@@ -1,30 +1,62 @@
-<div class="topbar">
-  <div class="topbar-inner">
-    <a class="brand" href="/dash.html">
-      <div class="brand-badge">L</div>
-      <div class="brand-name">Learnlio</div>
-    </a>
-
-    <div class="nav">
-      <a href="/dash.html" data-nav="dash">Dash</a>
-      <a href="/chat.html" data-nav="chat">Chat</a>
-      <a href="/screener.html" data-nav="screener">Screener</a>
-      <a href="/reports.html" data-nav="reports">Reports</a>
-      <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
-    </div>
-  </div>
-</div>
-
 <!doctype html>
 <html lang="en-GB">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Learnlio – Login</title>
+  <title>Learnlio – Log in</title>
+  <link rel="stylesheet" href="/assets/app.css" />
 </head>
-<body style="font-family:Arial,sans-serif;padding:24px">
-  <h1>Learnlio</h1>
-  <p>This is the hosted app login page (coming next).</p>
-  <p>If you can see this, Cloudflare Pages is working ✅</p>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/dash.html">
+        <div class="brand-badge">L</div>
+        <div class="brand-name">Learnlio</div>
+      </a>
+
+      <div class="nav">
+        <a href="/dash.html" data-nav="dash">Dash</a>
+        <a href="/chat.html" data-nav="chat">Chat</a>
+        <a href="/screener.html" data-nav="screener">Screener</a>
+        <a href="/reports.html" data-nav="reports">Reports</a>
+        <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container page">
+    <div class="card card-pad">
+      <h1 class="h1">Log in to Learnlio</h1>
+      <p class="small">This is the hosted app (app.learnlio.co.uk). We’ll add email code login next.</p>
+
+      <div class="spacer"></div>
+
+      <label class="small" for="email">Email</label>
+      <div class="spacer" style="height:6px;"></div>
+      <input id="email" class="input" placeholder="parent@email.com" />
+
+      <div class="spacer"></div>
+
+      <button class="btn btn-primary" type="button">Continue</button>
+
+      <div class="spacer"></div>
+      <p class="small">
+        Back to the main site:
+        <a href="https://www.learnlio.co.uk" style="color:var(--primary); text-decoration:underline;">learnlio.co.uk</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // highlight active nav link
+    const path = location.pathname;
+    const map = { "/dash.html":"dash", "/chat.html":"chat", "/screener.html":"screener", "/reports.html":"reports" };
+    const key = map[path];
+    if (key) {
+      const el = document.querySelector(`[data-nav="${key}"]`);
+      if (el) el.classList.add("active");
+    }
+  </script>
 </body>
 </html>
+
