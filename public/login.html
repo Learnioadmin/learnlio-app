@@ -1,66 +1,190 @@
 <!doctype html>
-<html lang="en-GB">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Learnlio – Log in</title>
-  <link rel="stylesheet" href="/assets/app.css" />
-</head>
-<body>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Learnlio • Login</title>
 
-  <div class="topbar">
-    <div class="topbar-inner">
-      <a class="brand" href="/dash.html">
-        <img class="brand-logo" src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp" alt="Learnlio logo" />
-        <div class="brand-name">Learnlio</div>
-      </a>
+  <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
 
-      <div class="nav">
-        <a href="/dash.html" data-nav="dash">Dash</a>
-        <a href="/chat.html" data-nav="chat">Chat</a>
-        <a href="/screener.html" data-nav="screener">Screener</a>
-        <a href="/reports.html" data-nav="reports">Reports</a>
-        <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="container page">
-    <div style="max-width:520px;margin:0 auto;">
-      <div class="card card-pad">
-        <h1 class="h1">Log in</h1>
-        <p class="small">Enter your email to continue. (We’ll add email code login next.)</p>
-
-        <div class="spacer"></div>
-
-        <label class="small" for="email">Email</label>
-        <div style="height:6px"></div>
-        <input id="email" class="input" placeholder="parent@email.com" />
-
-        <div class="spacer"></div>
-
-        <button class="btn btn-primary" type="button" style="width:100%;">Continue</button>
-
-        <div class="spacer"></div>
-
-        <p class="small">
-          Back to the main site:
-          <a href="https://www.learnlio.co.uk" style="color:var(--primary); text-decoration:underline;">learnlio.co.uk</a>
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // highlight active nav link
-    const path = location.pathname;
-    const map = { "/dash.html":"dash", "/chat.html":"chat", "/screener.html":"screener", "/reports.html":"reports" };
-    const key = map[path];
-    if (key) {
-      const el = document.querySelector(`[data-nav="${key}"]`);
-      if (el) el.classList.add("active");
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --border:#e5e7eb;
+      --shadow: 0 10px 24px rgba(15,23,42,.08);
+      --blue:#2563eb;
+      --pill:#eef2ff;
+      --max:1040px;
+      --good:#10b981;
+      --bad:#ef4444;
     }
-  </script>
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:'OpenDyslexic', Arial, sans-serif;
+      line-height:1.7;
+    }
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:rgba(255,255,255,.88);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--border);
+    }
+    .topbar-inner{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:10px 16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:180px;
+    }
+    .brand img{ height:34px; width:auto; border-radius:8px; }
+    .brand span{ font-size:14px; color:var(--muted); }
+
+    .page{
+      max-width:720px;
+      margin:18px auto;
+      padding:0 16px 28px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    h1{ margin:0 0 6px; font-size:22px; }
+    .muted{ color:var(--muted); font-size:14px; margin:0 0 14px; }
+    label{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      margin:10px 0 6px;
+    }
+    input{
+      width:100%;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid #cbd5e1;
+      font-size:15px;
+      font-family:inherit;
+    }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 14px;
+      font-size:14px;
+      cursor:pointer;
+      font-family:inherit;
+    }
+    .btn.primary{ background:var(--blue); color:#fff; }
+    .btn.ghost{ background:#fff; border:1px solid var(--border); color:var(--text); }
+    .notice{
+      margin-top:10px;
+      font-size:14px;
+      white-space:pre-wrap;
+    }
+    .ok{ color: var(--good); }
+    .err{ color: var(--bad); }
+  </style>
+</head>
+
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp" alt="Learnlio logo">
+      <span>Learnlio • Login</span>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <section class="card">
+    <h1>Sign in</h1>
+    <p class="muted">Parents sign in here. You can add one or more children after login.</p>
+
+    <label>Email</label>
+    <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+
+    <label>Password</label>
+    <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+
+    <div class="row">
+      <button id="signInBtn" class="btn primary" type="button">Sign in</button>
+      <button id="signUpBtn" class="btn ghost" type="button">Create account</button>
+    </div>
+
+    <div id="msg" class="notice"></div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // 1) Put your Supabase values here
+  const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+
+  const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const emailEl = document.getElementById("email");
+  const passEl  = document.getElementById("password");
+  const msgEl   = document.getElementById("msg");
+
+  function setMsg(text, kind){
+    msgEl.textContent = text || "";
+    msgEl.className = "notice " + (kind || "");
+  }
+
+  async function goNext(){
+    // after login, go to dash
+    window.location.href = "/dash.html";
+  }
+
+  // If already logged in, skip login page
+  (async () => {
+    const { data } = await supa.auth.getSession();
+    if (data.session) goNext();
+  })();
+
+  document.getElementById("signInBtn").onclick = async () => {
+    setMsg("Signing in…");
+    const email = emailEl.value.trim();
+    const password = passEl.value;
+
+    const { error } = await supa.auth.signInWithPassword({ email, password });
+    if (error) return setMsg("❌ " + error.message, "err");
+
+    setMsg("✅ Signed in.", "ok");
+    goNext();
+  };
+
+  document.getElementById("signUpBtn").onclick = async () => {
+    setMsg("Creating account…");
+    const email = emailEl.value.trim();
+    const password = passEl.value;
+
+    const { error } = await supa.auth.signUp({ email, password });
+    if (error) return setMsg("❌ " + error.message, "err");
+
+    setMsg("✅ Account created. You can now sign in.", "ok");
+  };
+</script>
 </body>
 </html>
 
