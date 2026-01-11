@@ -2,86 +2,142 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Learnlio • Tutor</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio Tutor</title>
 
-  <!-- Dyslexia-friendly font -->
+  <!-- Dyslexia-friendly font (optional; if blocked, page still works) -->
   <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Axios -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
   <!-- jsPDF for parent summary -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     :root{
-      --bg:#f6f7fb;
+      --ink:#111827;
+      --muted:#6b7280;
       --card:#ffffff;
-      --text:#0f172a;
-      --muted:#475569;
-      --border:#e5e7eb;
-      --shadow: 0 10px 24px rgba(15,23,42,.08);
-      --blue:#2563eb;
-      --yellow:#fef3c7;
-      --good:#10b981;
+      --bg:#f3f4f6;
+      --blue:#007bff;
+      --blue2:#0056b3;
+      --amber:#fef3c7;
+      --green:#10b981;
+      --green2:#059669;
       --purple:#7c3aed;
-      --max:1040px;
+      --purple2:#6d28d9;
+      --border:#e5e7eb;
     }
-    *{ box-sizing:border-box; }
+
     body{
       margin:0;
       background:var(--bg);
-      color:var(--text);
-      font-family:'OpenDyslexic', Arial, sans-serif;
-      line-height:1.7;
+      color:var(--ink);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-    .topbar{
-      position:sticky; top:0; z-index:50;
-      background:rgba(255,255,255,.88);
-      backdrop-filter:blur(10px);
+
+    /* NAV (simple + consistent) */
+    .nav{
+      position:sticky; top:0; z-index:10;
+      background:#fff;
       border-bottom:1px solid var(--border);
     }
-    .topbar-inner{
-      max-width:var(--max);
+    .nav-inner{
+      max-width:1100px;
       margin:0 auto;
-      padding:10px 16px;
+      padding:10px 14px;
       display:flex;
-      justify-content:space-between;
       align-items:center;
+      justify-content:space-between;
       gap:12px;
     }
     .brand{
+      display:flex; align-items:center; gap:10px;
+      text-decoration:none; color:var(--ink);
+    }
+    .brand img{
+      height:34px; width:auto; display:block;
+      border-radius:8px;
+    }
+    .brand-title{
+      font-weight:800; letter-spacing:.2px;
+    }
+    .nav-links{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .nav-links a, .nav-links button{
+      font-size:14px;
+      text-decoration:none;
+      color:var(--ink);
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid transparent;
+      background:transparent;
+      cursor:pointer;
+    }
+    .nav-links a:hover, .nav-links button:hover{
+      background:#f9fafb;
+      border-color:var(--border);
+    }
+
+    /* PAGE LAYOUT */
+    .page{
+      max-width:1100px;
+      margin:0 auto;
+      padding:16px 14px 40px;
+    }
+
+    /* CHAT WRAPPER */
+    #chat-wrapper { width: 100%; display: flex; justify-content: center; }
+    #chat-container {
+      width: 100%;
+      max-width: 720px;
+      background: var(--card);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 6px 22px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      border:1px solid var(--border);
+    }
+
+    /* Progress header */
+    #progress-header {
+      display:none;
+      margin-bottom:10px;
+      padding:10px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#fff;
+    }
+    #progress-row{
       display:flex;
+      justify-content:space-between;
       align-items:center;
       gap:10px;
-      min-width:210px;
+      flex-wrap:wrap;
+      font-family:'OpenDyslexic', Arial, sans-serif;
+      font-size:14px;
+      color:#333;
     }
-    .brand img{ height:34px; width:auto; border-radius:8px; }
-    .brand span{ font-size:14px; color:var(--muted); }
-    nav{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
-    nav a{
-      text-decoration:none;
-      background:#fff;
-      border:1px solid var(--border);
-      padding:8px 10px;
-      border-radius:12px;
-      color:var(--text);
-      font-size:13px;
+    #progress-track{
+      height:10px;
+      background:#e5e7eb;
+      border-radius:999px;
+      overflow:hidden;
+      margin-top:8px;
     }
-    nav a:hover{ border-color:#cbd5e1; }
-
-    .page{
-      max-width:760px;
-      margin:14px auto;
-      padding:0 16px 28px;
-    }
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      padding:16px;
+    #progress-bar{
+      height:10px;
+      width:0%;
+      background:var(--green);
     }
 
-    /* Chat UI */
+    /* Messages */
     #messages {
       background: #fafafa;
       border-radius: 14px;
@@ -94,6 +150,7 @@
       flex-direction: column;
       align-items: flex-start;
     }
+
     .msg {
       padding: 14px 16px;
       margin-bottom: 14px;
@@ -106,383 +163,460 @@
       overflow-wrap: break-word;
       display: inline-block;
     }
-    .user { background: #007bff; color: #ffffff; margin: 0 0 14px auto; text-align: right; word-break: break-word; }
-    .bot  { background: var(--yellow); color: #000000; margin-right: auto; }
+    .user {
+      background: var(--blue);
+      color: #ffffff;
+      margin: 0 0 14px auto;
+      text-align: right;
+      word-break: break-word;
+    }
+    .bot  { background: var(--amber); color: #000000; margin-right: auto; }
 
-    #typing-indicator { font-style: italic; color: #555; margin: 0 0 10px; }
+    /* Typing */
+    #typing-indicator {
+      font-style: italic;
+      color: #555;
+      margin-bottom:10px;
+      display:none;
+      font-family: 'OpenDyslexic', Arial, sans-serif;
+    }
 
-    .bot-controls { margin-top: 8px; display:flex; gap:8px; flex-wrap:wrap; }
+    /* Controls under bot messages */
+    .bot-controls {
+      margin-top: 10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
     .btn-small {
       border: none;
-      border-radius: 10px;
-      padding: 6px 12px;
+      border-radius: 12px;
+      padding: 8px 12px;
       font-size: 14px;
       cursor: pointer;
       color: #fff;
-      font-family: inherit;
+      font-family: 'OpenDyslexic', Arial, sans-serif;
     }
-    .speak-btn { background: #007bff; }
-    .speak-btn:hover { background: #0056b3; }
-    .hint-btn { background: var(--good); }
-    .hint-btn:hover { background: #059669; }
+    .speak-btn { background: var(--blue); }
+    .speak-btn:hover { background: var(--blue2); }
+    .hint-btn { background: var(--green); }
+    .hint-btn:hover { background: var(--green2); }
     .next-btn { background: var(--purple); }
-    .next-btn:hover { background: #6d28d9; }
-
-    /* Progress header */
-    #progress-header { display:none; margin-bottom:10px; }
-    #progress-label, #badge-label { font-size:14px; color:#333; }
+    .next-btn:hover { background: var(--purple2); }
 
     /* Calculator */
-    #calculator { display:none; margin-bottom: 12px; background: #eef2ff; padding: 10px; border-radius: 14px; }
-    .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    #calculator {
+      margin-bottom: 12px;
+      background: #eef2ff;
+      padding: 12px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      display:none;
+    }
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
     .calc-grid button {
       padding: 14px;
       font-size: 18px;
-      border-radius: 10px;
-      border: none;
+      border-radius: 12px;
+      border: 1px solid var(--border);
       background: #ffffff;
       cursor: pointer;
-      font-family: inherit;
+      font-family: 'OpenDyslexic', Arial, sans-serif;
     }
     .calc-grid button:hover { background: #dbeafe; }
 
-    /* Buttons area */
+    /* Subject + area buttons */
+    #subject-selection, #area-selection { display:none; }
+    #subject-selection p {
+      margin:6px 0 10px;
+      font-family:'OpenDyslexic', Arial, sans-serif;
+    }
     #subject-selection button, #area-selection button {
       padding: 10px 18px;
       font-size: 16px;
       border-radius: 12px;
       border: none;
-      background: #007bff;
+      background: var(--blue);
       color: #fff;
       cursor: pointer;
       margin-right: 8px;
-      margin-bottom: 8px;
-      font-family: inherit;
+      margin-bottom: 10px;
+      font-family:'OpenDyslexic', Arial, sans-serif;
     }
-    #subject-selection button:hover, #area-selection button:hover { background: #0056b3; }
+    #subject-selection button:hover, #area-selection button:hover { background: var(--blue2); }
 
     /* Input */
-    #input-container { display:flex; gap:10px; margin-top:10px; }
+    #input-container {
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+    }
     #input {
       flex:1;
       padding:14px;
       font-size:16px;
       border-radius:12px;
       border:1px solid #ccc;
-      font-family: inherit;
+      font-family:'OpenDyslexic', Arial, sans-serif;
     }
-    #sendBtn{
+    #sendBtn {
       padding:14px 20px;
       font-size:16px;
       border-radius:12px;
       border:none;
-      background:#007bff;
+      background:var(--blue);
       color:#fff;
       cursor:pointer;
-      font-family: inherit;
+      font-family:'OpenDyslexic', Arial, sans-serif;
     }
-    #sendBtn:hover{ background:#0056b3; }
+    #sendBtn:hover { background:var(--blue2); }
+    #sendBtn:disabled { opacity:.6; cursor:not-allowed; }
+
+    /* Small helper card */
+    .notice{
+      margin:10px 0 0;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-family:'OpenDyslexic', Arial, sans-serif;
+      color:var(--muted);
+      font-size:14px;
+      display:none;
+    }
 
     @media (max-width: 480px) {
+      #chat-container { padding: 14px; }
       .msg { font-size: 16px; }
-      .brand span{ display:none; }
+      .brand-title{ display:none; }
+      .brand img{ height:30px; }
     }
   </style>
 </head>
 
 <body>
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <img src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp" alt="Learnlio logo">
-      <span>Learnlio • Tutor</span>
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="dash.html">
+        <!-- Replace with your logo path if you have one in /public/assets/ -->
+        <img src="assets/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <div class="brand-title">Learnlio</div>
+      </a>
+
+      <div class="nav-links">
+        <a href="dash.html">Dashboard</a>
+        <a href="chat.html" style="border-color:var(--border); background:#f9fafb;">Tutor</a>
+        <a href="screener.html">Screener</a>
+        <a href="reports.html">Reports</a>
+        <button id="logoutBtn" type="button">Log out</button>
+      </div>
     </div>
-    <nav>
-      <a href="/dash.html">Dashboard</a>
-      <a href="/screener.html">Dyslexia screener</a>
-      <a href="/reports.html">Reports</a>
-      <a href="#" id="logoutLink">Logout</a>
-    </nav>
   </div>
-</header>
 
-<main class="page">
-  <section class="card">
+  <div class="page">
+    <div id="chat-wrapper">
+      <div id="chat-container">
 
-    <!-- Progress header -->
-    <div id="progress-header">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-        <div id="progress-label">Progress: 0 / 0</div>
-        <div id="badge-label">Badges: —</div>
+        <!-- Progress header -->
+        <div id="progress-header">
+          <div id="progress-row">
+            <div id="progress-label">Progress: 0 / 0</div>
+            <div id="badge-label">Badges: —</div>
+          </div>
+          <div id="progress-track">
+            <div id="progress-bar"></div>
+          </div>
+        </div>
+
+        <div id="messages"></div>
+        <div id="typing-indicator">Learnlio AI is typing...</div>
+
+        <!-- Calculator -->
+        <div id="calculator">
+          <div class="calc-grid">
+            <button onclick="calcInput('7')">7</button>
+            <button onclick="calcInput('8')">8</button>
+            <button onclick="calcInput('9')">9</button>
+            <button onclick="calcInput('÷')">÷</button>
+
+            <button onclick="calcInput('4')">4</button>
+            <button onclick="calcInput('5')">5</button>
+            <button onclick="calcInput('6')">6</button>
+            <button onclick="calcInput('×')">×</button>
+
+            <button onclick="calcInput('1')">1</button>
+            <button onclick="calcInput('2')">2</button>
+            <button onclick="calcInput('3')">3</button>
+            <button onclick="calcInput('−')">−</button>
+
+            <button onclick="calcInput('0')">0</button>
+            <button onclick="calcClear()">C</button>
+            <button onclick="calcInput('+')">+</button>
+            <button onclick="calcInput('=')">=</button>
+          </div>
+        </div>
+
+        <!-- Subject selection -->
+        <div id="subject-selection">
+          <p>Select a subject to start:</p>
+          <button onclick="selectSubject('Maths')">Maths</button>
+          <button onclick="selectSubject('English')">English</button>
+        </div>
+
+        <!-- Area selection / action buttons -->
+        <div id="area-selection"></div>
+
+        <!-- Input -->
+        <div id="input-container">
+          <input id="input" placeholder="Type your answer here…" />
+          <button id="sendBtn" type="button">Send</button>
+        </div>
+
+        <div id="notice" class="notice"></div>
       </div>
-      <div style="height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden; margin-top:8px;">
-        <div id="progress-bar" style="height:10px; width:0%; background:#10b981;"></div>
-      </div>
     </div>
-
-    <div id="messages"></div>
-    <div id="typing-indicator" style="display:none;">Learnlio AI is typing…</div>
-
-    <!-- Calculator (shows after maths area selected) -->
-    <div id="calculator">
-      <div class="calc-grid">
-        <button onclick="calcInput('7')">7</button>
-        <button onclick="calcInput('8')">8</button>
-        <button onclick="calcInput('9')">9</button>
-        <button onclick="calcInput('÷')">÷</button>
-
-        <button onclick="calcInput('4')">4</button>
-        <button onclick="calcInput('5')">5</button>
-        <button onclick="calcInput('6')">6</button>
-        <button onclick="calcInput('×')">×</button>
-
-        <button onclick="calcInput('1')">1</button>
-        <button onclick="calcInput('2')">2</button>
-        <button onclick="calcInput('3')">3</button>
-        <button onclick="calcInput('-')">−</button>
-
-        <button onclick="calcInput('0')">0</button>
-        <button onclick="calcClear()">C</button>
-        <button onclick="calcInput('+')">+</button>
-        <button onclick="calcInput('=')">=</button>
-      </div>
-    </div>
-
-    <!-- Subject selection -->
-    <div id="subject-selection" style="display:none;">
-      <p>Select a subject to start:</p>
-      <button onclick="selectSubject('Maths')">Maths</button>
-      <button onclick="selectSubject('English')">English</button>
-    </div>
-
-    <!-- Area selection / Action buttons -->
-    <div id="area-selection" style="display:none;"></div>
-
-    <!-- Input -->
-    <div id="input-container">
-      <input id="input" placeholder="Type your answer here…" />
-      <button id="sendBtn" type="button">Send</button>
-    </div>
-
-  </section>
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", async function() {
-  const BACKEND_URL = "https://softr-chat-backend.onrender.com";
+/* =======================
+   CONFIG — UPDATE THESE
+======================= */
+const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
 
-  // ✅ Replace these:
-  const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+/* Your Render backend that talks to OpenAI */
+const BACKEND_URL = "https://softr-chat-backend.onrender.com";
 
-  const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* If your login page is different, change this */
+const LOGIN_PAGE = "login.html";
 
-  // Elements
-  const progressHeader = document.getElementById("progress-header");
-  const progressLabel = document.getElementById("progress-label");
-  const badgeLabel = document.getElementById("badge-label");
-  const progressBar = document.getElementById("progress-bar");
+/* =======================
+   SUPABASE CLIENT
+======================= */
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const input = document.getElementById("input");
-  const sendBtn = document.getElementById("sendBtn");
-  const messagesDiv = document.getElementById("messages");
-  const calculator = document.getElementById("calculator");
-  const subjectSelection = document.getElementById("subject-selection");
-  const areaSelection = document.getElementById("area-selection");
-  const inputContainer = document.getElementById("input-container");
-  const typingIndicator = document.getElementById("typing-indicator");
-  const logoutLink = document.getElementById("logoutLink");
+/* =======================
+   ELEMENTS
+======================= */
+const progressHeader = document.getElementById("progress-header");
+const progressLabel  = document.getElementById("progress-label");
+const badgeLabel     = document.getElementById("badge-label");
+const progressBar    = document.getElementById("progress-bar");
 
-  // Require login
-  const { data: sessData } = await supa.auth.getSession();
-  if (!sessData.session) {
-    window.location.href = "/login.html";
-    return;
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("sendBtn");
+const messagesDiv = document.getElementById("messages");
+const calculator = document.getElementById("calculator");
+const subjectSelection = document.getElementById("subject-selection");
+const areaSelection = document.getElementById("area-selection");
+const typingIndicator = document.getElementById("typing-indicator");
+const notice = document.getElementById("notice");
+const logoutBtn = document.getElementById("logoutBtn");
+
+/* =======================
+   STATE
+======================= */
+let user = null;
+
+let childId = null;
+let childName = "";
+let childAge = ""; // stored as string for display, parse when needed
+let subject = null;
+let area = null;
+
+let sessionId = null;
+
+/* Maths */
+let currentQuestion = null;   // { displayText, correctAnswer }
+let hintUsedForCurrent = false;
+let waitingForNextButton = false;
+
+/* Guided step mode */
+let guided = { active:false, steps:[], idx:0 };
+
+/* Progress */
+let maxQuestions = 10;
+let questionsAnswered = 0; // counts “completed questions” for the session (Maths = correct question; English = turn)
+let correctCount = 0;
+let badges = [];
+
+/* Adaptive difficulty (stored per child/subject/area) */
+let difficulty = 1;
+let streakCorrect = 0;
+let streakWrong = 0;
+
+/* Report log */
+let sessionLog = []; // for PDF
+
+/* =======================
+   HELPERS
+======================= */
+function getParam(name){
+  const p = new URLSearchParams(window.location.search);
+  return p.get(name);
+}
+function nowTs(){ return new Date().toLocaleString("en-GB"); }
+function cleanBotText(t){ return String(t || "").replace(/\*\*/g, ""); }
+function parseChildNumber(text){
+  const m = String(text || "").match(/-?\d+(\.\d+)?/);
+  if (!m) return null;
+  return Number(m[0]);
+}
+function ageNum(){
+  const a = parseInt(childAge, 10);
+  return isNaN(a) ? 10 : a;
+}
+function kidTonePrefix(){
+  const a = ageNum();
+  if (a <= 7) return "🙂";
+  if (a <= 10) return "😊";
+  return "👍";
+}
+function shortLineBreaks(text){
+  return String(text || "").replace(/\.\s+/g, ".\n\n");
+}
+function disableInput(disabled){
+  input.disabled = disabled;
+  sendBtn.disabled = disabled;
+  input.style.opacity = disabled ? "0.6" : "1";
+  sendBtn.style.opacity = disabled ? "0.6" : "1";
+}
+function showNotice(text){
+  notice.style.display = "block";
+  notice.innerText = text;
+}
+function hideNotice(){
+  notice.style.display = "none";
+  notice.innerText = "";
+}
+
+/* =======================
+   CHAT UI
+======================= */
+function addUserMessage(text){
+  const div = document.createElement("div");
+  div.className = "msg user";
+  div.innerText = String(text || "").trim();
+  messagesDiv.appendChild(div);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function speak(text){
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+
+  const u = new SpeechSynthesisUtterance(String(text || ""));
+  u.lang = "en-GB";
+  u.rate = 0.9;
+  u.pitch = 1.0;
+
+  const voices = window.speechSynthesis.getVoices() || [];
+  const prefer = [
+    "Google UK English Female","Google UK English Male",
+    "Microsoft Sonia Online","Microsoft Ryan Online","Microsoft Libby Online",
+    "Samantha","Daniel"
+  ];
+  let chosen = null;
+  for (const name of prefer){
+    const v = voices.find(x => x.name === name);
+    if (v) { chosen = v; break; }
   }
-  const parentUserId = sessData.session.user.id;
-
-  logoutLink.onclick = async (e) => {
-    e.preventDefault();
-    await supa.auth.signOut();
-    window.location.href = "/login.html";
-  };
-
-  // Read child_id
-  const params = new URLSearchParams(window.location.search);
-  const childId = params.get("child_id");
-  if (!childId) {
-    addBotMessage("I can’t find a child profile.\n\nPlease go back to Dashboard and choose a child.", {showHint:false});
-    disableInput(true);
-    return;
+  if (!chosen){
+    chosen = voices.find(v => (v.lang||"").toLowerCase().startsWith("en-gb")) ||
+             voices.find(v => (v.lang||"").toLowerCase().startsWith("en")) ||
+             null;
   }
+  if (chosen) u.voice = chosen;
 
-  // Fetch child
-  const { data: child, error: childErr } = await supa
-    .from("children")
-    .select("id, child_name, child_dob")
-    .eq("id", childId)
-    .single();
+  window.speechSynthesis.speak(u);
+}
 
-  if (childErr || !child) {
-    addBotMessage("I couldn’t load that child.\n\nPlease go back to Dashboard and try again.", {showHint:false});
-    disableInput(true);
-    return;
-  }
+function addBotMessage(text, opts={showHint:false, showNext:false}){
+  const safeText = cleanBotText(text);
 
-  let childName = child.child_name || "Friend";
-  let childAge = calcAgeFromDob(child.child_dob);
+  const div = document.createElement("div");
+  div.className = "msg bot";
 
-  // State
-  let stage = "subjectSelect";
-  let subject = null;
-  let area = null;
+  const content = document.createElement("span");
+  content.innerText = safeText;
 
-  // Maths state
-  let currentQuestion = null;
-  let hintUsedForCurrent = false;
-  let waitingForNextButton = false;
-  let guided = { active: false, steps: [], idx: 0 };
+  const controls = document.createElement("div");
+  controls.className = "bot-controls";
 
-  // Session/progress
-  let maxQuestions = 10;
-  let questionsAnswered = 0;
-  let correctCount = 0;
-  let badges = [];
-  let sessionLog = [];
+  const speakBtn = document.createElement("button");
+  speakBtn.className = "btn-small speak-btn";
+  speakBtn.innerText = "🔊 Listen";
+  speakBtn.onclick = () => speak(safeText);
+  controls.appendChild(speakBtn);
 
-  // --- Voice (best available free) ---
-  let _cachedVoice = null;
-  function pickBestUKVoice() {
-    const voices = window.speechSynthesis.getVoices() || [];
-    if (!voices.length) return null;
-
-    const preferred = [
-      "Samantha","Daniel",
-      "Google UK English Female","Google UK English Male",
-      "Microsoft Sonia Online","Microsoft Ryan Online","Microsoft Libby Online"
-    ];
-    for (const name of preferred) {
-      const v = voices.find(x => x.name === name);
-      if (v) return v;
-    }
-    const uk = voices.find(v => (v.lang || "").toLowerCase().startsWith("en-gb"));
-    if (uk) return uk;
-    return voices.find(v => (v.lang || "").toLowerCase().startsWith("en")) || null;
-  }
-  function speak(text) {
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(String(text || ""));
-    u.lang = "en-GB";
-    u.rate = 0.9;
-    u.pitch = 1.0;
-    const voice = _cachedVoice || pickBestUKVoice();
-    if (voice) { _cachedVoice = voice; u.voice = voice; }
-    window.speechSynthesis.speak(u);
-  }
-  window.speechSynthesis.onvoiceschanged = () => { _cachedVoice = pickBestUKVoice(); };
-
-  // Calculator
-  window.calcInput = (value) => { input.value += value; };
-  window.calcClear = () => { input.value = ""; };
-
-  // Helpers
-  function calcAgeFromDob(dobStr){
-    if (!dobStr) return 10;
-    const dob = new Date(dobStr);
-    if (isNaN(dob.getTime())) return 10;
-    const today = new Date();
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-    return Math.max(4, Math.min(18, age));
-  }
-
-  function ageNum(){ return Number.isFinite(childAge) ? childAge : 10; }
-  function kidTonePrefix(){ const a = ageNum(); if (a <= 7) return "🙂"; if (a <= 10) return "😊"; return "👍"; }
-  function shortLineBreaks(text){ return String(text || "").replace(/\.\s+/g, ".\n\n"); }
-  function cleanBotText(t){ return String(t || "").replace(/\*\*/g, ""); }
-  function nowTs(){ return new Date().toLocaleString("en-GB"); }
-
-  function disableInput(disabled){
-    input.disabled = disabled;
-    sendBtn.disabled = disabled;
-    sendBtn.style.opacity = disabled ? "0.6" : "1";
-    input.style.opacity = disabled ? "0.6" : "1";
-  }
-
-  function addUserMessage(text){
-    const div = document.createElement("div");
-    div.className = "msg user";
-    div.innerText = String(text || "").trim();
-    messagesDiv.appendChild(div);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }
-
-  function addBotMessage(text, opts={showHint:false, showNext:false}){
-    const safeText = cleanBotText(text);
-
-    const div = document.createElement("div");
-    div.className = "msg bot";
-
-    const content = document.createElement("span");
-    content.innerText = safeText;
-
-    const controls = document.createElement("div");
-    controls.className = "bot-controls";
-
-    const speakBtn = document.createElement("button");
-    speakBtn.className = "btn-small speak-btn";
-    speakBtn.innerText = "🔊 Listen";
-    speakBtn.onclick = () => speak(safeText);
-    controls.appendChild(speakBtn);
-
-    if (opts.showHint) {
-      const hintBtn = document.createElement("button");
-      hintBtn.className = "btn-small hint-btn";
-      hintBtn.innerText = "💡 Hint";
-      hintBtn.onclick = () => requestHint();
-      controls.appendChild(hintBtn);
-    }
-
-    if (opts.showNext) {
-      const nextBtn = document.createElement("button");
-      nextBtn.className = "btn-small next-btn";
-      nextBtn.innerText = "➡️ Next question";
-      nextBtn.onclick = () => handleNextQuestion();
-      controls.appendChild(nextBtn);
-    }
-
-    div.appendChild(content);
-    div.appendChild(controls);
-
-    messagesDiv.appendChild(div);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  if (opts.showHint){
+    const hintBtn = document.createElement("button");
+    hintBtn.className = "btn-small hint-btn";
+    hintBtn.innerText = "💡 Hint";
+    hintBtn.onclick = () => requestHint();
+    controls.appendChild(hintBtn);
   }
 
-  async function callBackend(promptText){
-    try {
-      typingIndicator.style.display = "block";
-      const response = await axios.post(BACKEND_URL, {
-        userId: parentUserId,
-        messages: [{ role: "user", content: promptText }],
-        subject,
-        childName,
-        childAge: String(childAge)
-      });
-      typingIndicator.style.display = "none";
-      return response.data.reply;
-    } catch (err){
-      typingIndicator.style.display = "none";
-      return "Sorry, I couldn’t connect right now. Please try again.";
-    }
+  if (opts.showNext){
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "btn-small next-btn";
+    nextBtn.innerText = "➡️ Next question";
+    nextBtn.onclick = () => handleNextQuestion();
+    controls.appendChild(nextBtn);
   }
 
-  function baseRules(){
-    return `
+  div.appendChild(content);
+  div.appendChild(controls);
+
+  messagesDiv.appendChild(div);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function showActionButtons(buttons){
+  areaSelection.innerHTML = "";
+  buttons.forEach(b => {
+    const btn = document.createElement("button");
+    btn.innerText = b.label;
+    btn.onclick = b.onClick;
+    areaSelection.appendChild(btn);
+  });
+  areaSelection.style.display = "block";
+}
+
+/* =======================
+   CALCULATOR
+======================= */
+window.calcInput = (value) => { input.value += value; };
+window.calcClear = () => { input.value = ""; };
+
+/* =======================
+   BACKEND CALL
+======================= */
+async function callBackend(promptText){
+  try{
+    typingIndicator.style.display = "block";
+    const res = await axios.post(BACKEND_URL, {
+      userId: user.id,
+      messages: [{ role:"user", content: promptText }],
+      subject,
+      childName,
+      childAge
+    });
+    typingIndicator.style.display = "none";
+    return res.data.reply;
+  }catch(e){
+    typingIndicator.style.display = "none";
+    return "Sorry, I couldn’t connect right now. Please try again.";
+  }
+}
+
+function baseRules(){
+  return `
 Rules:
 - British English only.
 - Short, clear sentences.
@@ -490,227 +624,310 @@ Rules:
 - Dyslexia-friendly.
 - Positive encouragement.
 - Do NOT give the final answer immediately.
-- End each response with a gentle question.
+- End with a gentle, supportive question.
 - Child-safe tutoring only.
 `;
+}
+
+/* =======================
+   SESSION LIMIT BY AGE
+======================= */
+function computeMaxQuestions(){
+  const a = ageNum();
+  if (a <= 7) return 5;
+  if (a <= 10) return 8;
+  if (a <= 13) return 10;
+  return 12;
+}
+function sessionComplete(){
+  return questionsAnswered >= maxQuestions;
+}
+function resetSessionProgress(){
+  maxQuestions = computeMaxQuestions();
+  questionsAnswered = 0;
+  correctCount = 0;
+  badges = [];
+  sessionLog = [];
+  updateProgressUI();
+}
+function updateProgressUI(){
+  progressHeader.style.display = "block";
+  progressLabel.innerText = `Progress: ${questionsAnswered} / ${maxQuestions}`;
+  badgeLabel.innerText = `Badges: ${badges.length ? badges.join(" ") : "—"}`;
+  const pct = maxQuestions ? Math.min(100, Math.round((questionsAnswered / maxQuestions) * 100)) : 0;
+  progressBar.style.width = pct + "%";
+}
+function maybeAwardBadge(){
+  if (correctCount === 3 && !badges.includes("⭐")) badges.push("⭐");
+  if (correctCount === 5 && !badges.includes("🏅")) badges.push("🏅");
+  if (correctCount === 10 && !badges.includes("🏆")) badges.push("🏆");
+}
+function maybeRewardMessage(){
+  // only after a real completed question, never right after generating a question list
+  if (questionsAnswered === 1) addBotMessage("🌟 Nice start! You’re doing really well.");
+  if (questionsAnswered === Math.ceil(maxQuestions/2)) addBotMessage("🔥 Halfway there! Keep going!");
+  if (correctCount === 3 && badges.includes("⭐")) addBotMessage("⭐ Badge unlocked: Star Helper!");
+  if (correctCount === 5 && badges.includes("🏅")) addBotMessage("🏅 Badge unlocked: Steady Learner!");
+  if (correctCount === 10 && badges.includes("🏆")) addBotMessage("🏆 Badge unlocked: Learning Champion!");
+}
+
+/* =======================
+   DIFFICULTY (ADAPTIVE)
+======================= */
+function ageDifficultyMax(){
+  const a = ageNum();
+  if (a <= 7) return 2;
+  if (a <= 10) return 3;
+  if (a <= 13) return 4;
+  return 5;
+}
+function clampDifficulty(d){
+  const maxD = ageDifficultyMax();
+  return Math.max(1, Math.min(maxD, d));
+}
+function updateDifficultyAfterResult(isCorrect){
+  if (isCorrect){
+    streakCorrect += 1;
+    streakWrong = 0;
+    if (streakCorrect >= 3){
+      difficulty = clampDifficulty(difficulty + 1);
+      streakCorrect = 0;
+    }
+  }else{
+    streakWrong += 1;
+    streakCorrect = 0;
+    if (streakWrong >= 2){
+      difficulty = clampDifficulty(difficulty - 1);
+      streakWrong = 0;
+    }
+  }
+}
+
+/* =======================
+   MATHS GENERATION (DETERMINISTIC)
+   Uses age + difficulty to scale ranges.
+======================= */
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+function getRangeForAgeAndDifficulty(){
+  const a = ageNum();
+  const d = clampDifficulty(difficulty);
+
+  // Base ranges by age, then widen a bit by difficulty.
+  if (a <= 7){
+    // keep simple
+    const max = 10 + (d-1)*5; // 10, 15
+    return { min:0, max };
+  }
+  if (a <= 9){
+    const max = 30 + (d-1)*15; // 30,45,60
+    return { min:5, max };
+  }
+  if (a <= 11){
+    const max = 80 + (d-1)*30; // 80,110,140
+    return { min:10, max };
+  }
+  // 12+
+  const max = 200 + (d-1)*80; // 200,280,360,440,520
+  return { min:20, max };
+}
+
+function generateMathQuestion(){
+  const { min, max } = getRangeForAgeAndDifficulty();
+
+  if (area === "Addition"){
+    const x = randInt(min, max);
+    const y = randInt(min, max);
+    return { displayText:`${x} + ${y} = ?`, correctAnswer: x + y };
   }
 
-  // Session limit by age
-  function computeMaxQuestions(){
+  if (area === "Subtraction"){
+    let x = randInt(min, max);
+    let y = randInt(min, max);
+    if (y > x) [x,y] = [y,x];
+    return { displayText:`${x} - ${y} = ?`, correctAnswer: x - y };
+  }
+
+  if (area === "Multiplication"){
+    // avoid “all 5s / all 7s” by using varied factors + difficulty
     const a = ageNum();
-    if (a <= 7) return 5;
-    if (a <= 10) return 8;
-    if (a <= 13) return 10;
-    return 12;
-  }
-  function sessionComplete(){ return questionsAnswered >= maxQuestions; }
-
-  function resetSessionProgress(){
-    maxQuestions = computeMaxQuestions();
-    questionsAnswered = 0;
-    correctCount = 0;
-    badges = [];
-    sessionLog = [];
-    updateProgressUI();
+    const d = clampDifficulty(difficulty);
+    const tableMax = (a <= 7) ? (5 + d) : (a <= 9 ? (8 + d) : (12));
+    const x = randInt(2, Math.min(12, tableMax));
+    const y = randInt(2, Math.min(12, tableMax));
+    return { displayText:`${x} × ${y} = ?`, correctAnswer: x * y };
   }
 
-  function updateProgressUI(){
-    progressHeader.style.display = "block";
-    progressLabel.innerText = `Progress: ${questionsAnswered} / ${maxQuestions}`;
-    badgeLabel.innerText = `Badges: ${badges.length ? badges.join(" ") : "—"}`;
-    const pct = maxQuestions ? Math.min(100, Math.round((questionsAnswered / maxQuestions) * 100)) : 0;
-    progressBar.style.width = pct + "%";
-  }
-
-  function maybeAwardBadge(){
-    if (correctCount === 3 && !badges.includes("⭐")) badges.push("⭐");
-    if (correctCount === 5 && !badges.includes("🏅")) badges.push("🏅");
-    if (correctCount === 10 && !badges.includes("🏆")) badges.push("🏆");
-  }
-
-  function maybeRewardMessage(){
-    if (questionsAnswered === 1) addBotMessage("🌟 Nice start! You’re doing really well.");
-    if (questionsAnswered === Math.ceil(maxQuestions/2)) addBotMessage("🔥 Halfway there! Keep going!");
-    if (correctCount === 3 && badges.includes("⭐")) addBotMessage("⭐ Badge unlocked: Star Helper!");
-    if (correctCount === 5 && badges.includes("🏅")) addBotMessage("🏅 Badge unlocked: Steady Learner!");
-    if (correctCount === 10 && badges.includes("🏆")) addBotMessage("🏆 Badge unlocked: Learning Champion!");
-  }
-
-  // Maths generation + marking (deterministic)
-  function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
-
-  function generateMathQuestion(){
-    const age = ageNum();
-
-    let min=0, max=10;
-    if (age <= 7) { min=0; max=10; }
-    else if (age <= 9) { min=5; max=30; }
-    else if (age <= 11) { min=10; max=80; }
-    else { min=20; max=200; }
-
-    if (area === "Addition") {
-      const x = randInt(min, max), y = randInt(min, max);
-      return { displayText: `${x} + ${y} = ?`, correctAnswer: x + y };
-    }
-    if (area === "Subtraction") {
-      let x = randInt(min, max), y = randInt(min, max);
-      if (y > x) [x,y]=[y,x];
-      return { displayText: `${x} - ${y} = ?`, correctAnswer: x - y };
-    }
-    if (area === "Multiplication") {
-      const tableMax = age <= 7 ? 5 : age <= 9 ? 8 : 12;
-      const x = randInt(2, tableMax), y = randInt(2, tableMax);
-      return { displayText: `${x} × ${y} = ?`, correctAnswer: x * y };
-    }
-    if (area === "Division") {
-      const divMax = age <= 7 ? 5 : age <= 9 ? 8 : 12;
-      const divisor = randInt(2, divMax);
-      const quotient = randInt(2, divMax);
-      return { displayText: `${divisor*quotient} ÷ ${divisor} = ?`, correctAnswer: quotient };
-    }
-    return null;
-  }
-
-  function parseChildNumber(text){
-    const m = String(text || "").match(/-?\d+(\.\d+)?/);
-    if (!m) return null;
-    return Number(m[0]);
-  }
-
-  function showMathQuestion(q){
-    guided.active = false;
-    guided.steps = [];
-    guided.idx = 0;
-    hintUsedForCurrent = false;
-    waitingForNextButton = false;
-
+  if (area === "Division"){
     const a = ageNum();
-    const intro = (a <= 7)
-      ? `✏️ New question:\n\n${q.displayText}\n\nTake your time.\nYou can use the buttons if you want.\n\nWhat do you think?`
-      : `✏️ Question:\n\n${q.displayText}\n\nTake your time.\nWhat do you think the answer is?`;
-
-    addBotMessage(intro, { showHint:true, showNext:false });
+    const d = clampDifficulty(difficulty);
+    const divMax = (a <= 7) ? (5 + d) : (a <= 9 ? (8 + d) : 12);
+    const divisor = randInt(2, Math.min(12, divMax));
+    const quotient = randInt(2, Math.min(12, divMax));
+    const dividend = divisor * quotient;
+    return { displayText:`${dividend} ÷ ${divisor} = ?`, correctAnswer: quotient };
   }
 
-  function buildGuidedSteps(q){
-    const raw = q.displayText.replace("= ?", "").trim();
-    let op = null;
-    if (raw.includes("+")) op="+";
-    else if (raw.includes("-")) op="-";
-    else if (raw.includes("×")) op="×";
-    else if (raw.includes("÷")) op="÷";
-    if (!op) return [];
+  return null;
+}
 
-    const parts = raw.split(op).map(s => parseInt(s.trim(), 10));
-    const a = parts[0], b = parts[1];
-    if (Number.isNaN(a) || Number.isNaN(b)) return [];
+function showMathQuestion(q){
+  guided.active = false; guided.steps = []; guided.idx = 0;
+  hintUsedForCurrent = false;
+  waitingForNextButton = false;
 
-    const age = ageNum();
+  const a = ageNum();
+  const intro = (a <= 7)
+    ? `✏️ New question:\n\n${q.displayText}\n\nTake your time.\nYou can use the buttons if you want.\n\nWhat do you think?`
+    : `✏️ Question:\n\n${q.displayText}\n\nTake your time.\nWhat do you think the answer is?`;
+
+  addBotMessage(intro, { showHint:true, showNext:false });
+
+  // Log question to Supabase (B1)
+  logSessionItemSafe({
+    itemType: "question",
+    promptText: q.displayText
+  });
+}
+
+/* =======================
+   GUIDED STEPS (for wrong answers)
+======================= */
+function buildGuidedSteps(q){
+  const raw = q.displayText.replace("= ?", "").trim();
+  let op = null;
+  if (raw.includes("+")) op = "+";
+  else if (raw.includes("-")) op = "-";
+  else if (raw.includes("×")) op = "×";
+  else if (raw.includes("÷")) op = "÷";
+  if (!op) return [];
+
+  const parts = raw.split(op).map(s => parseInt(s.trim(), 10));
+  const A = parts[0], B = parts[1];
+  if (Number.isNaN(A) || Number.isNaN(B)) return [];
+
+  const age = ageNum();
+  const emoji = kidTonePrefix();
+
+  const ones = n => n % 10;
+  const tens = n => Math.floor((n % 100) / 10);
+  const hundreds = n => Math.floor((n % 1000) / 100);
+
+  if (op === "+"){
+    if (age <= 7 && A <= 20 && B <= 20){
+      return [{ prompt: shortLineBreaks(`${emoji} Start at ${A}.\nCount up ${B}.\n\nWhat number do you land on?`), expected: A+B }];
+    }
+
+    const a1=ones(A), b1=ones(B), a10=tens(A), b10=tens(B), a100=hundreds(A), b100=hundreds(B);
+    const onesSum = a1+b1;
+    const carry1 = Math.floor(onesSum/10);
+    const onesDigit = onesSum%10;
+
+    const tensSum = a10+b10+carry1;
+    const carry10 = Math.floor(tensSum/10);
+    const tensDigit = tensSum%10;
+
+    const hundredsSum = a100+b100+carry10;
+    const usesHundreds = (A>=100 || B>=100);
+
+    const steps = [];
+    steps.push({ prompt: shortLineBreaks(`${emoji} Add the ones.\n\n${a1} + ${b1} = ?`), expected: onesSum });
+    steps.push({ prompt: shortLineBreaks(`${emoji} Ones digit only.\n\nType ${onesDigit}.`), expected: onesDigit });
+    steps.push({ prompt: shortLineBreaks(`${emoji} Add the tens.\n\n${a10} + ${b10}`+(carry1?` + ${carry1}`:"")+` = ?`), expected: tensSum });
+    steps.push({ prompt: shortLineBreaks(`${emoji} Tens digit only.\n\nType ${tensDigit}.`), expected: tensDigit });
+
+    if (usesHundreds){
+      const final = hundredsSum*100 + tensDigit*10 + onesDigit;
+      steps.push({ prompt: shortLineBreaks(`${emoji} Add the hundreds.\n\n${a100} + ${b100}`+(carry10?` + ${carry10}`:"")+` = ?`), expected: hundredsSum });
+      steps.push({ prompt: shortLineBreaks(`${emoji} Put it together.\n\nWhat is ${A} + ${B}?`), expected: final });
+    }else{
+      const final = tensDigit*10 + onesDigit;
+      steps.push({ prompt: shortLineBreaks(`${emoji} Put it together.\n\nWhat is ${A} + ${B}?`), expected: final });
+    }
+    return steps;
+  }
+
+  if (op === "-"){
+    if (age <= 7 && A <= 20 && B <= 20){
+      return [{ prompt: shortLineBreaks(`${emoji} Start at ${A}.\nCount back ${B}.\n\nWhere do you land?`), expected: A-B }];
+    }
+
+    const a1=ones(A), b1=ones(B), a10=tens(A), b10=tens(B), a100=hundreds(A), b100=hundreds(B);
+    const usesHundreds = (A>=100 || B>=100);
+
+    if (a1 >= b1){
+      const onesRes = a1-b1;
+      const tensRes = a10-b10;
+      const hundredsRes = a100-b100;
+      const steps = [
+        { prompt: shortLineBreaks(`${emoji} Subtract the ones.\n\n${a1} - ${b1} = ?`), expected: onesRes },
+        { prompt: shortLineBreaks(`${emoji} Subtract the tens.\n\n${a10} - ${b10} = ?`), expected: tensRes }
+      ];
+      if (usesHundreds){
+        steps.push({ prompt: shortLineBreaks(`${emoji} Subtract the hundreds.\n\n${a100} - ${b100} = ?`), expected: hundredsRes });
+        steps.push({ prompt: shortLineBreaks(`${emoji} Put it together.\n\nWhat is ${A} - ${B}?`), expected: hundredsRes*100 + tensRes*10 + onesRes });
+      }else{
+        steps.push({ prompt: shortLineBreaks(`${emoji} Put it together.\n\nWhat is ${A} - ${B}?`), expected: tensRes*10 + onesRes });
+      }
+      return steps;
+    }
+
+    const newOnes = a1 + 10;
+    const newTens = a10 - 1;
+    const onesRes = newOnes - b1;
+    const tensRes = newTens - b10;
+
+    const steps = [
+      { prompt: shortLineBreaks(`${emoji} Swap 1 ten for 10 ones.\n\nOnes become ${newOnes}.\n\nType ${newOnes}.`), expected: newOnes },
+      { prompt: shortLineBreaks(`${emoji} Now subtract the ones.\n\n${newOnes} - ${b1} = ?`), expected: onesRes },
+      { prompt: shortLineBreaks(`${emoji} Now subtract the tens.\n\n${newTens} - ${b10} = ?`), expected: tensRes },
+    ];
+    if (usesHundreds){
+      const hundredsRes = a100 - b100;
+      steps.push({ prompt: shortLineBreaks(`${emoji} Subtract the hundreds.\n\n${a100} - ${b100} = ?`), expected: hundredsRes });
+      steps.push({ prompt: shortLineBreaks(`${emoji} Put it together.\n\nWhat is ${A} - ${B}?`), expected: hundredsRes*100 + tensRes*10 + onesRes });
+    }else{
+      steps.push({ prompt: shortLineBreaks(`${emoji} Put it together.\n\nWhat is ${A} - ${B}?`), expected: tensRes*10 + onesRes });
+    }
+    return steps;
+  }
+
+  if (op === "×"){
     const emoji = kidTonePrefix();
-
-    const ones = n => n % 10;
-    const tens = n => Math.floor((n % 100) / 10);
-    const hundreds = n => Math.floor((n % 1000) / 100);
-
-    if (op === "+") {
-      if (age <= 7 && a <= 20 && b <= 20) {
-        return [{ prompt: shortLineBreaks(`${emoji} Start at ${a}.\nCount up ${b}.\n\nWhat number do you land on?`), expected: a+b }];
+    if (age <= 7 && B <= 4){
+      let total = 0;
+      const steps = [];
+      for (let i=1;i<=B;i++){
+        const prev = total;
+        total += A;
+        steps.push({ prompt: shortLineBreaks(`${emoji} Step ${i}:\n\n${prev} + ${A} = ?`), expected: total });
       }
-      const a1=ones(a), b1=ones(b), a10=tens(a), b10=tens(b), a100=hundreds(a), b100=hundreds(b);
-      const onesSum = a1+b1, carry1=Math.floor(onesSum/10), onesDigit=onesSum%10;
-      const tensSum = a10+b10+carry1, carry10=Math.floor(tensSum/10), tensDigit=tensSum%10;
-      const hundredsSum = a100+b100+carry10;
-      const usesHundreds = (a>=100 || b>=100);
-
-      const steps=[];
-      steps.push({ prompt: shortLineBreaks(`${emoji} Add the ones.\n\n${a1} + ${b1} = ?`), expected: onesSum });
-      steps.push({ prompt: shortLineBreaks(`${emoji} Ones digit is ${onesDigit}.\n\nType ${onesDigit}.`), expected: onesDigit });
-      steps.push({ prompt: shortLineBreaks(`${emoji} Add the tens.\n\n${a10} + ${b10}` + (carry1?` + ${carry1}`:"") + ` = ?`), expected: tensSum });
-      steps.push({ prompt: shortLineBreaks(`${emoji} Tens digit is ${tensDigit}.\n\nType ${tensDigit}.`), expected: tensDigit });
-
-      if (usesHundreds) {
-        const final = hundredsSum*100 + tensDigit*10 + onesDigit;
-        steps.push({ prompt: shortLineBreaks(`${emoji} Add the hundreds.\n\n${a100} + ${b100}` + (carry10?` + ${carry10}`:"") + ` = ?`), expected: hundredsSum });
-        steps.push({ prompt: shortLineBreaks(`${emoji} Put it together.\n\nWhat is ${a} + ${b}?`), expected: final });
-      } else {
-        const final = tensDigit*10 + onesDigit;
-        steps.push({ prompt: shortLineBreaks(`${emoji} Put it together.\n\nWhat is ${a} + ${b}?`), expected: final });
-      }
+      steps.push({ prompt: shortLineBreaks(`${emoji} Final step:\n\nSo what is ${A} × ${B}?`), expected: A*B });
       return steps;
     }
-
-    if (op === "-") {
-      if (age <= 7 && a <= 20 && b <= 20) {
-        return [{ prompt: shortLineBreaks(`${emoji} Start at ${a}.\nCount back ${b}.\n\nWhere do you land?`), expected: a-b }];
-      }
-
-      const a1=ones(a), b1=ones(b), a10=tens(a), b10=tens(b), a100=hundreds(a), b100=hundreds(b);
-      const usesHundreds=(a>=100 || b>=100);
-
-      if (a1 >= b1) {
-        const onesRes=a1-b1, tensRes=a10-b10, hundredsRes=a100-b100;
-        const steps=[
-          { prompt: shortLineBreaks(`${emoji} Ones:\n\n${a1} - ${b1} = ?`), expected: onesRes },
-          { prompt: shortLineBreaks(`${emoji} Tens:\n\n${a10} - ${b10} = ?`), expected: tensRes },
-        ];
-        if (usesHundreds) {
-          steps.push({ prompt: shortLineBreaks(`${emoji} Hundreds:\n\n${a100} - ${b100} = ?`), expected: hundredsRes });
-          steps.push({ prompt: shortLineBreaks(`${emoji} Put it together.\n\nWhat is ${a} - ${b}?`), expected: hundredsRes*100 + tensRes*10 + onesRes });
-        } else {
-          steps.push({ prompt: shortLineBreaks(`${emoji} Put it together.\n\nWhat is ${a} - ${b}?`), expected: tensRes*10 + onesRes });
-        }
-        return steps;
-      }
-
-      const newOnes = a1 + 10;
-      const newTens = a10 - 1;
-      const onesRes = newOnes - b1;
-      const tensRes = newTens - b10;
-
-      const steps=[
-        { prompt: shortLineBreaks(`${emoji} Swap 1 ten for 10 ones.\n\nOnes become ${newOnes}.\n\nType ${newOnes}.`), expected: newOnes },
-        { prompt: shortLineBreaks(`${emoji} Ones:\n\n${newOnes} - ${b1} = ?`), expected: onesRes },
-        { prompt: shortLineBreaks(`${emoji} Tens:\n\n${newTens} - ${b10} = ?`), expected: tensRes },
-      ];
-      if (usesHundreds) {
-        const hundredsRes = a100 - b100;
-        steps.push({ prompt: shortLineBreaks(`${emoji} Hundreds:\n\n${a100} - ${b100} = ?`), expected: hundredsRes });
-        steps.push({ prompt: shortLineBreaks(`${emoji} Put it together.\n\nWhat is ${a} - ${b}?`), expected: hundredsRes*100 + tensRes*10 + onesRes });
-      } else {
-        steps.push({ prompt: shortLineBreaks(`${emoji} Put it together.\n\nWhat is ${a} - ${b}?`), expected: tensRes*10 + onesRes });
-      }
-      return steps;
-    }
-
-    if (op === "×") {
-      if (age <= 7 && b <= 4) {
-        let total=0; const steps=[];
-        for (let i=1;i<=b;i++){
-          const prev=total; total+=a;
-          steps.push({ prompt: shortLineBreaks(`${emoji} Step ${i}:\n\n${prev} + ${a} = ?`), expected: total });
-        }
-        steps.push({ prompt: shortLineBreaks(`${emoji} Final:\n\nSo what is ${a} × ${b}?`), expected: a*b });
-        return steps;
-      }
-      return [{ prompt: shortLineBreaks(`${emoji} Think of groups.\n\n${a} × ${b} means ${b} groups of ${a}.\n\nWhat is ${a} × ${b}?`), expected: a*b }];
-    }
-
-    if (op === "÷") {
-      const final = a/b;
-      if (age <= 7) {
-        return [{ prompt: shortLineBreaks(`${emoji} Share ${a} into groups of ${b}.\n\nHow many in each group?`), expected: final }];
-      }
-      return [
-        { prompt: shortLineBreaks(`${emoji} How many groups of ${b} fit into ${a}?`), expected: final },
-        { prompt: shortLineBreaks(`${emoji} Quick check.\n\n${final} × ${b} = ?`), expected: a },
-      ];
-    }
-
-    return [];
+    return [{ prompt: shortLineBreaks(`${emoji} Think of groups.\n\n${A} × ${B} means ${B} groups of ${A}.\n\nWhat is ${A} × ${B}?`), expected: A*B }];
   }
 
-  async function giveMathFeedback_AI(q, childAnswerText){
-    const prompt = `
+  if (op === "÷"){
+    const emoji = kidTonePrefix();
+    const final = A / B;
+    if (age <= 7){
+      return [{ prompt: shortLineBreaks(`${emoji} Sharing time.\n\nShare ${A} into groups of ${B}.\n\nHow many in each group?`), expected: final }];
+    }
+    return [
+      { prompt: shortLineBreaks(`${emoji} How many groups of ${B} fit into ${A}?`), expected: final },
+      { prompt: shortLineBreaks(`${emoji} Quick check.\n\n${final} × ${B} = ?`), expected: A }
+    ];
+  }
+
+  return [];
+}
+
+/* =======================
+   AI FEEDBACK + HINT
+======================= */
+async function giveMathFeedback_AI(q, childAnswerText){
+  const prompt = `
 You are Learnlio AI, a child-safe UK tutor.
 Child: ${childName}, age ${childAge}
 Maths area: ${area}
@@ -726,25 +943,31 @@ Write a short response:
 - Do NOT ask a new question.
 ${baseRules()}
 `;
-    return await callBackend(prompt);
+  return await callBackend(prompt);
+}
+
+async function requestHint(){
+  if (!currentQuestion){
+    addBotMessage("I can give a hint once you have a question on the screen. 😊");
+    return;
   }
+  if (guided.active){
+    addBotMessage("We’re already doing this step by step.\n\nTry the step on the screen first. 😊");
+    return;
+  }
+  if (hintUsedForCurrent){
+    addBotMessage("You’ve already got the hint for this one.\n\nHave another try! 😊");
+    return;
+  }
+  hintUsedForCurrent = true;
 
-  async function requestHint(){
-    if (!currentQuestion) {
-      addBotMessage("I can give a hint once you have a question on the screen. 😊");
-      return;
-    }
-    if (guided.active) {
-      addBotMessage("We’re already doing this step by step.\n\nTry the step on the screen first. 😊");
-      return;
-    }
-    if (hintUsedForCurrent) {
-      addBotMessage("You’ve already got the hint for this one.\n\nHave another try! 😊");
-      return;
-    }
-    hintUsedForCurrent = true;
+  // Log hint request
+  logSessionItemSafe({
+    itemType: "hint",
+    promptText: `Hint requested for: ${currentQuestion.displayText}`
+  });
 
-    const hintPrompt = `
+  const hintPrompt = `
 You are Learnlio AI, a child-safe UK tutor.
 Child: ${childName}, age ${childAge}
 Maths area: ${area}
@@ -758,213 +981,342 @@ Do NOT give the final answer.
 End with a gentle question.
 ${baseRules()}
 `;
-    const hintReply = await callBackend(hintPrompt);
-    addBotMessage(hintReply);
-  }
+  const hintReply = await callBackend(hintPrompt);
+  addBotMessage(hintReply, { showHint:false, showNext:false });
+}
 
-  function showActionButtons(buttons){
-    areaSelection.innerHTML = "";
-    buttons.forEach(b => {
-      const btn = document.createElement("button");
-      btn.innerText = b.label;
-      btn.onclick = b.onClick;
-      areaSelection.appendChild(btn);
-    });
-    areaSelection.style.display = "block";
-  }
+/* =======================
+   NEXT QUESTION BUTTON
+======================= */
+function handleNextQuestion(){
+  if (!waitingForNextButton) return;
 
-  async function saveSessionToSupabase(summaryText){
-    try{
-      await supa.from("sessions").insert([{
-        parent_user_id: parentUserId,
-        child_id: childId,
-        subject: subject || null,
-        area: area || null,
-        questions_done: questionsAnswered,
-        correct_count: correctCount,
-        badges: badges.join(" "),
-        summary: summaryText || null,
-        raw_log: sessionLog
-      }]);
-    }catch(e){
-      // silent fail (don’t break chat)
-      console.warn("Save session failed", e);
-    }
-  }
-
-  function endSessionUI(){
-    calculator.style.display = "none";
+  if (sessionComplete()){
     waitingForNextButton = false;
-    currentQuestion = null;
-    hintUsedForCurrent = false;
-    guided.active = false; guided.steps = []; guided.idx = 0;
+    endSessionUI();
+    return;
+  }
 
-    addBotMessage(`✅ That’s the end for today, ${childName}.\n\nYou did really well.`);
+  waitingForNextButton = false;
+  currentQuestion = generateMathQuestion();
+  if (!currentQuestion){
+    addBotMessage("Sorry — I couldn’t make a new question right now. Please try again.");
+    return;
+  }
+  showMathQuestion(currentQuestion);
+}
 
-    const nextSubject = (subject === "Maths") ? "English" : "Maths";
+/* =======================
+   END OF SESSION UI + PDF
+======================= */
+async function endSessionUI(){
+  calculator.style.display = "none";
+  waitingForNextButton = false;
+  currentQuestion = null;
+  hintUsedForCurrent = false;
+  guided.active = false; guided.steps = []; guided.idx = 0;
 
-    showActionButtons([
-      {
-        label: `Try ${nextSubject} next`,
-        onClick: () => {
-          addUserMessage(`Try ${nextSubject}`);
-          areaSelection.style.display = "none";
-          disableInput(false);
-          selectSubject(nextSubject);
-        }
-      },
-      {
-        label: "Finished for today ✅",
-        onClick: async () => {
-          addUserMessage("Finished for today");
-          areaSelection.style.display = "none";
-          disableInput(true);
+  addBotMessage(`✅ That’s the end for today, ${childName}.\n\nYou did really well.`);
 
-          await saveSessionToSupabase("Session ended by user.");
-          showFinishOptions();
-        }
+  // Close session in Supabase
+  if (sessionId){
+    await endSessionSafe(sessionId);
+  }
+
+  const nextSubject = (subject === "Maths") ? "English" : "Maths";
+
+  showActionButtons([
+    {
+      label: `Try ${nextSubject} next`,
+      onClick: () => {
+        addUserMessage(`Try ${nextSubject}`);
+        areaSelection.style.display = "none";
+        disableInput(false);
+        selectSubject(nextSubject);
       }
-    ]);
-
-    disableInput(true);
-  }
-
-  function showFinishOptions(){
-    addBotMessage("Would you like a parent summary?");
-
-    showActionButtons([
-      {
-        label: "Download parent summary (PDF) 📄",
-        onClick: async () => {
-          addUserMessage("Download parent summary (PDF)");
-          areaSelection.style.display = "none";
-          await saveSessionToSupabase("Parent summary downloaded.");
-          downloadParentSummaryPDF();
-        }
-      },
-      {
-        label: "Start a new session 🔄",
-        onClick: () => {
-          addUserMessage("Start a new session");
-          areaSelection.style.display = "none";
-          resetSessionProgress();
-          progressHeader.style.display = "none";
-          subject = null; area = null;
-          disableInput(false);
-          stage = "subjectSelect";
-          addBotMessage(`What would you like to work on now, ${childName}?`);
-          subjectSelection.style.display = "block";
-        }
+    },
+    {
+      label: "Finished for today ✅",
+      onClick: () => {
+        addUserMessage("Finished for today");
+        areaSelection.style.display = "none";
+        showFinishOptions();
       }
-    ]);
-  }
+    }
+  ]);
 
-  async function downloadParentSummaryPDF(){
-    try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      let y = 14;
+  disableInput(true);
+}
 
-      doc.setFontSize(18);
-      doc.text("Learnlio Parent Summary", 14, y); y += 10;
+function showFinishOptions(){
+  addBotMessage("Would you like a parent summary?");
 
-      doc.setFontSize(12);
-      doc.text(`Child: ${childName}`, 14, y); y += 7;
-      doc.text(`Age: ${childAge}`, 14, y); y += 7;
-      doc.text(`Subject: ${subject || "-"}`, 14, y); y += 7;
-      doc.text(`Area: ${area || "-"}`, 14, y); y += 7;
-      doc.text(`Date: ${nowTs()}`, 14, y); y += 10;
-
-      doc.text(`Questions completed: ${questionsAnswered} / ${maxQuestions}`, 14, y); y += 7;
-      if (subject === "Maths") { doc.text(`Correct answers: ${correctCount}`, 14, y); y += 7; }
-      doc.text(`Badges: ${badges.length ? badges.join(" ") : "None"}`, 14, y); y += 10;
-
-      doc.setFontSize(13);
-      doc.text("Suggested next steps:", 14, y); y += 8;
-      doc.setFontSize(12);
-
-      const plan = (subject === "Maths")
-        ? [
-            "1) Practise number facts for 5 minutes (calm and slow).",
-            "2) Do 3 easy questions, then 2 medium questions.",
-            "3) Encourage step-by-step working."
-          ]
-        : [
-            "1) Read together for 10 minutes (short, calm paragraphs).",
-            "2) Practise 5 spellings using “look, cover, write, check”.",
-            "3) Write 3 short sentences using one new word."
-          ];
-      plan.forEach(line => { doc.text(line, 14, y); y += 7; });
-
-      y += 6;
-      doc.text("Session notes:", 14, y); y += 7;
-
-      const lines = [];
-      for (const entry of sessionLog.slice(0, 12)) {
-        const q = entry.question ? `Q: ${entry.question}` : "";
-        const a = entry.childAnswer ? `A: ${entry.childAnswer}` : "";
-        const c = (subject === "Maths" && entry.correct !== null) ? `(${entry.correct ? "Correct" : "Try again"})` : "";
-        const line = `${q} ${a} ${c}`.trim();
-        if (line) lines.push(line);
+  showActionButtons([
+    {
+      label: "Download parent summary (PDF) 📄",
+      onClick: () => {
+        addUserMessage("Download parent summary (PDF)");
+        areaSelection.style.display = "none";
+        downloadParentSummaryPDF();
       }
-      if (!lines.length) lines.push("No detailed log saved.");
-
-      lines.forEach(line => {
-        const wrapped = doc.splitTextToSize(line, 180);
-        wrapped.forEach(w => {
-          if (y > 280) { doc.addPage(); y = 14; }
-          doc.text(w, 14, y);
-          y += 6;
-        });
-      });
-
-      doc.save(`Learnlio-Parent-Summary-${childName || "Child"}.pdf`);
-      addBotMessage("✅ Download started.\n\nWould you like to start a new session?");
-    } catch (e) {
-      addBotMessage("Sorry — I couldn’t create the PDF on this device/browser.\n\nPlease try another browser.");
-    }
-  }
-
-  function handleNextQuestion(){
-    if (!waitingForNextButton) return;
-    if (sessionComplete()) {
-      waitingForNextButton = false;
-      endSessionUI();
-      return;
-    }
-    waitingForNextButton = false;
-    currentQuestion = generateMathQuestion();
-    if (!currentQuestion) {
-      addBotMessage("Sorry — I couldn’t make a new question right now. Please try again.");
-      return;
-    }
-    showMathQuestion(currentQuestion);
-  }
-
-  // Subject/Area selection
-  function showAreaSelection(options){
-    areaSelection.innerHTML = "";
-    options.forEach(opt => {
-      const btn = document.createElement("button");
-      btn.innerText = opt.label;
-      btn.onclick = async () => {
-        addUserMessage(opt.label);
+    },
+    {
+      label: "Start a new session 🔄",
+      onClick: async () => {
+        addUserMessage("Start a new session");
         areaSelection.style.display = "none";
 
-        area = opt.area;
+        // End old session (just in case)
+        if (sessionId){
+          await endSessionSafe(sessionId);
+        }
+        sessionId = null;
+
         resetSessionProgress();
+        progressHeader.style.display = "none";
+
+        subject = null; area = null;
         disableInput(false);
-        guided.active = false; guided.steps=[]; guided.idx=0;
 
-        if (subject === "Maths") {
-          calculator.style.display = "block";
-          currentQuestion = generateMathQuestion();
-          showMathQuestion(currentQuestion);
-        } else {
-          calculator.style.display = "none";
-          currentQuestion = null;
+        addBotMessage(`What would you like to work on now, ${childName}?`);
+        subjectSelection.style.display = "block";
+      }
+    }
+  ]);
+}
 
-          const prompt = `
+async function downloadParentSummaryPDF(){
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let y = 14;
+
+    doc.setFontSize(18);
+    doc.text("Learnlio Parent Summary", 14, y); y += 10;
+
+    doc.setFontSize(12);
+    doc.text(`Child: ${childName}`, 14, y); y += 7;
+    doc.text(`Age: ${childAge}`, 14, y); y += 7;
+    doc.text(`Subject: ${subject || "-"}`, 14, y); y += 7;
+    doc.text(`Area: ${area || "-"}`, 14, y); y += 7;
+    doc.text(`Date: ${nowTs()}`, 14, y); y += 10;
+
+    doc.text(`Questions completed: ${questionsAnswered} / ${maxQuestions}`, 14, y); y += 7;
+    if (subject === "Maths") { doc.text(`Correct answers: ${correctCount}`, 14, y); y += 7; }
+    doc.text(`Badges: ${badges.length ? badges.join(" ") : "None"}`, 14, y); y += 10;
+
+    doc.setFontSize(13);
+    doc.text("Suggested next steps:", 14, y); y += 8;
+    doc.setFontSize(12);
+
+    const plan = (subject === "Maths")
+      ? [
+          "1) Practise number facts for 5 minutes (calm and slow).",
+          "2) Do 3 easy questions, then 2 medium questions.",
+          "3) Encourage step-by-step working."
+        ]
+      : [
+          "1) Read together for 10 minutes (short, calm paragraphs).",
+          "2) Practise 5 spellings using “look, cover, write, check”.",
+          "3) Write 3 short sentences using one new word."
+        ];
+    plan.forEach(line => { doc.text(line, 14, y); y += 7; });
+
+    y += 6;
+    doc.text("Session notes:", 14, y); y += 7;
+
+    const lines = [];
+    for (const entry of sessionLog.slice(0, 14)){
+      const q = entry.question ? `Q: ${entry.question}` : "";
+      const a = entry.childAnswer ? `A: ${entry.childAnswer}` : "";
+      const c = (subject === "Maths" && entry.correct !== null) ? `(${entry.correct ? "Correct" : "Try again"})` : "";
+      const line = `${q} ${a} ${c}`.trim();
+      if (line) lines.push(line);
+    }
+    if (!lines.length) lines.push("No detailed log saved.");
+
+    lines.forEach(line => {
+      const wrapped = doc.splitTextToSize(line, 180);
+      wrapped.forEach(w => {
+        if (y > 280) { doc.addPage(); y = 14; }
+        doc.text(w, 14, y);
+        y += 6;
+      });
+    });
+
+    doc.save(`Learnlio-Parent-Summary-${childName || "Child"}.pdf`);
+    addBotMessage("✅ Download started.\n\nWould you like to start a new session?");
+  }catch(e){
+    addBotMessage("Sorry — I couldn’t create the PDF on this device/browser.\n\nPlease try another browser.");
+  }
+}
+
+/* =======================
+   SUPABASE: B1 FUNCTIONS
+======================= */
+async function startSessionSafe({ childId, subject, area, questionsTarget }){
+  try{
+    const payload = {
+      child_id: childId,
+      owner_id: user.id,
+      subject,
+      area,
+      questions_target: questionsTarget,
+      questions_answered: 0,
+      correct_count: 0,
+      badges: []
+    };
+    const { data, error } = await supabase
+      .from("sessions")
+      .insert(payload)
+      .select("id")
+      .single();
+    if (error) throw error;
+    return data.id;
+  }catch(e){
+    console.error("startSession failed:", e);
+    return null;
+  }
+}
+
+async function logSessionItemSafe({ itemType, promptText=null, childText=null, isCorrect=null, meta={} }){
+  try{
+    if (!sessionId) return;
+    const payload = {
+      session_id: sessionId,
+      child_id: childId,
+      owner_id: user.id,
+      item_type: itemType,
+      prompt_text: promptText,
+      child_text: childText,
+      is_correct: isCorrect,
+      meta
+    };
+    const { error } = await supabase.from("session_items").insert(payload);
+    if (error) throw error;
+  }catch(e){
+    console.error("logSessionItem failed:", e);
+  }
+}
+
+async function updateSessionCountersSafe(){
+  try{
+    if (!sessionId) return;
+    const { error } = await supabase
+      .from("sessions")
+      .update({
+        questions_answered: questionsAnswered,
+        correct_count: correctCount,
+        badges: badges
+      })
+      .eq("id", sessionId);
+    if (error) throw error;
+  }catch(e){
+    console.error("updateSessionCounters failed:", e);
+  }
+}
+
+async function endSessionSafe(id){
+  try{
+    const { error } = await supabase
+      .from("sessions")
+      .update({ ended_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) throw error;
+  }catch(e){
+    console.error("endSession failed:", e);
+  }
+}
+
+async function loadProgressSafe({ subject, area }){
+  try{
+    const { data, error } = await supabase
+      .from("child_progress")
+      .select("difficulty, streak_correct, streak_wrong")
+      .eq("owner_id", user.id)
+      .eq("child_id", childId)
+      .eq("subject", subject)
+      .eq("area", area)
+      .maybeSingle();
+    if (error) throw error;
+    return data || null;
+  }catch(e){
+    console.error("loadProgress failed:", e);
+    return null;
+  }
+}
+
+async function upsertProgressSafe(){
+  try{
+    const payload = {
+      owner_id: user.id,
+      child_id: childId,
+      subject,
+      area,
+      difficulty: clampDifficulty(difficulty),
+      streak_correct: streakCorrect,
+      streak_wrong: streakWrong,
+      last_session_id: sessionId,
+      last_seen_at: new Date().toISOString()
+    };
+    const { error } = await supabase
+      .from("child_progress")
+      .upsert(payload, { onConflict: "child_id,subject,area" });
+    if (error) throw error;
+  }catch(e){
+    console.error("upsertProgress failed:", e);
+  }
+}
+
+/* =======================
+   SUBJECT + AREA SELECTION
+======================= */
+function showAreaSelection(options){
+  areaSelection.innerHTML = "";
+  options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.innerText = opt.label;
+    btn.onclick = async () => {
+      addUserMessage(opt.label);
+      areaSelection.style.display = "none";
+
+      area = opt.area;
+
+      // reset session counters + UI
+      resetSessionProgress();
+      disableInput(false);
+
+      // load saved progress for this child/subject/area
+      const p = await loadProgressSafe({ subject, area });
+      difficulty = clampDifficulty(p?.difficulty ?? 1);
+      streakCorrect = p?.streak_correct ?? 0;
+      streakWrong = p?.streak_wrong ?? 0;
+
+      // start a Supabase session
+      sessionId = await startSessionSafe({
+        childId,
+        subject,
+        area,
+        questionsTarget: maxQuestions
+      });
+
+      guided.active = false; guided.steps = []; guided.idx = 0;
+      hintUsedForCurrent = false;
+      waitingForNextButton = false;
+
+      if (subject === "Maths"){
+        calculator.style.display = "block";
+        currentQuestion = generateMathQuestion();
+        if (!currentQuestion){
+          addBotMessage("Sorry — I couldn’t make a question right now.");
+          return;
+        }
+        showMathQuestion(currentQuestion);
+      }else{
+        calculator.style.display = "none";
+        currentQuestion = null;
+
+        const prompt = `
 You are Learnlio AI, a child-safe UK tutor.
 Child: ${childName}, age ${childAge}
 English area: ${area}
@@ -974,167 +1326,249 @@ Keep it dyslexia-friendly.
 End with a gentle question to begin.
 ${baseRules()}
 `;
-          const reply = await callBackend(prompt);
-          addBotMessage(reply);
-        }
-      };
-      areaSelection.appendChild(btn);
-    });
-    areaSelection.style.display = "block";
+        const reply = await callBackend(prompt);
+        addBotMessage(reply);
+      }
+    };
+    areaSelection.appendChild(btn);
+  });
+  areaSelection.style.display = "block";
+}
+
+window.selectSubject = function(selected){
+  subject = selected;
+  subjectSelection.style.display = "none";
+  areaSelection.style.display = "none";
+
+  // reset per-subject state
+  area = null;
+  currentQuestion = null;
+  waitingForNextButton = false;
+  hintUsedForCurrent = false;
+  guided.active = false; guided.steps = []; guided.idx = 0;
+
+  progressHeader.style.display = "none";
+  calculator.style.display = "none";
+  disableInput(false);
+
+  // end any existing Supabase session when switching subjects
+  if (sessionId){
+    endSessionSafe(sessionId);
+    sessionId = null;
   }
 
-  window.selectSubject = function(selected){
-    subject = selected;
-    subjectSelection.style.display = "none";
-    inputContainer.style.display = "flex";
-    stage = "normalChat";
+  if (selected === "Maths"){
+    addBotMessage("✏️ Great!\n\nWhich Maths area would you like to try first?");
+    showAreaSelection([
+      { label:"Addition ➕", area:"Addition" },
+      { label:"Subtraction ➖", area:"Subtraction" },
+      { label:"Multiplication ✖️", area:"Multiplication" },
+      { label:"Division ➗", area:"Division" }
+    ]);
+  }else{
+    addBotMessage("📚 Great!\n\nWhich English area would you like to practise?");
+    showAreaSelection([
+      { label:"Reading aloud 📖", area:"Reading" },
+      { label:"Spelling 📝", area:"Spelling" },
+      { label:"Sentence building ✍️", area:"Sentence building" },
+      { label:"Fun word games 🎲", area:"Word games" }
+    ]);
+  }
+};
 
-    area = null;
-    currentQuestion = null;
-    waitingForNextButton = false;
-    hintUsedForCurrent = false;
-    guided.active = false; guided.steps=[]; guided.idx=0;
+/* =======================
+   MAIN INPUT HANDLER
+======================= */
+async function handleInput(){
+  const text = input.value.trim();
+  if (!text) return;
+  if (input.disabled) return;
 
-    progressHeader.style.display = "none";
-    disableInput(false);
+  addUserMessage(text);
+  input.value = "";
 
-    if (selected === "Maths") {
-      calculator.style.display = "none";
-      addBotMessage(`✏️ Hi ${childName}!\n\nWhich Maths area would you like to try first?`);
-      showAreaSelection([
-        { label: "Addition ➕", area: "Addition" },
-        { label: "Subtraction ➖", area: "Subtraction" },
-        { label: "Multiplication ✖️", area: "Multiplication" },
-        { label: "Division ➗", area: "Division" }
-      ]);
-    } else {
-      calculator.style.display = "none";
-      addBotMessage(`📚 Hi ${childName}!\n\nWhich English area would you like to practise?`);
-      showAreaSelection([
-        { label: "Reading aloud 📖", area: "Reading" },
-        { label: "Spelling 📝", area: "Spelling" },
-        { label: "Sentence building ✍️", area: "Sentence building" },
-        { label: "Fun word games 🎲", area: "Word games" }
-      ]);
-    }
-  };
+  // Must have chosen subject+area
+  if (!subject){
+    addBotMessage("Please choose Maths or English using the buttons.");
+    subjectSelection.style.display = "block";
+    return;
+  }
+  if (!area){
+    addBotMessage("Please choose an area using the buttons.");
+    return;
+  }
 
-  // Main input handler
-  async function handleInput(){
-    const text = input.value.trim();
-    if (!text) return;
-
-    if (stage === "subjectSelect") {
-      input.value = "";
-      addBotMessage("Please choose Maths or English using the buttons below.");
+  /* --------- MATHS --------- */
+  if (subject === "Maths"){
+    if (!currentQuestion){
+      addBotMessage("Please start a Maths area first using the buttons.");
       return;
     }
 
-    if (input.disabled) return;
+    // If session done
+    if (sessionComplete()){
+      await endSessionUI();
+      return;
+    }
 
-    addUserMessage(text);
-    input.value = "";
+    // Guided mode checks “step answers”
+    if (guided.active){
+      const n = parseChildNumber(text);
+      const step = guided.steps[guided.idx];
+      const ok = (n !== null && Math.abs(n - step.expected) < 1e-9);
 
-    // Maths flow
-    if (subject === "Maths") {
-      if (!area || !currentQuestion) {
-        addBotMessage("Please choose a Maths area first using the buttons.");
-        return;
-      }
+      sessionLog.push({
+        ts: nowTs(),
+        subject, area,
+        question: `[Guided step ${guided.idx + 1}/${guided.steps.length}]`,
+        childAnswer: text,
+        correct: ok
+      });
 
-      if (sessionComplete()) { endSessionUI(); return; }
+      await logSessionItemSafe({
+        itemType: "answer",
+        promptText: `[Guided step ${guided.idx + 1}/${guided.steps.length}]`,
+        childText: text,
+        isCorrect: ok
+      });
 
-      // Guided validation
-      if (guided.active) {
-        const n = parseChildNumber(text);
-        const step = guided.steps[guided.idx];
-        const ok = (n !== null && Math.abs(n - step.expected) < 1e-9);
+      if (ok){
+        guided.idx += 1;
 
-        sessionLog.push({ ts: nowTs(), subject, area, question: `[Guided step ${guided.idx+1}/${guided.steps.length}]`, childAnswer: text, correct: ok });
-
-        if (ok) {
-          guided.idx += 1;
-
-          if (guided.idx < guided.steps.length) {
-            addBotMessage(`✅ Nice work!\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${guided.steps[guided.idx].prompt}`);
-            return;
-          }
-
-          guided.active = false; guided.steps=[]; guided.idx=0;
-
-          questionsAnswered += 1;
-          correctCount += 1;
-          maybeAwardBadge();
-          updateProgressUI();
-          maybeRewardMessage();
-
-          sessionLog.push({ ts: nowTs(), subject, area, question: currentQuestion.displayText, childAnswer: "(completed via guided steps)", correct: true });
-
-          if (sessionComplete()) { endSessionUI(); return; }
-
-          waitingForNextButton = true;
-          addBotMessage(`Brilliant, ${childName}!\n\nThat is correct.\n\nReady for the next one?`, {showHint:false, showNext:true});
-          return;
-        } else {
-          addBotMessage(`Good try, ${childName}.\n\nLet’s do the same step again.\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${step.prompt}`);
+        if (guided.idx < guided.steps.length){
+          addBotMessage(
+            `✅ Nice work!\n\nStep ${guided.idx + 1} of ${guided.steps.length}:\n\n${guided.steps[guided.idx].prompt}`
+          );
           return;
         }
-      }
 
-      // Normal marking
-      const n = parseChildNumber(text);
-      const correct = (n !== null && Math.abs(n - currentQuestion.correctAnswer) < 1e-9);
-      sessionLog.push({ ts: nowTs(), subject, area, question: currentQuestion.displayText, childAnswer: text, correct });
+        // Question completed via guided steps
+        guided.active = false; guided.steps = []; guided.idx = 0;
 
-      if (correct) {
         questionsAnswered += 1;
         correctCount += 1;
+
         maybeAwardBadge();
         updateProgressUI();
         maybeRewardMessage();
 
-        const reply = await giveMathFeedback_AI(currentQuestion, text);
-        waitingForNextButton = true;
+        updateDifficultyAfterResult(true);
+        await upsertProgressSafe();
+        await updateSessionCountersSafe();
 
-        if (sessionComplete()) {
-          addBotMessage(reply);
-          endSessionUI();
+        if (sessionComplete()){
+          await endSessionUI();
           return;
         }
 
-        addBotMessage(reply, {showHint:false, showNext:true});
+        waitingForNextButton = true;
+        addBotMessage(
+          `Brilliant, ${childName}!\n\nThat is correct.\n\nReady for the next one?`,
+          { showHint:false, showNext:true }
+        );
+        return;
+      }else{
+        updateDifficultyAfterResult(false);
+        await upsertProgressSafe();
+
+        addBotMessage(
+          `Good try, ${childName}.\n\nLet’s do the same step again.\n\nStep ${guided.idx + 1} of ${guided.steps.length}:\n\n${step.prompt}`
+        );
+        return;
+      }
+    }
+
+    // Normal marking (final answer)
+    const n = parseChildNumber(text);
+    const correct = (n !== null && Math.abs(n - currentQuestion.correctAnswer) < 1e-9);
+
+    sessionLog.push({
+      ts: nowTs(),
+      subject, area,
+      question: currentQuestion.displayText,
+      childAnswer: text,
+      correct
+    });
+
+    await logSessionItemSafe({
+      itemType: "answer",
+      promptText: currentQuestion.displayText,
+      childText: text,
+      isCorrect: correct
+    });
+
+    if (correct){
+      questionsAnswered += 1;
+      correctCount += 1;
+
+      maybeAwardBadge();
+      updateProgressUI();
+      maybeRewardMessage();
+
+      updateDifficultyAfterResult(true);
+      await upsertProgressSafe();
+      await updateSessionCountersSafe();
+
+      const reply = await giveMathFeedback_AI(currentQuestion, text);
+      waitingForNextButton = true;
+
+      if (sessionComplete()){
+        addBotMessage(reply);
+        await endSessionUI();
         return;
       }
 
-      // Incorrect -> guided mode
-      const steps = buildGuidedSteps(currentQuestion);
-      if (steps.length) {
-        guided.active = true;
-        guided.steps = steps;
-        guided.idx = 0;
-        addBotMessage(`Good try, ${childName}.\n\nLet’s go slowly.\nOne small step at a time.\n\nStep 1 of ${guided.steps.length}:\n\n${guided.steps[0].prompt}`);
-        return;
-      }
-
-      addBotMessage("Good try.\n\nLet’s try again.\n\nWhat do you think the answer is?", {showHint:true});
+      addBotMessage(reply, { showHint:false, showNext:true });
       return;
     }
 
-    // English flow
-    if (subject === "English") {
-      if (!area) {
-        addBotMessage("Please choose an English area first using the buttons.");
-        return;
-      }
+    // Incorrect -> start guided mode
+    updateDifficultyAfterResult(false);
+    await upsertProgressSafe();
 
-      if (sessionComplete()) { endSessionUI(); return; }
+    const steps = buildGuidedSteps(currentQuestion);
+    if (steps.length){
+      guided.active = true;
+      guided.steps = steps;
+      guided.idx = 0;
 
-      questionsAnswered += 1;
-      updateProgressUI();
+      addBotMessage(
+        `Good try, ${childName}.\n\nLet’s go slowly.\nOne small step at a time.\n\nStep 1 of ${guided.steps.length}:\n\n${guided.steps[0].prompt}`
+      );
+      return;
+    }
 
-      sessionLog.push({ ts: nowTs(), subject, area, question: "(English turn)", childAnswer: text, correct: null });
+    addBotMessage("Good try.\n\nLet’s try again.\n\nWhat do you think the answer is?", { showHint:true, showNext:false });
+    return;
+  }
 
-      const prompt = `
+  /* --------- ENGLISH --------- */
+  if (subject === "English"){
+    if (sessionComplete()){
+      await endSessionUI();
+      return;
+    }
+
+    questionsAnswered += 1;
+    updateProgressUI();
+    await updateSessionCountersSafe();
+
+    sessionLog.push({
+      ts: nowTs(),
+      subject, area,
+      question: "(English turn)",
+      childAnswer: text,
+      correct: null
+    });
+
+    await logSessionItemSafe({
+      itemType: "answer",
+      promptText: "(English turn)",
+      childText: text,
+      isCorrect: null
+    });
+
+    const prompt = `
 You are Learnlio AI, a child-safe UK tutor.
 Child: ${childName}, age ${childAge}
 English area: ${area}
@@ -1146,25 +1580,198 @@ Use very simple words.
 Keep it dyslexia-friendly (extra spacing, short lines).
 Give one next step only.
 End with a gentle question.
-
 ${baseRules()}
 `;
-      const reply = await callBackend(prompt);
-      addBotMessage(reply);
+    const reply = await callBackend(prompt);
+    addBotMessage(reply);
 
-      if (sessionComplete()) endSessionUI();
-      return;
+    if (sessionComplete()){
+      await endSessionUI();
     }
   }
+}
 
-  sendBtn.addEventListener("click", handleInput);
-  input.addEventListener("keypress", e => { if (e.key === "Enter") handleInput(); });
+/* =======================
+   CHILD PROFILE LOADING
+======================= */
+function computeAgeFromDob(dobStr){
+  if (!dobStr) return null;
+  const d = new Date(dobStr);
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age;
+}
 
-  // Start
-  addBotMessage(`👋 Hi ${childName}!\n\nI’ll help you learn step by step.\n\nWhat are we working on today?`);
+async function loadChildProfile(){
+  // expects public.children has at least: id, owner_id, name (or child_name), dob or age
+  const { data, error } = await supabase
+    .from("children")
+    .select("*")
+    .eq("id", childId)
+    .eq("owner_id", user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const name = data.name || data.child_name || data.childName || "";
+  let age = data.age || data.child_age || data.childAge || null;
+
+  if (!age && data.dob){
+    const computed = computeAgeFromDob(data.dob);
+    if (computed !== null) age = computed;
+  }
+
+  return { raw:data, name, age: age !== null ? String(age) : "" };
+}
+
+/* If child name/age missing, ask once and save to children table */
+async function promptAndSaveMissingChildFields(existing){
+  // We do a simple “two-step” prompt in chat UI.
+  childName = existing.name || "";
+  childAge  = existing.age || "";
+
+  if (childName && childAge) return;
+
+  disableInput(false);
+  subjectSelection.style.display = "none";
+  areaSelection.style.display = "none";
+  calculator.style.display = "none";
+  progressHeader.style.display = "none";
+
+  if (!childName){
+    addBotMessage("Hi!\n\nI’m Learnlio AI.\n\nWhat is the child’s first name?");
+    await waitForOneUserReply(async (reply) => {
+      childName = reply.trim();
+      addBotMessage(`Thanks!\n\nHow old is ${childName}?`);
+    });
+
+    await waitForOneUserReply(async (reply) => {
+      childAge = reply.trim();
+    });
+  }else if (!childAge){
+    addBotMessage(`Hi ${childName}!\n\nHow old are you?`);
+    await waitForOneUserReply(async (reply) => {
+      childAge = reply.trim();
+    });
+  }
+
+  // Save back to children table
+  try{
+    const update = {};
+    if (childName) update.name = childName;
+    // store either "age" field if exists; if your table uses different field name, change this:
+    if (childAge) update.age = parseInt(childAge, 10);
+
+    const { error } = await supabase
+      .from("children")
+      .update(update)
+      .eq("id", childId)
+      .eq("owner_id", user.id);
+
+    if (error) throw error;
+  }catch(e){
+    console.error("Saving child fields failed:", e);
+    addBotMessage("I saved what I could.\n\nIf anything looks wrong, please update the child on the Dashboard.");
+  }
+}
+
+/* Wait for exactly one user reply, temporarily overriding handlers */
+function waitForOneUserReply(onReply){
+  return new Promise((resolve) => {
+    const oldClick = sendBtn.onclick;
+
+    const handler = async () => {
+      const t = input.value.trim();
+      if (!t) return;
+      addUserMessage(t);
+      input.value = "";
+      await onReply(t);
+      sendBtn.removeEventListener("click", handler);
+      input.removeEventListener("keypress", keyHandler);
+      resolve();
+    };
+
+    const keyHandler = (e) => { if (e.key === "Enter") handler(); };
+
+    sendBtn.addEventListener("click", handler);
+    input.addEventListener("keypress", keyHandler);
+  });
+}
+
+/* =======================
+   AUTH + INIT
+======================= */
+async function init(){
+  hideNotice();
+  disableInput(true);
+  subjectSelection.style.display = "none";
+  areaSelection.style.display = "none";
+  calculator.style.display = "none";
+
+  // Auth
+  const { data: u, error: uErr } = await supabase.auth.getUser();
+  user = u?.user || null;
+
+  if (uErr || !user){
+    window.location.href = LOGIN_PAGE;
+    return;
+  }
+
+  // Logout
+  logoutBtn.onclick = async () => {
+    await supabase.auth.signOut();
+    window.location.href = LOGIN_PAGE;
+  };
+
+  // Child selection
+  childId = getParam("child_id");
+  if (!childId){
+    showNotice("No child selected.\n\nGo back to the Dashboard and choose a child first.");
+    addBotMessage("I can’t find a child profile.\n\nPlease go back to the Dashboard to add or select a child.");
+    disableInput(true);
+    return;
+  }
+
+  // Load child profile
+  let child = null;
+  try{
+    child = await loadChildProfile();
+  }catch(e){
+    console.error(e);
+  }
+
+  if (!child){
+    showNotice("Child not found.\n\nMake sure you selected the correct child on the Dashboard.");
+    addBotMessage("I can’t find a child profile.\n\nPlease go back to the Dashboard to add a child.");
+    disableInput(true);
+    return;
+  }
+
+  // Save name+age into runtime (and prompt if missing)
+  childName = child.name || "";
+  childAge  = child.age || "";
+
+  disableInput(false);
+
+  if (!childName || !childAge){
+    await promptAndSaveMissingChildFields(child);
+  }
+
+  // Welcome
+  addBotMessage(`👋 Hello ${childName}!\n\nWhat are we working on today?`);
   subjectSelection.style.display = "block";
-});
+  disableInput(false);
+
+  // Wire default handlers
+  sendBtn.addEventListener("click", handleInput);
+  input.addEventListener("keypress", (e) => { if (e.key === "Enter") handleInput(); });
+}
+
+init();
 </script>
 </body>
 </html>
-
