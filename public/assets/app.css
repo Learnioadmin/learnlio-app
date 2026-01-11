@@ -244,3 +244,19 @@ a{
     width:100%;
   }
 }
+/* --- Fix: logo size + alignment --- */
+.brand-logo{
+  width:28px !important;
+  height:28px !important;
+  border-radius:8px !important;
+  object-fit:contain !important;
+}
+
+.brand{
+  gap:8px !important;
+}
+
+.brand-name{
+  font-size:16px !important;
+  line-height:1 !important;
+}
