@@ -1,54 +1,627 @@
 <!doctype html>
 <html lang="en-GB">
-<div class="topbar">
-  <div class="topbar-inner">
-    <a class="brand" href="/dash.html">
-      <img class="brand-logo" src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp" alt="Learnlio logo" />
-      <div class="brand-name">Learnlio</div>
-    </a>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Learnlio Reports</title>
 
-    <div class="nav">
-      <a href="/dash.html" data-nav="dash">Dash</a>
-      <a href="/chat.html" data-nav="chat">Chat</a>
-      <a href="/screener.html" data-nav="screener">Screener</a>
-      <a href="/reports.html" data-nav="reports">Reports</a>
-      <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
-    </div>
-  </div>
-</div>
+  <!-- Dyslexia-friendly font -->
+  <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
+
+  <!-- jsPDF (for generating a simple downloadable PDF report) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --border:#e5e7eb;
+      --shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      --blue:#2563eb;
+      --blue2:#1d4ed8;
+      --pill:#eef2ff;
+      --good:#10b981;
+      --warn:#f59e0b;
+      --font:'OpenDyslexic', Arial, sans-serif;
+      --max: 1040px;
+    }
+
+    * { box-sizing: border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:var(--font);
+      line-height:1.7;
+    }
+
+    /* --- Top bar (match other pages) --- */
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-inner{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 10px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 180px;
+    }
+    .brand img{
+      height: 34px;
+      width: auto;
+      display:block;
+      border-radius: 8px;
+    }
+    .brand .title{
+      font-size: 14px;
+      line-height: 1.2;
+      color: var(--muted);
+    }
+
+    .nav{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    .nav a{
+      text-decoration:none;
+      color: var(--text);
+      background: var(--pill);
+      border: 1px solid #dbeafe;
+      padding: 9px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      transition: 0.15s ease;
+    }
+    .nav a:hover{ transform: translateY(-1px); }
+    .nav a.active{
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    /* --- Layout --- */
+    .wrap{
+      max-width: var(--max);
+      margin: 18px auto;
+      padding: 0 16px 28px;
+    }
+    .page-head{
+      margin: 12px 0 14px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    h1{
+      margin:0;
+      font-size: 22px;
+      line-height:1.3;
+    }
+    .subtitle{
+      margin:6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 780px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 14px;
+      align-items:start;
+    }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .row{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      justify-content: space-between;
+    }
+
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #14532d;
+    }
+
+    .btn{
+      border:none;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 15px;
+      cursor:pointer;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      text-align:center;
+      transition: 0.12s ease;
+      font-family: var(--font);
+      width: 100%;
+    }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn.primary{
+      background: var(--blue);
+      border-color: var(--blue);
+      color:#fff;
+    }
+    .btn.primary:hover{ background: var(--blue2); }
+    .btn.good{
+      background: var(--good);
+      border-color: var(--good);
+      color:#fff;
+    }
+    .btn.warn{
+      background: var(--warn);
+      border-color: var(--warn);
+      color:#111827;
+    }
+
+    .muted{ color: var(--muted); font-size: 13px; }
+
+    .kv{
+      display:grid;
+      grid-template-columns: 140px 1fr;
+      gap: 8px 12px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .kv div:nth-child(odd){ color: var(--muted); }
+
+    .bar{
+      width:100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow:hidden;
+      border: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .bar > div{
+      height: 10px;
+      width: 0%;
+      background: var(--good);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .list{
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .list li{ margin: 6px 0; }
+
+    .empty{
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px dashed var(--border);
+      background: #fafafa;
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 520px){
+      .brand .title{ display:none; }
+      .nav a{ padding: 9px 10px; }
+      .kv{ grid-template-columns: 120px 1fr; }
+    }
+  </style>
+</head>
 
 <body>
-  <div class="topbar">
+
+  <!-- Top menu -->
+  <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="/dash.html">
-        <div class="brand-badge">L</div>
-        <div class="brand-name">Learnlio</div>
-      </a>
-      <div class="nav">
-        <a href="/dash.html" data-nav="dash">Dash</a>
-        <a href="/chat.html" data-nav="chat">Chat</a>
-        <a href="/screener.html" data-nav="screener">Screener</a>
-        <a href="/reports.html" data-nav="reports">Reports</a>
-        <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
+      <div class="brand">
+        <img
+          src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp"
+          alt="Learnlio"
+        />
+        <div class="title">Learnlio • Beta</div>
       </div>
-    </div>
-  </div>
 
-  <div class="container page">
-    <div class="card card-pad">
-      <h1 class="h1">Dashboard</h1>
-      <p class="small">Next we’ll add: child picker + last screener + start buttons.</p>
+      <nav class="nav">
+        <a href="/dash.html">🏠 Dash</a>
+        <a href="/tutor.html">💬 Learnlio Tutor</a>
+        <a href="/screener.html">🧠 Dyslexia Screener</a>
+        <a class="active" href="/reports.html">📄 Reports</a>
+      </nav>
     </div>
-  </div>
+  </header>
 
-  <script>
-    const path = location.pathname;
-    const map = { "/dash.html":"dash", "/chat.html":"chat", "/screener.html":"screener", "/reports.html":"reports" };
-    const key = map[path];
-    if (key) {
-      const el = document.querySelector(`[data-nav="${key}"]`);
-      if (el) el.classList.add("active");
+  <main class="wrap">
+    <div class="page-head">
+      <div>
+        <h1>Reports</h1>
+        <p class="subtitle">
+          Download a simple parent-friendly summary. This uses what is saved on this device.
+          (On Softr free, progress doesn’t sync across devices yet.)
+        </p>
+      </div>
+      <div class="pill" id="statusPill">📍 Status: Checking…</div>
+    </div>
+
+    <div class="grid">
+
+      <!-- Main report preview -->
+      <section class="card">
+        <div class="row">
+          <div>
+            <div style="font-size:16px; margin:0;">Parent Summary Preview</div>
+            <div class="muted" id="lastUpdated">Last updated: —</div>
+          </div>
+        </div>
+
+        <div class="kv" id="kv">
+          <div>Child</div><div id="childName">—</div>
+          <div>Age</div><div id="childAge">—</div>
+          <div>Last subject</div><div id="lastSubject">—</div>
+          <div>Last area</div><div id="lastArea">—</div>
+          <div>Badges</div><div id="badges">—</div>
+        </div>
+
+        <div style="margin-top:12px; font-size:14px; color:var(--muted);">Session progress</div>
+        <div class="bar"><div id="progressFill"></div></div>
+        <div class="muted" id="progressText" style="margin-top:6px;">—</div>
+
+        <div style="margin-top:14px; font-size:14px; color:var(--muted);">Suggested next steps</div>
+        <ul class="list" id="planList"></ul>
+
+        <div id="logBlock" style="margin-top:14px;">
+          <div style="font-size:14px; color:var(--muted);">Recent session notes</div>
+          <div class="empty" id="logEmpty">No session notes found on this device yet.</div>
+          <ul class="list" id="logList" style="display:none;"></ul>
+        </div>
+      </section>
+
+      <!-- Actions -->
+      <aside class="card">
+        <div style="font-size:16px; margin:0;">Actions</div>
+        <div class="muted" style="margin-top:6px;">
+          If the tutor just finished a session, download the PDF here.
+        </div>
+
+        <div style="margin-top:12px; display:grid; gap:10px;">
+          <button class="btn primary" id="btnDownload">Download parent summary (PDF) 📄</button>
+          <button class="btn" id="btnReset">Reset local report data (this device)</button>
+          <button class="btn good" onclick="window.location.href='/tutor.html'">Go to Tutor</button>
+          <button class="btn" onclick="window.location.href='/dash.html'">Back to Dash</button>
+        </div>
+
+        <div class="empty" style="margin-top:12px;">
+          <strong>Tip:</strong> For now, reports are “device-based”.
+          Later we can store reports in Airtable / a backend so it syncs across devices.
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+<script>
+(function(){
+  const LOGO_URL = "https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp";
+
+  // These keys match the patterns we’ve used (and are safe to change later)
+  // If your tutor page uses different keys, tell me the exact key names and I’ll align them.
+  const keys = {
+    childName: "childName",
+    childAge: "childAge",
+    lastSubject: "learnlio_last_subject",
+    lastArea: "learnlio_last_area",
+    badges: "learnlio_badges",
+    progressDone: "learnlio_progress_done",
+    progressMax: "learnlio_progress_max",
+    correctCount: "learnlio_correct_count",
+    lastUpdated: "learnlio_last_updated",
+    sessionLog: "learnlio_session_log" // JSON array
+  };
+
+  // Elements
+  const statusPill = document.getElementById("statusPill");
+  const lastUpdatedEl = document.getElementById("lastUpdated");
+
+  const childNameEl = document.getElementById("childName");
+  const childAgeEl = document.getElementById("childAge");
+  const lastSubjectEl = document.getElementById("lastSubject");
+  const lastAreaEl = document.getElementById("lastArea");
+  const badgesEl = document.getElementById("badges");
+
+  const progressFill = document.getElementById("progressFill");
+  const progressText = document.getElementById("progressText");
+
+  const planList = document.getElementById("planList");
+
+  const logEmpty = document.getElementById("logEmpty");
+  const logList = document.getElementById("logList");
+
+  const btnDownload = document.getElementById("btnDownload");
+  const btnReset = document.getElementById("btnReset");
+
+  function safeGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function safeSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+  function safeRemove(k){ try { localStorage.removeItem(k); } catch(e){} }
+
+  function parseJSON(value, fallback){
+    try { return JSON.parse(value); } catch(e){ return fallback; }
+  }
+
+  function nowGB(){
+    return new Date().toLocaleString("en-GB");
+  }
+
+  function setStatus(text, type){
+    statusPill.textContent = text;
+    // simple styling via class-less pill swapping
+    if(type === "good"){
+      statusPill.style.background = "#f0fdf4";
+      statusPill.style.borderColor = "#bbf7d0";
+      statusPill.style.color = "#14532d";
+    } else if(type === "warn"){
+      statusPill.style.background = "#fff7ed";
+      statusPill.style.borderColor = "#fed7aa";
+      statusPill.style.color = "#9a3412";
+    } else {
+      statusPill.style.background = "#eef2ff";
+      statusPill.style.borderColor = "#dbeafe";
+      statusPill.style.color = "#1e3a8a";
     }
-  </script>
+  }
+
+  function buildPlan(subject, age){
+    const a = parseInt(age || "10", 10);
+    const simple = a <= 7;
+
+    if(subject === "English"){
+      return [
+        simple ? "Read together for 5 minutes (short, calm lines)." : "Read together for 10 minutes (short, calm paragraphs).",
+        "Pick 5 tricky words. Practise: look, cover, write, check.",
+        "Write 3 short sentences. Keep them simple."
+      ];
+    }
+
+    // Maths default
+    return [
+      simple ? "Practise number facts for 3 minutes (slow and calm)." : "Practise number facts for 5 minutes (slow and calm).",
+      "Do 3 easy questions first. Then 2 slightly harder questions.",
+      "Encourage step-by-step working (ones, tens, hundreds)."
+    ];
+  }
+
+  function render(){
+    const childName = safeGet(keys.childName) || "—";
+    const childAge = safeGet(keys.childAge) || "—";
+
+    const lastSubject = safeGet(keys.lastSubject) || "—";
+    const lastArea = safeGet(keys.lastArea) || "—";
+    const badges = safeGet(keys.badges) || "—";
+
+    const done = parseInt(safeGet(keys.progressDone) || "0", 10);
+    const max = parseInt(safeGet(keys.progressMax) || "0", 10);
+    const correct = parseInt(safeGet(keys.correctCount) || "0", 10);
+
+    const lastUpdated = safeGet(keys.lastUpdated) || "—";
+
+    childNameEl.textContent = childName;
+    childAgeEl.textContent = childAge;
+    lastSubjectEl.textContent = lastSubject;
+    lastAreaEl.textContent = lastArea;
+    badgesEl.textContent = badges;
+
+    lastUpdatedEl.textContent = "Last updated: " + lastUpdated;
+
+    // Progress
+    if(max > 0){
+      const pct = Math.min(100, Math.round((done / max) * 100));
+      progressFill.style.width = pct + "%";
+      progressText.textContent = `${done} / ${max} steps completed${(correct || correct===0) ? ` • Correct: ${correct}` : ""}`;
+      setStatus("✅ Status: Report ready", "good");
+    } else {
+      progressFill.style.width = "0%";
+      progressText.textContent = "No tutor session saved on this device yet.";
+      setStatus("📍 Status: No report found", "warn");
+    }
+
+    // Plan
+    planList.innerHTML = "";
+    const plan = buildPlan(lastSubject, childAge);
+    plan.forEach(line => {
+      const li = document.createElement("li");
+      li.textContent = line;
+      planList.appendChild(li);
+    });
+
+    // Log
+    const rawLog = safeGet(keys.sessionLog);
+    const log = parseJSON(rawLog, []);
+    if(Array.isArray(log) && log.length){
+      logEmpty.style.display = "none";
+      logList.style.display = "block";
+      logList.innerHTML = "";
+
+      log.slice(-8).reverse().forEach(entry => {
+        const li = document.createElement("li");
+        const q = entry.question ? `Q: ${entry.question}` : "";
+        const a = entry.childAnswer ? `A: ${entry.childAnswer}` : "";
+        const c = (entry.correct === true) ? "✅" : (entry.correct === false ? "↩️" : "");
+        li.textContent = [c, q, a].filter(Boolean).join("  ");
+        logList.appendChild(li);
+      });
+    } else {
+      logEmpty.style.display = "block";
+      logList.style.display = "none";
+    }
+  }
+
+  async function loadImageAsDataURL(url){
+    // Convert logo into dataURL so jsPDF can embed it.
+    // If browser blocks cross-origin fetch, we fall back without logo.
+    try{
+      const res = await fetch(url, { mode: "cors" });
+      const blob = await res.blob();
+      return await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    }catch(e){
+      return null;
+    }
+  }
+
+  function wrapText(doc, text, x, y, maxWidth, lineHeight){
+    const lines = doc.splitTextToSize(text, maxWidth);
+    lines.forEach(line => {
+      doc.text(line, x, y);
+      y += lineHeight;
+    });
+    return y;
+  }
+
+  btnDownload.addEventListener("click", async () => {
+    const { jsPDF } = window.jspdf;
+
+    const childName = safeGet(keys.childName) || "—";
+    const childAge = safeGet(keys.childAge) || "—";
+    const lastSubject = safeGet(keys.lastSubject) || "—";
+    const lastArea = safeGet(keys.lastArea) || "—";
+    const badges = safeGet(keys.badges) || "—";
+    const done = parseInt(safeGet(keys.progressDone) || "0", 10);
+    const max = parseInt(safeGet(keys.progressMax) || "0", 10);
+    const correct = parseInt(safeGet(keys.correctCount) || "0", 10);
+    const lastUpdated = safeGet(keys.lastUpdated) || nowGB();
+
+    const rawLog = safeGet(keys.sessionLog);
+    const log = parseJSON(rawLog, []);
+
+    const doc = new jsPDF();
+    let y = 14;
+
+    // Try to include logo (best effort)
+    const logoData = await loadImageAsDataURL(LOGO_URL);
+    if(logoData){
+      try{
+        doc.addImage(logoData, "PNG", 14, y, 26, 26);
+      }catch(e){}
+    }
+
+    doc.setFontSize(18);
+    doc.text("Learnlio Parent Summary", 44, y + 10);
+    doc.setFontSize(11);
+    doc.text(`Generated: ${nowGB()}`, 44, y + 18);
+
+    y += 34;
+
+    doc.setFontSize(12);
+    doc.text(`Child: ${childName}`, 14, y); y += 7;
+    doc.text(`Age: ${childAge}`, 14, y); y += 7;
+    doc.text(`Subject: ${lastSubject}`, 14, y); y += 7;
+    doc.text(`Area: ${lastArea}`, 14, y); y += 7;
+    doc.text(`Last updated: ${lastUpdated}`, 14, y); y += 10;
+
+    doc.text(`Progress: ${done} / ${max || "—"}`, 14, y); y += 7;
+    if(!isNaN(correct) && lastSubject === "Maths"){
+      doc.text(`Correct answers: ${correct}`, 14, y); y += 7;
+    }
+    doc.text(`Badges: ${badges}`, 14, y); y += 10;
+
+    doc.setFontSize(13);
+    doc.text("Suggested next steps:", 14, y); y += 8;
+    doc.setFontSize(12);
+
+    const plan = buildPlan(lastSubject, childAge);
+    plan.forEach((line, idx) => {
+      y = wrapText(doc, `${idx+1}) ${line}`, 14, y, 180, 6);
+      y += 1;
+    });
+
+    y += 6;
+    doc.setFontSize(13);
+    doc.text("Recent session notes:", 14, y); y += 8;
+    doc.setFontSize(11);
+
+    if(Array.isArray(log) && log.length){
+      const slice = log.slice(-12);
+      slice.forEach((entry) => {
+        const q = entry.question ? `Q: ${entry.question}` : "";
+        const a = entry.childAnswer ? `A: ${entry.childAnswer}` : "";
+        const c = (entry.correct === true) ? "Correct" : (entry.correct === false ? "Try again" : "");
+        const line = [q, a, c ? `(${c})` : ""].filter(Boolean).join(" ");
+        y = wrapText(doc, line, 14, y, 180, 6);
+        y += 1;
+        if(y > 280){ doc.addPage(); y = 14; }
+      });
+    } else {
+      y = wrapText(doc, "No notes found on this device yet.", 14, y, 180, 6);
+    }
+
+    doc.save(`Learnlio-Report-${childName === "—" ? "Child" : childName}.pdf`);
+
+    // Update last updated stamp
+    safeSet(keys.lastUpdated, nowGB());
+    render();
+  });
+
+  btnReset.addEventListener("click", () => {
+    if(!confirm("Reset report data stored on this device?")) return;
+
+    Object.values(keys).forEach(k => safeRemove(k));
+    // Keep childName/childAge if you want; comment these out if you prefer to keep them:
+    // safeRemove(keys.childName);
+    // safeRemove(keys.childAge);
+
+    safeSet(keys.lastUpdated, nowGB());
+    render();
+  });
+
+  // If nothing has ever been saved, still set a timestamp so page feels alive
+  if(!safeGet(keys.lastUpdated)) safeSet(keys.lastUpdated, nowGB());
+
+  render();
+})();
+</script>
+
 </body>
 </html>
+
