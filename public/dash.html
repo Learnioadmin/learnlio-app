@@ -2,481 +2,340 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Learnlio • Dash</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio Dashboard</title>
 
-  <!-- Dyslexia-friendly font -->
-  <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root{
-      --bg:#f6f7fb;
+      --ink:#111827;
+      --muted:#6b7280;
       --card:#ffffff;
-      --text:#0f172a;
-      --muted:#475569;
+      --bg:#f3f4f6;
+      --blue:#007bff;
+      --blue2:#0056b3;
       --border:#e5e7eb;
-      --shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-      --blue:#2563eb;
-      --pill:#eef2ff;
-      --good:#10b981;
-      --warn:#f59e0b;
-      --danger:#ef4444;
-      --max: 1040px;
     }
-
-    *{ box-sizing:border-box; }
 
     body{
       margin:0;
       background:var(--bg);
-      color:var(--text);
-      font-family:'OpenDyslexic', Arial, sans-serif;
-      line-height:1.7;
+      color:var(--ink);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
-    /* Top bar */
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
+    /* NAV (same as screener / reports) */
+    .nav{
+      position:sticky; top:0; z-index:10;
+      background:#fff;
+      border-bottom:1px solid var(--border);
     }
-    .topbar-inner{
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: 10px 16px;
+    .nav-inner{
+      max-width:1100px;
+      margin:0 auto;
+      padding:10px 14px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap: 12px;
+      gap:12px;
     }
     .brand{
-      display:flex;
-      align-items:center;
-      gap: 10px;
-      min-width: 180px;
+      display:flex; align-items:center; gap:10px;
+      text-decoration:none; color:var(--ink);
     }
     .brand img{
-      height: 34px;
-      width: auto;
+      height:34px; width:auto;
+      border-radius:8px;
       display:block;
-      border-radius: 8px;
     }
-    .brand .title{
-      font-size: 14px;
-      line-height: 1.2;
-      color: var(--muted);
+    .brand-title{
+      font-weight:800;
     }
-    .nav{
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content:flex-end;
-      align-items:center;
+    .nav-links{
+      display:flex; gap:10px; flex-wrap:wrap;
     }
-    .nav a{
+    .nav-links a, .nav-links button{
+      font-size:14px;
       text-decoration:none;
-      color: var(--text);
-      background: var(--pill);
-      border: 1px solid #dbeafe;
-      padding: 9px 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      display:inline-flex;
-      align-items:center;
-      gap: 8px;
-      transition: 0.15s ease;
-      white-space: nowrap;
+      color:var(--ink);
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid transparent;
+      background:transparent;
+      cursor:pointer;
     }
-    .nav a:hover{ transform: translateY(-1px); }
-    .nav a.active{
-      background: var(--blue);
-      border-color: var(--blue);
-      color: #fff;
+    .nav-links a:hover, .nav-links button:hover{
+      background:#f9fafb;
+      border-color:var(--border);
     }
 
-    @media (max-width: 520px){
-      .brand .title{ display:none; }
-      .nav a{ padding: 9px 10px; }
+    .page{
+      max-width:1100px;
+      margin:0 auto;
+      padding:20px 14px 40px;
     }
 
-    /* Page layout */
-    .page-wrap{
-      max-width: var(--max);
-      margin: 18px auto;
-      padding: 0 16px 28px;
+    h1{
+      margin:0 0 6px;
+      font-size:26px;
+    }
+    .sub{
+      color:var(--muted);
+      margin-bottom:20px;
     }
 
-    .hero{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-    .hero h1{
-      margin:0;
-      font-size: 22px;
-      line-height: 1.3;
-    }
-    .hero p{
-      margin:6px 0 0 0;
-      color: var(--muted);
-      font-size: 14px;
-      max-width: 700px;
-    }
-
+    /* Cards */
     .grid{
       display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-top: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap:16px;
     }
-    @media (max-width: 860px){
-      .grid{ grid-template-columns: 1fr; }
-    }
-
     .card{
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      padding: 14px;
-    }
-    .card h2{
-      margin: 0 0 10px 0;
-      font-size: 16px;
-      line-height: 1.3;
-    }
-    .small{
-      color: var(--muted);
-      font-size: 14px;
-      margin: 0;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:16px;
+      box-shadow:0 4px 14px rgba(0,0,0,0.05);
     }
 
-    .quick-actions{
+    .child-name{
+      font-size:18px;
+      font-weight:700;
+      margin-bottom:4px;
+    }
+    .child-age{
+      color:var(--muted);
+      font-size:14px;
+      margin-bottom:12px;
+    }
+
+    .actions{
       display:flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
+      gap:8px;
+      flex-wrap:wrap;
     }
     .btn{
-      display:inline-flex;
-      align-items:center;
-      gap: 10px;
-      border: 1px solid var(--border);
-      background: #fff;
-      border-radius: 14px;
-      padding: 12px 14px;
-      text-decoration:none;
-      color: var(--text);
+      border:none;
+      border-radius:12px;
+      padding:10px 14px;
+      font-size:14px;
       cursor:pointer;
-      transition: 0.15s ease;
-      font-size: 14px;
-    }
-    .btn:hover{ transform: translateY(-1px); }
-    .btn.primary{
-      background: var(--blue);
-      border-color: var(--blue);
-      color: #fff;
-    }
-    .btn.good{
-      background: var(--good);
-      border-color: var(--good);
       color:#fff;
+      background:var(--blue);
+    }
+    .btn:hover{ background:var(--blue2); }
+    .btn.secondary{
+      background:#374151;
+    }
+    .btn.secondary:hover{
+      background:#1f2937;
     }
 
-    .pill{
-      display:inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      border: 1px solid var(--border);
-      background: #fff;
-      color: var(--muted);
-      margin-top: 8px;
+    /* Add child form */
+    .add-child{
+      margin-top:30px;
+      max-width:420px;
     }
-
-    .kv{
-      display:grid;
-      grid-template-columns: 140px 1fr;
-      gap: 8px 10px;
-      font-size: 14px;
-      margin-top: 10px;
-    }
-    .k{ color: var(--muted); }
-    .v{ color: var(--text); word-break: break-word; }
-
-    .note{
-      margin-top: 12px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .danger-area{
+    .field{
       display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 12px;
+      flex-direction:column;
+      gap:4px;
+      margin-bottom:12px;
     }
-    .btn.danger{
-      background: #fff;
-      border-color: #fecaca;
-      color: var(--danger);
+    .field label{
+      font-size:14px;
+      color:#374151;
     }
-    .btn.danger:hover{
-      border-color: var(--danger);
+    .field input{
+      padding:12px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      font-size:15px;
     }
 
-    .footer{
-      margin-top: 16px;
-      color: var(--muted);
-      font-size: 12px;
-      text-align:center;
+    .notice{
+      margin-top:12px;
+      font-size:14px;
+      color:#374151;
+    }
+
+    @media(max-width:480px){
+      .brand-title{ display:none; }
     }
   </style>
 </head>
 
 <body>
-
-  <!-- Top bar -->
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <img
-          src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp"
-          alt="Learnlio"
-        />
-        <div class="title">Learnlio • Beta</div>
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="dash.html">
+        <img src="assets/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <div class="brand-title">Learnlio</div>
+      </a>
+      <div class="nav-links">
+        <a href="dash.html" style="border-color:var(--border); background:#f9fafb;">Dashboard</a>
+        <a href="chat.html">Tutor</a>
+        <a href="screener.html">Screener</a>
+        <a href="reports.html">Reports</a>
+        <button id="logoutBtn">Log out</button>
       </div>
-
-      <nav class="nav">
-        <a href="/dash.html" id="navDash">🏠 Dash</a>
-        <a href="/chat.html" id="navChat">💬 Learnlio Tutor</a>
-        <a href="/screener.html" id="navScreener">🧠 Dyslexia Screener</a>
-        <a href="/reports.html" id="navReports">📄 Reports</a>
-      </nav>
     </div>
-  </header>
+  </div>
 
-  <main class="page-wrap">
+  <!-- PAGE -->
+  <div class="page">
+    <h1>Your children</h1>
+    <div class="sub">Choose a child to start learning</div>
 
-    <section class="hero">
-      <div>
-        <h1>Welcome to Learnlio</h1>
-        <p>
-          This is your dashboard.
-          Choose what you want to do today: tutoring, the dyslexia screener, or viewing reports.
-        </p>
-      </div>
-    </section>
+    <div id="childrenGrid" class="grid"></div>
 
-    <section class="grid">
+    <!-- Add child -->
+    <div class="add-child card">
+      <h2 style="margin-top:0;">Add a child</h2>
 
-      <!-- Quick start -->
-      <div class="card">
-        <h2>Quick start</h2>
-        <p class="small">Pick an activity to begin.</p>
-
-        <div class="quick-actions">
-          <a class="btn primary" href="/chat.html">💬 Start Learnlio Tutor</a>
-          <a class="btn good" href="/screener.html">🧠 Start Dyslexia Screener</a>
-          <a class="btn" href="/reports.html">📄 View Reports</a>
-        </div>
-
-        <div class="note">
-          Tip: If you’re on a shared device, use “Reset this device” at the bottom when finished.
-        </div>
+      <div class="field">
+        <label>Child’s name</label>
+        <input id="childName" placeholder="e.g. Ava">
       </div>
 
-      <!-- Child profile summary -->
-      <div class="card">
-        <h2>Child profile (this device)</h2>
-        <p class="small">
-          We use the name and age saved on this device to personalise activities.
-        </p>
-
-        <div class="kv">
-          <div class="k">Name</div>
-          <div class="v" id="childNameValue">—</div>
-
-          <div class="k">Age</div>
-          <div class="v" id="childAgeValue">—</div>
-
-          <div class="k">Status</div>
-          <div class="v" id="profileStatus">Not set</div>
-        </div>
-
-        <span class="pill" id="profilePill">No profile saved yet</span>
+      <div class="field">
+        <label>Date of birth</label>
+        <input id="childDob" type="date">
       </div>
 
-      <!-- Last session -->
-      <div class="card">
-        <h2>Last tutor session</h2>
-        <p class="small">If your Tutor page saves session data, it will appear here.</p>
-
-        <div class="kv">
-          <div class="k">Subject</div>
-          <div class="v" id="lastSubject">—</div>
-
-          <div class="k">Area</div>
-          <div class="v" id="lastArea">—</div>
-
-          <div class="k">Progress</div>
-          <div class="v" id="lastProgress">—</div>
-
-          <div class="k">Badges</div>
-          <div class="v" id="lastBadges">—</div>
-
-          <div class="k">Updated</div>
-          <div class="v" id="lastUpdated">—</div>
-        </div>
-
-        <div class="quick-actions" style="margin-top:12px;">
-          <a class="btn" href="/chat.html">Continue Tutor</a>
-          <a class="btn" href="/reports.html">Open Reports</a>
-        </div>
-      </div>
-
-      <!-- Last screener -->
-      <div class="card">
-        <h2>Last screener result</h2>
-        <p class="small">
-          If the screener stores results, you’ll see them here.
-        </p>
-
-        <div class="kv">
-          <div class="k">Result</div>
-          <div class="v" id="screenerResult">Not completed</div>
-
-          <div class="k">Date</div>
-          <div class="v" id="screenerDate">—</div>
-        </div>
-
-        <div class="quick-actions" style="margin-top:12px;">
-          <a class="btn" href="/screener.html">Start / Retake Screener</a>
-          <a class="btn" href="/reports.html">View Report</a>
-        </div>
-      </div>
-
-    </section>
-
-    <section class="card" style="margin-top:14px;">
-      <h2>Device controls</h2>
-      <p class="small">
-        This clears the name/age and local progress saved on this device only.
-      </p>
-
-      <div class="danger-area">
-        <button class="btn danger" id="resetDeviceBtn" type="button">Reset this device</button>
-      </div>
-
-      <div class="note" id="resetMsg" style="display:none;"></div>
-    </section>
-
-    <div class="footer">
-      © Learnlio • Beta
+      <button id="addChildBtn" class="btn">Add child</button>
+      <div id="formNotice" class="notice"></div>
     </div>
+  </div>
 
-  </main>
+<script>
+/* ================= CONFIG ================= */
+const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY";
+const LOGIN_PAGE = "login.html";
 
-  <script>
-    // Highlight active nav
-    (function(){
-      const el = document.getElementById("navDash");
-      if (el) el.classList.add("active");
-    })();
+/* ================= CLIENT ================= */
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Helpers
-    function safeGet(key){
-      try { return localStorage.getItem(key); } catch(e){ return null; }
-    }
-    function safeRemove(key){
-      try { localStorage.removeItem(key); } catch(e){}
-    }
+/* ================= ELEMENTS ================= */
+const grid = document.getElementById("childrenGrid");
+const addBtn = document.getElementById("addChildBtn");
+const nameInput = document.getElementById("childName");
+const dobInput = document.getElementById("childDob");
+const notice = document.getElementById("formNotice");
+const logoutBtn = document.getElementById("logoutBtn");
 
-    // Load profile
-    const childName = safeGet("childName");
-    const childAge = safeGet("childAge");
+let user = null;
 
-    const nameEl = document.getElementById("childNameValue");
-    const ageEl = document.getElementById("childAgeValue");
-    const statusEl = document.getElementById("profileStatus");
-    const pillEl = document.getElementById("profilePill");
+/* ================= HELPERS ================= */
+function ageFromDob(dob){
+  const d = new Date(dob);
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age;
+}
 
-    if (childName && childAge){
-      nameEl.textContent = childName;
-      ageEl.textContent = childAge;
-      statusEl.textContent = "Saved on this device";
-      pillEl.textContent = "Ready to personalise Tutor and Screener";
-      pillEl.style.borderColor = "#bbf7d0";
-      pillEl.style.color = "#166534";
-      pillEl.style.background = "#f0fdf4";
-    } else {
-      nameEl.textContent = childName || "—";
-      ageEl.textContent = childAge || "—";
-      statusEl.textContent = "Not set";
-      pillEl.textContent = "Open Tutor to set name and age";
-      pillEl.style.borderColor = "#fed7aa";
-      pillEl.style.color = "#9a3412";
-      pillEl.style.background = "#fff7ed";
-    }
+function childCard(child){
+  const age = child.dob ? ageFromDob(child.dob) : "—";
 
-    // Last tutor session (optional keys)
-    const lastSubject = safeGet("learnlio_last_subject");
-    const lastArea = safeGet("learnlio_last_area");
-    const done = safeGet("learnlio_progress_done");
-    const max = safeGet("learnlio_progress_max");
-    const badges = safeGet("learnlio_badges");
-    const updated = safeGet("learnlio_last_updated");
+  return `
+    <div class="card">
+      <div class="child-name">${child.name}</div>
+      <div class="child-age">Age ${age}</div>
+      <div class="actions">
+        <button class="btn" onclick="goTutor('${child.id}')">Tutor</button>
+        <button class="btn secondary" onclick="goScreener('${child.id}')">Screener</button>
+      </div>
+    </div>
+  `;
+}
 
-    document.getElementById("lastSubject").textContent = lastSubject || "—";
-    document.getElementById("lastArea").textContent = lastArea || "—";
-    document.getElementById("lastProgress").textContent = (done && max) ? (done + " / " + max) : "—";
-    document.getElementById("lastBadges").textContent = badges || "—";
-    document.getElementById("lastUpdated").textContent = updated || "—";
+window.goTutor = (id) => {
+  window.location.href = `chat.html?child_id=${id}`;
+};
+window.goScreener = (id) => {
+  window.location.href = `screener.html?child_id=${id}`;
+};
 
-    // Last screener result (optional keys)
-    const screenerScore = safeGet("learnlio_screener_score");
-    const screenerDate = safeGet("learnlio_screener_date");
+/* ================= LOAD ================= */
+async function loadChildren(){
+  const { data, error } = await supabase
+    .from("children")
+    .select("*")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: true });
 
-    document.getElementById("screenerResult").textContent =
-      screenerScore ? ("Completed (score: " + screenerScore + ")") : "Not completed";
-    document.getElementById("screenerDate").textContent = screenerDate || "—";
+  if (error){
+    grid.innerHTML = "<p>Could not load children.</p>";
+    return;
+  }
 
-    // Reset device
-    document.getElementById("resetDeviceBtn").addEventListener("click", () => {
-      const ok = confirm("Reset this device?\n\nThis clears name/age and saved progress on THIS device only.");
-      if (!ok) return;
+  if (!data.length){
+    grid.innerHTML = "<p>No children added yet.</p>";
+    return;
+  }
 
-      // profile
-      safeRemove("childName");
-      safeRemove("childAge");
+  grid.innerHTML = data.map(childCard).join("");
+}
 
-      // tutor/session
-      safeRemove("learnlio_last_subject");
-      safeRemove("learnlio_last_area");
-      safeRemove("learnlio_progress_done");
-      safeRemove("learnlio_progress_max");
-      safeRemove("learnlio_badges");
-      safeRemove("learnlio_last_updated");
-      safeRemove("learnlio_session_log");
+/* ================= ADD CHILD ================= */
+addBtn.onclick = async () => {
+  notice.innerText = "";
 
-      // screener
-      safeRemove("learnlio_screener_score");
-      safeRemove("learnlio_screener_date");
+  const name = nameInput.value.trim();
+  const dob = dobInput.value;
 
-      const msg = document.getElementById("resetMsg");
-      msg.style.display = "block";
-      msg.textContent = "✅ Device reset. Refreshing…";
-      msg.style.color = "#166534";
+  if (!name || !dob){
+    notice.innerText = "Please enter name and date of birth.";
+    return;
+  }
 
-      setTimeout(() => location.reload(), 600);
+  const { error } = await supabase
+    .from("children")
+    .insert({
+      owner_id: user.id,
+      name,
+      dob
     });
-  </script>
 
+  if (error){
+    notice.innerText = "Could not add child.";
+    return;
+  }
+
+  nameInput.value = "";
+  dobInput.value = "";
+  notice.innerText = "Child added ✔";
+
+  loadChildren();
+};
+
+/* ================= INIT ================= */
+async function init(){
+  const { data, error } = await supabase.auth.getUser();
+  user = data?.user || null;
+
+  if (!user){
+    window.location.href = LOGIN_PAGE;
+    return;
+  }
+
+  logoutBtn.onclick = async () => {
+    await supabase.auth.signOut();
+    window.location.href = LOGIN_PAGE;
+  };
+
+  loadChildren();
+}
+
+init();
+</script>
 </body>
 </html>
+
 
