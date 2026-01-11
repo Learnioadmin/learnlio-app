@@ -5,264 +5,420 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Learnlio Dyslexia Screener</title>
 
+  <!-- Dyslexia-friendly font -->
   <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#f7f7fb; --card:#fff; --text:#0f172a; --muted:#64748b;
-      --border:#e2e8f0; --primary:#007bff; --primaryHover:#0056b3;
-      --shadow:0 8px 24px rgba(15,23,42,.08); --radius:18px;
-      --soft:#fafafa; --warn:#fef3c7; --good:#ecfeff;
-    }
-    *{ box-sizing:border-box; }
-    body{ margin:0; font-family:"OpenDyslexic", Arial, sans-serif; color:var(--text); background:var(--bg); }
-
-    header.site-header{
-      position:sticky; top:0; z-index:999;
-      background:rgba(255,255,255,.92);
-      backdrop-filter:saturate(180%) blur(10px);
-      border-bottom:1px solid var(--border);
-    }
-    .header-inner{
-      max-width:1100px; margin:0 auto;
-      padding:10px 16px;
-      display:flex; align-items:center; justify-content:space-between; gap:14px;
-    }
-    .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; min-width:0; }
-    .logo-box{ width:140px; height:34px; display:flex; align-items:center; overflow:hidden; flex:0 0 auto; }
-
-    /* Defensive logo sizing even if global CSS exists */
-    header.site-header img{
-      width:auto !important;
-      max-width:140px !important;
-      height:34px !important;
-      max-height:34px !important;
-      object-fit:contain !important;
-      display:block !important;
-      margin:0 !important;
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --border:#e5e7eb;
+      --shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      --blue:#2563eb;
+      --blue2:#1d4ed8;
+      --pill:#eef2ff;
+      --warn:#f59e0b;
+      --good:#10b981;
+      --font:'OpenDyslexic', Arial, sans-serif;
+      --max: 1040px;
     }
 
-    .nav{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
-    .nav a{ text-decoration:none; font-size:13px; color:var(--muted); padding:8px 10px; border-radius:12px; }
-    .nav a:hover{ background:#eef2ff; color:var(--text); }
-    .nav a.active{ background:#dbeafe; color:#1d4ed8; }
+    * { box-sizing: border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:var(--font);
+      line-height:1.7;
+    }
 
-    .page{ max-width:1100px; margin:0 auto; padding:18px 16px 40px; }
-    .page-title h1{ margin:0; font-size:18px; }
-    .page-title p{ margin:6px 0 0; color:var(--muted); font-size:14px; line-height:1.6; }
+    /* --- Top bar (MATCH this across all pages) --- */
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-inner{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 10px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 180px;
+    }
+    .brand img{
+      height: 34px;       /* ✅ prevents huge logo */
+      width: auto;
+      display:block;
+      border-radius: 8px;
+    }
+    .brand .title{
+      font-size: 14px;
+      line-height: 1.2;
+      color: var(--muted);
+    }
 
-    .wrap{ display:flex; justify-content:center; }
+    .nav{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    .nav a{
+      text-decoration:none;
+      color: var(--text);
+      background: var(--pill);
+      border: 1px solid #dbeafe;
+      padding: 9px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      transition: 0.15s ease;
+    }
+    .nav a:hover{ transform: translateY(-1px); }
+    .nav a.active{
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    /* --- Page layout --- */
+    .wrap{
+      max-width: var(--max);
+      margin: 18px auto;
+      padding: 0 16px 28px;
+    }
+    .page-head{
+      margin: 12px 0 14px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    h1{
+      margin:0;
+      font-size: 22px;
+      line-height:1.3;
+    }
+    .subtitle{
+      margin:6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 780px;
+    }
+
     .card{
-      width:100%; max-width:720px;
-      background:var(--card); border:1px solid var(--border);
-      border-radius:var(--radius); padding:18px;
-      box-shadow:var(--shadow);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 16px;
     }
-    .info-box{
-      background:var(--soft); border:1px solid var(--border);
-      border-radius:14px; padding:14px 16px;
-      font-size:16px; line-height:1.8; margin-bottom:12px;
-    }
-    .progress-row{
-      display:flex; justify-content:space-between; align-items:center;
-      gap:10px; margin:10px 0 10px; font-size:14px; color:var(--muted);
-    }
-    .progress-track{ height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden; margin-bottom:12px; }
-    .progress-bar{ height:10px; width:0%; background:#10b981; }
 
-    .question-box{
-      background:var(--warn); border:1px solid #fde68a;
-      border-radius:14px; padding:16px;
-      font-size:18px; line-height:1.85; margin-bottom:14px;
-      min-height:60px;
+    /* --- Screener UI --- */
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
     }
-    .btn-grid{ display:grid; grid-template-columns:1fr; gap:10px; }
+
+    .progress-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .bar{
+      width:100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow:hidden;
+      border: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .bar > div{
+      height: 10px;
+      width: 0%;
+      background: var(--good);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .question{
+      margin-top: 14px;
+      font-size: 18px;
+      white-space: pre-wrap;
+    }
+
+    .answers{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
     .btn{
-      padding:14px; font-size:16px; border-radius:12px; border:none;
-      background:var(--primary); color:#fff; cursor:pointer;
+      border:none;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 16px;
+      cursor:pointer;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      text-align:left;
+      transition: 0.12s ease;
+      font-family: var(--font);
     }
-    .btn:hover{ background:var(--primaryHover); }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn.primary{
+      background: var(--blue);
+      border-color: var(--blue);
+      color:#fff;
+      text-align:center;
+    }
+    .btn.primary:hover{ background: var(--blue2); }
+
+    .note{
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
 
     .result{
-      display:none; margin-top:14px;
-      background:var(--good); border:1px solid #a5f3fc;
-      border-radius:14px; padding:16px;
-      font-size:16px; line-height:1.85;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      white-space: pre-wrap;
     }
-    .small{ font-size:13px; color:var(--muted); line-height:1.6; margin-top:10px; }
 
-    @media (max-width:520px){
-      .logo-box{ width:120px; height:30px; }
-      header.site-header img{
-        max-width:120px !important;
-        height:30px !important;
-        max-height:30px !important;
-      }
-      .card{ padding:14px; }
-      .question-box{ font-size:16px; }
+    @media (max-width: 520px){
+      .brand .title{ display:none; }
+      .nav a{ padding: 9px 10px; }
     }
   </style>
 </head>
 
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="/dash/">
-        <div class="logo-box">
-          <img src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp" alt="Learnlio" />
-        </div>
-      </a>
+
+  <!-- ✅ Top menu matches Dash/Tutor style -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img
+          src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp"
+          alt="Learnlio"
+        />
+        <div class="title">Learnlio • Beta</div>
+      </div>
 
       <nav class="nav">
-        <a href="/dash/">Dash</a>
-        <a href="/tutor/">Tutor</a>
-        <a class="active" href="/screener/">Screener</a>
+        <a href="/dash.html">🏠 Dash</a>
+        <a href="/tutor.html">💬 Learnlio Tutor</a>
+        <a class="active" href="/screener.html">🧠 Dyslexia Screener</a>
       </nav>
     </div>
   </header>
 
-  <main class="page">
-    <div class="page-title">
-      <h1>Dyslexia Screener</h1>
-      <p>A short, child-friendly check-in. Not a diagnosis.</p>
-    </div>
-
-    <div class="wrap">
-      <div class="card">
-        <div class="info-box">
-          <strong>Hi!</strong><br><br>
-          We’ll do a short activity.<br>
-          There are no right or wrong answers.<br><br>
-          Just choose what feels true for you. 😊
-        </div>
-
-        <div class="progress-row">
-          <div>Question <span id="qNow">1</span> of <span id="qTotal">6</span></div>
-          <div id="saveStatus">Ready</div>
-        </div>
-
-        <div class="progress-track">
-          <div class="progress-bar" id="progressBar"></div>
-        </div>
-
-        <div class="question-box" id="questionBox">Loading…</div>
-        <div class="btn-grid" id="buttons"></div>
-
-        <div class="result" id="resultBox"></div>
-
-        <div class="small">
-          For parents/carers: this is not a medical test.
-          It helps us choose supports that may suit your child.
-        </div>
+  <main class="wrap">
+    <div class="page-head">
+      <div>
+        <h1>Dyslexia Screener</h1>
+        <p class="subtitle">
+          This is a short, child-friendly check. It is not a diagnosis.
+          It can help you decide if you may want extra support.
+        </p>
       </div>
+
+      <div class="pill">⏱️ Takes about 3–5 minutes</div>
     </div>
+
+    <section class="card" id="app">
+      <div class="progress-row">
+        <div id="progressText">Progress: 0 / 8</div>
+        <div id="statusText" style="color:var(--muted); font-size:13px;">Choose the best answer.</div>
+      </div>
+      <div class="bar"><div id="barFill"></div></div>
+
+      <div class="question" id="question"></div>
+
+      <div class="answers" id="answers"></div>
+
+      <div class="note" id="note">
+        Tip: If you’re not sure, pick the closest answer. There are no “perfect” scores.
+      </div>
+
+      <div class="result" id="result" style="display:none;"></div>
+    </section>
   </main>
 
-  <script>
-    (function(){
-      const canStore = (() => {
-        try { localStorage.setItem("__t","1"); localStorage.removeItem("__t"); return true; }
-        catch(e){ return false; }
-      })();
+<script>
+(function(){
+  // Very lightweight “option 1” screener (no backend needed).
+  // You can expand this later and save results externally.
 
-      const questions = [
-        { id:"read_mix",   text:"When you read, do letters ever look mixed up or move?", weight:2 },
-        { id:"spell_hard", text:"Do you find spelling tricky, even after practice?", weight:2 },
-        { id:"slow_read",  text:"Do you read more slowly than other children your age?", weight:2 },
-        { id:"copy_hard",  text:"Is copying from a book or board hard for you?", weight:2 },
-        { id:"sound_help", text:"Is it easier when someone reads things out loud to you?", weight:1 },
-        { id:"numbers_mix",text:"Do numbers sometimes get mixed up (like 6 and 9)?", weight:1 }
-      ];
+  const questions = [
+    {
+      q: "When you read, do the words ever look like they move or jump?",
+      a: ["Never", "Sometimes", "Often"],
+      score: [0,1,2]
+    },
+    {
+      q: "Do you find it hard to remember spellings, even after practising?",
+      a: ["Not really", "A bit", "Yes, a lot"],
+      score: [0,1,2]
+    },
+    {
+      q: "Do you lose your place when reading a long line of text?",
+      a: ["No", "Sometimes", "Yes, often"],
+      score: [0,1,2]
+    },
+    {
+      q: "Do you mix up letters or numbers that look similar (b/d, p/q, 6/9)?",
+      a: ["No", "Sometimes", "Yes, often"],
+      score: [0,1,2]
+    },
+    {
+      q: "Is it easier to understand when someone explains it out loud?",
+      a: ["Not really", "Sometimes", "Yes, much easier"],
+      score: [0,1,2]
+    },
+    {
+      q: "Do you need extra time to read questions or finish work?",
+      a: ["No", "Sometimes", "Yes, often"],
+      score: [0,1,2]
+    },
+    {
+      q: "Do you avoid reading out loud at school or at home?",
+      a: ["No", "Sometimes", "Yes, often"],
+      score: [0,1,2]
+    },
+    {
+      q: "Do you find it hard to write sentences without mistakes?",
+      a: ["No", "Sometimes", "Yes, often"],
+      score: [0,1,2]
+    }
+  ];
 
-      const elQNow = document.getElementById("qNow");
-      const elQTotal = document.getElementById("qTotal");
-      const elProgressBar = document.getElementById("progressBar");
-      const elQuestion = document.getElementById("questionBox");
-      const elButtons = document.getElementById("buttons");
-      const elResult = document.getElementById("resultBox");
-      const elSave = document.getElementById("saveStatus");
+  let i = 0;
+  let total = 0;
 
-      elQTotal.textContent = String(questions.length);
-      elSave.textContent = canStore ? "Saving on this device" : "Saving blocked (browser settings)";
+  const questionEl = document.getElementById("question");
+  const answersEl = document.getElementById("answers");
+  const resultEl = document.getElementById("result");
+  const progressText = document.getElementById("progressText");
+  const statusText = document.getElementById("statusText");
+  const barFill = document.getElementById("barFill");
 
-      let idx = 0;
-      let score = 0;
-      let answers = [];
+  function render(){
+    resultEl.style.display = "none";
+    const q = questions[i];
+    progressText.textContent = `Progress: ${i} / ${questions.length}`;
+    statusText.textContent = "Choose the best answer.";
+    barFill.style.width = `${Math.round((i / questions.length) * 100)}%`;
 
-      function setProgress() {
-        elQNow.textContent = String(idx + 1);
-        const pct = Math.round((idx / questions.length) * 100);
-        elProgressBar.style.width = pct + "%";
-      }
+    questionEl.textContent = "🧠 " + q.q;
 
-      function renderQuestion() {
-        setProgress();
-        const q = questions[idx];
-        elQuestion.textContent = q.text;
-        elButtons.innerHTML = "";
+    answersEl.innerHTML = "";
+    q.a.forEach((label, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.type = "button";
+      btn.textContent = "• " + label;
+      btn.onclick = () => choose(idx);
+      answersEl.appendChild(btn);
+    });
+  }
 
-        const options = [
-          { label:"Yes", add:q.weight },
-          { label:"Sometimes", add:Math.ceil(q.weight / 2) },
-          { label:"No", add:0 }
-        ];
+  function choose(idx){
+    total += questions[i].score[idx];
+    i++;
 
-        options.forEach(opt => {
-          const b = document.createElement("button");
-          b.className = "btn";
-          b.type = "button";
-          b.textContent = opt.label;
-          b.addEventListener("click", () => choose(opt.add, opt.label));
-          elButtons.appendChild(b);
-        });
-      }
+    if(i < questions.length){
+      render();
+      return;
+    }
 
-      function choose(add, label) {
-        const q = questions[idx];
-        score += add;
-        answers.push({ id:q.id, q:q.text, a:label, add });
+    finish();
+  }
 
-        idx += 1;
-        if (idx < questions.length) renderQuestion();
-        else showResult();
-      }
+  function finish(){
+    progressText.textContent = `Progress: ${questions.length} / ${questions.length}`;
+    barFill.style.width = "100%";
+    statusText.textContent = "Done.";
 
-      function showResult() {
-        elProgressBar.style.width = "100%";
-        elQuestion.style.display = "none";
-        elButtons.style.display = "none";
+    answersEl.innerHTML = "";
 
-        let level, msg;
-        if (score <= 4) {
-          level = "Low indicators";
-          msg = "You show few signs linked with dyslexia.<br><br>Everyone learns in their own way. 🌱";
-        } else if (score <= 8) {
-          level = "Some indicators";
-          msg = "You show some signs linked with dyslexia.<br><br>Step-by-step support may help. 🌟";
-        } else {
-          level = "Higher indicators";
-          msg = "You show several signs linked with dyslexia.<br><br>This does not mean anything is ‘wrong’. 💙";
-        }
+    // Simple banding (not a diagnosis)
+    let band = "";
+    let advice = "";
 
-        elResult.innerHTML =
-          "<strong>Result: " + level + "</strong><br><br>" +
-          msg + "<br><br>" +
-          "Next: try the Tutor, and we’ll use extra-friendly learning steps.";
+    if(total <= 4){
+      band = "Low indicators";
+      advice = "This suggests fewer signs. If learning still feels hard, ask a teacher or parent for support.";
+    } else if(total <= 9){
+      band = "Some indicators";
+      advice = "This suggests some signs. It may help to try dyslexia-friendly support and speak to school.";
+    } else {
+      band = "Higher indicators";
+      advice = "This suggests more signs. Consider speaking to school/SENCO or a professional for advice.";
+    }
 
-        elResult.style.display = "block";
+    resultEl.style.display = "block";
+    resultEl.textContent =
+`✅ Screener complete
 
-        if (canStore) {
-          try {
-            localStorage.setItem("learnlio_screener_score", String(score));
-            localStorage.setItem("learnlio_screener_level", level);
-            localStorage.setItem("learnlio_screener_answers", JSON.stringify(answers));
-            localStorage.setItem("learnlio_screener_date", new Date().toISOString());
-          } catch(e) {}
-        }
-      }
+Result: ${band}
 
-      renderQuestion();
-    })();
-  </script>
+What this means:
+${advice}
+
+Next step:
+Tell a parent or teacher how reading and spelling feels for you.`;
+
+    // Optional: save locally so Dash can show “completed”
+    try {
+      localStorage.setItem("learnlio_screener_score", String(total));
+      localStorage.setItem("learnlio_screener_done", "true");
+      localStorage.setItem("learnlio_screener_date", new Date().toLocaleString("en-GB"));
+    } catch(e){}
+
+    // Buttons
+    const download = document.createElement("button");
+    download.className = "btn primary";
+    download.textContent = "Back to Dash";
+    download.onclick = () => window.location.href = "/dash.html";
+    answersEl.appendChild(download);
+  }
+
+  render();
+})();
+</script>
+
 </body>
 </html>
