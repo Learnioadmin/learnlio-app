@@ -1,47 +1,77 @@
 <!doctype html>
 <html lang="en-GB">
-<div class="topbar">
-  <div class="topbar-inner">
-    <a class="brand" href="/dash.html">
-      <img class="brand-logo" src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp" alt="Learnlio logo" />
-      <div class="brand-name">Learnlio</div>
-    </a>
-
-    <div class="nav">
-      <a href="/dash.html" data-nav="dash">Dash</a>
-      <a href="/chat.html" data-nav="chat">Chat</a>
-      <a href="/screener.html" data-nav="screener">Screener</a>
-      <a href="/reports.html" data-nav="reports">Reports</a>
-      <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
-    </div>
-  </div>
-</div>
-
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio – Dash</title>
+  <link rel="stylesheet" href="/assets/app.css" />
+</head>
 <body>
+
+  <!-- Header -->
   <div class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="/dash.html">
-        <div class="brand-badge">L</div>
+        <img class="brand-logo"
+             src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp"
+             alt="Learnlio logo" />
         <div class="brand-name">Learnlio</div>
       </a>
+
       <div class="nav">
         <a href="/dash.html" data-nav="dash">Dash</a>
-        <a href="/chat.html" data-nav="chat">Chat</a>
-        <a href="/screener.html" data-nav="screener">Screener</a>
+        <a href="/chat.html" data-nav="chat">Learnlio Tutor</a>
+        <a href="/screener.html" data-nav="screener">Dyslexia Screener</a>
         <a href="/reports.html" data-nav="reports">Reports</a>
         <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
       </div>
     </div>
   </div>
 
+  <!-- Page -->
   <div class="container page">
     <div class="card card-pad">
       <h1 class="h1">Dashboard</h1>
-      <p class="small">Next we’ll add: child picker + last screener + start buttons.</p>
+      <p class="small">
+        This is the hosted Learnlio app. Next we’ll add login + child profiles, so progress works across phone, tablet, and laptop.
+      </p>
+
+      <div class="spacer"></div>
+
+      <div class="grid">
+        <div class="card card-pad" style="box-shadow:var(--shadow-soft);">
+          <h2 class="h2">Start learning</h2>
+          <p class="small">Jump straight into tutoring.</p>
+          <div class="spacer"></div>
+          <a class="btn btn-primary" href="/chat.html" style="width:100%;">Open Learnlio Tutor</a>
+        </div>
+
+        <div class="card card-pad" style="box-shadow:var(--shadow-soft);">
+          <h2 class="h2">Dyslexia Screener</h2>
+          <p class="small">A short, child-friendly check-in. Not a diagnosis.</p>
+          <div class="spacer"></div>
+          <a class="btn btn-primary" href="/screener.html" style="width:100%;">Open Dyslexia Screener</a>
+        </div>
+
+        <div class="card card-pad" style="box-shadow:var(--shadow-soft);">
+          <h2 class="h2">Reports</h2>
+          <p class="small">Download a parent summary (PDF) after sessions.</p>
+          <div class="spacer"></div>
+          <a class="btn btn-secondary" href="/reports.html" style="width:100%;">View Reports</a>
+        </div>
+
+        <div class="card card-pad" style="box-shadow:var(--shadow-soft);">
+          <h2 class="h2">Main website</h2>
+          <p class="small">Go back to the Learnlio website (Softr).</p>
+          <div class="spacer"></div>
+          <a class="btn btn-secondary" href="https://www.learnlio.co.uk" style="width:100%;">Back to learnlio.co.uk</a>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
+    // highlight active nav link
     const path = location.pathname;
     const map = { "/dash.html":"dash", "/chat.html":"chat", "/screener.html":"screener", "/reports.html":"reports" };
     const key = map[path];
@@ -52,3 +82,4 @@
   </script>
 </body>
 </html>
+
