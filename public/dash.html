@@ -1,85 +1,482 @@
 <!doctype html>
-<html lang="en-GB">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Learnlio – Dash</title>
-  <link rel="stylesheet" href="/assets/app.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Learnlio • Dash</title>
+
+  <!-- Dyslexia-friendly font -->
+  <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --border:#e5e7eb;
+      --shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      --blue:#2563eb;
+      --pill:#eef2ff;
+      --good:#10b981;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --max: 1040px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:'OpenDyslexic', Arial, sans-serif;
+      line-height:1.7;
+    }
+
+    /* Top bar */
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-inner{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 10px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 180px;
+    }
+    .brand img{
+      height: 34px;
+      width: auto;
+      display:block;
+      border-radius: 8px;
+    }
+    .brand .title{
+      font-size: 14px;
+      line-height: 1.2;
+      color: var(--muted);
+    }
+    .nav{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    .nav a{
+      text-decoration:none;
+      color: var(--text);
+      background: var(--pill);
+      border: 1px solid #dbeafe;
+      padding: 9px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      transition: 0.15s ease;
+      white-space: nowrap;
+    }
+    .nav a:hover{ transform: translateY(-1px); }
+    .nav a.active{
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    @media (max-width: 520px){
+      .brand .title{ display:none; }
+      .nav a{ padding: 9px 10px; }
+    }
+
+    /* Page layout */
+    .page-wrap{
+      max-width: var(--max);
+      margin: 18px auto;
+      padding: 0 16px 28px;
+    }
+
+    .hero{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .hero h1{
+      margin:0;
+      font-size: 22px;
+      line-height: 1.3;
+    }
+    .hero p{
+      margin:6px 0 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 700px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    @media (max-width: 860px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+    .card h2{
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      line-height: 1.3;
+    }
+    .small{
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .quick-actions{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 14px;
+      padding: 12px 14px;
+      text-decoration:none;
+      color: var(--text);
+      cursor:pointer;
+      transition: 0.15s ease;
+      font-size: 14px;
+    }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn.primary{
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .btn.good{
+      background: var(--good);
+      border-color: var(--good);
+      color:#fff;
+    }
+
+    .pill{
+      display:inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns: 140px 1fr;
+      gap: 8px 10px;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .k{ color: var(--muted); }
+    .v{ color: var(--text); word-break: break-word; }
+
+    .note{
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .danger-area{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .btn.danger{
+      background: #fff;
+      border-color: #fecaca;
+      color: var(--danger);
+    }
+    .btn.danger:hover{
+      border-color: var(--danger);
+    }
+
+    .footer{
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align:center;
+    }
+  </style>
 </head>
+
 <body>
 
-  <!-- Header -->
-  <div class="topbar">
+  <!-- Top bar -->
+  <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="/dash.html">
-        <img class="brand-logo"
-             src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp"
-             alt="Learnlio logo" />
-        <div class="brand-name">Learnlio</div>
-      </a>
-
-      <div class="nav">
-        <a href="/dash.html" data-nav="dash">Dash</a>
-        <a href="/chat.html" data-nav="chat">Learnlio Tutor</a>
-        <a href="/screener.html" data-nav="screener">Dyslexia Screener</a>
-        <a href="/reports.html" data-nav="reports">Reports</a>
-        <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
+      <div class="brand">
+        <img
+          src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp"
+          alt="Learnlio"
+        />
+        <div class="title">Learnlio • Beta</div>
       </div>
-    </div>
-  </div>
 
-  <!-- Page -->
-  <div class="container page">
-    <div class="card card-pad">
-      <h1 class="h1">Dashboard</h1>
+      <nav class="nav">
+        <a href="/dash.html" id="navDash">🏠 Dash</a>
+        <a href="/chat.html" id="navChat">💬 Learnlio Tutor</a>
+        <a href="/screener.html" id="navScreener">🧠 Dyslexia Screener</a>
+        <a href="/reports.html" id="navReports">📄 Reports</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page-wrap">
+
+    <section class="hero">
+      <div>
+        <h1>Welcome to Learnlio</h1>
+        <p>
+          This is your dashboard.
+          Choose what you want to do today: tutoring, the dyslexia screener, or viewing reports.
+        </p>
+      </div>
+    </section>
+
+    <section class="grid">
+
+      <!-- Quick start -->
+      <div class="card">
+        <h2>Quick start</h2>
+        <p class="small">Pick an activity to begin.</p>
+
+        <div class="quick-actions">
+          <a class="btn primary" href="/chat.html">💬 Start Learnlio Tutor</a>
+          <a class="btn good" href="/screener.html">🧠 Start Dyslexia Screener</a>
+          <a class="btn" href="/reports.html">📄 View Reports</a>
+        </div>
+
+        <div class="note">
+          Tip: If you’re on a shared device, use “Reset this device” at the bottom when finished.
+        </div>
+      </div>
+
+      <!-- Child profile summary -->
+      <div class="card">
+        <h2>Child profile (this device)</h2>
+        <p class="small">
+          We use the name and age saved on this device to personalise activities.
+        </p>
+
+        <div class="kv">
+          <div class="k">Name</div>
+          <div class="v" id="childNameValue">—</div>
+
+          <div class="k">Age</div>
+          <div class="v" id="childAgeValue">—</div>
+
+          <div class="k">Status</div>
+          <div class="v" id="profileStatus">Not set</div>
+        </div>
+
+        <span class="pill" id="profilePill">No profile saved yet</span>
+      </div>
+
+      <!-- Last session -->
+      <div class="card">
+        <h2>Last tutor session</h2>
+        <p class="small">If your Tutor page saves session data, it will appear here.</p>
+
+        <div class="kv">
+          <div class="k">Subject</div>
+          <div class="v" id="lastSubject">—</div>
+
+          <div class="k">Area</div>
+          <div class="v" id="lastArea">—</div>
+
+          <div class="k">Progress</div>
+          <div class="v" id="lastProgress">—</div>
+
+          <div class="k">Badges</div>
+          <div class="v" id="lastBadges">—</div>
+
+          <div class="k">Updated</div>
+          <div class="v" id="lastUpdated">—</div>
+        </div>
+
+        <div class="quick-actions" style="margin-top:12px;">
+          <a class="btn" href="/chat.html">Continue Tutor</a>
+          <a class="btn" href="/reports.html">Open Reports</a>
+        </div>
+      </div>
+
+      <!-- Last screener -->
+      <div class="card">
+        <h2>Last screener result</h2>
+        <p class="small">
+          If the screener stores results, you’ll see them here.
+        </p>
+
+        <div class="kv">
+          <div class="k">Result</div>
+          <div class="v" id="screenerResult">Not completed</div>
+
+          <div class="k">Date</div>
+          <div class="v" id="screenerDate">—</div>
+        </div>
+
+        <div class="quick-actions" style="margin-top:12px;">
+          <a class="btn" href="/screener.html">Start / Retake Screener</a>
+          <a class="btn" href="/reports.html">View Report</a>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="card" style="margin-top:14px;">
+      <h2>Device controls</h2>
       <p class="small">
-        This is the hosted Learnlio app. Next we’ll add login + child profiles, so progress works across phone, tablet, and laptop.
+        This clears the name/age and local progress saved on this device only.
       </p>
 
-      <div class="spacer"></div>
-
-      <div class="grid">
-        <div class="card card-pad" style="box-shadow:var(--shadow-soft);">
-          <h2 class="h2">Start learning</h2>
-          <p class="small">Jump straight into tutoring.</p>
-          <div class="spacer"></div>
-          <a class="btn btn-primary" href="/chat.html" style="width:100%;">Open Learnlio Tutor</a>
-        </div>
-
-        <div class="card card-pad" style="box-shadow:var(--shadow-soft);">
-          <h2 class="h2">Dyslexia Screener</h2>
-          <p class="small">A short, child-friendly check-in. Not a diagnosis.</p>
-          <div class="spacer"></div>
-          <a class="btn btn-primary" href="/screener.html" style="width:100%;">Open Dyslexia Screener</a>
-        </div>
-
-        <div class="card card-pad" style="box-shadow:var(--shadow-soft);">
-          <h2 class="h2">Reports</h2>
-          <p class="small">Download a parent summary (PDF) after sessions.</p>
-          <div class="spacer"></div>
-          <a class="btn btn-secondary" href="/reports.html" style="width:100%;">View Reports</a>
-        </div>
-
-        <div class="card card-pad" style="box-shadow:var(--shadow-soft);">
-          <h2 class="h2">Main website</h2>
-          <p class="small">Go back to the Learnlio website (Softr).</p>
-          <div class="spacer"></div>
-          <a class="btn btn-secondary" href="https://www.learnlio.co.uk" style="width:100%;">Back to learnlio.co.uk</a>
-        </div>
+      <div class="danger-area">
+        <button class="btn danger" id="resetDeviceBtn" type="button">Reset this device</button>
       </div>
+
+      <div class="note" id="resetMsg" style="display:none;"></div>
+    </section>
+
+    <div class="footer">
+      © Learnlio • Beta
     </div>
-  </div>
+
+  </main>
 
   <script>
-    // highlight active nav link
-    const path = location.pathname;
-    const map = { "/dash.html":"dash", "/chat.html":"chat", "/screener.html":"screener", "/reports.html":"reports" };
-    const key = map[path];
-    if (key) {
-      const el = document.querySelector(`[data-nav="${key}"]`);
+    // Highlight active nav
+    (function(){
+      const el = document.getElementById("navDash");
       if (el) el.classList.add("active");
+    })();
+
+    // Helpers
+    function safeGet(key){
+      try { return localStorage.getItem(key); } catch(e){ return null; }
     }
+    function safeRemove(key){
+      try { localStorage.removeItem(key); } catch(e){}
+    }
+
+    // Load profile
+    const childName = safeGet("childName");
+    const childAge = safeGet("childAge");
+
+    const nameEl = document.getElementById("childNameValue");
+    const ageEl = document.getElementById("childAgeValue");
+    const statusEl = document.getElementById("profileStatus");
+    const pillEl = document.getElementById("profilePill");
+
+    if (childName && childAge){
+      nameEl.textContent = childName;
+      ageEl.textContent = childAge;
+      statusEl.textContent = "Saved on this device";
+      pillEl.textContent = "Ready to personalise Tutor and Screener";
+      pillEl.style.borderColor = "#bbf7d0";
+      pillEl.style.color = "#166534";
+      pillEl.style.background = "#f0fdf4";
+    } else {
+      nameEl.textContent = childName || "—";
+      ageEl.textContent = childAge || "—";
+      statusEl.textContent = "Not set";
+      pillEl.textContent = "Open Tutor to set name and age";
+      pillEl.style.borderColor = "#fed7aa";
+      pillEl.style.color = "#9a3412";
+      pillEl.style.background = "#fff7ed";
+    }
+
+    // Last tutor session (optional keys)
+    const lastSubject = safeGet("learnlio_last_subject");
+    const lastArea = safeGet("learnlio_last_area");
+    const done = safeGet("learnlio_progress_done");
+    const max = safeGet("learnlio_progress_max");
+    const badges = safeGet("learnlio_badges");
+    const updated = safeGet("learnlio_last_updated");
+
+    document.getElementById("lastSubject").textContent = lastSubject || "—";
+    document.getElementById("lastArea").textContent = lastArea || "—";
+    document.getElementById("lastProgress").textContent = (done && max) ? (done + " / " + max) : "—";
+    document.getElementById("lastBadges").textContent = badges || "—";
+    document.getElementById("lastUpdated").textContent = updated || "—";
+
+    // Last screener result (optional keys)
+    const screenerScore = safeGet("learnlio_screener_score");
+    const screenerDate = safeGet("learnlio_screener_date");
+
+    document.getElementById("screenerResult").textContent =
+      screenerScore ? ("Completed (score: " + screenerScore + ")") : "Not completed";
+    document.getElementById("screenerDate").textContent = screenerDate || "—";
+
+    // Reset device
+    document.getElementById("resetDeviceBtn").addEventListener("click", () => {
+      const ok = confirm("Reset this device?\n\nThis clears name/age and saved progress on THIS device only.");
+      if (!ok) return;
+
+      // profile
+      safeRemove("childName");
+      safeRemove("childAge");
+
+      // tutor/session
+      safeRemove("learnlio_last_subject");
+      safeRemove("learnlio_last_area");
+      safeRemove("learnlio_progress_done");
+      safeRemove("learnlio_progress_max");
+      safeRemove("learnlio_badges");
+      safeRemove("learnlio_last_updated");
+      safeRemove("learnlio_session_log");
+
+      // screener
+      safeRemove("learnlio_screener_score");
+      safeRemove("learnlio_screener_date");
+
+      const msg = document.getElementById("resetMsg");
+      msg.style.display = "block";
+      msg.textContent = "✅ Device reset. Refreshing…";
+      msg.style.color = "#166534";
+
+      setTimeout(() => location.reload(), 600);
+    });
   </script>
+
 </body>
 </html>
 
