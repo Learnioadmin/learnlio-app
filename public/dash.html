@@ -1,352 +1,269 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Learnlio Dashboard</title>
+  <meta charset="UTF-8" />
+  <title>Learnlio – Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Supabase (one import only) -->
+  <!-- Open Dyslexic -->
+  <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
+
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    :root{
-      --ink:#111827;
-      --muted:#6b7280;
-      --card:#ffffff;
-      --bg:#f3f4f6;
-      --blue:#007bff;
-      --blue2:#0056b3;
-      --border:#e5e7eb;
-      --danger:#b91c1c;
-      --ok:#047857;
+    body {
+      margin: 0;
+      font-family: 'OpenDyslexic', Arial, sans-serif;
+      background: #f9fafb;
+      color: #111;
     }
 
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--ink);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    /* NAV */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
     }
 
-    /* NAV (matches screener/reports style) */
-    .nav{
-      position:sticky; top:0; z-index:10;
-      background:#fff;
-      border-bottom:1px solid var(--border);
-    }
-    .nav-inner{
-      max-width:1100px;
-      margin:0 auto;
-      padding:10px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .brandorrene{
-      display:flex; align-items:center; gap:10px;
-      text-decoration:none; color:var(--ink);
-    }
-    .brand img{
-      height:34px; width:auto;
-      border-radius:8px;
-      display:block;
-    }
-    .brand-title{
-      font-weight:800;
-    }
-    .nav-links{
-      display:flex; gap:10px; flex-wrap:wrap;
-    }
-    .nav-links a, .nav-links button{
-      font-size:14px;
-      text-decoration:none;
-      color:var(--ink);
-      padding:8px 10px;
-      border-radius:10px;
-      border:1px solid transparent;
-      background:transparent;
-      cursor:pointer;
-    }
-    .nav-links a:hover, .nav-links button:hover{
-      background:#f9fafb;
-      border-color:var(--border);
-    }
-    .nav-links a.active{
-      border-color:var(--border);
-      background:#f9fafb;
+    nav img {
+      height: 36px;
     }
 
-    .page{
-      max-width:1100px;
-      margin:0 auto;
-      padding:20px 14px 40px;
+    nav a {
+      text-decoration: none;
+      color: #2563eb;
+      font-size: 14px;
+      margin-left: 16px;
     }
 
-    h1{ margin:0 0 6px; font-size:26px; }
-    .sub{ color:var(--muted); margin-bottom:20px; }
-
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap:16px;
-    }
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:16px;
-      box-shadow:0 4px 14px rgba(0,0,0,0.05);
+    /* PAGE */
+    main {
+      max-width: 720px;
+      margin: 30px auto;
+      padding: 0 16px;
     }
 
-    .child-name{ font-size:18px; font-weight:700; margin-bottom:4px; }
-    .child-age{ color:var(--muted); font-size:14px; margin-bottom:12px; }
-
-    .actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .btn{
-      border:none;
-      border-radius:12px;
-      padding:10px 14px;
-      font-size:14px;
-      cursor:pointer;
-      color:#fff;
-      background:var(--blue);
-    }
-    .btn:hover{ background:var(--blue2); }
-    .btn.secondary{ background:#374151; }
-    .btn.secondary:hover{ background:#1f2937; }
-
-    .add-child{
-      margin-top:30px;
-      max-width:420px;
-    }
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-      margin-bottom:12px;
-    }
-    .field label{ font-size:14px; color:#374151; }
-    .field input{
-      padding:12px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      font-size:15px;
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
     }
 
-    .notice{
-      margin-top:12px;
-      font-size:14px;
-      color:#374151;
-      min-height:18px;
+    p {
+      font-size: 14px;
+      color: #444;
     }
-    .notice.ok{ color:var(--ok); }
-    .notice.err{ color:var(--danger); }
 
-    @media(max-width:480px){
-      .brand-title{ display:none; }
+    /* CARD */
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      margin-top: 4px;
+    }
+
+    button {
+      margin-top: 14px;
+      padding: 12px 16px;
+      font-size: 14px;
+      border-radius: 12px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #10b981;
+      margin-left: 8px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      background: #f3f4f6;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
     }
   </style>
 </head>
 
 <body>
-  <!-- NAV -->
-  <div class="nav">
-    <div class="nav-inner">
-      <a class="brand" href="dash.html">
-        <img src="assets/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
-        <div class="brand-title">Learnlio</div>
-      </a>
-      <div class="nav-links">
-        <a class="active" href="dash.html">Dashboard</a>
-        <a href="chat.html">Tutor</a>
-        <a href="screener.html">Screener</a>
-        <a href="reports.html">Reports</a>
-        <button id="logoutBtn">Log out</button>
-      </div>
-    </div>
+
+<nav>
+  <img src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp" alt="Learnlio">
+  <div>
+    <a href="/chat.html">Tutor</a>
+    <a href="/screener.html">Screener</a>
+    <a href="/reports.html">Reports</a>
+    <a href="#" onclick="logout()">Log out</a>
+  </div>
+</nav>
+
+<main>
+
+  <h1>Parent Dashboard</h1>
+  <p>Add your child below to get started.</p>
+
+  <!-- ADD CHILD -->
+  <div class="card">
+    <h2>Add a child</h2>
+
+    <label>Child name</label>
+    <input id="childName" placeholder="e.g. Ava">
+
+    <label>Date of birth</label>
+    <input id="childDob" type="date">
+
+    <button onclick="addChild()">Add child</button>
   </div>
 
-  <!-- PAGE -->
-  <div class="page">
-    <h1>Your children</h1>
-    <div class="sub">Choose a child to start learning</div>
-
-    <div id="childrenGrid" class="grid"></div>
-
-    <!-- Add child -->
-    <div class="add-child card">
-      <h2 style="margin-top:0;">Add a child</h2>
-
-      <div class="field">
-        <label>Child’s name</label>
-        <input id="childName" placeholder="e.g. Ava" autocomplete="off">
-      </div>
-
-      <div class="field">
-        <label>Date of birth</label>
-        <input id="childDob" type="date">
-      </div>
-
-      <button id="addChildBtn" class="btn" type="button">Add child</button>
-      <div id="formNotice" class="notice"></div>
-    </div>
+  <!-- CHILD LIST -->
+  <div class="card">
+    <h2>Your children</h2>
+    <ul id="childrenList">
+      <li>Loading…</li>
+    </ul>
   </div>
+
+</main>
 
 <script>
-/* ================= CONFIG (EDIT THESE) ================= */
-const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-const LOGIN_PAGE = "login.html";
+  /* -------------------------------
+     Supabase setup
+  -------------------------------- */
+  const supabase = window.supabase.createClient(
+    "https://YOUR_PROJECT_ID.supabase.co",
+    "YOUR_PUBLIC_ANON_KEY"
+  );
 
-/* ================= SAFETY CHECK ================= */
-if (!SUPABASE_URL.startsWith("http")) {
-  console.error("Supabase URL not set");
-}
-
-/* ================= CLIENT ================= */
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-/* ================= ELEMENTS ================= */
-const grid = document.getElementById("childrenGrid");
-const addBtn = document.getElementById("addChildBtn");
-const nameInput = document.getElementById("childName");
-const dobInput = document.getElementById("childDob");
-const notice = document.getElementById("formNotice");
-const logoutBtn = document.getElementById("logoutBtn");
-
-let user = null;
-
-/* ================= HELPERS ================= */
-function setNotice(msg, type="") {
-  notice.className = "notice " + (type || "");
-  notice.textContent = msg || "";
-}
-
-function ageFromDob(dob){
-  const d = new Date(dob);
-  const now = new Date();
-  let age = now.getFullYear() - d.getFullYear();
-  const m = now.getMonth() - d.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
-  return age;
-}
-
-function childCard(child){
-  const age = child.dob ? ageFromDob(child.dob) : "—";
-  return `
-    <div class="card">
-      <div class="child-name">${escapeHtml(child.name || "")}</div>
-      <div class="child-age">Age ${age}</div>
-      <div class="actions">
-        <button class="btn" onclick="goTutor('${child.id}')">Tutor</button>
-        <button class="btn secondary" onclick="goScreener('${child.id}')">Screener</button>
-      </div>
-    </div>
-  `;
-}
-
-function escapeHtml(s){
-  return String(s)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-window.goTutor = (id) => { window.location.href = `chat.html?child_id=${encodeURIComponent(id)}`; };
-window.goScreener = (id) => { window.location.href = `screener.html?child_id=${encodeURIComponent(id)}`; };
-
-/* ================= LOAD CHILDREN ================= */
-async function loadChildren(){
-  grid.innerHTML = "<p>Loading…</p>";
-
-  const { data, error } = await supabaseClient
-    .from("children")
-    .select("*")
-    .eq("owner_id", user.id)
-    .order("created_at", { ascending: true });
-
-  if (error){
-    console.error("loadChildren error:", error);
-    grid.innerHTML = `<p>Could not load children: ${escapeHtml(error.message)}</p>`;
-    return;
+  /* -------------------------------
+     Auth guard
+  -------------------------------- */
+  async function requireAuth() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      window.location.href = "/login.html";
+    }
+    return user;
   }
 
-  if (!data || !data.length){
-    grid.innerHTML = "<p>No children added yet.</p>";
-    return;
-  }
+  /* -------------------------------
+     Load children
+  -------------------------------- */
+  async function loadChildren() {
+    const user = await requireAuth();
 
-  grid.innerHTML = data.map(childCard).join("");
-}
-
-/* ================= ADD CHILD ================= */
-addBtn.addEventListener("click", async () => {
-  setNotice("");
-
-  const name = nameInput.value.trim();
-  const dob = dobInput.value;
-
-  if (!name || !dob){
-    setNotice("Please enter name and date of birth.", "err");
-    return;
-  }
-
-  addBtn.disabled = true;
-  addBtn.style.opacity = "0.7";
-  setNotice("Saving…");
-
-  try {
-    const payload = { owner_id: user.id, name, dob };
-
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabase
       .from("children")
-      .insert(payload)
-      .select()
-      .single();
+      .select("*")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: true });
 
-    if (error){
-      console.error("insert error:", error);
-      setNotice("Could not add child: " + error.message, "err");
+    const list = document.getElementById("childrenList");
+    list.innerHTML = "";
+
+    if (error || !data || data.length === 0) {
+      list.innerHTML = "<li>No children added yet</li>";
       return;
     }
 
-    console.log("insert success:", data);
-    nameInput.value = "";
-    dobInput.value = "";
-    setNotice("Child added ✔", "ok");
-    await loadChildren();
-  } finally {
-    addBtn.disabled = false;
-    addBtn.style.opacity = "1";
-  }
-});
-
-/* ================= INIT ================= */
-async function init(){
-  const { data } = await supabaseClient.auth.getUser();
-  user = data?.user || null;
-
-  if (!user){
-    window.location.href = LOGIN_PAGE;
-    return;
+    data.forEach(child => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <span>${child.name}</span>
+        <button class="secondary" onclick="startTutor('${child.id}')">
+          Start
+        </button>
+      `;
+      list.appendChild(li);
+    });
   }
 
-  logoutBtn.addEventListener("click", async () => {
-    await supabaseClient.auth.signOut();
-    window.location.href = LOGIN_PAGE;
-  });
+  /* -------------------------------
+     Add child (FIXED owner_id)
+  -------------------------------- */
+  async function addChild() {
+    const name = document.getElementById("childName").value.trim();
+    const dob = document.getElementById("childDob").value;
 
-  await loadChildren();
-}
+    if (!name) {
+      alert("Please enter a child name");
+      return;
+    }
 
-init();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("You must be logged in");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("children")
+      .insert({
+        owner_id: user.id,
+        name: name,
+        dob: dob || null
+      });
+
+    if (error) {
+      console.error(error);
+      alert("Error adding child");
+      return;
+    }
+
+    document.getElementById("childName").value = "";
+    document.getElementById("childDob").value = "";
+
+    loadChildren();
+  }
+
+  /* -------------------------------
+     Navigation helpers
+  -------------------------------- */
+  function startTutor(childId) {
+    localStorage.setItem("activeChildId", childId);
+    window.location.href = "/chat.html";
+  }
+
+  async function logout() {
+    await supabase.auth.signOut();
+    window.location.href = "/login.html";
+  }
+
+  /* -------------------------------
+     Init
+  -------------------------------- */
+  loadChildren();
 </script>
+
 </body>
 </html>
