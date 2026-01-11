@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio – Dash</title>
+  <link rel="stylesheet" href="/assets/app.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/dash.html">
+        <div class="brand-badge">L</div>
+        <div class="brand-name">Learnlio</div>
+      </a>
+      <div class="nav">
+        <a href="/dash.html" data-nav="dash">Dash</a>
+        <a href="/chat.html" data-nav="chat">Chat</a>
+        <a href="/screener.html" data-nav="screener">Screener</a>
+        <a href="/reports.html" data-nav="reports">Reports</a>
+        <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container page">
+    <div class="card card-pad">
+      <h1 class="h1">Dashboard</h1>
+      <p class="small">Next we’ll add: child picker + last screener + start buttons.</p>
+    </div>
+  </div>
+
+  <script>
+    const path = location.pathname;
+    const map = { "/dash.html":"dash", "/chat.html":"chat", "/screener.html":"screener", "/reports.html":"reports" };
+    const key = map[path];
+    if (key) {
+      const el = document.querySelector(`[data-nav="${key}"]`);
+      if (el) el.classList.add("active");
+    }
+  </script>
+</body>
+</html>
