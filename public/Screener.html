@@ -1,54 +1,338 @@
 <!doctype html>
 <html lang="en-GB">
-<div class="topbar">
-  <div class="topbar-inner">
-    <a class="brand" href="/dash.html">
-      <img class="brand-logo" src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp" alt="Learnlio logo" />
-      <div class="brand-name">Learnlio</div>
-    </a>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Learnlio Dyslexia Screener</title>
 
-    <div class="nav">
-      <a href="/dash.html" data-nav="dash">Dash</a>
-      <a href="/chat.html" data-nav="chat">Chat</a>
-      <a href="/screener.html" data-nav="screener">Screener</a>
-      <a href="/reports.html" data-nav="reports">Reports</a>
-      <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
-    </div>
-  </div>
-</div>
+  <!-- Dyslexia-friendly font -->
+  <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#f7f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --primary:#007bff;
+      --primaryHover:#0056b3;
+      --shadow:0 8px 24px rgba(15, 23, 42, .08);
+      --radius:18px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:"OpenDyslexic", Arial, sans-serif;
+      color:var(--text);
+      background:var(--bg);
+    }
+
+    /* ===== Header (prevents huge logo everywhere) ===== */
+    .site-header{
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:rgba(255,255,255,.92);
+      backdrop-filter:saturate(180%) blur(10px);
+      border-bottom:1px solid var(--border);
+    }
+    .header-inner{
+      max-width:1100px;
+      margin:0 auto;
+      padding:10px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+      text-decoration:none;
+      color:inherit;
+    }
+    .site-logo{
+      height:34px;            /* ✅ key: keeps logo small */
+      width:auto;
+      max-width:140px;        /* ✅ hard cap */
+      display:block;
+    }
+    .brand-title{
+      font-size:14px;
+      font-weight:700;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .nav{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .nav a{
+      text-decoration:none;
+      font-size:13px;
+      color:var(--muted);
+      padding:8px 10px;
+      border-radius:12px;
+    }
+    .nav a:hover{
+      background:#eef2ff;
+      color:var(--text);
+    }
+    .nav a.active{
+      background:#dbeafe;
+      color:#1d4ed8;
+    }
+
+    /* ===== Page shell ===== */
+    .page{
+      max-width:1100px;
+      margin:0 auto;
+      padding:18px 16px 40px;
+    }
+    .page-title{
+      margin:8px 0 16px;
+    }
+    .page-title h1{
+      margin:0;
+      font-size:18px;
+    }
+    .page-title p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.6;
+    }
+
+    /* ===== Screener card ===== */
+    #screener-wrapper{
+      display:flex;
+      justify-content:center;
+    }
+    #screener-container{
+      width:100%;
+      max-width:720px;
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:24px;
+      box-shadow:var(--shadow);
+      border:1px solid var(--border);
+    }
+    .intro{
+      text-align:center;
+      font-size:16px;
+      line-height:1.8;
+      margin:0 0 20px;
+      color:var(--text);
+    }
+
+    #screen-progress{
+      text-align:center;
+      font-size:14px;
+      margin-bottom:14px;
+      color:var(--muted);
+    }
+
+    #question-box{
+      background:#fef3c7;
+      padding:18px;
+      border-radius:14px;
+      font-size:18px;
+      line-height:1.85;
+      margin-bottom:16px;
+    }
+
+    #answer-options{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .option-btn{
+      padding:14px;
+      font-size:16px;
+      border-radius:12px;
+      border:none;
+      background:var(--primary);
+      color:#fff;
+      cursor:pointer;
+    }
+    .option-btn:hover{ background:var(--primaryHover); }
+
+    #result-box{
+      margin-top:20px;
+      background:#ecfeff;
+      padding:18px;
+      border-radius:14px;
+      font-size:16px;
+      line-height:1.85;
+      display:none;
+    }
+
+    @media (max-width:520px){
+      .site-logo{ height:30px; max-width:120px; }
+      .brand-title{ display:none; }
+      #screener-container{ padding:16px; }
+    }
+  </style>
+</head>
 
 <body>
-  <div class="topbar">
-    <div class="topbar-inner">
-      <a class="brand" href="/dash.html">
-        <div class="brand-badge">L</div>
-        <div class="brand-name">Learnlio</div>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/dash/">
+        <img
+          class="site-logo"
+          src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp"
+          alt="Learnlio"
+        />
+        <div class="brand-title">Learnlio</div>
       </a>
-      <div class="nav">
-        <a href="/dash.html" data-nav="dash">Dash</a>
-        <a href="/chat.html" data-nav="chat">Chat</a>
-        <a href="/screener.html" data-nav="screener">Screener</a>
-        <a href="/reports.html" data-nav="reports">Reports</a>
-        <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
+
+      <nav class="nav">
+        <a href="/dash/">Dash</a>
+        <a href="/tutor/">Tutor</a>
+        <a class="active" href="/screener/">Screener</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="page-title">
+      <h1>Dyslexia Screener</h1>
+      <p>A short, child-friendly activity. Not a diagnosis.</p>
+    </div>
+
+    <!-- ===== Existing screener setup (working logic) ===== -->
+    <div id="screener-wrapper">
+      <div id="screener-container">
+
+        <p class="intro">
+          This short activity helps us understand how you learn best.
+          <br><br>
+          There are no right or wrong answers.
+          <br>
+          Just do your best 😊
+        </p>
+
+        <div id="screen-progress">
+          Question <span id="current-q">1</span> of <span id="total-q">5</span>
+        </div>
+
+        <div id="question-box"></div>
+        <div id="answer-options"></div>
+
+        <div id="result-box"></div>
+
       </div>
     </div>
-  </div>
-
-  <div class="container page">
-    <div class="card card-pad">
-      <h1 class="h1">Dashboard</h1>
-      <p class="small">Next we’ll add: child picker + last screener + start buttons.</p>
-    </div>
-  </div>
+  </main>
 
   <script>
-    const path = location.pathname;
-    const map = { "/dash.html":"dash", "/chat.html":"chat", "/screener.html":"screener", "/reports.html":"reports" };
-    const key = map[path];
-    if (key) {
-      const el = document.querySelector(`[data-nav="${key}"]`);
-      if (el) el.classList.add("active");
+  document.addEventListener("DOMContentLoaded", () => {
+
+    // Existing screener questions (same working setup)
+    const questions = [
+      { text: "When reading, do letters ever look mixed up or jump around?", score: 2 },
+      { text: "Do you find it hard to remember how words are spelt, even after practice?", score: 2 },
+      { text: "Is it easier to understand things when someone explains them out loud?", score: 1 },
+      { text: "Do you find copying from the board or a book tricky?", score: 2 },
+      { text: "Do numbers sometimes get mixed up (like 6 and 9)?", score: 1 }
+    ];
+
+    let current = 0;
+    let totalScore = 0;
+
+    const questionBox = document.getElementById("question-box");
+    const optionsBox = document.getElementById("answer-options");
+    const currentQ = document.getElementById("current-q");
+    const totalQ = document.getElementById("total-q");
+    const resultBox = document.getElementById("result-box");
+    const progressWrap = document.getElementById("screen-progress");
+
+    totalQ.innerText = questions.length;
+
+    function showQuestion() {
+      const q = questions[current];
+      questionBox.innerText = q.text;
+      currentQ.innerText = current + 1;
+
+      optionsBox.innerHTML = "";
+
+      const opts = [
+        { label:"Yes", value:q.score },
+        { label:"Sometimes", value:Math.ceil(q.score / 2) },
+        { label:"No", value:0 }
+      ];
+
+      opts.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerText = opt.label;
+        btn.onclick = () => answer(opt.value);
+        optionsBox.appendChild(btn);
+      });
     }
+
+    function answer(val) {
+      totalScore += val;
+      current++;
+      if (current < questions.length) showQuestion();
+      else showResult();
+    }
+
+    function showResult() {
+      questionBox.style.display = "none";
+      optionsBox.style.display = "none";
+      progressWrap.style.display = "none";
+
+      let level = "";
+      let message = "";
+
+      if (totalScore <= 3) {
+        level = "Low indicators";
+        message = `
+          🌱 You show few signs linked with dyslexia.<br><br>
+          Everyone learns differently, and that’s okay!
+        `;
+      } else if (totalScore <= 6) {
+        level = "Some indicators";
+        message = `
+          🌟 You show some signs linked with dyslexia.<br><br>
+          This means you may learn best with extra support and step-by-step help.
+        `;
+      } else {
+        level = "Higher indicators";
+        message = `
+          💙 You show several signs linked with dyslexia.<br><br>
+          This does NOT mean anything is “wrong”.<br>
+          It means your brain may learn in a different — often creative — way.
+        `;
+      }
+
+      resultBox.innerHTML = `
+        <strong>Result: ${level}</strong><br><br>
+        ${message}<br><br>
+        👉 A parent or carer can use this to decide what support might help next.
+      `;
+      resultBox.style.display = "block";
+
+      // Save locally (works on Cloudflare Pages)
+      localStorage.setItem("learnlio_screener_score", String(totalScore));
+      localStorage.setItem("learnlio_screener_level", level);
+      localStorage.setItem("learnlio_screener_date", new Date().toISOString());
+    }
+
+    showQuestion();
+  });
   </script>
 </body>
 </html>
+
