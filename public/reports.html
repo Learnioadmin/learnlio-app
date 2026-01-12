@@ -35,6 +35,14 @@
     .row:last-child { border-bottom:none; }
     .k { color:#6b7280; font-size:13px; }
     .v { font-weight:650; text-align:right; }
+
+    .top-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .select {
+      border:1px solid #e5e7eb; border-radius:12px; padding:10px 12px; background:#fff;
+      font-size:14px; color:#111; cursor:pointer;
+    }
+    .select-wrap { display:none; gap:8px; align-items:center; }
+    .label { font-size:13px; color:#6b7280; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -65,7 +73,14 @@
           <h1 style="margin:0 0 6px;">Reports</h1>
           <div id="childHeader" class="muted">Loading child…</div>
         </div>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+
+        <div class="top-actions">
+          <!-- Change child (only shows if 2+ children) -->
+          <div id="childSwitcher" class="select-wrap">
+            <span class="label">Child:</span>
+            <select id="childSelect" class="select" aria-label="Select child"></select>
+          </div>
+
           <button id="downloadBtn" class="btn" type="button">Download report (PDF)</button>
           <button id="refreshBtn" class="btn light" type="button">Refresh</button>
         </div>
@@ -133,6 +148,10 @@
     const signalsBox = document.getElementById("signalsBox");
     const noDataBox = document.getElementById("noDataBox");
 
+    // Child switcher
+    const childSwitcher = document.getElementById("childSwitcher");
+    const childSelect = document.getElementById("childSelect");
+
     let currentUser = null;
     let child = null;
 
@@ -162,13 +181,16 @@
       } catch { return null; }
     }
 
+    function setSelectedChild(id, name){
+      localStorage.setItem("selectedChild", JSON.stringify({ id, child_name: name }));
+    }
+
     function safe(v, fallback="—"){
       if (v === null || v === undefined || v === "") return fallback;
       return String(v);
     }
 
     function formatDateOnly(value){
-      // Accepts ISO string, Date, or null -> returns dd/mm/yyyy or —
       if (!value) return "—";
       const d = new Date(value);
       if (isNaN(d.getTime())) return "—";
@@ -196,6 +218,54 @@
       }
       currentUser = data.user;
       return true;
+    }
+
+    async function loadChildSwitcher(){
+      // Load all children for this parent
+      const { data, error } = await sb
+        .from("children")
+        .select("id, child_name, child_dob, parent_user_id")
+        .eq("parent_user_id", currentUser.id)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("children list error", error);
+        childSwitcher.style.display = "none";
+        return;
+      }
+
+      const children = data || [];
+      if (children.length <= 1) {
+        // Hide switcher if 0/1 child
+        childSwitcher.style.display = "none";
+        return;
+      }
+
+      // Show switcher
+      childSwitcher.style.display = "flex";
+      childSelect.innerHTML = "";
+
+      children.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.child_name || "Child";
+        childSelect.appendChild(opt);
+      });
+
+      // Set currently selected value
+      const selected = getSelectedChild();
+      if (selected?.id) childSelect.value = selected.id;
+
+      // Change handler
+      childSelect.addEventListener("change", async () => {
+        const id = childSelect.value;
+        const name = childSelect.options[childSelect.selectedIndex]?.textContent || "Child";
+        setSelectedChild(id, name);
+        // Reload child + reports
+        await loadChildProfile();
+        await loadReports();
+        showOk("Child changed");
+      });
     }
 
     async function loadChildProfile(){
@@ -251,7 +321,6 @@
       lastOverall = null;
       lastSignals = null;
 
-      // progress (overall)
       const { data: overall, error: overallErr } = await sb
         .from("progress")
         .select("id, parent_user_id, child_id, maths_level, english_level, streak, updated_at")
@@ -260,7 +329,6 @@
 
       if (overallErr) console.error("progress read error", overallErr);
 
-      // child_progress (signals)
       const { data: signals, error: signalsErr } = await sb
         .from("child_progress")
         .select("id, child_id, owner_id, subject, area, difficulty, streak_correct, streak_wrong, last_session_id, last_seen_at")
@@ -275,7 +343,6 @@
 
       const hasAnyData = !!overall || !!signals;
 
-      // Render overall
       if (!overall) {
         overallBox.innerHTML = `<div class="muted">No overall progress row yet.</div>`;
       } else {
@@ -287,13 +354,12 @@
         ]);
       }
 
-      // Render signals
       if (!signals) {
         signalsBox.innerHTML = `<div class="muted">No tutor signals row yet.</div>`;
       } else {
         renderRows(signalsBox, [
           { k: "Last subject",   v: safe(signals.subject) },
-          { k: "Last area",      v: safe(signals.area) },   // if empty -> —
+          { k: "Last area",      v: safe(signals.area) },     // clean fallback handled in safe()
           { k: "Difficulty",     v: safe(signals.difficulty) },
           { k: "Streak correct", v: safe(signals.streak_correct) },
           { k: "Streak wrong",   v: safe(signals.streak_wrong) },
@@ -381,8 +447,15 @@
     (async () => {
       if (!sb) { showError("Supabase did not load."); return; }
 
-      const ok = await requireAuth();
-      if (!ok) return;
+      const { data, error } = await sb.auth.getUser();
+      if (error || !data?.user){
+        window.location.href = "/login.html";
+        return;
+      }
+      currentUser = data.user;
+
+      // Show switcher only if 2+ children
+      await loadChildSwitcher();
 
       const childOk = await loadChildProfile();
       if (!childOk) return;
