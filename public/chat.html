@@ -27,21 +27,21 @@
     .status.bad { color:#dc2626; }
     .status.good { color:#16a34a; }
 
-    /* Chat bubbles (kept like your current build) */
     .msg { padding:14px 16px; margin-bottom:14px; border-radius:16px; max-width:85%;
       font-size:18px; line-height:1.85; white-space:pre-wrap;
       font-family:'OpenDyslexic', Arial, sans-serif;
-      overflow-wrap:break-word; display:inline-block; }
+      overflow-wrap:break-word; display:inline-block;
+    }
     .msg.user { background:#0b5cff; color:#fff; margin-left:auto; text-align:right; }
-    .msg.bot  { background:#fef3c7; color:#000; margin-right:auto; }
-
+    .msg.bot  { background:#fef3c7; color:#000; }
     .bot-controls { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
     .btn-small { border:none; border-radius:10px; padding:6px 12px; font-size:14px; cursor:pointer; color:#fff; }
     .speak-btn { background:#0b5cff; }
     .hint-btn  { background:#10b981; }
     .next-btn  { background:#7c3aed; }
-
-    .calcBtn { padding:14px; font-size:18px; border-radius:10px; border:none; background:#fff; cursor:pointer; }
+    .speak-btn:hover{ background:#094bd1; }
+    .hint-btn:hover{ background:#059669; }
+    .next-btn:hover{ background:#6d28d9; }
   </style>
 
   <!-- Dependencies -->
@@ -49,7 +49,7 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- OpenDyslexic font (optional) -->
+  <!-- OpenDyslexic font -->
   <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
 </head>
 
@@ -77,8 +77,12 @@
       <!-- Progress header -->
       <div id="progress-header" style="display:none; margin-bottom:10px;">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-          <div id="progress-label" style="font-family:'OpenDyslexic', Arial, sans-serif; font-size:14px; color:#333;">Progress: 0 / 0</div>
-          <div id="badge-label" style="font-family:'OpenDyslexic', Arial, sans-serif; font-size:14px; color:#333;">Badges: —</div>
+          <div id="progress-label" style="font-family:'OpenDyslexic', Arial, sans-serif; font-size:14px; color:#333;">
+            Progress: 0 / 0
+          </div>
+          <div id="badge-label" style="font-family:'OpenDyslexic', Arial, sans-serif; font-size:14px; color:#333;">
+            Badges: —
+          </div>
         </div>
         <div style="height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden; margin-top:8px;">
           <div id="progress-bar" style="height:10px; width:0%; background:#10b981;"></div>
@@ -154,6 +158,7 @@
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // Elements
     const pageError = document.getElementById("pageError");
     const logoutBtn = document.getElementById("logoutBtn");
 
@@ -173,41 +178,39 @@
     const mathsBtn = document.getElementById("mathsBtn");
     const englishBtn = document.getElementById("englishBtn");
 
-    // Auth + child
+    // Auth + child profile
     let currentUser = null;
-    let child = null; // { id, child_name, child_dob, parent_user_id }
-    let childName = "";
+    let child = null; // { id, child_name, child_dob }
+    let childName = "Child";
     let childAge = 10;
 
     // Tutor state
     let subject = null; // "Maths" | "English"
     let area = null;
 
-    // Deterministic question checking
+    // Session
+    let sessionId = (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()));
+    let maxQuestions = 10;
+    let questionsAnswered = 0;   // counts “completed turns” for both subjects
+    let correctCount = 0;        // maths correct total in session
+    let badges = [];
+    let sessionLog = [];
+
+    // Adaptive difficulty (lightweight)
+    // 1 = easy, 2 = medium, 3 = harder (still within age bands)
+    let difficultyLevel = 1;
+
+    // Streak tracking (for storage)
+    let streakCorrect = 0;
+    let streakWrong = 0;
+
+    // Maths question + guided mode
     let currentQuestion = null; // { displayText, correctAnswer }
     let hintUsedForCurrent = false;
     let waitingForNextButton = false;
     let guided = { active:false, steps:[], idx:0 };
 
-    // Session/progress UI state (per session)
-    let maxQuestions = 10;
-    let questionsAnswered = 0; // completed questions (Maths only when correct; English counts turns)
-    let correctCount = 0;      // Maths correct count
-    let badges = [];
-    let sessionLog = [];
-
-    // Progress persistence (per child+subject+area)
-    // difficulty_level: 1..5
-    // rolling_correct: 0..10 (we store a rolling window length indicator)
-    let difficultyLevel = 1;
-    let rollingCorrect = 0; // 0..10
-    let weakTags = [];      // text array
-
-    // Session aggregation (persist into sessions at end)
-    let sessionStartedAt = new Date();
-    let attemptedThisSession = 0;
-    let correctThisSession = 0;
-
+    // ---------- UI helpers ----------
     function showError(msg) {
       pageError.style.display = "block";
       pageError.textContent = msg;
@@ -216,8 +219,6 @@
       pageError.style.display = "none";
       pageError.textContent = "";
     }
-
-    function nowTs() { return new Date().toLocaleString("en-GB"); }
 
     function disableInput(disabled) {
       input.disabled = disabled;
@@ -238,6 +239,32 @@
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
+    function pickBestUKVoice() {
+      const voices = window.speechSynthesis.getVoices() || [];
+      if (!voices.length) return null;
+
+      // Prefer UK voices where possible
+      const preferredNames = [
+        "Google UK English Female",
+        "Google UK English Male",
+        "Microsoft Sonia Online",
+        "Microsoft Ryan Online",
+        "Microsoft Libby Online",
+        "Samantha",
+        "Daniel"
+      ];
+      for (const name of preferredNames) {
+        const v = voices.find(x => x.name === name);
+        if (v) return v;
+      }
+      const uk = voices.find(v => (v.lang || "").toLowerCase().startsWith("en-gb"));
+      if (uk) return uk;
+      return voices.find(v => (v.lang || "").toLowerCase().startsWith("en")) || null;
+    }
+
+    let cachedVoice = null;
+    window.speechSynthesis.onvoiceschanged = () => { cachedVoice = pickBestUKVoice(); };
+
     function speak(text) {
       if (!("speechSynthesis" in window)) return;
       window.speechSynthesis.cancel();
@@ -245,12 +272,8 @@
       u.lang = "en-GB";
       u.rate = 0.9;
       u.pitch = 1.0;
-
-      const voices = window.speechSynthesis.getVoices() || [];
-      const preferred = voices.find(v => (v.lang || "").toLowerCase().startsWith("en-gb")) ||
-                        voices.find(v => (v.lang || "").toLowerCase().startsWith("en"));
-      if (preferred) u.voice = preferred;
-
+      const v = cachedVoice || pickBestUKVoice();
+      if (v) { cachedVoice = v; u.voice = v; }
       window.speechSynthesis.speak(u);
     }
 
@@ -293,11 +316,28 @@
       }
 
       div.appendChild(controls);
-
       messagesDiv.appendChild(div);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
+    function showActionButtons(buttons) {
+      areaSelection.innerHTML = "";
+      buttons.forEach(b => {
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.type = "button";
+        btn.style.marginRight = "8px";
+        btn.style.marginBottom = "8px";
+        btn.innerText = b.label;
+        btn.addEventListener("click", b.onClick);
+        areaSelection.appendChild(btn);
+      });
+      areaSelection.style.display = "block";
+    }
+
+    function nowTs() { return new Date().toLocaleString("en-GB"); }
+
+    // ---------- Backend (AI) ----------
     async function callBackend(promptText) {
       try {
         typingIndicator.style.display = "block";
@@ -319,9 +359,7 @@
       }
     }
 
-    // --------------------------
-    // Age + limits
-    // --------------------------
+    // ---------- Age + limits ----------
     function computeAgeFromDob(dobStr) {
       const d = new Date(dobStr);
       if (isNaN(d.getTime())) return 10;
@@ -340,28 +378,29 @@
       return 12;
     }
 
-    function resetSessionProgress() {
-      maxQuestions = computeMaxQuestions();
-      questionsAnswered = 0;
-      correctCount = 0;
-      badges = [];
-      sessionLog = [];
-      attemptedThisSession = 0;
-      correctThisSession = 0;
-      sessionStartedAt = new Date();
-      updateProgressUI();
-    }
-
-    function sessionComplete() {
-      return questionsAnswered >= maxQuestions;
-    }
-
     function updateProgressUI() {
       progressHeader.style.display = "block";
       progressLabel.innerText = `Progress: ${questionsAnswered} / ${maxQuestions}`;
       badgeLabel.innerText = `Badges: ${badges.length ? badges.join(" ") : "—"}`;
       const pct = maxQuestions ? Math.min(100, Math.round((questionsAnswered / maxQuestions) * 100)) : 0;
       progressBar.style.width = pct + "%";
+    }
+
+    function resetSessionProgress() {
+      sessionId = (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()));
+      maxQuestions = computeMaxQuestions();
+      questionsAnswered = 0;
+      correctCount = 0;
+      badges = [];
+      sessionLog = [];
+      difficultyLevel = 1;
+      streakCorrect = 0;
+      streakWrong = 0;
+      updateProgressUI();
+    }
+
+    function sessionComplete() {
+      return questionsAnswered >= maxQuestions;
     }
 
     function maybeAwardBadge() {
@@ -371,7 +410,7 @@
     }
 
     function maybeRewardMessage() {
-      // only AFTER completing a question
+      // only after a completed question
       if (questionsAnswered === 1) addBotMessage("🌟 Nice start! You’re doing really well.");
       if (questionsAnswered === Math.ceil(maxQuestions/2)) addBotMessage("🔥 Halfway there! Keep going!");
       if (correctCount === 3 && badges.includes("⭐")) addBotMessage("⭐ Badge unlocked: Star Helper!");
@@ -379,136 +418,135 @@
       if (correctCount === 10 && badges.includes("🏆")) addBotMessage("🏆 Badge unlocked: Learning Champion!");
     }
 
-    // --------------------------
-    // Supabase persistence helpers
-    // --------------------------
-    async function loadChildProgress() {
-      // loads progress for current child + selected subject/area (when set)
-      if (!child?.id || !subject || !area) return;
-
-      const { data, error } = await sb
-        .from("child_progress")
-        .select("difficulty_level, rolling_correct, weak_tags")
-        .eq("child_id", child.id)
-        .eq("subject", subject)
-        .eq("area", area)
-        .maybeSingle();
-
-      if (error) {
-        // don't block tutor for this
-        console.warn("Progress load error:", error.message);
-        return;
-      }
-
-      if (data) {
-        difficultyLevel = clampInt(data.difficulty_level ?? 1, 1, 5);
-        rollingCorrect = clampInt(data.rolling_correct ?? 0, 0, 10);
-        weakTags = Array.isArray(data.weak_tags) ? data.weak_tags : (data.weak_tags ? [String(data.weak_tags)] : []);
-      } else {
-        difficultyLevel = 1;
-        rollingCorrect = 0;
-        weakTags = [];
-      }
-    }
-
-    async function saveChildProgress() {
-      if (!child?.id || !subject || !area) return;
+    // ---------- Storage: save to Supabase ----------
+    async function saveChildProgressRow() {
+      // child_progress:
+      // Id, child_id, owner_id, subject, area, difficulty, streak_correct, streak_wrong, last_session_id, last_seen_at
+      if (!child?.id || !currentUser?.id) return;
 
       const payload = {
         child_id: child.id,
-        subject,
-        area,
-        difficulty_level: difficultyLevel,
-        rolling_correct: rollingCorrect,
-        weak_tags: weakTags,
+        owner_id: currentUser.id,
+        subject: subject || null,
+        area: area || null,
+        difficulty: difficultyLevel,
+        streak_correct: streakCorrect,
+        streak_wrong: streakWrong,
+        last_session_id: sessionId,
+        last_seen_at: new Date().toISOString()
+      };
+
+      // Use upsert on (child_id) if you add a unique constraint.
+      // If you DON'T have a unique constraint, we fallback to select->update/insert.
+      try {
+        // Try update first (if row exists)
+        const { data: existing, error: selErr } = await sb
+          .from("child_progress")
+          .select("id")
+          .eq("child_id", child.id)
+          .eq("owner_id", currentUser.id)
+          .maybeSingle();
+
+        if (selErr) {
+          console.error("child_progress select failed:", selErr);
+        }
+
+        if (existing?.id) {
+          const { error: upErr } = await sb
+            .from("child_progress")
+            .update(payload)
+            .eq("id", existing.id);
+          if (upErr) console.error("child_progress update failed:", upErr);
+        } else {
+          const { error: inErr } = await sb
+            .from("child_progress")
+            .insert(payload);
+          if (inErr) console.error("child_progress insert failed:", inErr);
+        }
+      } catch (e) {
+        console.error("child_progress save exception:", e);
+      }
+    }
+
+    async function saveSummaryProgress() {
+      // progress:
+      // Id, parent_user_id, child_id, maths_level, english_level, streak, updated_at
+      if (!child?.id || !currentUser?.id) return;
+
+      const payload = {
+        parent_user_id: currentUser.id,
+        child_id: child.id,
+        maths_level: null,
+        english_level: null,
+        streak: null,
         updated_at: new Date().toISOString()
       };
 
+      const safeDifficulty = (typeof difficultyLevel === "number") ? difficultyLevel : 1;
+
+      if (subject === "Maths") {
+        payload.maths_level = safeDifficulty;
+        payload.streak = streakCorrect; // use streakCorrect as a simple streak
+      } else if (subject === "English") {
+        payload.english_level = safeDifficulty;
+        payload.streak = questionsAnswered;
+      }
+
       const { error } = await sb
-        .from("child_progress")
-        .upsert(payload, { onConflict: "child_id,subject,area" });
+        .from("progress")
+        .upsert(payload, { onConflict: "child_id" });
 
-      if (error) console.warn("Progress save error:", error.message);
+      if (error) console.error("progress upsert failed:", error);
     }
 
-    async function saveSessionRow(finalNotes) {
-      if (!child?.id || !subject) return;
-
-      // If no activity, don’t spam sessions
-      if (attemptedThisSession <= 0 && sessionLog.length <= 0) return;
-
-      const payload = {
-        child_id: child.id,
-        subject,
-        area: area || null,
-        questions_attempted: attemptedThisSession,
-        questions_correct: correctThisSession,
-        notes: finalNotes || null
-      };
-
-      const { error } = await sb.from("sessions").insert(payload);
-      if (error) console.warn("Session insert error:", error.message);
+    async function saveAllProgress() {
+      await saveChildProgressRow();
+      await saveSummaryProgress();
     }
 
-    function clampInt(n, min, max) {
-      n = parseInt(n, 10);
-      if (isNaN(n)) n = min;
-      return Math.max(min, Math.min(max, n));
-    }
-
-    function updateRollingCorrect(isCorrect) {
-      // rolling window length capped at 10
-      // simplest: treat rollingCorrect as "score out of 10" drifting up/down
-      if (isCorrect) rollingCorrect = Math.min(10, rollingCorrect + 1);
-      else rollingCorrect = Math.max(0, rollingCorrect - 1);
-    }
-
-    function adjustDifficultyAfterQuestion(isCorrect) {
-      // Keep changes gentle and age-safe
-      updateRollingCorrect(isCorrect);
-
-      // Increase difficulty if doing well, decrease if struggling
-      if (rollingCorrect >= 8 && isCorrect) {
-        difficultyLevel = Math.min(5, difficultyLevel + 1);
-        rollingCorrect = 5; // reset to avoid rapid jumps
-      } else if (rollingCorrect <= 2 && !isCorrect) {
-        difficultyLevel = Math.max(1, difficultyLevel - 1);
-        rollingCorrect = 5;
+    // ---------- Adaptive difficulty ----------
+    function adjustDifficultyAfterAnswer(wasCorrect) {
+      // Keep within 1..3
+      if (wasCorrect) {
+        // gentle increase when doing well
+        if (streakCorrect >= 2) difficultyLevel = Math.min(3, difficultyLevel + 1);
+      } else {
+        // reduce difficulty when struggling
+        if (streakWrong >= 2) difficultyLevel = Math.max(1, difficultyLevel - 1);
       }
     }
 
-    function addWeakTagIfNeeded() {
-      // light tagging; you can refine later
-      if (!area) return;
-      const tag = `${subject}:${area}`;
-      if (!weakTags.includes(tag)) weakTags.push(tag);
-      if (weakTags.length > 10) weakTags = weakTags.slice(-10);
-    }
-
-    // --------------------------
-    // Maths generation (difficulty-aware but age-safe)
-    // --------------------------
+    // ---------- Maths generation ----------
     function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-    function getRangeForAgeAndDifficulty() {
-      // base age range
-      let min = 0, max = 10;
-      if (childAge <= 7) { min = 0; max = 10; }
-      else if (childAge <= 9) { min = 5; max = 30; }
-      else if (childAge <= 11) { min = 10; max = 80; }
-      else { min = 20; max = 200; }
+    function boundsForAgeAndDifficulty() {
+      // tuned so it stays age-appropriate and not “all 5s / all 7s”
+      const age = childAge;
+      const d = difficultyLevel;
 
-      // difficulty scales within the age band (never exceeds safe max)
-      const level = clampInt(difficultyLevel, 1, 5);
-      const span = Math.max(5, max - min);
-      const bump = Math.floor(span * (level - 1) * 0.12); // gentle
-      const newMin = Math.max(0, min + Math.floor(bump * 0.4));
-      const newMax = Math.max(newMin + 5, Math.min(max, max - Math.floor(bump * 0.2)));
-      return { min: newMin, max: newMax };
+      if (age <= 7) {
+        if (d === 1) return { min: 0, max: 10 };
+        if (d === 2) return { min: 5, max: 15 };
+        return { min: 10, max: 20 };
+      }
+      if (age <= 9) {
+        if (d === 1) return { min: 5, max: 25 };
+        if (d === 2) return { min: 10, max: 40 };
+        return { min: 20, max: 60 };
+      }
+      if (age <= 11) {
+        if (d === 1) return { min: 10, max: 60 };
+        if (d === 2) return { min: 20, max: 120 };
+        return { min: 50, max: 200 };
+      }
+      // 12+
+      if (d === 1) return { min: 20, max: 120 };
+      if (d === 2) return { min: 50, max: 300 };
+      return { min: 100, max: 600 };
     }
 
     function generateMathQuestion() {
-      const { min, max } = getRangeForAgeAndDifficulty();
+      const { min, max } = boundsForAgeAndDifficulty();
 
       if (area === "Addition") {
         const x = randInt(min, max);
@@ -524,22 +562,27 @@
       }
 
       if (area === "Multiplication") {
-        const tableMaxBase = childAge <= 7 ? 5 : childAge <= 9 ? 8 : 12;
-        const level = clampInt(difficultyLevel, 1, 5);
-        const tableMax = Math.min(12, tableMaxBase + Math.floor((level - 1) / 2)); // gentle
+        // tableMax scales slightly with difficulty & age
+        const age = childAge;
+        const base = (age <= 7) ? 5 : (age <= 9) ? 8 : 12;
+        const tableMax = Math.min(12, base + (difficultyLevel - 1) * 2);
+
         const x = randInt(2, tableMax);
         let y = randInt(2, tableMax);
         if (y === x) y = randInt(2, tableMax);
+
         return { displayText: `${x} × ${y} = ?`, correctAnswer: x * y };
       }
 
       if (area === "Division") {
-        const divMaxBase = childAge <= 7 ? 5 : childAge <= 9 ? 8 : 12;
-        const level = clampInt(difficultyLevel, 1, 5);
-        const divMax = Math.min(12, divMaxBase + Math.floor((level - 1) / 2));
+        const age = childAge;
+        const base = (age <= 7) ? 5 : (age <= 9) ? 8 : 12;
+        const divMax = Math.min(12, base + (difficultyLevel - 1) * 2);
+
         const divisor = randInt(2, divMax);
         const quotient = randInt(2, divMax);
         const dividend = divisor * quotient;
+
         return { displayText: `${dividend} ÷ ${divisor} = ?`, correctAnswer: quotient };
       }
 
@@ -556,6 +599,7 @@
       guided.active = false;
       guided.steps = [];
       guided.idx = 0;
+
       hintUsedForCurrent = false;
       waitingForNextButton = false;
 
@@ -570,6 +614,7 @@
       return String(text || "").replace(/\.\s+/g, ".\n\n");
     }
 
+    // Guided: simple but reliable (prevents “wrong because expecting old answer”)
     function buildGuidedSteps(q) {
       const raw = q.displayText.replace("= ?", "").trim();
       let op = null;
@@ -583,7 +628,7 @@
       const a = parts[0], b = parts[1];
       if (Number.isNaN(a) || Number.isNaN(b)) return [];
 
-      // Younger: counting style
+      // Younger = counting steps
       if (childAge <= 7) {
         if (op === "+") return [{ prompt: shortLineBreaks(`Start at ${a}.\nCount up ${b}.\n\nWhat number do you land on?`), expected: a+b }];
         if (op === "-") return [{ prompt: shortLineBreaks(`Start at ${a}.\nCount back ${b}.\n\nWhere do you land?`), expected: a-b }];
@@ -591,23 +636,16 @@
         if (op === "÷") return [{ prompt: shortLineBreaks(`How many groups of ${b} fit into ${a}?\n\nWhat do you get?`), expected: a/b }];
       }
 
-      // Older: still calm, still step-by-step prompt
-      return [{ prompt: shortLineBreaks(`Let’s go slowly.\n\nTry working it out.\n\nWhat answer do you get?`), expected: q.correctAnswer }];
+      // Older: still step-by-step, but simple
+      return [
+        { prompt: shortLineBreaks(`Let’s do it slowly.\n\nTry working it out.\n\nWhat answer do you get?`), expected: q.correctAnswer }
+      ];
     }
 
     async function requestHint() {
-      if (!currentQuestion) {
-        addBotMessage("I can give a hint once you have a question on the screen. 😊");
-        return;
-      }
-      if (guided.active) {
-        addBotMessage("We’re already doing this step by step.\n\nTry the step on the screen first. 😊");
-        return;
-      }
-      if (hintUsedForCurrent) {
-        addBotMessage("You’ve already got the hint for this one.\n\nHave another try! 😊");
-        return;
-      }
+      if (!currentQuestion) { addBotMessage("I can give a hint once you have a question on the screen. 😊"); return; }
+      if (guided.active) { addBotMessage("We’re already doing this step by step.\n\nTry the step on the screen first. 😊"); return; }
+      if (hintUsedForCurrent) { addBotMessage("You’ve already got the hint for this one.\n\nHave another try! 😊"); return; }
       hintUsedForCurrent = true;
 
       const hintPrompt = `
@@ -620,6 +658,9 @@ Give ONE short hint only.
 Use very simple words.
 Do NOT give the final answer.
 End with a gentle question.
+British English.
+Short sentences.
+Dyslexia-friendly spacing.
 `;
       const hintReply = await callBackend(hintPrompt);
       addBotMessage(hintReply);
@@ -642,51 +683,18 @@ Write a short response:
 - Do NOT ask a new question.
 British English.
 Short sentences.
+Dyslexia-friendly.
 `;
       return await callBackend(prompt);
     }
 
-    function handleNextQuestion() {
-      if (!waitingForNextButton) return;
-      if (sessionComplete()) {
-        waitingForNextButton = false;
-        endSessionUI();
-        return;
-      }
-      waitingForNextButton = false;
-      currentQuestion = generateMathQuestion();
-      if (!currentQuestion) {
-        addBotMessage("Sorry — I couldn’t make a new question right now. Please try again.");
-        return;
-      }
-      showMathQuestion(currentQuestion);
-    }
-
-    function showActionButtons(buttons) {
-      areaSelection.innerHTML = "";
-      buttons.forEach(b => {
-        const btn = document.createElement("button");
-        btn.className = "btn";
-        btn.type = "button";
-        btn.style.marginRight = "8px";
-        btn.style.marginBottom = "8px";
-        btn.innerText = b.label;
-        btn.addEventListener("click", b.onClick);
-        areaSelection.appendChild(btn);
-      });
-      areaSelection.style.display = "block";
-    }
-
-    async function endSessionUI() {
-      // Save a session record before UI locks
-      const notes = buildSessionNotes();
-      await saveSessionRow(notes);
-      await saveChildProgress();
-
+    // ---------- End session UI ----------
+    function endSessionUI() {
       calculator.style.display = "none";
       waitingForNextButton = false;
       currentQuestion = null;
       hintUsedForCurrent = false;
+
       guided.active = false;
       guided.steps = [];
       guided.idx = 0;
@@ -698,16 +706,10 @@ Short sentences.
       showActionButtons([
         {
           label: `Try ${nextSubject} next`,
-          onClick: async () => {
+          onClick: () => {
             addUserMessage(`Try ${nextSubject}`);
             areaSelection.style.display = "none";
             disableInput(false);
-
-            // Save current session before switching
-            const notes = buildSessionNotes();
-            await saveSessionRow(notes);
-            await saveChildProgress();
-
             selectSubject(nextSubject);
           }
         },
@@ -716,11 +718,10 @@ Short sentences.
           onClick: async () => {
             addUserMessage("Finished for today");
             areaSelection.style.display = "none";
+            disableInput(true);
 
-            // Save final session again (safe)
-            const notes = buildSessionNotes();
-            await saveSessionRow(notes);
-            await saveChildProgress();
+            // FINAL SAVE GUARD
+            await saveAllProgress();
 
             showFinishOptions();
           }
@@ -744,15 +745,9 @@ Short sentences.
         },
         {
           label: "Start a new session 🔄",
-          onClick: async () => {
+          onClick: () => {
             addUserMessage("Start a new session");
             areaSelection.style.display = "none";
-
-            // save before reset
-            const notes = buildSessionNotes();
-            await saveSessionRow(notes);
-            await saveChildProgress();
-
             resetSessionProgress();
             progressHeader.style.display = "none";
             subject = null; area = null;
@@ -762,22 +757,6 @@ Short sentences.
           }
         }
       ]);
-    }
-
-    function buildSessionNotes() {
-      const top = [];
-      top.push(`Child: ${childName} (age ${childAge})`);
-      top.push(`Subject: ${subject || "-"}`);
-      top.push(`Area: ${area || "-"}`);
-      top.push(`Difficulty level: ${difficultyLevel}`);
-      if (subject === "Maths") {
-        top.push(`Attempted: ${attemptedThisSession}, Correct: ${correctThisSession}`);
-      } else {
-        top.push(`Turns: ${attemptedThisSession}`);
-      }
-      if (weakTags?.length) top.push(`Weak tags: ${weakTags.join(", ")}`);
-      if (badges?.length) top.push(`Badges: ${badges.join(" ")}`);
-      return top.join(" | ");
     }
 
     function downloadParentSummaryPDF() {
@@ -847,9 +826,23 @@ Short sentences.
       }
     }
 
-    // --------------------------
-    // Selection UIs
-    // --------------------------
+    // ---------- Next question ----------
+    function handleNextQuestion() {
+      if (!waitingForNextButton) return;
+
+      if (sessionComplete()) {
+        waitingForNextButton = false;
+        endSessionUI();
+        return;
+      }
+
+      waitingForNextButton = false;
+      currentQuestion = generateMathQuestion();
+      if (!currentQuestion) { addBotMessage("Sorry — I couldn’t make a new question right now. Please try again."); return; }
+      showMathQuestion(currentQuestion);
+    }
+
+    // ---------- Subject/Area ----------
     function showAreaSelection(options) {
       areaSelection.innerHTML = "";
       options.forEach(opt => {
@@ -859,26 +852,16 @@ Short sentences.
         btn.style.marginRight = "8px";
         btn.style.marginBottom = "8px";
         btn.innerText = opt.label;
-
         btn.addEventListener("click", async () => {
           addUserMessage(opt.label);
           areaSelection.style.display = "none";
 
-          // end any running session cleanly before switching area
-          await saveSessionRow(buildSessionNotes());
-          await saveChildProgress();
-
           area = opt.area;
-
-          // load progress for this child/subject/area (important!)
-          await loadChildProgress();
 
           resetSessionProgress();
           disableInput(false);
 
-          guided.active = false;
-          guided.steps = [];
-          guided.idx = 0;
+          guided.active = false; guided.steps = []; guided.idx = 0;
 
           if (subject === "Maths") {
             calculator.style.display = "block";
@@ -901,19 +884,17 @@ Short sentences.
 `;
             const reply = await callBackend(prompt);
             addBotMessage(reply);
+
+            // save that they started English
+            await saveAllProgress();
           }
         });
-
         areaSelection.appendChild(btn);
       });
       areaSelection.style.display = "block";
     }
 
-    async function selectSubject(selected) {
-      // save prior session when switching
-      await saveSessionRow(buildSessionNotes());
-      await saveChildProgress();
-
+    function selectSubject(selected) {
       subject = selected;
       subjectSelection.style.display = "none";
       areaSelection.style.display = "none";
@@ -923,15 +904,10 @@ Short sentences.
       currentQuestion = null;
       waitingForNextButton = false;
       hintUsedForCurrent = false;
-      guided.active = false;
-      guided.steps = [];
-      guided.idx = 0;
+      guided.active = false; guided.steps = []; guided.idx = 0;
 
       progressHeader.style.display = "none";
       calculator.style.display = "none";
-
-      // reset session aggregation
-      resetSessionProgress();
 
       if (selected === "Maths") {
         addBotMessage("✏️ Great!\n\nWhich Maths area would you like to try first?");
@@ -952,9 +928,7 @@ Short sentences.
       }
     }
 
-    // --------------------------
-    // Main send handler
-    // --------------------------
+    // ---------- Main send handler ----------
     async function handleSend() {
       const text = input.value.trim();
       if (!text) return;
@@ -963,27 +937,29 @@ Short sentences.
       addUserMessage(text);
       input.value = "";
 
+      // if subject not chosen
       if (!subject) {
         addBotMessage("Please choose Maths or English using the buttons below.");
         subjectSelection.style.display = "block";
         return;
       }
 
+      // Limit check
+      if (sessionComplete()) {
+        endSessionUI();
+        return;
+      }
+
+      // -------------------------
       // Maths
+      // -------------------------
       if (subject === "Maths") {
         if (!area || !currentQuestion) {
           addBotMessage("Please choose a Maths area first using the buttons.");
           return;
         }
 
-        if (sessionComplete()) {
-          await endSessionUI();
-          return;
-        }
-
-        attemptedThisSession += 1;
-
-        // Guided steps
+        // Guided mode step validation
         if (guided.active) {
           const n = parseChildNumber(text);
           const step = guided.steps[guided.idx];
@@ -999,65 +975,73 @@ Short sentences.
               return;
             }
 
-            // Completed guided path = correct
-            guided.active = false;
-            guided.steps = [];
-            guided.idx = 0;
+            // Guided completed: count as correct question
+            guided.active = false; guided.steps = []; guided.idx = 0;
 
             questionsAnswered += 1;
             correctCount += 1;
-            correctThisSession += 1;
 
+            streakCorrect += 1;
+            streakWrong = 0;
+
+            adjustDifficultyAfterAnswer(true);
             maybeAwardBadge();
             updateProgressUI();
             maybeRewardMessage();
 
-            // difficulty adapts
-            adjustDifficultyAfterQuestion(true);
-            await saveChildProgress();
-
             sessionLog.push({ ts: nowTs(), subject, area, question: currentQuestion.displayText, childAnswer: "(completed via guided steps)", correct: true });
 
-            if (sessionComplete()) { await endSessionUI(); return; }
+            // SAVE after completion
+            await saveAllProgress();
+
+            if (sessionComplete()) { endSessionUI(); return; }
 
             waitingForNextButton = true;
             addBotMessage(`Brilliant, ${childName}!\n\nThat is correct.\n\nReady for the next one?`, { showNext:true });
             return;
           } else {
-            // incorrect guided step
-            addWeakTagIfNeeded();
-            adjustDifficultyAfterQuestion(false);
-            await saveChildProgress();
+            // wrong in guided step
+            streakWrong += 1;
+            streakCorrect = 0;
+
+            adjustDifficultyAfterAnswer(false);
+
+            sessionLog.push({ ts: nowTs(), subject, area, question: currentQuestion.displayText, childAnswer: text, correct: false });
+
+            // SAVE on wrong too (so reports can show struggle areas)
+            await saveAllProgress();
 
             addBotMessage(`Good try, ${childName}.\n\nLet’s do the same step again.\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${step.prompt}`);
             return;
           }
         }
 
-        // Normal marking
+        // Normal marking vs final answer
         const n = parseChildNumber(text);
-        const isCorrect = (n !== null && Math.abs(n - currentQuestion.correctAnswer) < 1e-9);
+        const correct = (n !== null && Math.abs(n - currentQuestion.correctAnswer) < 1e-9);
 
-        sessionLog.push({ ts: nowTs(), subject, area, question: currentQuestion.displayText, childAnswer: text, correct: isCorrect });
+        sessionLog.push({ ts: nowTs(), subject, area, question: currentQuestion.displayText, childAnswer: text, correct });
 
-        if (isCorrect) {
+        if (correct) {
           questionsAnswered += 1;
           correctCount += 1;
-          correctThisSession += 1;
 
+          streakCorrect += 1;
+          streakWrong = 0;
+
+          adjustDifficultyAfterAnswer(true);
           maybeAwardBadge();
           updateProgressUI();
           maybeRewardMessage();
 
-          // adapt & save
-          adjustDifficultyAfterQuestion(true);
-          await saveChildProgress();
+          // SAVE after completion
+          await saveAllProgress();
 
           const reply = await giveMathFeedback_AI(currentQuestion, text);
 
           if (sessionComplete()) {
             addBotMessage(reply);
-            await endSessionUI();
+            endSessionUI();
             return;
           }
 
@@ -1066,10 +1050,12 @@ Short sentences.
           return;
         }
 
-        // Incorrect -> guided steps
-        addWeakTagIfNeeded();
-        adjustDifficultyAfterQuestion(false);
-        await saveChildProgress();
+        // Incorrect: start guided steps
+        streakWrong += 1;
+        streakCorrect = 0;
+
+        adjustDifficultyAfterAnswer(false);
+        await saveAllProgress();
 
         const steps = buildGuidedSteps(currentQuestion);
         if (steps.length) {
@@ -1085,28 +1071,22 @@ Short sentences.
         return;
       }
 
+      // -------------------------
       // English
+      // -------------------------
       if (subject === "English") {
         if (!area) {
           addBotMessage("Please choose an English area first using the buttons.");
           return;
         }
 
-        if (sessionComplete()) {
-          await endSessionUI();
-          return;
-        }
-
-        attemptedThisSession += 1;
-
         questionsAnswered += 1;
         updateProgressUI();
 
-        // For English, we don’t mark correctness, but we can still “save progress”
-        // (simple: difficulty stays, rollingCorrect unchanged)
-        await saveChildProgress();
-
         sessionLog.push({ ts: nowTs(), subject, area, question: "(English turn)", childAnswer: text, correct: null });
+
+        // SAVE each turn
+        await saveAllProgress();
 
         const prompt = `
 You are Learnlio AI, a child-safe UK tutor.
@@ -1125,16 +1105,15 @@ British English.
         const reply = await callBackend(prompt);
         addBotMessage(reply);
 
-        if (sessionComplete()) await endSessionUI();
+        if (sessionComplete()) endSessionUI();
       }
     }
 
-    // --------------------------
-    // Calculator wiring
-    // --------------------------
+    // ---------- Calculator wiring ----------
     function setupCalculator() {
       const btns = Array.from(document.querySelectorAll(".calcBtn"));
       btns.forEach(b => {
+        b.style.cssText = "padding:14px; font-size:18px; border-radius:10px; border:none; background:#fff; cursor:pointer;";
         b.addEventListener("click", () => {
           const val = b.textContent;
           if (val === "C") return;
@@ -1148,9 +1127,7 @@ British English.
       });
     }
 
-    // --------------------------
-    // Auth + child loading
-    // --------------------------
+    // ---------- Auth + child loading ----------
     async function requireAuth() {
       const { data, error } = await sb.auth.getUser();
       if (error || !data?.user) {
@@ -1192,6 +1169,7 @@ British English.
         return false;
       }
 
+      // Ensure the child belongs to this parent
       if (data.parent_user_id !== currentUser.id) {
         showError("This child profile does not belong to this account. Please re-select a child on Dashboard.");
         disableInput(true);
@@ -1205,32 +1183,28 @@ British English.
       clearError();
       disableInput(false);
 
+      // Start tutor UI
       addBotMessage(`👋 Hi ${childName}!\n\nI’ll help you in a calm, step-by-step way.\n\nWhat are we working on today?`);
       subjectSelection.style.display = "block";
+
       return true;
     }
 
-    // --------------------------
-    // Logout
-    // --------------------------
+    // ---------- Logout ----------
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
       window.location.href = "/login.html";
     });
 
-    // --------------------------
-    // Buttons
-    // --------------------------
-    mathsBtn.addEventListener("click", async () => { addUserMessage("Maths"); await selectSubject("Maths"); });
-    englishBtn.addEventListener("click", async () => { addUserMessage("English"); await selectSubject("English"); });
+    // ---------- Buttons ----------
+    mathsBtn.addEventListener("click", () => { addUserMessage("Maths"); selectSubject("Maths"); });
+    englishBtn.addEventListener("click", () => { addUserMessage("English"); selectSubject("English"); });
 
     sendBtn.addEventListener("click", handleSend);
     input.addEventListener("keypress", e => { if (e.key === "Enter") handleSend(); });
 
-    // --------------------------
-    // Init
-    // --------------------------
+    // ---------- Init ----------
     (async () => {
       if (!sb) { showError("Supabase did not load. Check the supabase script tag."); return; }
 
