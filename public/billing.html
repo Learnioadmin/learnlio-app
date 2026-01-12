@@ -1,1 +1,249 @@
 
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio — Billing</title>
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="/assets/css/app.css" />
+
+  <!-- Minimal fallback styles -->
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
+    .container { max-width: 980px; margin: 0 auto; padding: 18px; }
+    .card { background:#fff; border-radius:16px; padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .nav { background:#fff; border-bottom:1px solid #ececf4; }
+    .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:700; }
+    .brand img { height:34px; width:auto; display:block; }
+    .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
+    .links a.active { background:#eef2ff; }
+    .btn { background:#0b5cff; border:none; color:#fff; padding:12px 14px; border-radius:12px; cursor:pointer; font-size:15px; }
+    .btn:disabled { opacity:.6; cursor:not-allowed; }
+    .btn.light { background:#e5e7eb; color:#111; }
+    .muted { color:#6b7280; font-size: 14px; }
+    .row { display:flex; gap:14px; flex-wrap:wrap; }
+    .col { flex:1 1 320px; }
+    .status { margin-top:10px; font-size:14px; }
+    .status.good { color:#16a34a; }
+    .status.bad { color:#dc2626; }
+    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#111; }
+    .banner { background:#fff7ed; border:1px solid #fed7aa; border-radius:16px; padding:14px; }
+    .divider { height:1px; background:#ececf4; margin:14px 0; }
+    .kpi { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+    .kpi .big { font-size:28px; font-weight:800; }
+  </style>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="/dash.html" aria-label="Learnlio home">
+        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <span>Learnlio</span>
+      </a>
+      <nav class="links">
+        <a href="/dash.html">Dashboard</a>
+        <a href="/chat.html">Learnlio Tutor</a>
+        <a href="/screener.html">Dyslexia Screener</a>
+        <a href="/reports.html">Reports</a>
+        <a class="active" href="/billing.html">Billing</a>
+        <button id="logoutBtn" class="btn light" type="button">Log out</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="pageMsg" class="banner" style="display:none; margin-bottom:14px;"></div>
+
+    <div class="row">
+      <section class="col">
+        <div class="card">
+          <h2 style="margin:0 0 6px;">Your plan</h2>
+          <p class="muted" style="margin:0 0 14px;">
+            We’re keeping this simple while we’re in MVP.
+          </p>
+
+          <div class="kpi">
+            <div class="big" id="planTitle">Loading…</div>
+            <span class="pill" id="statusPill">—</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="muted">Trial ends</div>
+          <div style="font-weight:700; margin-top:6px;" id="trialEnds">—</div>
+
+          <div style="margin-top:14px;" class="muted">
+            If your trial has ended, you’ll need to upgrade to keep using Learnlio.
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+            <button id="upgradeBtn" class="btn" type="button">Upgrade (coming soon)</button>
+            <a class="btn light" href="/dash.html" style="text-decoration:none; display:inline-block;">Back to Dashboard</a>
+          </div>
+
+          <div id="upgradeHint" class="status" style="margin-top:12px;"></div>
+        </div>
+      </section>
+
+      <section class="col">
+        <div class="card">
+          <h2 style="margin:0 0 6px;">What happens next?</h2>
+          <p class="muted" style="margin:0 0 14px;">
+            You’re early — thanks for helping shape Learnlio.
+          </p>
+
+          <ul style="margin:0; padding-left:18px; line-height:1.8;">
+            <li>We’ll add Stripe payments next.</li>
+            <li>Your child profiles and progress stay saved in your account.</li>
+            <li>Reports will show learning progress over time.</li>
+          </ul>
+
+          <div class="divider"></div>
+
+          <div class="muted">Need help?</div>
+          <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="copySupportBtn" class="btn light" type="button">Copy support email</button>
+            <span class="muted" id="copiedMsg" style="display:none;">Copied ✅</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+  (() => {
+    // ====== CONFIG ======
+    const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+    const SUPPORT_EMAIL = "support@learnlio.co.uk"; // change if you want
+    // ====================
+
+    const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const pageMsg = document.getElementById("pageMsg");
+    const planTitle = document.getElementById("planTitle");
+    const statusPill = document.getElementById("statusPill");
+    const trialEnds = document.getElementById("trialEnds");
+    const upgradeBtn = document.getElementById("upgradeBtn");
+    const upgradeHint = document.getElementById("upgradeHint");
+
+    const copySupportBtn = document.getElementById("copySupportBtn");
+    const copiedMsg = document.getElementById("copiedMsg");
+
+    function showBanner(html) {
+      pageMsg.style.display = "block";
+      pageMsg.innerHTML = html;
+    }
+
+    function fmtDateOnly(iso) {
+      if (!iso) return "—";
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return "—";
+      // dd/mm/yyyy
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
+
+    function setStatusPill(status) {
+      const s = (status || "unknown").toLowerCase();
+      statusPill.textContent = s;
+      statusPill.style.background = (s === "active" || s === "trialing") ? "#ecfdf5" : "#fef2f2";
+      statusPill.style.color = (s === "active" || s === "trialing") ? "#065f46" : "#991b1b";
+      statusPill.style.border = "1px solid " + ((s === "active" || s === "trialing") ? "#a7f3d0" : "#fecaca");
+    }
+
+    async function requireAuth() {
+      const { data, error } = await sb.auth.getUser();
+      if (error || !data?.user) {
+        window.location.href = "/login.html";
+        return null;
+      }
+      return data.user;
+    }
+
+    async function loadSubscription(userId) {
+      const { data, error } = await sb
+        .from("subscriptions")
+        .select("user_id, plan, status, trial_ends_at, updated_at")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (error) {
+        showBanner(`<h3 style="margin:0 0 6px;">We can’t load billing right now.</h3><div class="muted">${error.message}</div>`);
+        planTitle.textContent = "—";
+        setStatusPill("unknown");
+        return;
+      }
+
+      if (!data) {
+        planTitle.textContent = "Free trial";
+        setStatusPill("trialing");
+        trialEnds.textContent = "—";
+        showBanner(`<h3 style="margin:0 0 6px;">Trial status not found</h3><div class="muted">No subscription row exists yet for this account.</div>`);
+        return;
+      }
+
+      planTitle.textContent = data.plan ? data.plan : "Free trial";
+      setStatusPill(data.status || "unknown");
+      trialEnds.textContent = fmtDateOnly(data.trial_ends_at);
+
+      // If expired
+      if (data.trial_ends_at) {
+        const ends = new Date(data.trial_ends_at);
+        if (!isNaN(ends.getTime()) && ends.getTime() < Date.now() && (data.status || "").toLowerCase() !== "active") {
+          showBanner(`
+            <h3 style="margin:0 0 6px;">Your trial has ended</h3>
+            <div class="muted">Upgrade to keep using Learnlio.</div>
+          `);
+        }
+      }
+    }
+
+    logoutBtn.addEventListener("click", async () => {
+      await sb.auth.signOut();
+      localStorage.removeItem("selectedChild");
+      window.location.href = "/login.html";
+    });
+
+    upgradeBtn.addEventListener("click", () => {
+      upgradeHint.className = "status bad";
+      upgradeHint.textContent = "Stripe upgrades are not wired up yet. This page is ready for it next.";
+    });
+
+    copySupportBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(SUPPORT_EMAIL);
+        copiedMsg.style.display = "inline";
+        setTimeout(() => copiedMsg.style.display = "none", 1200);
+      } catch {
+        // fallback
+        alert(SUPPORT_EMAIL);
+      }
+    });
+
+    (async () => {
+      if (!sb) {
+        showBanner(`<h3 style="margin:0 0 6px;">Supabase didn’t load</h3><div class="muted">Check the supabase script tag.</div>`);
+        return;
+      }
+
+      const user = await requireAuth();
+      if (!user) return;
+
+      await loadSubscription(user.id);
+    })();
+  })();
+  </script>
+</body>
+</html>
