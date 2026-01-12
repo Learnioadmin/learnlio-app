@@ -3,737 +3,319 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Learnlio Reports</title>
+  <title>Learnlio — Reports</title>
 
-  <!-- Dyslexia-friendly font -->
-  <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
+  <!-- App CSS -->
+  <link rel="stylesheet" href="/assets/css/app.css" />
 
-  <!-- jsPDF for PDF downloads -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- Supabase JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  <!-- Minimal fallback styles -->
   <style>
-    :root{
-      --bg:#f6f7fb;
-      --card:#ffffff;
-      --text:#111827;
-      --muted:#6b7280;
-      --border:#e5e7eb;
-      --primary:#2563eb;
-      --primary2:#1d4ed8;
-      --accent:#10b981;
-      --warn:#f59e0b;
-      --shadow: 0 10px 30px rgba(17,24,39,0.08);
-      --radius: 16px;
-      --max: 1040px;
-      --font: "OpenDyslexic", Arial, sans-serif;
-    }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
+    .container { max-width: 980px; margin: 0 auto; padding: 18px; }
+    .card { background:#fff; border-radius:16px; padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .nav { background:#fff; border-bottom:1px solid #ececf4; }
+    .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:700; }
+    .brand img { height:34px; width:auto; display:block; }
+    .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
+    .links a.active { background:#eef2ff; }
+    .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; }
+    .btn.light { background:#e5e7eb; color:#111; }
+    .muted { color:#6b7280; font-size: 14px; }
+    .status { margin-top:10px; font-size:14px; }
+    .status.bad { color:#dc2626; }
+    .status.good { color:#16a34a; }
 
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      font-family:var(--font);
-      line-height:1.6;
-    }
+    .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
+    @media(min-width: 900px){ .grid { grid-template-columns: 1fr 1fr; } }
 
-    /* Top nav (matches the clean reports/screener vibe) */
-    .topbar{
-      position:sticky; top:0; z-index:50;
-      background:rgba(246,247,251,0.92);
-      backdrop-filter: blur(10px);
-      border-bottom:1px solid var(--border);
-    }
-    .topbar-inner{
-      max-width:var(--max);
-      margin:0 auto;
-      padding:12px 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .brand{
-      display:flex; align-items:center; gap:10px;
-      text-decoration:none; color:var(--text);
-      min-width: 160px;
-    }
-    .brand img{
-      width:36px; height:36px; border-radius:10px;
-      object-fit:cover;
-      box-shadow: 0 6px 18px rgba(37,99,235,0.15);
-    }
-    .brand .title{
-      font-weight:800;
-      letter-spacing:0.2px;
-    }
-    .nav{
-      display:flex; flex-wrap:wrap;
-      gap:8px;
-      justify-content:center;
-    }
-    .nav a{
-      text-decoration:none;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid transparent;
-      color:var(--text);
-      font-size:14px;
-    }
-    .nav a:hover{
-      background:#fff;
-      border-color:var(--border);
-      box-shadow: 0 6px 18px rgba(17,24,39,0.05);
-    }
-    .nav a.active{
-      background:#fff;
-      border-color:#c7d2fe;
-      color:#1e40af;
-    }
-    .right{
-      display:flex; gap:8px; align-items:center;
-    }
-    .btn{
-      border:none;
-      cursor:pointer;
-      border-radius:12px;
-      padding:10px 12px;
-      font-family:var(--font);
-      font-size:14px;
-      background:var(--primary);
-      color:#fff;
-    }
-    .btn:hover{ background:var(--primary2); }
-    .btn.secondary{
-      background:#fff; color:var(--text);
-      border:1px solid var(--border);
-    }
-    .btn.secondary:hover{
-      border-color:#c7d2fe;
-      box-shadow: 0 6px 18px rgba(17,24,39,0.05);
-    }
-
-    /* Page */
-    .wrap{
-      max-width:var(--max);
-      margin:0 auto;
-      padding:18px 16px 40px;
-    }
-    .header{
-      display:flex;
-      flex-wrap:wrap;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:12px;
-      margin-top:10px;
-    }
-    h1{
-      margin:0;
-      font-size:22px;
-      line-height:1.2;
-    }
-    .sub{
-      color:var(--muted);
-      font-size:14px;
-      margin-top:6px;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap:14px;
-      margin-top:16px;
-    }
-    @media (max-width: 980px){
-      .grid{ grid-template-columns: 1fr; }
-      .brand{ min-width:auto; }
-    }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:14px;
-    }
-    .card h2{
-      margin:0;
-      font-size:16px;
-    }
-    .row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:12px;
-      align-items:center;
-    }
-    label{
-      font-size:14px;
-      color:var(--muted);
-    }
-    select{
-      font-family:var(--font);
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:#fff;
-      font-size:14px;
-      min-width: 240px;
-    }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:#fff;
-      color:var(--text);
-      font-size:13px;
-    }
-    .pill.good{ border-color:#bbf7d0; background:#ecfdf5; }
-    .pill.warn{ border-color:#fde68a; background:#fffbeb; }
-    .pill.muted{ color:var(--muted); }
-
-    .table{
-      width:100%;
-      border-collapse:collapse;
-      margin-top:10px;
-      overflow:hidden;
-      border-radius:14px;
-      border:1px solid var(--border);
-    }
-    .table th, .table td{
-      padding:10px 10px;
-      border-bottom:1px solid var(--border);
-      font-size:14px;
-      vertical-align:top;
-    }
-    .table th{
-      text-align:left;
-      background:#f9fafb;
-      color:#374151;
-      font-weight:700;
-    }
-    .table tr:last-child td{ border-bottom:none; }
-
-    .empty{
-      padding:12px;
-      border-radius:14px;
-      border:1px dashed #cbd5e1;
-      background:#fff;
-      color:var(--muted);
-      font-size:14px;
-      margin-top:10px;
-    }
-
-    .note{
-      margin-top:10px;
-      font-size:13px;
-      color:var(--muted);
-    }
-
-    .toast{
-      margin-top:12px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background:#fff;
-      display:none;
-      font-size:14px;
-    }
-    .toast.show{ display:block; }
-    .toast.error{ border-color:#fecaca; background:#fff1f2; color:#991b1b; }
-    .toast.ok{ border-color:#bbf7d0; background:#ecfdf5; color:#065f46; }
+    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; }
+    .row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f1f1f6; }
+    .row:last-child { border-bottom:none; }
+    .k { color:#6b7280; font-size:13px; }
+    .v { font-weight:650; }
   </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
-  <!-- Top bar -->
-  <div class="topbar">
-    <div class="topbar-inner">
+  <header class="nav">
+    <div class="nav-inner">
       <a class="brand" href="/dash.html" aria-label="Learnlio home">
-        <!-- Put your logo here locally for consistency -->
-        <img src="/assets/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
-        <div class="title">Learnlio</div>
+        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <span>Learnlio</span>
       </a>
-
-      <nav class="nav" aria-label="Primary">
-        <a href="/dash.html">Dash</a>
+      <nav class="links">
+        <a href="/dash.html">Dashboard</a>
         <a href="/chat.html">Learnlio Tutor</a>
         <a href="/screener.html">Dyslexia Screener</a>
         <a class="active" href="/reports.html">Reports</a>
+        <button id="logoutBtn" class="btn light" type="button">Log out</button>
       </nav>
-
-      <div class="right">
-        <button id="logoutBtn" class="btn secondary" type="button">Log out</button>
-      </div>
     </div>
-  </div>
+  </header>
 
-  <main class="wrap">
-    <div class="header">
-      <div>
-        <h1>Reports</h1>
-        <div class="sub">View progress and download a parent report for each child.</div>
-      </div>
-      <div class="row">
-        <span id="statusPill" class="pill muted">Not loaded</span>
-      </div>
-    </div>
-
-    <div id="toast" class="toast"></div>
-
-    <div class="grid">
-      <!-- Left: Progress + sessions -->
-      <section class="card">
-        <h2>Child progress</h2>
-
-        <div class="row">
-          <div>
-            <label for="childSelect">Select child</label><br>
-            <select id="childSelect">
-              <option value="">Loading…</option>
-            </select>
-          </div>
-
-          <button id="refreshBtn" class="btn secondary" type="button">Refresh</button>
-          <button id="pdfBtn" class="btn" type="button">Download PDF</button>
+  <main class="container">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+        <div>
+          <h1 style="margin:0 0 6px;">Reports</h1>
+          <div id="childHeader" class="muted">Loading child…</div>
         </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button id="refreshBtn" class="btn light" type="button">Refresh</button>
+        </div>
+      </div>
 
-        <div id="progressArea" class="empty" style="display:none;"></div>
+      <div id="pageError" class="status bad" style="display:none;"></div>
+      <div id="pageOk" class="status good" style="display:none;"></div>
 
-        <table id="progressTable" class="table" style="display:none;">
-          <thead>
-            <tr>
-              <th>Subject</th>
-              <th>Area</th>
-              <th>Level</th>
-              <th>Rolling correct</th>
-              <th>Weak spots</th>
-              <th>Updated</th>
-            </tr>
-          </thead>
-          <tbody id="progressTbody"></tbody>
-        </table>
+      <div class="grid" style="margin-top:14px;">
+        <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="margin:0; font-size:16px;">Overall progress</h2>
+            <span class="pill">Table: progress</span>
+          </div>
+          <div id="overallBox" style="margin-top:10px;">
+            <div class="muted">Loading…</div>
+          </div>
+        </section>
 
-        <div class="note">
-          This page is already “wired” to read from Supabase tables:
-          <strong>children</strong>, <strong>child_progress</strong>, and <strong>sessions</strong>.
+        <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="margin:0; font-size:16px;">Latest tutor signals</h2>
+            <span class="pill">Table: child_progress</span>
+          </div>
+          <div id="signalsBox" style="margin-top:10px;">
+            <div class="muted">Loading…</div>
+          </div>
+        </section>
+      </div>
+
+      <section class="card" style="margin-top:14px; box-shadow:none; border:1px solid #ececf4;">
+        <h2 style="margin:0 0 8px; font-size:16px;">What this means</h2>
+        <div class="muted" style="line-height:1.6;">
+          These reports show:
+          <ul style="margin:8px 0 0 18px;">
+            <li><b>Overall progress</b> = your child’s latest saved levels and streak.</li>
+            <li><b>Latest tutor signals</b> = the most recent subject/area, difficulty and streaks from tutor sessions.</li>
+          </ul>
         </div>
       </section>
 
-      <!-- Right: Recent sessions -->
-      <aside class="card">
-        <h2>Recent sessions</h2>
-        <div id="sessionsEmpty" class="empty" style="display:none;"></div>
-
-        <table id="sessionsTable" class="table" style="display:none;">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Subject</th>
-              <th>Area</th>
-              <th>Score</th>
-            </tr>
-          </thead>
-          <tbody id="sessionsTbody"></tbody>
-        </table>
-
-        <div class="note">
-          Tip: once your chat starts writing sessions, parents will see a real history here.
+      <section id="noDataBox" class="card" style="margin-top:14px; box-shadow:none; border:1px dashed #cbd5e1; display:none;">
+        <h2 style="margin:0 0 8px; font-size:16px;">No progress data yet</h2>
+        <div class="muted" style="line-height:1.6;">
+          I can’t see any saved progress for this child yet.<br>
+          Do a short Tutor session (Maths or English), then come back and press <b>Refresh</b>.
         </div>
-      </aside>
+        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="btn" href="/chat.html" style="text-decoration:none; display:inline-block;">Go to Tutor</a>
+          <a class="btn light" href="/dash.html" style="text-decoration:none; display:inline-block;">Go to Dashboard</a>
+        </div>
+      </section>
     </div>
   </main>
 
   <script>
-    // ----------------------------
-    // 1) Supabase config
-    // ----------------------------
-    // IMPORTANT:
-    // Use the SAME Supabase URL + Anon key you used on login/dash/chat.
-    // If you already set window.SUPABASE_URL / window.SUPABASE_ANON_KEY in another script,
-    // this will pick them up. Otherwise paste them below.
+  (() => {
+    // =========================
+    // CONFIG (PASTE YOUR VALUES)
+    // =========================
+    const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+    // =========================
 
-    const SUPABASE_URL = window.SUPABASE_URL || "https://jesuzdpivwsprkmqmoab.supabase.co";
-    const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+    const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Avoid: "Identifier 'supabase' has already been declared"
-    const sb = (window.__sbReports)
-      ? window.__sbReports
-      : (window.__sbReports = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY));
-
-    // ----------------------------
-    // 2) UI helpers
-    // ----------------------------
-    const statusPill = document.getElementById("statusPill");
-    const toast = document.getElementById("toast");
-
-    const childSelect = document.getElementById("childSelect");
-    const refreshBtn = document.getElementById("refreshBtn");
-    const pdfBtn = document.getElementById("pdfBtn");
     const logoutBtn = document.getElementById("logoutBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
 
-    const progressTable = document.getElementById("progressTable");
-    const progressTbody = document.getElementById("progressTbody");
-    const progressArea = document.getElementById("progressArea");
+    const pageError = document.getElementById("pageError");
+    const pageOk = document.getElementById("pageOk");
+    const childHeader = document.getElementById("childHeader");
 
-    const sessionsTable = document.getElementById("sessionsTable");
-    const sessionsTbody = document.getElementById("sessionsTbody");
-    const sessionsEmpty = document.getElementById("sessionsEmpty");
+    const overallBox = document.getElementById("overallBox");
+    const signalsBox = document.getElementById("signalsBox");
+    const noDataBox = document.getElementById("noDataBox");
 
-    function setPill(text, kind="muted"){
-      statusPill.className = "pill " + kind;
-      statusPill.textContent = text;
+    let currentUser = null;
+    let child = null;
+
+    function showError(msg){
+      pageError.style.display = "block";
+      pageError.textContent = msg;
+    }
+    function clearError(){
+      pageError.style.display = "none";
+      pageError.textContent = "";
+    }
+    function showOk(msg){
+      pageOk.style.display = "block";
+      pageOk.textContent = msg;
+      setTimeout(() => { pageOk.style.display="none"; }, 2000);
     }
 
-    function showToast(msg, type="ok"){
-      toast.className = "toast show " + (type === "error" ? "error" : "ok");
-      toast.textContent = msg;
-      setTimeout(() => toast.classList.remove("show"), 3800);
+    function getSelectedChild(){
+      try {
+        const raw = localStorage.getItem("selectedChild");
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch { return null; }
     }
 
-    function fmtDate(ts){
-      try{
-        return new Date(ts).toLocaleString("en-GB");
-      }catch(e){
-        return String(ts || "");
-      }
+    function safe(v, fallback="—"){
+      if (v === null || v === undefined || v === "") return fallback;
+      return String(v);
     }
 
-    function safeText(v){
-      return (v === null || v === undefined) ? "" : String(v);
+    function renderRows(targetEl, rows){
+      targetEl.innerHTML = "";
+      rows.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "row";
+        div.innerHTML = `<div class="k">${r.k}</div><div class="v">${r.v}</div>`;
+        targetEl.appendChild(div);
+      });
     }
 
-    // ----------------------------
-    // 3) Auth gate
-    // ----------------------------
     async function requireAuth(){
-      const { data, error } = await sb.auth.getSession();
-      if (error) {
-        setPill("Auth error", "warn");
-        showToast("Auth error. Please log in again.", "error");
+      const { data, error } = await sb.auth.getUser();
+      if (error || !data?.user){
         window.location.href = "/login.html";
-        return null;
+        return false;
       }
-      const session = data?.session;
-      if (!session?.user) {
-        setPill("Not logged in", "warn");
-        window.location.href = "/login.html";
-        return null;
-      }
-      setPill("Logged in", "good");
-      return session.user;
+      currentUser = data.user;
+      return true;
     }
 
-    // ----------------------------
-    // 4) Load children list
-    // ----------------------------
-    async function loadChildren(user){
-      childSelect.innerHTML = `<option value="">Select a child…</option>`;
+    async function loadChildProfile(){
+      const selected = getSelectedChild();
+      if (!selected?.id){
+        showError("No child selected. Please go to Dashboard and select a child.");
+        childHeader.textContent = "No child selected";
+        overallBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
+        signalsBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
+        noDataBox.style.display = "none";
+        return false;
+      }
 
-      // Your children table includes:
-      // id, parent_user_id, child_name, child_dob, created_at, ...
-      // So we filter by parent_user_id = user.id
       const { data, error } = await sb
         .from("children")
-        .select("id, child_name, child_dob, created_at")
-        .eq("parent_user_id", user.id)
-        .order("created_at", { ascending: true });
+        .select("id, parent_user_id, child_name, child_dob")
+        .eq("id", selected.id)
+        .single();
 
-      if (error){
-        setPill("Children load failed", "warn");
-        showToast("Couldn’t load children. Check table columns + RLS.", "error");
-        return [];
+      if (error || !data){
+        showError("Could not load child profile. Please re-select the child on Dashboard.");
+        return false;
       }
 
-      if (!data || data.length === 0){
-        childSelect.innerHTML = `<option value="">No children yet (add one on Dash)</option>`;
-        setPill("No children", "warn");
-        return [];
+      if (data.parent_user_id !== currentUser.id){
+        showError("This child profile does not belong to this account.");
+        return false;
       }
 
-      for (const c of data){
-        const dob = c.child_dob ? ` (DOB: ${safeText(c.child_dob)})` : "";
-        const opt = document.createElement("option");
-        opt.value = c.id;
-        opt.textContent = `${safeText(c.child_name)}${dob}`;
-        childSelect.appendChild(opt);
-      }
-
-      setPill("Ready", "good");
-      return data;
+      child = data;
+      const dob = data.child_dob ? ` • DOB: ${data.child_dob}` : "";
+      childHeader.textContent = `Child: ${data.child_name}${dob}`;
+      clearError();
+      return true;
     }
 
-    // ----------------------------
-    // 5) Load progress + sessions
-    // ----------------------------
-    async function loadProgress(childId){
-      progressTbody.innerHTML = "";
-      progressArea.style.display = "none";
-      progressTable.style.display = "none";
+    async function loadReports(){
+      if (!child?.id) return;
 
-      const { data, error } = await sb
+      overallBox.innerHTML = `<div class="muted">Loading…</div>`;
+      signalsBox.innerHTML = `<div class="muted">Loading…</div>`;
+      noDataBox.style.display = "none";
+
+      // 1) progress table (overall)
+      const { data: overall, error: overallErr } = await sb
+        .from("progress")
+        .select("id, parent_user_id, child_id, maths_level, english_level, streak, updated_at")
+        .eq("child_id", child.id)
+        .maybeSingle();
+
+      if (overallErr) {
+        console.error("progress read error", overallErr);
+      }
+
+      // 2) child_progress table (signals)
+      const { data: signals, error: signalsErr } = await sb
         .from("child_progress")
-        .select("subject, area, difficulty_level, rolling_correct, weak_tags, updated_at")
-        .eq("child_id", childId)
-        .order("updated_at", { ascending: false });
+        .select("id, child_id, owner_id, subject, area, difficulty, streak_correct, streak_wrong, last_session_id, last_seen_at")
+        .eq("child_id", child.id)
+        .eq("owner_id", currentUser.id)
+        .maybeSingle();
 
-      if (error){
-        progressArea.style.display = "block";
-        progressArea.textContent = "No progress data yet (or table/RLS not set).";
-        return [];
+      if (signalsErr) {
+        console.error("child_progress read error", signalsErr);
       }
 
-      if (!data || data.length === 0){
-        progressArea.style.display = "block";
-        progressArea.textContent = "No progress saved yet. Once Tutor starts writing progress, it will appear here.";
-        return [];
-      }
+      const hasAnyData = !!overall || !!signals;
 
-      for (const row of data){
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${safeText(row.subject)}</td>
-          <td>${safeText(row.area)}</td>
-          <td>${safeText(row.difficulty_level ?? "")}</td>
-          <td>${safeText(row.rolling_correct ?? "")}</td>
-          <td>${Array.isArray(row.weak_tags) ? row.weak_tags.join(", ") : safeText(row.weak_tags)}</td>
-          <td>${fmtDate(row.updated_at)}</td>
-        `;
-        progressTbody.appendChild(tr);
-      }
-
-      progressTable.style.display = "table";
-      return data;
-    }
-
-    async function loadSessions(childId){
-      sessionsTbody.innerHTML = "";
-      sessionsEmpty.style.display = "none";
-      sessionsTable.style.display = "none";
-
-      const { data, error } = await sb
-        .from("sessions")
-        .select("created_at, subject, area, questions_attempted, questions_correct, notes")
-        .eq("child_id", childId)
-        .order("created_at", { ascending: false })
-        .limit(12);
-
-      if (error){
-        sessionsEmpty.style.display = "block";
-        sessionsEmpty.textContent = "No session data yet (or table/RLS not set).";
-        return [];
-      }
-
-      if (!data || data.length === 0){
-        sessionsEmpty.style.display = "block";
-        sessionsEmpty.textContent = "No sessions saved yet. Once Tutor starts saving sessions, they will appear here.";
-        return [];
-      }
-
-      for (const s of data){
-        const score = (s.questions_attempted != null && s.questions_correct != null)
-          ? `${s.questions_correct}/${s.questions_attempted}`
-          : "—";
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${fmtDate(s.created_at)}</td>
-          <td>${safeText(s.subject)}</td>
-          <td>${safeText(s.area)}</td>
-          <td>${score}</td>
-        `;
-        sessionsTbody.appendChild(tr);
-      }
-
-      sessionsTable.style.display = "table";
-      return data;
-    }
-
-    // ----------------------------
-    // 6) PDF download (ready for logo)
-    // ----------------------------
-    async function fetchLogoDataURL(){
-      // Best: put your logo at /assets/logo.webp in the repo so it's same-origin.
-      // If it isn't there, we just skip the image.
-      try{
-        const res = await fetch("/assets/logo.webp", { cache: "no-store" });
-        if (!res.ok) return null;
-        const blob = await res.blob();
-        return await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = () => resolve(null);
-          reader.readAsDataURL(blob);
-        });
-      }catch(e){
-        return null;
-      }
-    }
-
-    async function downloadPDF(childName, progressRows, sessionRows){
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      let y = 14;
-
-      // Logo (optional)
-      const logo = await fetchLogoDataURL();
-      if (logo){
-        try{
-          doc.addImage(logo, "WEBP", 14, 10, 18, 18);
-          doc.setFontSize(18);
-          doc.text("Learnlio Parent Report", 36, 20);
-          y = 34;
-        }catch(e){
-          doc.setFontSize(18);
-          doc.text("Learnlio Parent Report", 14, y);
-          y += 10;
-        }
+      // Render overall
+      if (!overall) {
+        overallBox.innerHTML = `<div class="muted">No overall progress row yet.</div>`;
       } else {
-        doc.setFontSize(18);
-        doc.text("Learnlio Parent Report", 14, y);
-        y += 10;
+        renderRows(overallBox, [
+          { k: "Maths level",   v: safe(overall.maths_level) },
+          { k: "English level", v: safe(overall.english_level) },
+          { k: "Streak",        v: safe(overall.streak) },
+          { k: "Last updated",  v: safe(overall.updated_at) }
+        ]);
       }
 
-      doc.setFontSize(12);
-      doc.text(`Child: ${childName}`, 14, y); y += 7;
-      doc.text(`Generated: ${new Date().toLocaleString("en-GB")}`, 14, y); y += 10;
-
-      doc.setFontSize(13);
-      doc.text("Progress snapshot", 14, y); y += 8;
-      doc.setFontSize(11);
-
-      if (!progressRows || progressRows.length === 0){
-        doc.text("No saved progress yet.", 14, y); y += 7;
+      // Render signals
+      if (!signals) {
+        signalsBox.innerHTML = `<div class="muted">No tutor signals row yet.</div>`;
       } else {
-        for (const p of progressRows.slice(0, 12)){
-          const weak = Array.isArray(p.weak_tags) ? p.weak_tags.join(", ") : (p.weak_tags || "");
-          const line = `${p.subject} / ${p.area}  |  Level: ${p.difficulty_level ?? "—"}  |  Correct: ${p.rolling_correct ?? "—"}  |  Weak: ${weak || "—"}`;
-          const wrapped = doc.splitTextToSize(line, 180);
-          wrapped.forEach(w => {
-            if (y > 280){ doc.addPage(); y = 14; }
-            doc.text(w, 14, y);
-            y += 6;
-          });
-          y += 2;
-        }
+        renderRows(signalsBox, [
+          { k: "Last subject",   v: safe(signals.subject) },
+          { k: "Last area",      v: safe(signals.area) },
+          { k: "Difficulty",     v: safe(signals.difficulty) },
+          { k: "Streak correct", v: safe(signals.streak_correct) },
+          { k: "Streak wrong",   v: safe(signals.streak_wrong) },
+          { k: "Last session",   v: safe(signals.last_session_id) },
+          { k: "Last seen",      v: safe(signals.last_seen_at) }
+        ]);
       }
 
-      y += 4;
-      doc.setFontSize(13);
-      doc.text("Recent sessions", 14, y); y += 8;
-      doc.setFontSize(11);
-
-      if (!sessionRows || sessionRows.length === 0){
-        doc.text("No sessions saved yet.", 14, y); y += 7;
+      if (!hasAnyData) {
+        noDataBox.style.display = "block";
       } else {
-        for (const s of sessionRows.slice(0, 12)){
-          const score = (s.questions_attempted != null && s.questions_correct != null)
-            ? `${s.questions_correct}/${s.questions_attempted}`
-            : "—";
-          const line = `${new Date(s.created_at).toLocaleString("en-GB")}  |  ${s.subject} / ${s.area}  |  Score: ${score}`;
-          if (y > 280){ doc.addPage(); y = 14; }
-          doc.text(line, 14, y);
-          y += 6;
-        }
+        noDataBox.style.display = "none";
       }
 
-      y += 6;
-      doc.setFontSize(13);
-      doc.text("Simple next steps for parents", 14, y); y += 8;
-      doc.setFontSize(11);
-      const plan = [
-        "1) Keep sessions short and calm (5–10 minutes).",
-        "2) Praise effort, not speed.",
-        "3) If a child struggles, use step-by-step and a hint before trying again.",
-        "4) Repeat small wins regularly."
-      ];
-      plan.forEach(line => {
-        if (y > 280){ doc.addPage(); y = 14; }
-        doc.text(line, 14, y);
-        y += 6;
-      });
-
-      doc.save(`Learnlio-Report-${(childName || "Child").replace(/\s+/g, "-")}.pdf`);
+      showOk("Reports refreshed");
     }
-
-    // ----------------------------
-    // 7) Wiring
-    // ----------------------------
-    let currentUser = null;
-    let childrenCache = [];
-    let lastProgress = [];
-    let lastSessions = [];
-
-    async function refreshAll(){
-      const childId = childSelect.value;
-      if (!childId){
-        progressArea.style.display = "block";
-        progressArea.textContent = "Pick a child to view reports.";
-        progressTable.style.display = "none";
-        sessionsEmpty.style.display = "block";
-        sessionsEmpty.textContent = "Pick a child to view sessions.";
-        sessionsTable.style.display = "none";
-        return;
-      }
-
-      setPill("Loading…", "muted");
-      lastProgress = await loadProgress(childId);
-      lastSessions = await loadSessions(childId);
-      setPill("Ready", "good");
-    }
-
-    refreshBtn.addEventListener("click", refreshAll);
-    childSelect.addEventListener("change", refreshAll);
-
-    pdfBtn.addEventListener("click", async () => {
-      const childId = childSelect.value;
-      if (!childId){
-        showToast("Please select a child first.", "error");
-        return;
-      }
-      const child = childrenCache.find(c => c.id === childId);
-      const childName = child?.child_name || "Child";
-      await downloadPDF(childName, lastProgress, lastSessions);
-      showToast("PDF download started.", "ok");
-    });
 
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
+      localStorage.removeItem("selectedChild");
       window.location.href = "/login.html";
     });
 
-    // ----------------------------
-    // 8) Boot
-    // ----------------------------
-    (async function boot(){
-      currentUser = await requireAuth();
-      if (!currentUser) return;
+    refreshBtn.addEventListener("click", async () => {
+      clearError();
+      await loadReports();
+    });
 
-      if (SUPABASE_URL.includes("PASTE_") || SUPABASE_ANON_KEY.includes("PASTE_")){
-        showToast("Supabase keys not set on this page. Paste them in reports.html (or load them via window.SUPABASE_URL).", "error");
-        setPill("Config needed", "warn");
-        childSelect.innerHTML = `<option value="">Set Supabase keys</option>`;
-        return;
-      }
+    (async () => {
+      if (!sb) { showError("Supabase did not load."); return; }
 
-      childrenCache = await loadChildren(currentUser);
+      const ok = await requireAuth();
+      if (!ok) return;
 
-      // If we have children, auto-select first
-      if (childrenCache.length > 0){
-        childSelect.value = childrenCache[0].id;
-        await refreshAll();
-      } else {
-        progressArea.style.display = "block";
-        progressArea.textContent = "No children found. Please add a child on Dash first.";
-        sessionsEmpty.style.display = "block";
-        sessionsEmpty.textContent = "No children found.";
-      }
+      const childOk = await loadChildProfile();
+      if (!childOk) return;
+
+      await loadReports();
     })();
+  })();
   </script>
 </body>
 </html>
