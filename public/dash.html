@@ -32,13 +32,14 @@
     .children-list .child-card { border:1px solid #eef2f7; border-radius:14px; padding:12px; margin:10px 0; background:#fff; }
     .child-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
     .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#111; }
-    .status { margin-top:10px; font-size:14px; }
+    .status { margin-top:10px; font-size:14px; white-space:pre-wrap; }
     .status.good { color:#16a34a; }
     .status.bad { color:#dc2626; }
-    .banner { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; padding:12px 14px; border-radius:14px; background:#fff7ed; border:1px solid #fed7aa; margin-bottom:14px; }
-    .banner strong { font-weight:700; }
+    .status.warn { color:#b45309; }
+    .locked { opacity: .55; pointer-events:none; user-select:none; }
   </style>
 
+  <!-- Supabase JS (must be loaded once) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -51,32 +52,34 @@
       </a>
       <nav class="links">
         <a class="active" href="/dash.html">Dashboard</a>
-        <a href="/chat.html">Learnlio Tutor</a>
-        <a href="/screener.html">Dyslexia Screener</a>
-        <a href="/reports.html">Reports</a>
-        <a href="/billing.html">Billing</a>
+        <a id="navTutor" href="/chat.html">Learnlio Tutor</a>
+        <a id="navScreener" href="/screener.html">Dyslexia Screener</a>
+        <a id="navReports" href="/reports.html">Reports</a>
+        <a id="navBilling" href="/billing.html">Billing</a>
         <button id="logoutBtn" class="btn light" type="button">Log out</button>
       </nav>
     </div>
   </header>
 
   <main class="container">
-
     <!-- Access banner -->
-    <div id="accessBanner" class="banner" style="display:none;">
-      <div>
-        <div class="pill" id="accessPill">Checking…</div>
-        <div class="muted" id="accessText" style="margin-top:6px;"></div>
-      </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button id="refreshAccessBtn" class="btn light" type="button">Refresh access</button>
-        <a class="btn" href="/billing.html" style="text-decoration:none; display:none;" id="goBillingBtn">Go to Billing</a>
+    <div id="accessBanner" class="card" style="margin-bottom:14px; display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+        <div>
+          <div style="font-weight:800; margin-bottom:6px;" id="accessTitle">Checking access…</div>
+          <div class="muted" id="accessSubtitle">Please wait.</div>
+          <div class="status" id="accessMsg"></div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a id="goBillingBtn" class="btn" href="/billing.html" style="text-decoration:none; display:none;">Go to Billing</a>
+          <button id="retryAccessBtn" class="btn secondary" type="button" style="display:none;">Retry</button>
+        </div>
       </div>
     </div>
 
-    <div class="row">
+    <div class="row" id="dashContent">
       <section class="col">
-        <div class="card">
+        <div class="card" id="addChildCard">
           <h2 style="margin:0 0 6px;">Add a child</h2>
           <p class="muted" style="margin:0 0 14px;">
             Create a child profile. Then select them for Learnlio Tutor.
@@ -98,7 +101,7 @@
       </section>
 
       <section class="col">
-        <div class="card">
+        <div class="card" id="childrenCard">
           <h2 style="margin:0 0 6px;">Your children</h2>
           <p class="muted" style="margin:0 0 14px;">
             Click <strong>Select</strong> to set the active child for the Tutor.
@@ -114,7 +117,7 @@
           </div>
 
           <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-            <a class="btn" href="/chat.html" style="text-decoration:none; display:inline-block;">Go to Tutor</a>
+            <a id="goTutorBtn" class="btn" href="/chat.html" style="text-decoration:none; display:inline-block;">Go to Tutor</a>
           </div>
         </div>
       </section>
@@ -123,16 +126,41 @@
 
   <script>
   (() => {
-    // ========= CONFIG =========
+    // =========================
+    // CONFIG (YOUR VALUES)
+    // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-    const BILLING_API_BASE = "https://learnlio-billing.falling-grass-34ab.workers.dev"; // Worker
-    // ==========================
+
+    // ✅ your Worker base URL:
+    const BILLING_API_BASE = "https://learnlio-billing.falling-grass-34ab.workers.dev";
+    // expects: GET /me -> { ok, authenticated, status: "none|trialing|active|expired", trial_ends_at, plan }
+    // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    if (!sb) { console.error("Supabase failed to load"); return; }
+    if (!sb) {
+      console.error("Supabase JS failed to load.");
+      return;
+    }
 
     // Elements
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const accessBanner = document.getElementById("accessBanner");
+    const accessTitle = document.getElementById("accessTitle");
+    const accessSubtitle = document.getElementById("accessSubtitle");
+    const accessMsg = document.getElementById("accessMsg");
+    const goBillingBtn = document.getElementById("goBillingBtn");
+    const retryAccessBtn = document.getElementById("retryAccessBtn");
+
+    const dashContent = document.getElementById("dashContent");
+    const addChildCard = document.getElementById("addChildCard");
+    const childrenCard = document.getElementById("childrenCard");
+    const goTutorBtn = document.getElementById("goTutorBtn");
+    const navTutor = document.getElementById("navTutor");
+    const navScreener = document.getElementById("navScreener");
+    const navReports = document.getElementById("navReports");
+
     const addBtn = document.getElementById("addChildBtn");
     const refreshBtn = document.getElementById("refreshBtn");
     const nameInput = document.getElementById("childName");
@@ -140,26 +168,92 @@
     const listEl = document.getElementById("childrenList");
     const msgEl = document.getElementById("formMessage");
     const selectedChildLabel = document.getElementById("selectedChildLabel");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    const accessBanner = document.getElementById("accessBanner");
-    const accessPill = document.getElementById("accessPill");
-    const accessText = document.getElementById("accessText");
-    const refreshAccessBtn = document.getElementById("refreshAccessBtn");
-    const goBillingBtn = document.getElementById("goBillingBtn");
 
     let currentUser = null;
-
-    function setMsg(text, good=false) {
-      msgEl.textContent = text || "";
-      msgEl.className = "status " + (good ? "good" : "bad");
-      if (!text) msgEl.className = "status";
-    }
+    let accessStatus = "checking"; // checking|locked|ok|warn
 
     function escapeHtml(str){
       return String(str ?? "").replace(/[&<>"']/g, s => ({
         "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
       }[s]));
+    }
+
+    function setFormMsg(text, kind="") {
+      msgEl.textContent = text || "";
+      msgEl.className = "status" + (kind ? " " + kind : "");
+    }
+
+    function setAccessBanner(show, title="", subtitle="", msg="", kind="") {
+      accessBanner.style.display = show ? "block" : "none";
+      accessTitle.textContent = title || "";
+      accessSubtitle.textContent = subtitle || "";
+      accessMsg.textContent = msg || "";
+      accessMsg.className = "status" + (kind ? " " + kind : "");
+    }
+
+    function lockUi(locked) {
+      // lock main cards + nav buttons to paid areas
+      addChildCard.classList.toggle("locked", locked);
+      childrenCard.classList.toggle("locked", locked);
+      goTutorBtn.classList.toggle("locked", locked);
+
+      // prevent navigation clicks if locked
+      [navTutor, navScreener, navReports, goTutorBtn].forEach(a => {
+        if (!a) return;
+        a.addEventListener("click", (e) => {
+          if (accessStatus === "locked") {
+            e.preventDefault();
+            window.location.href = "/billing.html";
+          }
+        }, { passive:false });
+      });
+    }
+
+    async function requireAuth() {
+      const { data, error } = await sb.auth.getUser();
+      if (error || !data?.user) {
+        window.location.href = "/login.html";
+        return false;
+      }
+      currentUser = data.user;
+      return true;
+    }
+
+    async function getAccessTokenOrThrow() {
+      let { data: sessionData } = await sb.auth.getSession();
+      let accessToken = sessionData?.session?.access_token;
+
+      if (!accessToken) {
+        const refreshed = await sb.auth.refreshSession();
+        accessToken = refreshed?.data?.session?.access_token;
+      }
+
+      if (!accessToken) {
+        throw new Error("No Supabase session token found. Please log out and log in again.");
+      }
+      return accessToken;
+    }
+
+    async function billingMe() {
+      const token = await getAccessTokenOrThrow();
+      const res = await fetch(`${BILLING_API_BASE}/me`, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+          "Authorization": `Bearer ${token}`,
+        }
+      });
+
+      const text = await res.text();
+      let json;
+      try { json = JSON.parse(text); } catch { json = null; }
+
+      if (!res.ok) {
+        const msg = (json && (json.error || json.message)) ? (json.error || json.message) : `HTTP ${res.status}`;
+        throw new Error(msg);
+      }
+      if (!json) throw new Error("Billing /me did not return JSON.");
+      return json;
     }
 
     function setSelectedChildUI() {
@@ -173,125 +267,9 @@
       }
     }
 
-    async function requireAuth() {
-      const { data, error } = await sb.auth.getUser();
-      if (error || !data?.user) {
-        window.location.href = "/login.html";
-        return false;
-      }
-      currentUser = data.user;
-      return true;
-    }
-
-    function formatDateDDMMYYYY(isoLike) {
-      if (!isoLike) return "";
-      const d = new Date(isoLike);
-      if (isNaN(d.getTime())) {
-        const s = String(isoLike).slice(0,10);
-        const parts = s.split("-");
-        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        return s;
-      }
-      const dd = String(d.getDate()).padStart(2, "0");
-      const mm = String(d.getMonth()+1).padStart(2, "0");
-      const yyyy = d.getFullYear();
-      return `${dd}/${mm}/${yyyy}`;
-    }
-
-    async function getAccessTokenOrThrow() {
-      let { data: sessionData } = await sb.auth.getSession();
-      let accessToken = sessionData?.session?.access_token;
-
-      if (!accessToken) {
-        const refreshed = await sb.auth.refreshSession();
-        accessToken = refreshed?.data?.session?.access_token;
-      }
-      if (!accessToken) throw new Error("No Supabase session token. Please log out and log in again.");
-      return accessToken;
-    }
-
-    async function fetchMeNoCache() {
-      const token = await getAccessTokenOrThrow();
-      const res = await fetch(`${BILLING_API_BASE}/me`, {
-        method: "GET",
-        headers: {
-          "Accept": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "Cache-Control": "no-store",
-          "Pragma": "no-cache"
-        }
-      });
-      const text = await res.text();
-      let json;
-      try { json = JSON.parse(text); }
-      catch { throw new Error("Billing /me did not return JSON"); }
-      if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`);
-      return json;
-    }
-
-    function setAccessUi(pill, text, showBilling=false) {
-      accessBanner.style.display = "flex";
-      accessPill.textContent = pill;
-      accessText.textContent = text || "";
-      goBillingBtn.style.display = showBilling ? "inline-block" : "none";
-    }
-
-    // ✅ The important bit:
-    // Treat status=active as the override even if trial_ends_at is in the past.
-    function isAllowedByMe(me) {
-      const status = me?.status || "none";
-
-      if (status === "active") return { ok:true, reason:"Paid active" };
-
-      if (status === "trialing") {
-        if (!me.trial_ends_at) return { ok:true, reason:"Trial active" };
-        const end = new Date(me.trial_ends_at);
-        if (!isNaN(end.getTime()) && end.getTime() > Date.now()) return { ok:true, reason:"Trial active" };
-        return { ok:false, reason:"Trial ended" };
-      }
-
-      if (status === "expired") return { ok:false, reason:"Trial ended" };
-
-      // status "none" -> allowed for now (keep friction low)
-      return { ok:true, reason:"No trial yet" };
-    }
-
-    async function enforceAccessGate() {
-      // If you want dash to ALWAYS require active/trialing, change the "none" handling above.
-      try {
-        const me = await fetchMeNoCache();
-        const verdict = isAllowedByMe(me);
-
-        if (me.status === "active") {
-          setAccessUi("Access active", me.plan ? `Plan: ${me.plan}` : "Paid account ✅", false);
-          return true;
-        }
-
-        if (me.status === "trialing") {
-          setAccessUi("Trial active", me.trial_ends_at ? `Ends: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "", false);
-          return true;
-        }
-
-        if (!verdict.ok) {
-          setAccessUi("Trial ended", "Please activate access to continue.", true);
-          // NOTE: We do NOT auto-redirect on dashboard (less annoying).
-          // Tutor page can redirect if you prefer.
-          return false;
-        }
-
-        // none/unknown
-        setAccessUi("Free access", "You can start a trial or activate paid access anytime in Billing.", false);
-        return true;
-
-      } catch (e) {
-        // If billing is down, don't lock people out from dashboard creation.
-        setAccessUi("Access check failed", String(e.message || e), true);
-        return true;
-      }
-    }
-
     async function loadChildren() {
-      setMsg("");
+      setFormMsg("");
+
       listEl.innerHTML = `<div class="muted">Loading…</div>`;
 
       const { data, error } = await sb
@@ -321,7 +299,7 @@
         card.innerHTML = `
           <div class="child-top">
             <div>
-              <div style="font-weight:700;">${escapeHtml(name)}</div>
+              <div style="font-weight:800;">${escapeHtml(name)}</div>
               <div class="muted" style="margin-top:4px;">DOB: ${escapeHtml(dob)}</div>
             </div>
             <button class="btn" type="button" data-id="${ch.id}">Select</button>
@@ -332,7 +310,7 @@
         btn.addEventListener("click", () => {
           localStorage.setItem("selectedChild", JSON.stringify({ id: ch.id, name, dob }));
           setSelectedChildUI();
-          setMsg(`Selected child: ${name}`, true);
+          setFormMsg(`Selected child: ${name}`, "good");
         });
 
         listEl.appendChild(card);
@@ -340,13 +318,13 @@
     }
 
     async function addChild() {
-      setMsg("");
+      setFormMsg("");
 
       const name = nameInput.value.trim();
       const dob = dobInput.value;
 
       if (!name || !dob) {
-        setMsg("Please enter a child name and date of birth.");
+        setFormMsg("Please enter a child name and date of birth.", "bad");
         return;
       }
 
@@ -361,18 +339,79 @@
       addBtn.disabled = false;
 
       if (error) {
-        setMsg("Couldn’t add child: " + error.message);
+        setFormMsg("Couldn’t add child: " + error.message, "bad");
         return;
       }
 
       nameInput.value = "";
       dobInput.value = "";
-      setMsg("Child added ✅", true);
+      setFormMsg("Child added ✅", "good");
 
       await loadChildren();
     }
 
-    refreshAccessBtn.addEventListener("click", enforceAccessGate);
+    async function enforceAccessGate() {
+      accessStatus = "checking";
+      lockUi(true);
+
+      goBillingBtn.style.display = "none";
+      retryAccessBtn.style.display = "none";
+
+      setAccessBanner(true, "Checking access…", "One moment.", "", "");
+      try {
+        const me = await billingMe();
+        const status = me?.status || "none";
+
+        if (status === "active" || status === "trialing") {
+          accessStatus = "ok";
+          setAccessBanner(false);
+          lockUi(false);
+          return true;
+        }
+
+        // Locked states
+        accessStatus = "locked";
+        lockUi(true);
+
+        let subtitle = "You need an active plan to use the app.";
+        if (status === "expired") subtitle = "Your trial has ended. Activate access to continue.";
+        if (status === "none") subtitle = "Start your 7-day trial to begin.";
+
+        setAccessBanner(true,
+          "Access needed",
+          subtitle,
+          "Go to Billing to start/activate access.",
+          "bad"
+        );
+
+        goBillingBtn.style.display = "inline-block";
+        retryAccessBtn.style.display = "inline-block";
+        return false;
+      } catch (e) {
+        // Network/CORS/etc. We show warning and allow retry. We keep UI locked to avoid “ghost unlock”.
+        accessStatus = "locked";
+        lockUi(true);
+
+        setAccessBanner(true,
+          "Couldn’t verify access",
+          "This is usually a Worker CORS issue or the billing worker being offline.",
+          `Error: ${String(e.message || e)}`,
+          "warn"
+        );
+
+        goBillingBtn.style.display = "inline-block";
+        retryAccessBtn.style.display = "inline-block";
+        return false;
+      }
+    }
+
+    retryAccessBtn.addEventListener("click", async () => {
+      await enforceAccessGate();
+      if (accessStatus === "ok") {
+        setSelectedChildUI();
+        await loadChildren();
+      }
+    });
 
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
@@ -383,12 +422,13 @@
     addBtn.addEventListener("click", addChild);
     refreshBtn.addEventListener("click", loadChildren);
 
+    // Init
     (async () => {
-      const ok = await requireAuth();
-      if (!ok) return;
+      const okAuth = await requireAuth();
+      if (!okAuth) return;
 
-      // Access check first (so banner shows immediately)
-      await enforceAccessGate();
+      const okAccess = await enforceAccessGate();
+      if (!okAccess) return;
 
       setSelectedChildUI();
       await loadChildren();
