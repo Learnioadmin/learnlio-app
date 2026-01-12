@@ -7,6 +7,7 @@
 
   <link rel="stylesheet" href="/assets/css/app.css" />
 
+  <!-- Minimal fallback styles (if app.css path breaks) -->
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
     .container { max-width: 980px; margin: 0 auto; padding: 18px; }
@@ -29,8 +30,6 @@
     @media (min-width: 860px) { .grid { grid-template-columns: 1.2fr .8fr; } }
     .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#111; }
     .hr { height:1px; background:#ececf4; margin:14px 0; }
-    .price { font-size:28px; font-weight:800; margin:8px 0 2px; }
-    .tiny { font-size:12px; color:#6b7280; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -71,23 +70,24 @@
 
         <div class="hr"></div>
 
-        <h2 style="margin:0 0 6px;">Trial</h2>
-        <p class="muted" id="trialCopy" style="margin:0 0 14px;">
-          Start your 7-day trial. No card required.
+        <div id="trialSection">
+          <h2 style="margin:0 0 6px;">Trial</h2>
+          <p class="muted" style="margin:0 0 14px;">
+            Start your 7-day trial. No card required.
+          </p>
+
+          <button id="startTrialBtn" class="btn" type="button">Start 7-day trial</button>
+          <div id="trialMsg" class="status" aria-live="polite"></div>
+
+          <div class="hr"></div>
+        </div>
+
+        <h2 style="margin:0 0 6px;">Paid access</h2>
+        <p class="muted" id="paidText" style="margin:0 0 14px;">
+          When you’re ready, you can activate paid access in one tap.
         </p>
 
-        <!-- IMPORTANT: explicit type="button" -->
-        <button id="primaryBtn" class="btn" type="button">Start 7-day trial</button>
-        <div id="primaryMsg" class="status" aria-live="polite"></div>
-
-        <div class="hr"></div>
-
-        <h2 style="margin:0 0 6px;">Manage</h2>
-        <p class="muted" style="margin:0 0 14px;">
-          If you’ve already subscribed, you can manage your plan here.
-        </p>
-
-        <button id="manageBtn" class="btn light" type="button">Open billing portal</button>
+        <button id="manageBtn" class="btn light" type="button">Manage access</button>
         <div id="manageMsg" class="status" aria-live="polite"></div>
       </section>
 
@@ -102,13 +102,9 @@
 
         <div class="hr"></div>
 
-        <h3 style="margin:0 0 6px;">Pricing</h3>
-        <div class="price">£0.99 <span class="tiny">/ month</span></div>
-        <div class="muted">Cancel anytime.</div>
-
-        <div class="hr"></div>
-
-        <p class="muted" style="margin:0;">Debug (only you will see this):</p>
+        <p class="muted" style="margin:0;">
+          Debug (shows the exact API responses):
+        </p>
         <div id="debugBox" class="status muted" style="white-space:pre-wrap;"></div>
       </aside>
     </div>
@@ -116,55 +112,49 @@
 
   <script>
   (() => {
+    // =========================
+    // CONFIG (YOUR VALUES)
+    // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
 
-    // Your Worker base:
+    // ✅ your Worker base URL:
     const BILLING_API_BASE = "https://learnlio-billing.falling-grass-34ab.workers.dev";
+    // Endpoints used:
+    //   GET  /me
+    //   POST /trial/start
+    //   POST /portal
+    // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const logoutBtn = document.getElementById("logoutBtn");
+
     const statusPill = document.getElementById("statusPill");
     const statusText = document.getElementById("statusText");
     const debugBox = document.getElementById("debugBox");
 
-    const trialCopy = document.getElementById("trialCopy");
-    const primaryBtn = document.getElementById("primaryBtn");
-    const primaryMsg = document.getElementById("primaryMsg");
+    const trialSection = document.getElementById("trialSection");
+    const startTrialBtn = document.getElementById("startTrialBtn");
+    const trialMsg = document.getElementById("trialMsg");
 
     const manageBtn = document.getElementById("manageBtn");
     const manageMsg = document.getElementById("manageMsg");
-
-    let currentStatus = "none"; // trialing | active | expired | none
-
-    // Catch ANY JS errors and show them
-    window.addEventListener("error", (e) => {
-      debugBox.textContent = "JS error: " + (e?.message || String(e));
-    });
-    window.addEventListener("unhandledrejection", (e) => {
-      debugBox.textContent = "Promise error: " + (e?.reason?.message || String(e?.reason || e));
-    });
+    const paidText = document.getElementById("paidText");
 
     function setStatus(pillText, text="") {
       statusPill.textContent = pillText;
       statusText.textContent = text;
     }
+
     function setMsg(el, text, good=false) {
       el.textContent = text || "";
       el.className = "status " + (good ? "good" : "bad");
       if (!text) el.className = "status";
     }
-    function setDebug(text) { debugBox.textContent = text || ""; }
 
-    function formatDateDDMMYYYY(isoLike) {
-      if (!isoLike) return "";
-      const d = new Date(isoLike);
-      if (isNaN(d.getTime())) return String(isoLike).slice(0,10).split("-").reverse().join("/");
-      const dd = String(d.getDate()).padStart(2, "0");
-      const mm = String(d.getMonth()+1).padStart(2, "0");
-      const yyyy = d.getFullYear();
-      return `${dd}/${mm}/${yyyy}`;
+    function setDebug(text) {
+      debugBox.textContent = text || "";
     }
 
     async function requireAuth() {
@@ -178,19 +168,27 @@
 
     async function safeJson(response) {
       const text = await response.text();
-      try { return { ok: true, json: JSON.parse(text), raw: text }; }
-      catch { return { ok: false, raw: text }; }
+      try {
+        return { ok:true, json: JSON.parse(text), raw:text };
+      } catch {
+        return { ok:false, raw:text };
+      }
     }
 
     async function getAccessTokenOrThrow() {
+      // 1) current session
       let { data: sessionData } = await sb.auth.getSession();
       let accessToken = sessionData?.session?.access_token;
 
+      // 2) refresh if missing (helps on some browsers/pages)
       if (!accessToken) {
         const refreshed = await sb.auth.refreshSession();
         accessToken = refreshed?.data?.session?.access_token;
       }
-      if (!accessToken) throw new Error("No Supabase session token found. Log out and log in again.");
+
+      if (!accessToken) {
+        throw new Error("No Supabase session token on this page. Please log out and log in again.");
+      }
       return accessToken;
     }
 
@@ -205,135 +203,134 @@
           "Authorization": `Bearer ${accessToken}`,
           ...(opts.headers || {})
         },
-        cache: "no-store",
         body: opts.body ? JSON.stringify(opts.body) : undefined
       });
 
       const parsed = await safeJson(res);
 
-      if (!parsed.ok) {
-        const snippet = (parsed.raw || "").slice(0, 220);
-        throw new Error(
-          `API did not return JSON.\nURL: ${BILLING_API_BASE}${path}\nHTTP: ${res.status}\nStarts with: ${snippet}`
-        );
-      }
+      // Always log responses (helps instantly)
+      setDebug(
+        `REQUEST: ${opts.method || "GET"} ${path}\n` +
+        `HTTP: ${res.status}\n` +
+        `BODY:\n${parsed.ok ? JSON.stringify(parsed.json, null, 2) : parsed.raw.slice(0, 800)}`
+      );
 
-      if (!res.ok) throw new Error(parsed.json?.error || `HTTP ${res.status}`);
+      if (!parsed.ok) {
+        const snippet = parsed.raw?.slice(0, 140) || "";
+        throw new Error(`API did not return JSON (starts with): ${snippet}`);
+      }
+      if (!res.ok) {
+        throw new Error(parsed.json?.error || `HTTP ${res.status}`);
+      }
       return parsed.json;
     }
 
-    function applyUiFromStatus(me) {
-      currentStatus = me.status || "none";
-      setMsg(primaryMsg, "");
+    function formatDateDDMMYYYY(isoLike) {
+      if (!isoLike) return "";
+      const d = new Date(isoLike);
+      if (isNaN(d.getTime())) {
+        // fallback: YYYY-MM-DD -> DD/MM/YYYY
+        const s = String(isoLike).slice(0,10);
+        const parts = s.split("-");
+        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        return s;
+      }
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth()+1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
+
+    function applyUiForStatus(me) {
+      const status = me?.status || "none";
+
+      // Reset defaults
+      trialSection.style.display = "block";
+      startTrialBtn.style.display = "inline-block";
+      startTrialBtn.disabled = false;
+      manageBtn.className = "btn light";
+      manageBtn.textContent = "Manage access";
+      paidText.textContent = "When you’re ready, you can activate paid access in one tap.";
+      setMsg(trialMsg, "");
       setMsg(manageMsg, "");
-      primaryBtn.disabled = false;
 
-      if (currentStatus === "trialing") {
+      if (status === "trialing") {
         setStatus("Trial active", me.trial_ends_at ? `Ends: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "");
-        trialCopy.textContent = "Your trial is active. No card required.";
-        primaryBtn.textContent = "Trial active ✅";
-        primaryBtn.disabled = true;
-        return;
+        startTrialBtn.disabled = true;
+        setMsg(trialMsg, "You’re all set. Enjoy the trial!", true);
+        // keep manage as light
       }
-
-      if (currentStatus === "active") {
+      else if (status === "active") {
         setStatus("Access active", me.plan ? `Plan: ${me.plan}` : "");
-        trialCopy.textContent = "You have active access.";
-        primaryBtn.textContent = "Access active ✅";
-        primaryBtn.disabled = true;
-        return;
+        startTrialBtn.disabled = true;
+        setMsg(trialMsg, "", true);
+        manageBtn.className = "btn light";
       }
-
-      if (currentStatus === "expired") {
+      else if (status === "expired") {
         setStatus("Trial ended", me.trial_ends_at ? `Ended: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "");
-        trialCopy.textContent = "Your trial has ended. You can unlock full access for £0.99/month.";
-        primaryBtn.textContent = "Upgrade — £0.99/month";
-        primaryBtn.disabled = false;
-        return;
-      }
+        // Hide trial button – they already used it
+        startTrialBtn.style.display = "none";
+        setMsg(trialMsg, "Your trial has ended.", false);
 
-      setStatus("No trial yet", "");
-      trialCopy.textContent = "Start your 7-day trial. No card required.";
-      primaryBtn.textContent = "Start 7-day trial";
-      primaryBtn.disabled = false;
+        // Show paid CTA
+        manageBtn.className = "btn";
+        manageBtn.textContent = "Activate for £0.99/month";
+        paidText.textContent = "You can activate paid access now. (You can cancel anytime.)";
+      }
+      else {
+        // none / unknown
+        setStatus("No trial yet", "");
+        startTrialBtn.style.display = "inline-block";
+        startTrialBtn.disabled = false;
+      }
     }
 
     async function refreshStatus() {
       setStatus("Checking…", "");
       setDebug("");
-
       try {
         const me = await callApi("/me");
-        if (me?.authenticated === false) throw new Error(me.message || "No token provided to /me.");
-        applyUiFromStatus(me);
-        setDebug("OK: /me returned status = " + (me.status || "none"));
+        applyUiForStatus(me);
       } catch (e) {
         setStatus("Error", "");
-        setMsg(primaryMsg, String(e.message || e), false);
-        setDebug(String(e.message || e));
+        setMsg(trialMsg, String(e.message || e), false);
       }
     }
 
-    async function startTrial() {
-      setMsg(primaryMsg, "Starting trial…", true);
+    startTrialBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      setMsg(trialMsg, "");
       setDebug("");
-      primaryBtn.disabled = true;
 
+      startTrialBtn.disabled = true;
       try {
         const out = await callApi("/trial/start", { method: "POST", body: {} });
-        setMsg(primaryMsg, "Trial started ✅", true);
-        setDebug("OK: /trial/start returned: " + JSON.stringify(out));
+        // If the worker returns the new status, apply immediately
+        if (out && out.status) applyUiForStatus(out);
+        setMsg(trialMsg, "Trial started ✅", true);
         await refreshStatus();
-      } catch (e) {
-        setMsg(primaryMsg, String(e.message || e), false);
-        setDebug(String(e.message || e));
-        primaryBtn.disabled = false;
+      } catch (err) {
+        setMsg(trialMsg, String(err.message || err), false);
+        startTrialBtn.disabled = false;
       }
-    }
-
-    async function startCheckout() {
-      setMsg(primaryMsg, "Opening checkout…", true);
-      setDebug("");
-      primaryBtn.disabled = true;
-
-      try {
-        const out = await callApi("/checkout", { method: "POST", body: { return_url: window.location.href } });
-        if (out?.url) { window.location.href = out.url; return; }
-        throw new Error("No checkout URL returned from /checkout");
-      } catch (e) {
-        setMsg(primaryMsg, String(e.message || e), false);
-        setDebug(String(e.message || e));
-        primaryBtn.disabled = false;
-      }
-    }
-
-    // HARDEN CLICK: stop any default submit/navigation
-    primaryBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Visible proof the handler is running
-      setDebug("Clicked primary button at " + new Date().toLocaleTimeString("en-GB"));
-
-      if (currentStatus === "expired") return startCheckout();
-      return startTrial();
     });
 
     manageBtn.addEventListener("click", async (e) => {
       e.preventDefault();
-      e.stopPropagation();
-
       setMsg(manageMsg, "");
-      setDebug("Clicked portal at " + new Date().toLocaleTimeString("en-GB"));
-      manageBtn.disabled = true;
+      setDebug("");
 
+      manageBtn.disabled = true;
       try {
+        // Worker should return a portal/checkout URL
         const out = await callApi("/portal", { method: "POST", body: { return_url: window.location.href } });
-        if (out?.url) { window.location.href = out.url; return; }
-        setMsg(manageMsg, "No portal URL returned from billing API.", false);
-      } catch (e2) {
-        setMsg(manageMsg, String(e2.message || e2), false);
-        setDebug(String(e2.message || e2));
+        if (out?.url) {
+          window.location.href = out.url;
+          return;
+        }
+        setMsg(manageMsg, "No URL returned from billing API.", false);
+      } catch (err) {
+        setMsg(manageMsg, String(err.message || err), false);
       } finally {
         manageBtn.disabled = false;
       }
@@ -341,12 +338,14 @@
 
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
-      localStorage.removeItem("selectedChild");
       window.location.href = "/login.html";
     });
 
     (async () => {
-      if (!sb) { setStatus("Error", "Supabase failed to load"); return; }
+      if (!sb) {
+        setStatus("Error", "Supabase failed to load");
+        return;
+      }
       const ok = await requireAuth();
       if (!ok) return;
       await refreshStatus();
