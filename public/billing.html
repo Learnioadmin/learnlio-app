@@ -30,6 +30,12 @@
     @media (min-width: 860px) { .grid { grid-template-columns: 1.2fr .8fr; } }
     .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#111; }
     .hr { height:1px; background:#ececf4; margin:14px 0; }
+
+    /* small info rows */
+    .info { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .info-item { background:#f3f4f6; border-radius:12px; padding:10px 12px; }
+    .info-item .k { font-size:12px; color:#6b7280; margin-bottom:2px; }
+    .info-item .v { font-size:14px; color:#111; font-weight:600; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -68,6 +74,21 @@
           <span class="muted" id="statusText"></span>
         </div>
 
+        <div class="info" id="billingInfo" style="display:none;">
+          <div class="info-item">
+            <div class="k">Plan</div>
+            <div class="v" id="planValue">—</div>
+          </div>
+          <div class="info-item">
+            <div class="k">Next payment</div>
+            <div class="v" id="nextPaymentValue">—</div>
+          </div>
+          <div class="info-item" id="cancelInfo" style="display:none;">
+            <div class="k">Cancellation</div>
+            <div class="v" id="cancelValue">—</div>
+          </div>
+        </div>
+
         <div class="hr"></div>
 
         <!-- Trial -->
@@ -86,7 +107,8 @@
         <!-- Paid -->
         <h2 style="margin:0 0 6px;">Paid access</h2>
         <p class="muted" id="paidText" style="margin:0 0 14px;">
-          When you’re ready, you can activate paid access in one tap.
+          If you’re happy with Learnlio, you can activate paid access anytime.
+          <br><span class="muted">Cancel anytime in one tap.</span>
         </p>
 
         <button id="paidBtn" class="btn" type="button" style="display:none;">Activate for £0.99/month</button>
@@ -140,6 +162,12 @@
 
     const statusPill = document.getElementById("statusPill");
     const statusText = document.getElementById("statusText");
+
+    const billingInfo = document.getElementById("billingInfo");
+    const planValue = document.getElementById("planValue");
+    const nextPaymentValue = document.getElementById("nextPaymentValue");
+    const cancelInfo = document.getElementById("cancelInfo");
+    const cancelValue = document.getElementById("cancelValue");
 
     const trialSection = document.getElementById("trialSection");
     const startTrialBtn = document.getElementById("startTrialBtn");
@@ -232,13 +260,21 @@
         throw new Error(`API did not return JSON (starts with): ${snippet}`);
       }
       if (!res.ok) {
-        throw new Error(parsed.json?.error || `HTTP ${res.status}`);
+        // Try to preserve useful error text
+        const msg = parsed.json?.error || parsed.json?.message || `HTTP ${res.status}`;
+        const code = parsed.json?.code || "";
+        const details = parsed.json?.details || "";
+        const combined = [msg, code ? `(code: ${code})` : "", details ? `— ${details}` : ""].filter(Boolean).join(" ");
+        const err = new Error(combined);
+        err.httpStatus = res.status;
+        err.payload = parsed.json;
+        throw err;
       }
       return parsed.json;
     }
 
     function formatDateDDMMYYYY(isoLike) {
-      if (!isoLike) return "";
+      if (!isoLike) return "—";
       const d = new Date(isoLike);
       if (isNaN(d.getTime())) {
         const s = String(isoLike).slice(0,10);
@@ -250,6 +286,13 @@
       const mm = String(d.getMonth()+1).padStart(2, "0");
       const yyyy = d.getFullYear();
       return `${dd}/${mm}/${yyyy}`;
+    }
+
+    function coalesce(...vals) {
+      for (const v of vals) {
+        if (v !== undefined && v !== null && String(v).trim() !== "") return v;
+      }
+      return null;
     }
 
     function resetUi() {
@@ -267,13 +310,47 @@
       manageBtn.style.display = "none";
       manageBtn.disabled = false;
 
-      paidText.textContent = "When you’re ready, you can activate paid access in one tap.";
+      paidText.innerHTML =
+        'If you’re happy with Learnlio, you can activate paid access anytime.<br><span class="muted">Cancel anytime in one tap.</span>';
+
+      billingInfo.style.display = "none";
+      planValue.textContent = "—";
+      nextPaymentValue.textContent = "—";
+      cancelInfo.style.display = "none";
+      cancelValue.textContent = "—";
+    }
+
+    function applyBillingInfo(me) {
+      // Show extra info only when we have meaningful values
+      const plan = coalesce(me?.plan, me?.plan_name, me?.price_label, (me?.status === "active" ? "£0.99/month" : null));
+      const next = coalesce(me?.next_payment_due_at, me?.current_period_end, me?.current_period_end_at, me?.renews_at);
+      const cap = me?.cancel_at_period_end;
+
+      if (plan || next || cap !== undefined) {
+        billingInfo.style.display = "flex";
+        planValue.textContent = plan ? String(plan) : "—";
+        nextPaymentValue.textContent = next ? formatDateDDMMYYYY(next) : "—";
+
+        if (cap === true) {
+          cancelInfo.style.display = "block";
+          cancelValue.textContent = "Cancels at period end";
+        } else if (cap === false) {
+          cancelInfo.style.display = "block";
+          cancelValue.textContent = "Active (not scheduled to cancel)";
+        } else {
+          cancelInfo.style.display = "none";
+        }
+      } else {
+        billingInfo.style.display = "none";
+      }
     }
 
     function applyUiForStatus(me) {
       resetUi();
 
       const status = me?.status || "none";
+
+      applyBillingInfo(me);
 
       if (status === "trialing") {
         setStatus("Trial active", me.trial_ends_at ? `Ends: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "");
@@ -289,19 +366,21 @@
         trialSection.style.display = "none";
 
         manageBtn.style.display = "inline-block";
-        manageBtn.textContent = "Manage access";
+        manageBtn.textContent = "Manage / cancel subscription";
         manageBtn.className = "btn light";
       }
       else if (status === "expired") {
         setStatus("Trial ended", me.trial_ends_at ? `Ended: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "");
         trialSection.style.display = "none";
 
-        paidText.textContent = "Your trial has ended. You can activate paid access anytime.";
+        paidText.innerHTML =
+          'Your trial has ended. If you’d like to continue, you can activate paid access anytime.<br><span class="muted">Cancel anytime in one tap.</span>';
+
         paidBtn.style.display = "inline-block";
         paidBtn.textContent = "Activate for £0.99/month";
 
         manageBtn.style.display = "inline-block";
-        manageBtn.textContent = "Manage access";
+        manageBtn.textContent = "Manage / cancel subscription";
         manageBtn.className = "btn light";
       }
       else {
@@ -323,7 +402,6 @@
       }
     }
 
-    // ✅ NEW: Finalise Stripe checkout on return
     async function maybeFinalizeCheckout() {
       const u = new URL(window.location.href);
       const success = u.searchParams.get("success");
@@ -336,12 +414,12 @@
       try {
         await callApi(`/checkout/success?session_id=${encodeURIComponent(sessionId)}`, { method: "GET" });
 
-        // clean the URL (remove session_id so refresh doesn't re-run)
+        // Clean URL so refresh doesn't repeat
         u.searchParams.delete("session_id");
         u.searchParams.set("success", "1");
         window.history.replaceState({}, "", u.toString());
       } catch (e) {
-        setMsg(paidMsg, "Payment was successful, but we couldn’t unlock access yet. Please refresh the page.", false);
+        setMsg(paidMsg, "Payment was successful, but access hasn’t updated yet. Please refresh this page.", false);
         setDebug(String(e.message || e));
       }
     }
@@ -361,7 +439,14 @@
         setMsg(trialMsg, "Trial started ✅", true);
         await refreshStatus();
       } catch (err) {
-        setMsg(trialMsg, String(err.message || err), false);
+        // Friendly handling for “already exists”
+        const msg = String(err.message || err);
+        if (msg.includes("already exists") || msg.includes("duplicate key") || err.httpStatus === 409) {
+          setMsg(trialMsg, "Looks like this account has already used the trial. ✅", false);
+          await refreshStatus();
+        } else {
+          setMsg(trialMsg, msg, false);
+        }
         startTrialBtn.disabled = false;
       }
     });
@@ -376,11 +461,11 @@
       paidBtn.disabled = true;
 
       try {
-        // IMPORTANT: include Stripe session id in success URL
         const origin = window.location.origin;
         const out = await callApi("/checkout", {
           method: "POST",
           body: {
+            // Include session id token so Stripe swaps it for the real id
             success_url: `${origin}/billing.html?success=1&session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${origin}/billing.html?canceled=1`
           }
@@ -441,6 +526,9 @@
       if (u.searchParams.get("canceled") === "1") {
         setMsg(paidMsg, "No worries — checkout was cancelled.", false);
       }
+      if (u.searchParams.get("success") === "1") {
+        setMsg(paidMsg, "Payment successful ✅ Checking access…", true);
+      }
 
       await maybeFinalizeCheckout();
       await refreshStatus();
@@ -449,5 +537,4 @@
   </script>
 </body>
 </html>
-
 
