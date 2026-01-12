@@ -107,15 +107,22 @@
 </main>
 
 <script>
+(() => {
   // Mobile menu
   const menuBtn = document.getElementById("menuBtn");
   const navLinks = document.getElementById("navLinks");
   if (menuBtn && navLinks) menuBtn.addEventListener("click", () => navLinks.classList.toggle("open"));
 
-  // Supabase client (replace these)
+  // IMPORTANT: do NOT declare "supabase" again (it may already exist globally)
   const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Use a different variable name to avoid collisions
+  const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!sb) {
+    console.error("Supabase library not found. Check the supabase-js script tag.");
+    return;
+  }
 
   // Elements
   const addBtn = document.getElementById("addChildBtn");
@@ -126,8 +133,15 @@
 
   let currentUser = null;
 
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[s]));
+  }
+  function escapeHtmlAttr(str){ return escapeHtml(str).replace(/"/g,"&quot;"); }
+
   async function init() {
-    const { data, error } = await supabase.auth.getUser();
+    const { data, error } = await sb.auth.getUser();
     if (error || !data?.user) {
       window.location.href = "/login.html";
       return;
@@ -139,9 +153,9 @@
   async function loadChildren() {
     listEl.innerHTML = `<div style="color:#6b7280;">Loading…</div>`;
 
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("children")
-      .select("id,name,dob")
+      .select("id,name,dob,created_at")
       .eq("parent_id", currentUser.id)
       .order("created_at", { ascending: true });
 
@@ -178,7 +192,6 @@
       listEl.appendChild(card);
     });
 
-    // Select child → store selection for chat page
     listEl.querySelectorAll("button[data-child-id]").forEach(btn => {
       btn.addEventListener("click", () => {
         const child = {
@@ -205,7 +218,7 @@
       return;
     }
 
-    const { error } = await supabase.from("children").insert({
+    const { error } = await sb.from("children").insert({
       parent_id: currentUser.id,
       name,
       dob
@@ -224,15 +237,10 @@
     await loadChildren();
   });
 
-  function escapeHtml(str){
-    return String(str).replace(/[&<>"']/g, s => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[s]));
-  }
-  function escapeHtmlAttr(str){ return escapeHtml(str).replace(/"/g,"&quot;"); }
-
   init();
+})();
 </script>
+
 
 </body>
 </html>
