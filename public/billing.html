@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en-GB">
 <head>
@@ -24,20 +23,22 @@
     .btn { background:#0b5cff; border:none; color:#fff; padding:12px 14px; border-radius:12px; cursor:pointer; font-size:15px; }
     .btn:disabled { opacity:.6; cursor:not-allowed; }
     .btn.light { background:#e5e7eb; color:#111; }
+    .btn.secondary { background:#111827; }
     .muted { color:#6b7280; font-size: 14px; }
     .row { display:flex; gap:14px; flex-wrap:wrap; }
     .col { flex:1 1 320px; }
-    .status { margin-top:10px; font-size:14px; }
-    .status.good { color:#16a34a; }
-    .status.bad { color:#dc2626; }
     .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#111; }
-    .banner { background:#fff7ed; border:1px solid #fed7aa; border-radius:16px; padding:14px; }
-    .divider { height:1px; background:#ececf4; margin:14px 0; }
-    .kpi { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
-    .kpi .big { font-size:28px; font-weight:800; }
+    .status { margin-top:10px; font-size:14px; }
+    .status.bad { color:#dc2626; }
+    .status.good { color:#16a34a; }
+    .big { font-size: 28px; font-weight: 800; letter-spacing:-0.02em; margin:0; }
+    .line { height:1px; background:#eef2f7; margin:14px 0; }
+    .kv { display:flex; justify-content:space-between; gap:10px; padding:8px 0; }
+    .kv div:first-child { color:#6b7280; font-size:14px; }
+    .kv div:last-child { font-weight:600; }
   </style>
 
-  <!-- Supabase -->
+  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -60,59 +61,53 @@
   </header>
 
   <main class="container">
-    <div id="pageMsg" class="banner" style="display:none; margin-bottom:14px;"></div>
-
     <div class="row">
       <section class="col">
         <div class="card">
-          <h2 style="margin:0 0 6px;">Your plan</h2>
-          <p class="muted" style="margin:0 0 14px;">
-            We’re keeping this simple while we’re in MVP.
+          <p class="muted" style="margin:0 0 8px;">Plan</p>
+          <h1 class="big">£0.99 / month</h1>
+          <p class="muted" style="margin:10px 0 0;">
+            7-day free trial. Upgrade when testers are happy — no friction.
           </p>
 
-          <div class="kpi">
-            <div class="big" id="planTitle">Loading…</div>
-            <span class="pill" id="statusPill">—</span>
+          <div class="line"></div>
+
+          <div class="kv">
+            <div>Status</div>
+            <div id="statusPill" class="pill">Loading…</div>
+          </div>
+          <div class="kv">
+            <div>Trial ends</div>
+            <div id="trialEnds">—</div>
+          </div>
+          <div class="kv">
+            <div>Last updated</div>
+            <div id="updatedAt">—</div>
           </div>
 
-          <div class="divider"></div>
+          <div class="line"></div>
 
-          <div class="muted">Trial ends</div>
-          <div style="font-weight:700; margin-top:6px;" id="trialEnds">—</div>
-
-          <div style="margin-top:14px;" class="muted">
-            If your trial has ended, you’ll need to upgrade to keep using Learnlio.
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="startTrialBtn" class="btn" type="button">Start / Resume trial</button>
+            <button id="manageBtn" class="btn secondary" type="button">Manage subscription</button>
           </div>
 
-          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
-            <button id="upgradeBtn" class="btn" type="button">Upgrade (coming soon)</button>
-            <a class="btn light" href="/dash.html" style="text-decoration:none; display:inline-block;">Back to Dashboard</a>
-          </div>
-
-          <div id="upgradeHint" class="status" style="margin-top:12px;"></div>
+          <div id="msg" class="status" aria-live="polite"></div>
         </div>
       </section>
 
       <section class="col">
         <div class="card">
-          <h2 style="margin:0 0 6px;">What happens next?</h2>
-          <p class="muted" style="margin:0 0 14px;">
-            You’re early — thanks for helping shape Learnlio.
+          <h2 style="margin:0 0 6px;">How billing works</h2>
+          <p class="muted" style="margin:0 0 10px;">
+            You can test Learnlio first. When you’re ready, billing is handled securely by Stripe.
           </p>
 
-          <ul style="margin:0; padding-left:18px; line-height:1.8;">
-            <li>We’ll add Stripe payments next.</li>
-            <li>Your child profiles and progress stay saved in your account.</li>
-            <li>Reports will show learning progress over time.</li>
+          <ul class="muted" style="margin:0; padding-left:18px;">
+            <li>Trial runs for 7 days</li>
+            <li>Cancel anytime in the billing portal</li>
+            <li>We never store card details</li>
           </ul>
-
-          <div class="divider"></div>
-
-          <div class="muted">Need help?</div>
-          <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
-            <button id="copySupportBtn" class="btn light" type="button">Copy support email</button>
-            <span class="muted" id="copiedMsg" style="display:none;">Copied ✅</span>
-          </div>
         </div>
       </section>
     </div>
@@ -120,128 +115,190 @@
 
   <script>
   (() => {
-    // ====== CONFIG ======
+    // =========================
+    // CONFIG (PASTE YOUR VALUES)
+    // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-    const SUPPORT_EMAIL = "support@learnlio.co.uk"; // change if you want
-    // ====================
+    const BILLING_WORKER_BASE = "learnlio-billing.falling-grass-34ab.workers.dev";
+    // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const logoutBtn = document.getElementById("logoutBtn");
+    if (!sb) {
+      console.error("Supabase JS failed to load.");
+      return;
+    }
 
-    const pageMsg = document.getElementById("pageMsg");
-    const planTitle = document.getElementById("planTitle");
+    // UI
+    const logoutBtn = document.getElementById("logoutBtn");
+    const startTrialBtn = document.getElementById("startTrialBtn");
+    const manageBtn = document.getElementById("manageBtn");
+    const msg = document.getElementById("msg");
+
     const statusPill = document.getElementById("statusPill");
     const trialEnds = document.getElementById("trialEnds");
-    const upgradeBtn = document.getElementById("upgradeBtn");
-    const upgradeHint = document.getElementById("upgradeHint");
+    const updatedAt = document.getElementById("updatedAt");
 
-    const copySupportBtn = document.getElementById("copySupportBtn");
-    const copiedMsg = document.getElementById("copiedMsg");
+    let currentUser = null;
+    let subRow = null;
 
-    function showBanner(html) {
-      pageMsg.style.display = "block";
-      pageMsg.innerHTML = html;
+    function setMsg(text, good=false) {
+      msg.textContent = text || "";
+      msg.className = "status " + (text ? (good ? "good" : "bad") : "");
     }
 
-    function fmtDateOnly(iso) {
-      if (!iso) return "—";
-      const d = new Date(iso);
+    function fmtDateOnly(isoOrNull) {
+      if (!isoOrNull) return "—";
+      const d = new Date(isoOrNull);
       if (isNaN(d.getTime())) return "—";
-      // dd/mm/yyyy
-      const dd = String(d.getDate()).padStart(2, "0");
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2,"0");
+      const mm = String(d.getMonth()+1).padStart(2,"0");
       const yyyy = d.getFullYear();
       return `${dd}/${mm}/${yyyy}`;
-    }
-
-    function setStatusPill(status) {
-      const s = (status || "unknown").toLowerCase();
-      statusPill.textContent = s;
-      statusPill.style.background = (s === "active" || s === "trialing") ? "#ecfdf5" : "#fef2f2";
-      statusPill.style.color = (s === "active" || s === "trialing") ? "#065f46" : "#991b1b";
-      statusPill.style.border = "1px solid " + ((s === "active" || s === "trialing") ? "#a7f3d0" : "#fecaca");
     }
 
     async function requireAuth() {
       const { data, error } = await sb.auth.getUser();
       if (error || !data?.user) {
         window.location.href = "/login.html";
-        return null;
+        return false;
       }
-      return data.user;
+      currentUser = data.user;
+      return true;
     }
 
-    async function loadSubscription(userId) {
+    async function loadSubscription() {
+      setMsg("");
+
       const { data, error } = await sb
         .from("subscriptions")
-        .select("user_id, plan, status, trial_ends_at, updated_at")
-        .eq("user_id", userId)
+        .select("user_id, trial_starts_at, trial_ends_at, plan, status, stripe_customer_id, stripe_subscription_id, updated_at")
+        .eq("user_id", currentUser.id)
         .maybeSingle();
 
       if (error) {
-        showBanner(`<h3 style="margin:0 0 6px;">We can’t load billing right now.</h3><div class="muted">${error.message}</div>`);
-        planTitle.textContent = "—";
-        setStatusPill("unknown");
-        return;
-      }
-
-      if (!data) {
-        planTitle.textContent = "Free trial";
-        setStatusPill("trialing");
+        statusPill.textContent = "Error";
         trialEnds.textContent = "—";
-        showBanner(`<h3 style="margin:0 0 6px;">Trial status not found</h3><div class="muted">No subscription row exists yet for this account.</div>`);
+        updatedAt.textContent = "—";
+        setMsg("Couldn’t load subscription: " + error.message);
         return;
       }
 
-      planTitle.textContent = data.plan ? data.plan : "Free trial";
-      setStatusPill(data.status || "unknown");
-      trialEnds.textContent = fmtDateOnly(data.trial_ends_at);
+      subRow = data;
 
-      // If expired
-      if (data.trial_ends_at) {
-        const ends = new Date(data.trial_ends_at);
-        if (!isNaN(ends.getTime()) && ends.getTime() < Date.now() && (data.status || "").toLowerCase() !== "active") {
-          showBanner(`
-            <h3 style="margin:0 0 6px;">Your trial has ended</h3>
-            <div class="muted">Upgrade to keep using Learnlio.</div>
-          `);
+      const status = (subRow?.status || "none").toLowerCase();
+      statusPill.textContent = status === "active" ? "Active" :
+                               status === "trialing" ? "Trialing" :
+                               status === "canceled" ? "Cancelled" :
+                               status === "past_due" ? "Past due" :
+                               "No plan yet";
+
+      trialEnds.textContent = fmtDateOnly(subRow?.trial_ends_at);
+      updatedAt.textContent = fmtDateOnly(subRow?.updated_at);
+
+      // If active/trialing, allow portal
+      manageBtn.disabled = !(subRow?.stripe_customer_id);
+
+      // Button label tweak
+      if (status === "trialing") startTrialBtn.textContent = "Continue trial";
+      else if (status === "active") startTrialBtn.textContent = "You’re subscribed ✅";
+      else startTrialBtn.textContent = "Start trial";
+      startTrialBtn.disabled = (status === "active");
+    }
+
+    async function getAccessToken() {
+      const { data } = await sb.auth.getSession();
+      return data?.session?.access_token || null;
+    }
+
+    async function goCheckout() {
+      setMsg("");
+      startTrialBtn.disabled = true;
+
+      try {
+        const token = await getAccessToken();
+        if (!token) throw new Error("No session token found. Please log in again.");
+
+        // Worker should verify JWT server-side and use token.sub as user_id
+        const resp = await fetch(`${BILLING_WORKER_BASE}/checkout?plan=monthly`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (!resp.ok) {
+          const t = await resp.text();
+          throw new Error(t || "Checkout request failed");
         }
+
+        const json = await resp.json();
+        if (!json?.url) throw new Error("No checkout URL returned from billing service.");
+
+        window.location.href = json.url;
+      } catch (e) {
+        setMsg(String(e.message || e), false);
+        startTrialBtn.disabled = false;
       }
     }
 
+    async function goPortal() {
+      setMsg("");
+      manageBtn.disabled = true;
+
+      try {
+        const token = await getAccessToken();
+        if (!token) throw new Error("No session token found. Please log in again.");
+
+        const resp = await fetch(`${BILLING_WORKER_BASE}/portal`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (!resp.ok) {
+          const t = await resp.text();
+          throw new Error(t || "Portal request failed");
+        }
+
+        const json = await resp.json();
+        if (!json?.url) throw new Error("No portal URL returned from billing service.");
+
+        window.location.href = json.url;
+      } catch (e) {
+        setMsg(String(e.message || e), false);
+        manageBtn.disabled = false;
+      }
+    }
+
+    // Logout
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
       window.location.href = "/login.html";
     });
 
-    upgradeBtn.addEventListener("click", () => {
-      upgradeHint.className = "status bad";
-      upgradeHint.textContent = "Stripe upgrades are not wired up yet. This page is ready for it next.";
-    });
+    startTrialBtn.addEventListener("click", goCheckout);
+    manageBtn.addEventListener("click", goPortal);
 
-    copySupportBtn.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(SUPPORT_EMAIL);
-        copiedMsg.style.display = "inline";
-        setTimeout(() => copiedMsg.style.display = "none", 1200);
-      } catch {
-        // fallback
-        alert(SUPPORT_EMAIL);
-      }
-    });
-
+    // Init
     (async () => {
-      if (!sb) {
-        showBanner(`<h3 style="margin:0 0 6px;">Supabase didn’t load</h3><div class="muted">Check the supabase script tag.</div>`);
-        return;
+      const ok = await requireAuth();
+      if (!ok) return;
+
+      await loadSubscription();
+
+      // Optional: refresh status after returning from Stripe
+      // e.g. billing.html?success=1
+      const params = new URLSearchParams(location.search);
+      if (params.get("success") === "1") {
+        setMsg("✅ Billing updated. Loading status…", true);
+        setTimeout(loadSubscription, 600);
       }
-
-      const user = await requireAuth();
-      if (!user) return;
-
-      await loadSubscription(user.id);
+      if (params.get("canceled") === "1") {
+        setMsg("No worries — billing was cancelled.", false);
+      }
     })();
   })();
   </script>
