@@ -2,268 +2,182 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Learnlio – Dashboard</title>
+  <title>Dashboard · Learnlio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Open Dyslexic -->
-  <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
+  <!-- Global CSS -->
+  <link rel="stylesheet" href="/assets/css/app.css">
 
   <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: 'OpenDyslexic', Arial, sans-serif;
-      background: #f9fafb;
-      color: #111;
-    }
-
-    /* NAV */
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 20px;
-      background: #ffffff;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    nav img {
-      height: 36px;
-    }
-
-    nav a {
-      text-decoration: none;
-      color: #2563eb;
-      font-size: 14px;
-      margin-left: 16px;
-    }
-
-    /* PAGE */
-    main {
-      max-width: 720px;
-      margin: 30px auto;
-      padding: 0 16px;
-    }
-
-    h1 {
-      font-size: 22px;
-      margin-bottom: 10px;
-    }
-
-    p {
-      font-size: 14px;
-      color: #444;
-    }
-
-    /* CARD */
-    .card {
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-    }
-
-    label {
-      display: block;
-      font-size: 14px;
-      margin-top: 10px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      font-size: 14px;
-      border-radius: 10px;
-      border: 1px solid #d1d5db;
-      margin-top: 4px;
-    }
-
-    button {
-      margin-top: 14px;
-      padding: 12px 16px;
-      font-size: 14px;
-      border-radius: 12px;
-      border: none;
-      background: #2563eb;
-      color: white;
-      cursor: pointer;
-    }
-
-    button.secondary {
-      background: #10b981;
-      margin-left: 8px;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    li {
-      background: #f3f4f6;
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 14px;
-    }
-  </style>
+  <script>
+    window.PAGE = "dash";
+  </script>
 </head>
 
 <body>
 
-<nav>
-  <img src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp" alt="Learnlio">
-  <div>
-    <a href="/chat.html">Tutor</a>
-    <a href="/screener.html">Screener</a>
-    <a href="/reports.html">Reports</a>
-    <a href="#" onclick="logout()">Log out</a>
+<!-- ================= HEADER ================= -->
+<header class="site-header">
+  <div class="container">
+    <nav class="navbar">
+      <a class="brand" href="/dash.html">
+        <img src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp" alt="Learnlio">
+        <div class="brand-text">
+          <strong>Learnlio</strong>
+          <span>Friendly learning support</span>
+        </div>
+      </a>
+
+      <button class="menu-btn" id="menuBtn">☰ Menu</button>
+
+      <div class="nav-links" id="navLinks">
+        <a class="nav-link active" href="/dash.html">Dashboard</a>
+        <a class="nav-link" href="/chat.html">Learnlio Tutor</a>
+        <a class="nav-link" href="/screener.html">Dyslexia Screener</a>
+        <a class="nav-link" href="/reports.html">Reports</a>
+        <a class="nav-cta" href="/chat.html">Start Tutor</a>
+      </div>
+    </nav>
   </div>
-</nav>
+</header>
 
-<main>
+<!-- ================= PAGE ================= -->
+<main class="page">
+  <div class="container">
 
-  <h1>Parent Dashboard</h1>
-  <p>Add your child below to get started.</p>
+    <div class="page-title">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Add and manage your children</p>
+      </div>
+    </div>
 
-  <!-- ADD CHILD -->
-  <div class="card">
-    <h2>Add a child</h2>
+    <!-- ADD CHILD CARD -->
+    <div class="card stack-16">
 
-    <label>Child name</label>
-    <input id="childName" placeholder="e.g. Ava">
+      <h3>Add a child</h3>
 
-    <label>Date of birth</label>
-    <input id="childDob" type="date">
+      <div class="stack-12">
+        <input id="childName" class="input" placeholder="Child’s name" />
+        <input id="childDob" class="input" type="date" />
+        <button id="addChildBtn" class="btn">Add child</button>
+        <p id="formMessage" style="color:#dc2626;font-size:14px;"></p>
+      </div>
 
-    <button onclick="addChild()">Add child</button>
+    </div>
+
+    <!-- CHILD LIST -->
+    <div class="card stack-16" style="margin-top:20px;">
+      <h3>Your children</h3>
+      <div id="childrenList" class="stack-12">
+        <p style="color:#6b7280;">Loading…</p>
+      </div>
+    </div>
+
   </div>
-
-  <!-- CHILD LIST -->
-  <div class="card">
-    <h2>Your children</h2>
-    <ul id="childrenList">
-      <li>Loading…</li>
-    </ul>
-  </div>
-
 </main>
 
+<!-- ================= SCRIPTS ================= -->
 <script>
-  /* -------------------------------
-     Supabase setup
-  -------------------------------- */
-  const supabase = window.supabase.createClient(
-    "https://YOUR_PROJECT_ID.supabase.co",
-    "YOUR_PUBLIC_ANON_KEY"
-  );
+/* ---------- Mobile menu ---------- */
+const menuBtn = document.getElementById("menuBtn");
+const navLinks = document.getElementById("navLinks");
+menuBtn.addEventListener("click", () => navLinks.classList.toggle("open"));
 
-  /* -------------------------------
-     Auth guard
-  -------------------------------- */
-  async function requireAuth() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      window.location.href = "/login.html";
-    }
-    return user;
-  }
+/* ---------- Supabase ---------- */
+const supabase = window.supabase.createClient(
+  "YOUR_SUPABASE_URL",
+  "YOUR_SUPABASE_ANON_KEY"
+);
 
-  /* -------------------------------
-     Load children
-  -------------------------------- */
-  async function loadChildren() {
-    const user = await requireAuth();
+/* ---------- Elements ---------- */
+const addBtn = document.getElementById("addChildBtn");
+const nameInput = document.getElementById("childName");
+const dobInput = document.getElementById("childDob");
+const listEl = document.getElementById("childrenList");
+const msgEl = document.getElementById("formMessage");
 
-    const { data, error } = await supabase
-      .from("children")
-      .select("*")
-      .eq("owner_id", user.id)
-      .order("created_at", { ascending: true });
+/* ---------- Load user ---------- */
+let currentUser = null;
 
-    const list = document.getElementById("childrenList");
-    list.innerHTML = "";
-
-    if (error || !data || data.length === 0) {
-      list.innerHTML = "<li>No children added yet</li>";
-      return;
-    }
-
-    data.forEach(child => {
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <span>${child.name}</span>
-        <button class="secondary" onclick="startTutor('${child.id}')">
-          Start
-        </button>
-      `;
-      list.appendChild(li);
-    });
-  }
-
-  /* -------------------------------
-     Add child (FIXED owner_id)
-  -------------------------------- */
-  async function addChild() {
-    const name = document.getElementById("childName").value.trim();
-    const dob = document.getElementById("childDob").value;
-
-    if (!name) {
-      alert("Please enter a child name");
-      return;
-    }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      alert("You must be logged in");
-      return;
-    }
-
-    const { error } = await supabase
-      .from("children")
-      .insert({
-        owner_id: user.id,
-        name: name,
-        dob: dob || null
-      });
-
-    if (error) {
-      console.error(error);
-      alert("Error adding child");
-      return;
-    }
-
-    document.getElementById("childName").value = "";
-    document.getElementById("childDob").value = "";
-
-    loadChildren();
-  }
-
-  /* -------------------------------
-     Navigation helpers
-  -------------------------------- */
-  function startTutor(childId) {
-    localStorage.setItem("activeChildId", childId);
-    window.location.href = "/chat.html";
-  }
-
-  async function logout() {
-    await supabase.auth.signOut();
+async function init() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) {
     window.location.href = "/login.html";
+    return;
+  }
+  currentUser = data.user;
+  loadChildren();
+}
+
+/* ---------- Load children ---------- */
+async function loadChildren() {
+  listEl.innerHTML = "<p style='color:#6b7280;'>Loading…</p>";
+
+  const { data, error } = await supabase
+    .from("children")
+    .select("*")
+    .eq("parent_id", currentUser.id)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    listEl.innerHTML = "<p style='color:#dc2626;'>Failed to load children.</p>";
+    return;
   }
 
-  /* -------------------------------
-     Init
-  -------------------------------- */
+  if (!data.length) {
+    listEl.innerHTML = "<p style='color:#6b7280;'>No children added yet.</p>";
+    return;
+  }
+
+  listEl.innerHTML = "";
+  data.forEach(child => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <strong>${child.name}</strong><br>
+      <span style="color:#6b7280;">Born ${child.dob}</span>
+    `;
+    listEl.appendChild(div);
+  });
+}
+
+/* ---------- Add child ---------- */
+addBtn.addEventListener("click", async () => {
+  msgEl.textContent = "";
+
+  const name = nameInput.value.trim();
+  const dob = dobInput.value;
+
+  if (!name || !dob) {
+    msgEl.textContent = "Please enter a name and date of birth.";
+    return;
+  }
+
+  const { error } = await supabase
+    .from("children")
+    .insert({
+      parent_id: currentUser.id,
+      name: name,
+      dob: dob
+    });
+
+  if (error) {
+    msgEl.textContent = error.message;
+    return;
+  }
+
+  nameInput.value = "";
+  dobInput.value = "";
   loadChildren();
+});
+
+/* ---------- Start ---------- */
+init();
 </script>
 
 </body>
 </html>
+
