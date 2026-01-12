@@ -1,1 +1,212 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio — Terms of Service</title>
+
+  <link rel="stylesheet" href="/assets/css/app.css" />
+
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
+    .container { max-width: 980px; margin: 0 auto; padding: 18px; }
+    .card { background:#fff; border-radius:16px; padding:18px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .nav { background:#fff; border-bottom:1px solid #ececf4; }
+    .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:800; }
+    .brand img { height:34px; width:auto; display:block; }
+    .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
+    .links a.active { background:#eef2ff; }
+    .muted { color:#6b7280; font-size: 14px; }
+    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#111; }
+    .hr { height:1px; background:#ececf4; margin:14px 0; }
+    .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; }
+    .btn.light { background:#e5e7eb; color:#111; }
+    h1 { margin:0 0 6px; }
+    h2 { margin:18px 0 8px; font-size:18px; }
+    p, li { line-height:1.7; font-size:15px; }
+    ul { margin: 8px 0 0; padding-left: 18px; }
+
+    /* Cookie banner */
+    .cookie-banner {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 9999;
+      background: #111827;
+      color: #fff;
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      display: none;
+    }
+    .cookie-row {
+      max-width: 980px;
+      margin: 0 auto;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .cookie-text { font-size: 14px; color:#e5e7eb; line-height:1.5; }
+    .cookie-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .cookie-actions button { border:none; border-radius:12px; padding:10px 12px; cursor:pointer; font-size:14px; }
+    .cookie-ok { background:#0b5cff; color:#fff; }
+    .cookie-close { background: rgba(255,255,255,.12); color:#fff; }
+  </style>
+</head>
+
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="/index.html" aria-label="Learnlio home">
+        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <span>Learnlio</span>
+      </a>
+      <nav class="links">
+        <a href="/dash.html">Dashboard</a>
+        <a href="/chat.html">Learnlio Tutor</a>
+        <a href="/screener.html">Dyslexia Screener</a>
+        <a href="/reports.html">Reports</a>
+        <a href="/billing.html">Billing</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div style="display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+        <div>
+          <h1>Terms of Service</h1>
+          <div class="muted">Last updated: <span id="lastUpdated">12/01/2026</span></div>
+        </div>
+        <span class="pill">Plain English</span>
+      </div>
+
+      <div class="hr"></div>
+
+      <p>
+        These Terms of Service (“Terms”) apply to your use of Learnlio (the “Service”).
+        By using Learnlio, you agree to these Terms.
+      </p>
+
+      <h2>Who can use Learnlio</h2>
+      <ul>
+        <li>Learnlio accounts are created and managed by a parent or legal guardian.</li>
+        <li>Children may use Learnlio under adult supervision or guidance.</li>
+        <li>You must provide accurate information when creating an account.</li>
+      </ul>
+
+      <h2>What Learnlio provides</h2>
+      <ul>
+        <li>Child-led, dyslexia-friendly learning support in Maths and English.</li>
+        <li>Progress tracking and parent reports (where enabled).</li>
+        <li>A supportive tutoring experience designed to build confidence.</li>
+      </ul>
+
+      <h2>What Learnlio is not</h2>
+      <ul>
+        <li>Learnlio is not a medical, diagnostic, or clinical service.</li>
+        <li>Any screener or “signals” are guidance only and not a diagnosis.</li>
+        <li>Learnlio does not replace professional educational assessment or support.</li>
+      </ul>
+
+      <h2>Accounts and security</h2>
+      <ul>
+        <li>You are responsible for keeping your login details secure.</li>
+        <li>You must not share access with people outside your household.</li>
+        <li>We may suspend accounts that misuse the Service or violate these Terms.</li>
+      </ul>
+
+      <h2>Payments, trials, and cancellations</h2>
+      <ul>
+        <li>Trials (if offered) are time-limited and intended for testing Learnlio.</li>
+        <li>Paid access is handled through Stripe. We do not store card details.</li>
+        <li>You can cancel at any time via the Billing page or Stripe portal (where enabled).</li>
+        <li>If you cancel, access continues until the end of the paid period.</li>
+      </ul>
+
+      <h2>Acceptable use</h2>
+      <p>Please do not:</p>
+      <ul>
+        <li>Use Learnlio to upload harmful, abusive, or illegal content.</li>
+        <li>Attempt to break, reverse engineer, or disrupt the Service.</li>
+        <li>Use Learnlio in a way that risks harm to a child.</li>
+      </ul>
+
+      <h2>Availability and changes</h2>
+      <ul>
+        <li>We aim for reliable access, but uptime cannot be guaranteed.</li>
+        <li>We may update features to improve learning and safety.</li>
+        <li>We may update these Terms and will post changes on this page.</li>
+      </ul>
+
+      <h2>Liability</h2>
+      <ul>
+        <li>We provide the Service “as is”.</li>
+        <li>We are not liable for indirect losses.</li>
+        <li>Nothing in these Terms limits rights you may have under UK consumer law.</li>
+      </ul>
+
+      <h2>Contact</h2>
+      <p>
+        Questions about these Terms: <strong>hello@learnlio.co.uk</strong>
+      </p>
+
+      <div class="hr"></div>
+
+      <div class="muted" style="display:flex; gap:12px; flex-wrap:wrap;">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/cookies.html">Cookies</a>
+        <a href="/safeguarding.html">Child Data & Safeguarding</a>
+      </div>
+    </section>
+  </main>
+
+  <div id="cookieBanner" class="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie notice">
+    <div class="cookie-row">
+      <div class="cookie-text">
+        We only use <strong>essential cookies</strong> to keep you signed in and keep Learnlio secure.
+        <a href="/cookies.html" style="color:#c7d2fe; text-decoration:underline;">Learn more</a>.
+      </div>
+      <div class="cookie-actions">
+        <button id="cookieOk" class="cookie-ok" type="button">OK</button>
+        <button id="cookieClose" class="cookie-close" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const el = document.getElementById("lastUpdated");
+      const d = new Date();
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      el.textContent = `${dd}/${mm}/${yyyy}`;
+    })();
+
+    (function () {
+      const KEY = "learnlio_cookie_notice_v1";
+      const banner = document.getElementById("cookieBanner");
+      const ok = document.getElementById("cookieOk");
+      const close = document.getElementById("cookieClose");
+
+      function accept() { try { localStorage.setItem(KEY, "1"); } catch {} banner.style.display = "none"; }
+      function showIfNeeded() {
+        let seen = "0";
+        try { seen = localStorage.getItem(KEY) || "0"; } catch {}
+        if (seen !== "1") banner.style.display = "block";
+      }
+
+      ok.addEventListener("click", accept);
+      close.addEventListener("click", accept);
+      showIfNeeded();
+    })();
+  </script>
+</body>
+</html>
 
