@@ -1,1 +1,136 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio — Contact</title>
+
+  <link rel="stylesheet" href="/assets/css/app.css" />
+
+  <!-- Fallback styles (same system as other pages) -->
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
+    .container { max-width: 980px; margin: 0 auto; padding: 18px; }
+    .card { background:#fff; border-radius:16px; padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .nav { background:#fff; border-bottom:1px solid #ececf4; }
+    .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:700; }
+    .brand img { height:34px; width:auto; display:block; }
+    .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
+    .links a.active { background:#eef2ff; }
+    .btn { background:#0b5cff; border:none; color:#fff; padding:12px 14px; border-radius:12px; cursor:pointer; font-size:15px; }
+    .btn.light { background:#e5e7eb; color:#111; }
+    .muted { color:#6b7280; font-size:14px; }
+    .label { display:block; font-size:13px; color:#333; margin:10px 0 6px; }
+    .input, .textarea, select {
+      width:100%;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid #d6d6e3;
+      font-size:16px;
+      font-family:inherit;
+    }
+    .textarea { min-height:120px; resize:vertical; }
+    .grid { display:grid; gap:14px; }
+    @media (min-width: 860px) { .grid { grid-template-columns: 1.2fr .8fr; } }
+    .status { margin-top:10px; font-size:14px; }
+    .status.good { color:#16a34a; }
+    .status.bad { color:#dc2626; }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="/" aria-label="Learnlio home">
+        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <span>Learnlio</span>
+      </a>
+      <nav class="links">
+        <a href="/">Home</a>
+        <a href="/dash.html">Dashboard</a>
+        <a href="/reports.html">Reports</a>
+        <a class="active" href="/contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="container">
+    <div class="grid">
+      <!-- Contact form -->
+      <section class="card">
+        <h1 style="margin:0 0 6px;">Contact Learnlio</h1>
+        <p class="muted" style="margin:0 0 14px;">
+          Have a question, feedback, or need support? We’re here to help.
+        </p>
+
+        <form id="contactForm" novalidate>
+          <label class="label" for="name">Your name</label>
+          <input id="name" class="input" placeholder="e.g. Sarah" required />
+
+          <label class="label" for="email">Email address</label>
+          <input id="email" class="input" type="email" placeholder="you@example.com" required />
+
+          <label class="label" for="topic">What’s this about?</label>
+          <select id="topic" class="input">
+            <option value="support">Support</option>
+            <option value="feedback">Feedback</option>
+            <option value="billing">Billing</option>
+            <option value="safeguarding">Safeguarding / Child safety</option>
+            <option value="other">Something else</option>
+          </select>
+
+          <label class="label" for="message">Message</label>
+          <textarea id="message" class="textarea" placeholder="Tell us how we can help…" required></textarea>
+
+          <button class="btn" type="submit" style="margin-top:14px;">Send message</button>
+          <div id="formStatus" class="status" aria-live="polite"></div>
+        </form>
+      </section>
+
+      <!-- Side info -->
+      <aside class="card">
+        <h2 style="margin:0 0 6px;">Other ways to reach us</h2>
+
+        <p class="muted" style="margin:0 0 10px;">
+          We usually reply within one working day.
+        </p>
+
+        <p style="margin:0 0 6px;"><strong>Email</strong></p>
+        <p class="muted" style="margin:0 0 14px;">
+          <a href="mailto:hello@learnlio.co.uk">hello@learnlio.co.uk</a>
+        </p>
+
+        <p style="margin:0 0 6px;"><strong>Safeguarding</strong></p>
+        <p class="muted" style="margin:0;">
+          For child safety concerns, please email  
+          <a href="mailto:safeguarding@learnlio.co.uk">safeguarding@learnlio.co.uk</a>
+        </p>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Footer (reuse the footer strip you added earlier) -->
+
+  <!-- Simple form handler (no backend yet) -->
+  <script>
+    const form = document.getElementById("contactForm");
+    const statusEl = document.getElementById("formStatus");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      // This is intentionally simple for now
+      statusEl.textContent =
+        "Thanks — your message has been sent. We’ll be in touch shortly.";
+      statusEl.className = "status good";
+
+      form.reset();
+    });
+  </script>
+</body>
+</html>
 
