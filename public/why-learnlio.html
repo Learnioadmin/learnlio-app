@@ -3,134 +3,191 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Learnlio — Contact</title>
+
+  <title>Why Learnlio | Child-Led, Dyslexia-Friendly Learning</title>
+
+  <meta name="description" content="Learn why Learnlio is different. Child-led learning, dyslexia-friendly tutoring, calm adaptive lessons and meaningful progress for Maths and English." />
 
   <link rel="stylesheet" href="/assets/css/app.css" />
 
-  <!-- Fallback styles (same system as other pages) -->
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
-    .container { max-width: 980px; margin: 0 auto; padding: 18px; }
-    .card { background:#fff; border-radius:16px; padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .container { max-width: 980px; margin: 0 auto; padding: 22px 18px; }
+    .card { background:#fff; border-radius:18px; padding:24px; box-shadow:0 6px 20px rgba(0,0,0,.08); }
     .nav { background:#fff; border-bottom:1px solid #ececf4; }
     .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:700; }
-    .brand img { height:34px; width:auto; display:block; }
-    .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .brand img { height:34px; }
+    .links { display:flex; gap:10px; flex-wrap:wrap; }
     .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
     .links a.active { background:#eef2ff; }
-    .btn { background:#0b5cff; border:none; color:#fff; padding:12px 14px; border-radius:12px; cursor:pointer; font-size:15px; }
-    .btn.light { background:#e5e7eb; color:#111; }
-    .muted { color:#6b7280; font-size:14px; }
-    .label { display:block; font-size:13px; color:#333; margin:10px 0 6px; }
-    .input, .textarea, select {
-      width:100%;
-      padding:12px;
-      border-radius:12px;
-      border:1px solid #d6d6e3;
-      font-size:16px;
-      font-family:inherit;
+
+    h1 { font-size:34px; line-height:1.2; margin:0 0 12px; }
+    h2 { font-size:24px; margin:28px 0 10px; }
+    h3 { font-size:18px; margin:18px 0 6px; }
+
+    p { font-size:17px; line-height:1.8; margin:0 0 12px; }
+    .muted { color:#6b7280; }
+
+    .hero { padding:10px 0 22px; }
+    .hero p { font-size:18px; }
+
+    .grid { display:grid; gap:20px; }
+    @media (min-width: 800px) {
+      .grid { grid-template-columns:1fr 1fr; }
     }
-    .textarea { min-height:120px; resize:vertical; }
-    .grid { display:grid; gap:14px; }
-    @media (min-width: 860px) { .grid { grid-template-columns: 1.2fr .8fr; } }
-    .status { margin-top:10px; font-size:14px; }
-    .status.good { color:#16a34a; }
-    .status.bad { color:#dc2626; }
+
+    .principle {
+      border:1px solid #eef2f7;
+      border-radius:16px;
+      padding:18px;
+      background:#fafafa;
+    }
+
+    .cta {
+      margin-top:30px;
+      padding:22px;
+      border-radius:18px;
+      background:#0b5cff;
+      color:#fff;
+      text-align:center;
+    }
+    .cta p { color:#e5edff; }
+    .cta a {
+      display:inline-block;
+      margin-top:12px;
+      background:#fff;
+      color:#0b5cff;
+      padding:12px 18px;
+      border-radius:14px;
+      text-decoration:none;
+      font-weight:600;
+    }
+
+    footer {
+      margin-top:40px;
+      padding:18px;
+      text-align:center;
+      font-size:14px;
+      color:#6b7280;
+    }
+    footer a { color:#6b7280; text-decoration:none; margin:0 8px; }
   </style>
 </head>
 
 <body>
-  <!-- Header -->
   <header class="nav">
     <div class="nav-inner">
-      <a class="brand" href="/" aria-label="Learnlio home">
+      <a class="brand" href="/">
         <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
         <span>Learnlio</span>
       </a>
       <nav class="links">
-        <a href="/">Home</a>
-        <a href="/dash.html">Dashboard</a>
-        <a href="/reports.html">Reports</a>
-        <a class="active" href="/contact.html">Contact</a>
+        <a class="active" href="/why-learnlio.html">Why Learnlio</a>
+        <a href="/how-it-works.html">How it works</a>
+        <a href="/pricing.html">Pricing</a>
+        <a href="/login.html">Log in</a>
       </nav>
     </div>
   </header>
 
-  <!-- Main -->
   <main class="container">
-    <div class="grid">
-      <!-- Contact form -->
-      <section class="card">
-        <h1 style="margin:0 0 6px;">Contact Learnlio</h1>
-        <p class="muted" style="margin:0 0 14px;">
-          Have a question, feedback, or need support? We’re here to help.
-        </p>
+    <section class="hero">
+      <h1>Why Learnlio exists</h1>
+      <p class="muted">
+        Learnlio was built for children who don’t thrive under pressure, rigid systems, or one-size-fits-all teaching.
+      </p>
+      <p>
+        We believe learning should be calm, child-led, and confidence-building — especially for children with dyslexia or learning differences.
+      </p>
+    </section>
 
-        <form id="contactForm" novalidate>
-          <label class="label" for="name">Your name</label>
-          <input id="name" class="input" placeholder="e.g. Sarah" required />
+    <section class="card">
+      <h2>Our principles</h2>
+      <p class="muted">
+        These principles guide every lesson, interaction and design decision inside Learnlio.
+      </p>
 
-          <label class="label" for="email">Email address</label>
-          <input id="email" class="input" type="email" placeholder="you@example.com" required />
+      <div class="grid">
+        <div class="principle">
+          <h3>Child-led learning</h3>
+          <p>
+            Children learn best when they feel in control. Learnlio follows the child’s pace,
+            interests and energy — not a rigid curriculum clock.
+          </p>
+        </div>
 
-          <label class="label" for="topic">What’s this about?</label>
-          <select id="topic" class="input">
-            <option value="support">Support</option>
-            <option value="feedback">Feedback</option>
-            <option value="billing">Billing</option>
-            <option value="safeguarding">Safeguarding / Child safety</option>
-            <option value="other">Something else</option>
-          </select>
+        <div class="principle">
+          <h3>Dyslexia-friendly by design</h3>
+          <p>
+            We use clear spacing, simple language, reduced cognitive load and supportive feedback.
+            No visual clutter. No pressure.
+          </p>
+        </div>
 
-          <label class="label" for="message">Message</label>
-          <textarea id="message" class="textarea" placeholder="Tell us how we can help…" required></textarea>
+        <div class="principle">
+          <h3>Safe, supportive tutoring</h3>
+          <p>
+            Learnlio is calm by default. No shaming. No “wrong answer” emphasis.
+            Mistakes are treated as part of learning, not failure.
+          </p>
+        </div>
 
-          <button class="btn" type="submit" style="margin-top:14px;">Send message</button>
-          <div id="formStatus" class="status" aria-live="polite"></div>
-        </form>
-      </section>
+        <div class="principle">
+          <h3>Adaptive, not overwhelming</h3>
+          <p>
+            Difficulty adjusts gently within safe boundaries.
+            Children are challenged — but never pushed beyond confidence.
+          </p>
+        </div>
 
-      <!-- Side info -->
-      <aside class="card">
-        <h2 style="margin:0 0 6px;">Other ways to reach us</h2>
+        <div class="principle">
+          <h3>Meaningful progress</h3>
+          <p>
+            We focus on real understanding, not rushing levels.
+            Progress is remembered, reinforced, and shared clearly with parents.
+          </p>
+        </div>
 
-        <p class="muted" style="margin:0 0 10px;">
-          We usually reply within one working day.
-        </p>
+        <div class="principle">
+          <h3>Parent clarity & trust</h3>
+          <p>
+            Parents can see what’s happening, why it matters, and what to do next —
+            without needing teaching expertise.
+          </p>
+        </div>
+      </div>
+    </section>
 
-        <p style="margin:0 0 6px;"><strong>Email</strong></p>
-        <p class="muted" style="margin:0 0 14px;">
-          <a href="mailto:hello@learnlio.co.uk">hello@learnlio.co.uk</a>
-        </p>
+    <section class="card" style="margin-top:24px;">
+      <h2>Who Learnlio is for</h2>
+      <p>
+        Learnlio is designed for parents who want:
+      </p>
+      <ul>
+        <li>✔ Calm, structured support for Maths and English</li>
+        <li>✔ Dyslexia-aware teaching without labels or stigma</li>
+        <li>✔ Progress that builds confidence, not anxiety</li>
+        <li>✔ A safe alternative to pressure-based tutoring</li>
+      </ul>
+    </section>
 
-        <p style="margin:0 0 6px;"><strong>Safeguarding</strong></p>
-        <p class="muted" style="margin:0;">
-          For child safety concerns, please email  
-          <a href="mailto:safeguarding@learnlio.co.uk">safeguarding@learnlio.co.uk</a>
-        </p>
-      </aside>
+    <div class="cta">
+      <h2>Learning that feels safe, calm and personal</h2>
+      <p>
+        Start a 7-day trial. No card required.
+      </p>
+      <a href="/login.html">Get started</a>
     </div>
+
+    <footer>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+      <a href="/cookies.html">Cookies</a>
+      <a href="/contact.html">Contact</a>
+    </footer>
   </main>
-
-  <!-- Footer (reuse the footer strip you added earlier) -->
-
-  <!-- Simple form handler (no backend yet) -->
-  <script>
-    const form = document.getElementById("contactForm");
-    const statusEl = document.getElementById("formStatus");
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      // This is intentionally simple for now
-      statusEl.textContent =
-        "Thanks — your message has been sent. We’ll be in touch shortly.";
-      statusEl.className = "status good";
-
-      form.reset();
-    });
-  </script>
 </body>
 </html>
+
 
