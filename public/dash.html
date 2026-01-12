@@ -35,6 +35,8 @@
     .status { margin-top:10px; font-size:14px; }
     .status.good { color:#16a34a; }
     .status.bad { color:#dc2626; }
+    .banner { background:#fff7ed; border:1px solid #fed7aa; border-radius:16px; padding:14px; }
+    .banner h3 { margin:0 0 6px; }
   </style>
 
   <!-- Supabase JS (must be loaded once) -->
@@ -59,7 +61,9 @@
   </header>
 
   <main class="container">
-    <div class="row">
+    <div id="trialBanner" class="banner" style="display:none; margin-bottom:14px;"></div>
+
+    <div class="row" id="dashGrid">
       <section class="col">
         <div class="card">
           <h2 style="margin:0 0 6px;">Add a child</h2>
@@ -113,7 +117,6 @@
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
     // =======================================
 
-    // Avoid "supabase already declared"
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     if (!sb) {
       console.error("Supabase JS failed to load.");
@@ -130,12 +133,15 @@
     const selectedChildLabel = document.getElementById("selectedChildLabel");
     const logoutBtn = document.getElementById("logoutBtn");
 
+    const trialBanner = document.getElementById("trialBanner");
+    const dashGrid = document.getElementById("dashGrid");
+
     let currentUser = null;
+    let trialAllowed = true;
 
     function setMsg(text, good=false) {
       msgEl.textContent = text || "";
-      msgEl.className = "status " + (good ? "good" : "bad");
-      if (!text) msgEl.className = "status";
+      msgEl.className = "status " + (text ? (good ? "good" : "bad") : "");
     }
 
     function escapeHtml(str){
@@ -155,6 +161,17 @@
       }
     }
 
+    function disableDashboard(disabled) {
+      addBtn.disabled = disabled;
+      refreshBtn.disabled = disabled;
+      nameInput.disabled = disabled;
+      dobInput.disabled = disabled;
+      if (disabled) {
+        // prevent accidental selection when expired
+        Array.from(document.querySelectorAll("#childrenList button")).forEach(b => b.disabled = true);
+      }
+    }
+
     async function requireAuth() {
       const { data, error } = await sb.auth.getUser();
       if (error || !data?.user) {
@@ -165,9 +182,95 @@
       return true;
     }
 
+    // -----------------------
+    // TRIAL GATE (Dash)
+    // -----------------------
+    async function enforceTrialGate() {
+      // If you decide later to allow "active" subs, this already does.
+      // Allowed statuses: trialing, active
+      // Blocks: expired trial (trial_ends_at < now) and status not allowed.
+
+      const { data, error } = await sb
+        .from("subscriptions")
+        .select("user_id, status, trial_ends_at, plan")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (error) {
+        // If subscriptions table is missing or RLS blocks, surface clearly
+        trialBanner.style.display = "block";
+        trialBanner.innerHTML = `
+          <h3>We can’t check your trial right now.</h3>
+          <div class="muted">Error: ${escapeHtml(error.message)}</div>
+        `;
+        // Don’t hard-block if it’s a temporary check issue — but you can change this to block if you prefer.
+        return true;
+      }
+
+      // If no row exists yet, treat as allowed for MVP (or block if you prefer).
+      if (!data) return true;
+
+      const status = (data.status || "").toLowerCase();
+      const allowedStatus = (status === "trialing" || status === "active");
+
+      let endsOk = true;
+      if (data.trial_ends_at) {
+        const ends = new Date(data.trial_ends_at);
+        if (!isNaN(ends.getTime())) {
+          endsOk = ends.getTime() >= Date.now();
+        }
+      }
+
+      if (!allowedStatus || !endsOk) {
+        trialAllowed = false;
+        trialBanner.style.display = "block";
+        trialBanner.innerHTML = `
+          <h3>Your free trial has ended</h3>
+          <div class="muted" style="margin-top:6px;">
+            Please upgrade to keep using Learnlio.
+          </div>
+          <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="btn" href="/billing.html" style="text-decoration:none; display:inline-block;">Upgrade</a>
+            <button id="logoutExpiredBtn" class="btn light" type="button">Log out</button>
+          </div>
+        `;
+
+        // Disable dashboard actions
+        disableDashboard(true);
+
+        // optional: hide the grid interaction feel
+        dashGrid.style.opacity = "0.6";
+
+        const lo = document.getElementById("logoutExpiredBtn");
+        if (lo) lo.addEventListener("click", async () => {
+          await sb.auth.signOut();
+          localStorage.removeItem("selectedChild");
+          window.location.href = "/login.html";
+        });
+
+        return false;
+      }
+
+      // Trial allowed — optionally show remaining days
+      if (data.trial_ends_at && status === "trialing") {
+        const ends = new Date(data.trial_ends_at);
+        const daysLeft = Math.ceil((ends.getTime() - Date.now()) / (1000*60*60*24));
+        if (!isNaN(daysLeft) && daysLeft >= 0) {
+          trialBanner.style.display = "block";
+          trialBanner.innerHTML = `
+            <h3>Trial active</h3>
+            <div class="muted" style="margin-top:6px;">
+              You have <strong>${daysLeft}</strong> day${daysLeft === 1 ? "" : "s"} left.
+            </div>
+          `;
+        }
+      }
+
+      return true;
+    }
+
     async function loadChildren() {
       setMsg("");
-
       listEl.innerHTML = `<div class="muted">Loading…</div>`;
 
       const { data, error } = await sb
@@ -206,21 +309,25 @@
 
         const btn = card.querySelector("button[data-id]");
         btn.addEventListener("click", () => {
-          localStorage.setItem("selectedChild", JSON.stringify({
-            id: ch.id,
-            name,
-            dob
-          }));
+          localStorage.setItem("selectedChild", JSON.stringify({ id: ch.id, name, dob }));
           setSelectedChildUI();
           setMsg(`Selected child: ${name}`, true);
         });
 
         listEl.appendChild(card);
       });
+
+      // If trial is not allowed, disable select buttons too
+      if (!trialAllowed) disableDashboard(true);
     }
 
     async function addChild() {
       setMsg("");
+
+      if (!trialAllowed) {
+        setMsg("Your trial has ended. Please upgrade to add children.");
+        return;
+      }
 
       const name = nameInput.value.trim();
       const dob = dobInput.value;
@@ -267,29 +374,18 @@
       if (!ok) return;
 
       setSelectedChildUI();
+
+      // Trial gate must run BEFORE loading
+      const trialOk = await enforceTrialGate();
+      if (!trialOk) {
+        // still load children list so they can see profiles, but disable actions
+        await loadChildren();
+        return;
+      }
+
       await loadChildren();
     })();
   })();
-
-    (async () => {
-  // 1) Ensure Supabase client exists
-  if (!sb) return;
-
-  // 2) Require login (your existing code)
-  const { data, error } = await sb.auth.getUser();
-  if (error || !data?.user) {
-    window.location.href = "/login.html";
-    return;
-  }
-
-  // 3) Trial gate (NEW)
-  const ok = await enforceTrialGate(sb);
-  if (!ok) return;
-
-  // 4) Continue normal page load...
-  // e.g. load child, render dashboard, etc.
-})();
-
   </script>
 </body>
 </html>
