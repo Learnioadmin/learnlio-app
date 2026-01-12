@@ -1,40 +1,384 @@
-<div class="topbar">
-  <div class="topbar-inner">
-    <a class="brand" href="/dash.html">
-      <div class="brand-badge">L</div>
-      <div class="brand-name">Learnlio</div>
-    </a>
-
-    <div class="nav">
-      <a href="/dash.html" data-nav="dash">Dash</a>
-      <a href="/chat.html" data-nav="chat">Chat</a>
-      <a href="/screener.html" data-nav="screener">Screener</a>
-      <a href="/reports.html" data-nav="reports">Reports</a>
-      <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
-    </div>
-  </div>
-</div>
-
 <!doctype html>
 <html lang="en-GB">
-<div class="topbar">
-  <div class="topbar-inner">
-    <a class="brand" href="/dash.html">
-      <img class="brand-logo" src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp" alt="Learnlio logo" />
-      <div class="brand-name">Learnlio</div>
-    </a>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio — Dyslexia-friendly AI Tutor for Maths & English (UK)</title>
 
-    <div class="nav">
-      <a href="/dash.html" data-nav="dash">Dash</a>
-      <a href="/chat.html" data-nav="chat">Chat</a>
-      <a href="/screener.html" data-nav="screener">Screener</a>
-      <a href="/reports.html" data-nav="reports">Reports</a>
-      <a href="/login.html" class="btn btn-secondary" style="padding:10px 12px;">Log in</a>
-    </div>
-  </div>
-</div>
+  <!-- SEO -->
+  <meta name="description" content="Learnlio is a dyslexia-friendly AI tutor for children. Calm, step-by-step Maths & English practice, plus a child-friendly dyslexia screener and parent reports. Built for UK families." />
+  <link rel="canonical" href="https://learnlio.co.uk/" />
+  <meta name="robots" content="index,follow" />
+
+  <!-- Social (Open Graph / Twitter) -->
+  <meta property="og:title" content="Learnlio — Dyslexia-friendly AI Tutor for Maths & English" />
+  <meta property="og:description" content="Calm, step-by-step practice for kids who struggle. Dyslexia-friendly tutoring, screener, and parent reports." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://learnlio.co.uk/" />
+  <meta property="og:image" content="/assets/img/og-learnlio.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Favicons (optional) -->
+  <link rel="icon" href="/assets/img/favicon.png" />
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="/assets/css/app.css" />
+
+  <!-- Minimal fallback styles (if app.css path breaks) -->
+  <style>
+    :root{
+      --bg:#f7f7fb;
+      --card:#ffffff;
+      --text:#0b0b0f;
+      --muted:#6b7280;
+      --line:#ececf4;
+      --brand:#0b5cff;
+      --brand2:#7c3aed;
+      --ok:#10b981;
+      --warn:#f59e0b;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text);}
+    a{color:inherit}
+    .container{max-width:1100px; margin:0 auto; padding:18px;}
+    .nav{background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:50;}
+    .nav-inner{max-width:1100px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px;}
+    .brand{display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:800; letter-spacing:.2px;}
+    .brand img{height:34px; width:auto; display:block;}
+    .links{display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;}
+    .links a{ text-decoration:none; padding:10px 12px; border-radius:12px; color:#111; }
+    .links a:hover{ background:#f3f4f6; }
+    .links a.active{ background:#eef2ff; }
+    .btn{background:var(--brand); color:#fff; border:none; padding:12px 14px; border-radius:14px; cursor:pointer; font-size:14px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:10px;}
+    .btn:hover{filter:brightness(.95)}
+    .btn.light{background:#e5e7eb; color:#111;}
+    .btn.ghost{background:transparent; border:1px solid #d1d5db; color:#111;}
+    .tag{display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; color:#111; font-weight:650;}
+    .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid rgba(236,236,244,.8);}
+    .hero{display:grid; grid-template-columns:1.1fr .9fr; gap:18px; align-items:stretch; margin-top:18px;}
+    @media(max-width:900px){ .hero{grid-template-columns:1fr;} }
+    .hero-left{padding:22px;}
+    .hero-right{padding:22px; position:relative; overflow:hidden;}
+    .h1{margin:10px 0 10px; font-size:44px; line-height:1.1; letter-spacing:-.7px;}
+    @media(max-width:520px){ .h1{font-size:36px;} }
+    .lead{margin:0 0 18px; color:var(--muted); font-size:16px; line-height:1.6;}
+    .cta-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+    .mini{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+    .mini .pill{background:#f3f4f6; border:1px solid #e5e7eb; padding:10px 12px; border-radius:14px; font-size:13px; color:#111; display:flex; gap:10px; align-items:flex-start;}
+    .mini .pill b{display:block}
+    .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px;}
+    @media(max-width:700px){ .stats{grid-template-columns:1fr;} }
+    .stat{padding:14px; border-radius:16px; background:#fafafa; border:1px solid #eee;}
+    .stat .k{color:var(--muted); font-size:12px;}
+    .stat .v{font-weight:900; font-size:18px; margin-top:4px;}
+    .glass{
+      background: linear-gradient(135deg, rgba(11,92,255,.14), rgba(124,58,237,.12));
+      border:1px solid rgba(255,255,255,.35);
+      border-radius:18px;
+      padding:16px;
+    }
+    .mock{
+      margin-top:12px;
+      background:#0b1220;
+      color:#e5e7eb;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      padding:16px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.18);
+    }
+    .chatline{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:12px; margin:10px 0;}
+    .chatline strong{color:#a5b4fc;}
+    .grid3{display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:14px;}
+    @media(max-width:900px){ .grid3{grid-template-columns:1fr;} }
+    .feature{padding:16px;}
+    .feature h3{margin:10px 0 6px; font-size:16px;}
+    .feature p{margin:0; color:var(--muted); line-height:1.6; font-size:14px;}
+    .section{margin-top:18px;}
+    .section h2{margin:0 0 8px; font-size:22px; letter-spacing:-.3px;}
+    .section p{margin:0; color:var(--muted); line-height:1.7;}
+    .how{display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;}
+    @media(max-width:900px){ .how{grid-template-columns:1fr;} }
+    .step{padding:16px; border-radius:18px; border:1px solid var(--line); background:#fff;}
+    .step .n{width:34px; height:34px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:#eef2ff; font-weight:900;}
+    .step h3{margin:10px 0 6px; font-size:16px;}
+    .step p{margin:0; color:var(--muted); line-height:1.6; font-size:14px;}
+    .faq{margin-top:12px;}
+    details{border:1px solid var(--line); background:#fff; border-radius:16px; padding:12px 14px;}
+    details + details{margin-top:10px;}
+    summary{cursor:pointer; font-weight:800;}
+    summary::-webkit-details-marker{display:none;}
+    .footer{margin-top:18px; padding:18px 0 40px; color:var(--muted); font-size:14px;}
+    .footer a{color:var(--muted);}
+    .split{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;}
+    @media(max-width:900px){ .split{grid-template-columns:1fr;} }
+    .callout{padding:16px; border-radius:18px; background:linear-gradient(135deg, rgba(16,185,129,.14), rgba(11,92,255,.10)); border:1px solid rgba(16,185,129,.25);}
+    .callout h3{margin:0 0 6px;}
+    .callout p{margin:0; color:var(--muted); line-height:1.6;}
+  </style>
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Learnlio",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web",
+    "description": "Dyslexia-friendly AI tutor for Maths and English with a child-friendly screener and parent reports.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0.99",
+      "priceCurrency": "GBP"
+    },
+    "audience": {
+      "@type": "EducationalAudience",
+      "educationalRole": ["student", "parent"]
+    }
+  }
+  </script>
+</head>
 
 <body>
-  <p>Redirecting to Learnlio… If nothing happens, <a href="/login.html">tap here</a>.</p>
+  <!-- NAV -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="/" aria-label="Learnlio home">
+        <img src="/assets/img/logo.webp" alt="Learnlio logo" onerror="this.style.display='none'">
+        <span>Learnlio</span>
+      </a>
+
+      <nav class="links" aria-label="Primary navigation">
+        <a class="active" href="/">Home</a>
+        <a href="/screener.html">Dyslexia Screener</a>
+        <a href="/login.html">Log in</a>
+        <a class="btn" href="/login.html">Start free trial →</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <main class="container">
+    <section class="hero">
+      <div class="card hero-left">
+        <span class="tag">UK • Dyslexia-friendly • Step-by-step</span>
+        <h1 class="h1">Calm, step-by-step learning for children who struggle.</h1>
+        <p class="lead">
+          Learnlio is a dyslexia-friendly AI tutor for <b>Maths</b> and <b>English</b>.
+          It breaks questions into small steps, offers gentle hints, tracks progress, and gives parents clear reports.
+        </p>
+
+        <div class="cta-row">
+          <a class="btn" href="/login.html">Start Learnlio Tutor</a>
+          <a class="btn ghost" href="/screener.html">Try the dyslexia screener</a>
+          <a class="btn light" href="#how-it-works">See how it works</a>
+        </div>
+
+        <div class="mini" aria-label="Key benefits">
+          <div class="pill">✅ Dyslexia-friendly wording & spacing</div>
+          <div class="pill">💡 Hints on demand (no shame)</div>
+          <div class="pill">📄 Parent reports (downloadable)</div>
+          <div class="pill">🔊 Read-aloud button (child controlled)</div>
+        </div>
+
+        <div class="stats" role="list" aria-label="What you get">
+          <div class="stat" role="listitem">
+            <div class="k">Tutor style</div>
+            <div class="v">Guided steps</div>
+          </div>
+          <div class="stat" role="listitem">
+            <div class="k">Sessions</div>
+            <div class="v">Age-based limits</div>
+          </div>
+          <div class="stat" role="listitem">
+            <div class="k">Progress</div>
+            <div class="v">Saved to profile</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card hero-right">
+        <div class="glass">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <div>
+              <div style="font-weight:900;">What Learnlio feels like</div>
+              <div class="muted">Short lines. One step at a time.</div>
+            </div>
+            <span class="tag" style="background:#ecfeff;">Preview</span>
+          </div>
+
+          <div class="mock" aria-label="Tutor preview">
+            <div class="chatline"><strong>Learnlio:</strong> Let’s go slowly.<br><br>What is <b>18 + 7</b>?</div>
+            <div class="chatline" style="background:rgba(11,92,255,.18); border-color:rgba(11,92,255,.25);"><strong>You:</strong> 24</div>
+            <div class="chatline"><strong>Learnlio:</strong> Good try.<br><br>Step 1 of 2:<br><br>Start at 18.<br>Count up 7.<br><br>Where do you land?</div>
+            <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+              <span class="pill" style="background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.10); color:#e5e7eb;">🔊 Listen</span>
+              <span class="pill" style="background:rgba(16,185,129,.18); border:1px solid rgba(16,185,129,.24); color:#e5e7eb;">💡 Hint</span>
+              <span class="pill" style="background:rgba(124,58,237,.18); border:1px solid rgba(124,58,237,.25); color:#e5e7eb;">➡️ Next</span>
+            </div>
+          </div>
+
+          <div style="margin-top:12px; display:flex; gap:12px; flex-wrap:wrap;">
+            <div class="pill">Designed for attention + confidence</div>
+            <div class="pill">No long worksheets</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="section">
+      <h2>Why parents choose Learnlio</h2>
+      <p>
+        Lots of apps drill questions. Learnlio is built for children who need extra support, patience, and structure —
+        especially dyslexic learners and kids who lack confidence.
+      </p>
+
+      <div class="grid3">
+        <div class="card feature">
+          <div class="tag" style="background:#ecfeff;">Tutor</div>
+          <h3>Guided steps (not just “right/wrong”)</h3>
+          <p>When a child gets stuck, Learnlio breaks the question down into small steps and checks each step gently.</p>
+        </div>
+
+        <div class="card feature">
+          <div class="tag" style="background:#fff7ed;">Screener</div>
+          <h3>Child-friendly dyslexia screener</h3>
+          <p>A short, interactive screener to spot risk signs. Helpful for early insight (not a diagnosis).</p>
+        </div>
+
+        <div class="card feature">
+          <div class="tag" style="background:#f0fdf4;">Reports</div>
+          <h3>Parent reports you can actually use</h3>
+          <p>Clear “what happened” summaries + practical next steps you can do at home in minutes.</p>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="callout card" style="box-shadow:none;">
+          <h3>Built for dyslexic learning styles</h3>
+          <p>Short sentences, extra spacing, predictable patterns, and child-controlled read-aloud.</p>
+        </div>
+        <div class="callout card" style="box-shadow:none;">
+          <h3>Designed for confidence</h3>
+          <p>Gentle encouragement, badges, and a calm pace — without overwhelming the child.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how-it-works" class="section">
+      <h2>How Learnlio works</h2>
+      <p>Three simple steps. No complicated setup.</p>
+
+      <div class="how">
+        <div class="step">
+          <span class="n">1</span>
+          <h3>Create a child profile</h3>
+          <p>Add your child’s name and date of birth. Learnlio adjusts pacing and question limits by age.</p>
+        </div>
+        <div class="step">
+          <span class="n">2</span>
+          <h3>Choose Maths or English</h3>
+          <p>Pick a focus area (like addition or spelling). Learnlio starts immediately with a calm first task.</p>
+        </div>
+        <div class="step">
+          <span class="n">3</span>
+          <h3>Get progress + a report</h3>
+          <p>Progress is saved to your account. Download a report for parents, carers, or teachers.</p>
+        </div>
+        <div class="step">
+          <span class="n">★</span>
+          <h3>Optional: run the screener</h3>
+          <p>Use the dyslexia screener for extra insight. Then use Learnlio Tutor with the right support level.</p>
+        </div>
+      </div>
+
+      <div class="cta-row" style="margin-top:14px;">
+        <a class="btn" href="/login.html">Start Learnlio Tutor →</a>
+        <a class="btn light" href="/screener.html">Try the screener</a>
+      </div>
+    </section>
+
+    <!-- SEO-FRIENDLY CONTENT BLOCK (helps rankings for key intents) -->
+    <section class="section">
+      <h2>Dyslexia-friendly tutoring in the UK</h2>
+      <p>
+        Learnlio is built for UK families looking for a <b>dyslexia-friendly tutor</b> that supports children in
+        <b>Maths</b> and <b>English</b>. It’s designed to be calm and structured for learners who struggle with
+        working memory, speed, confidence, and reading/spelling.
+      </p>
+      <p style="margin-top:10px;">
+        Whether your child needs help with <b>number bonds</b>, <b>addition and subtraction</b>, <b>times tables</b>,
+        <b>spelling</b>, or <b>sentence building</b>, Learnlio guides them step-by-step and saves progress to their profile.
+      </p>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section">
+      <h2>Quick FAQ</h2>
+      <div class="faq" role="list">
+        <details>
+          <summary>Is Learnlio a dyslexia diagnosis?</summary>
+          <div class="muted" style="margin-top:8px; line-height:1.7;">
+            No. The screener is for early insight and risk signs. It doesn’t diagnose.
+            If you’re concerned, speak to your school or a qualified professional.
+          </div>
+        </details>
+
+        <details>
+          <summary>What ages is Learnlio for?</summary>
+          <div class="muted" style="margin-top:8px; line-height:1.7;">
+            Learnlio is designed for primary and early secondary learners. Sessions are paced and capped by age.
+          </div>
+        </details>
+
+        <details>
+          <summary>Can I use Learnlio on phone, tablet, and laptop?</summary>
+          <div class="muted" style="margin-top:8px; line-height:1.7;">
+            Yes. Learnlio is a web app and your child’s progress is stored to your account so you can pick up on another device.
+          </div>
+        </details>
+
+        <details>
+          <summary>Do children have to use voice?</summary>
+          <div class="muted" style="margin-top:8px; line-height:1.7;">
+            No. Voice only plays when the child presses the Listen button.
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="section card" style="padding:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div>
+          <h2 style="margin:0 0 6px;">Ready to try Learnlio?</h2>
+          <p style="margin:0; color:var(--muted);">Start a short session and see how calm, guided learning feels.</p>
+        </div>
+        <div class="cta-row" style="margin:0;">
+          <a class="btn" href="/login.html">Start Learnlio Tutor</a>
+          <a class="btn light" href="/dash.html">Go to dashboard</a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:center;">
+        <div>© <span id="year"></span> Learnlio. Built in the UK.</div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+          <a href="/contact.html">Contact</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
+
