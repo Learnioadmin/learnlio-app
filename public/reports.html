@@ -34,10 +34,11 @@
     .row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f1f1f6; }
     .row:last-child { border-bottom:none; }
     .k { color:#6b7280; font-size:13px; }
-    .v { font-weight:650; }
+    .v { font-weight:650; text-align:right; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 
 <body>
@@ -64,7 +65,8 @@
           <h1 style="margin:0 0 6px;">Reports</h1>
           <div id="childHeader" class="muted">Loading child…</div>
         </div>
-        <div style="display:flex; gap:10px; align-items:center;">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button id="downloadBtn" class="btn" type="button">Download report (PDF)</button>
           <button id="refreshBtn" class="btn light" type="button">Refresh</button>
         </div>
       </div>
@@ -76,7 +78,7 @@
         <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <h2 style="margin:0; font-size:16px;">Overall progress</h2>
-            <span class="pill">Table: progress</span>
+            <span class="pill">progress</span>
           </div>
           <div id="overallBox" style="margin-top:10px;">
             <div class="muted">Loading…</div>
@@ -85,25 +87,14 @@
 
         <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2 style="margin:0; font-size:16px;">Latest tutor signals</h2>
-            <span class="pill">Table: child_progress</span>
+            <h2 style="margin:0; font-size:16px;">Tutor signals</h2>
+            <span class="pill">child_progress</span>
           </div>
           <div id="signalsBox" style="margin-top:10px;">
             <div class="muted">Loading…</div>
           </div>
         </section>
       </div>
-
-      <section class="card" style="margin-top:14px; box-shadow:none; border:1px solid #ececf4;">
-        <h2 style="margin:0 0 8px; font-size:16px;">What this means</h2>
-        <div class="muted" style="line-height:1.6;">
-          These reports show:
-          <ul style="margin:8px 0 0 18px;">
-            <li><b>Overall progress</b> = your child’s latest saved levels and streak.</li>
-            <li><b>Latest tutor signals</b> = the most recent subject/area, difficulty and streaks from tutor sessions.</li>
-          </ul>
-        </div>
-      </section>
 
       <section id="noDataBox" class="card" style="margin-top:14px; box-shadow:none; border:1px dashed #cbd5e1; display:none;">
         <h2 style="margin:0 0 8px; font-size:16px;">No progress data yet</h2>
@@ -122,7 +113,7 @@
   <script>
   (() => {
     // =========================
-    // CONFIG (PASTE YOUR VALUES)
+    // CONFIG
     // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
@@ -132,6 +123,7 @@
 
     const logoutBtn = document.getElementById("logoutBtn");
     const refreshBtn = document.getElementById("refreshBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
 
     const pageError = document.getElementById("pageError");
     const pageOk = document.getElementById("pageOk");
@@ -144,6 +136,10 @@
     let currentUser = null;
     let child = null;
 
+    // cache latest data for PDF
+    let lastOverall = null;
+    let lastSignals = null;
+
     function showError(msg){
       pageError.style.display = "block";
       pageError.textContent = msg;
@@ -155,7 +151,7 @@
     function showOk(msg){
       pageOk.style.display = "block";
       pageOk.textContent = msg;
-      setTimeout(() => { pageOk.style.display="none"; }, 2000);
+      setTimeout(() => { pageOk.style.display="none"; }, 1800);
     }
 
     function getSelectedChild(){
@@ -169,6 +165,17 @@
     function safe(v, fallback="—"){
       if (v === null || v === undefined || v === "") return fallback;
       return String(v);
+    }
+
+    function formatDateOnly(value){
+      // Accepts ISO string, Date, or null -> returns dd/mm/yyyy or —
+      if (!value) return "—";
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return "—";
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
     }
 
     function renderRows(targetEl, rows){
@@ -199,6 +206,8 @@
         overallBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
         signalsBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
         noDataBox.style.display = "none";
+        downloadBtn.disabled = true;
+        downloadBtn.style.opacity = "0.6";
         return false;
       }
 
@@ -210,11 +219,15 @@
 
       if (error || !data){
         showError("Could not load child profile. Please re-select the child on Dashboard.");
+        downloadBtn.disabled = true;
+        downloadBtn.style.opacity = "0.6";
         return false;
       }
 
       if (data.parent_user_id !== currentUser.id){
         showError("This child profile does not belong to this account.");
+        downloadBtn.disabled = true;
+        downloadBtn.style.opacity = "0.6";
         return false;
       }
 
@@ -222,6 +235,9 @@
       const dob = data.child_dob ? ` • DOB: ${data.child_dob}` : "";
       childHeader.textContent = `Child: ${data.child_name}${dob}`;
       clearError();
+
+      downloadBtn.disabled = false;
+      downloadBtn.style.opacity = "1";
       return true;
     }
 
@@ -232,18 +248,19 @@
       signalsBox.innerHTML = `<div class="muted">Loading…</div>`;
       noDataBox.style.display = "none";
 
-      // 1) progress table (overall)
+      lastOverall = null;
+      lastSignals = null;
+
+      // progress (overall)
       const { data: overall, error: overallErr } = await sb
         .from("progress")
         .select("id, parent_user_id, child_id, maths_level, english_level, streak, updated_at")
         .eq("child_id", child.id)
         .maybeSingle();
 
-      if (overallErr) {
-        console.error("progress read error", overallErr);
-      }
+      if (overallErr) console.error("progress read error", overallErr);
 
-      // 2) child_progress table (signals)
+      // child_progress (signals)
       const { data: signals, error: signalsErr } = await sb
         .from("child_progress")
         .select("id, child_id, owner_id, subject, area, difficulty, streak_correct, streak_wrong, last_session_id, last_seen_at")
@@ -251,9 +268,10 @@
         .eq("owner_id", currentUser.id)
         .maybeSingle();
 
-      if (signalsErr) {
-        console.error("child_progress read error", signalsErr);
-      }
+      if (signalsErr) console.error("child_progress read error", signalsErr);
+
+      lastOverall = overall || null;
+      lastSignals = signals || null;
 
       const hasAnyData = !!overall || !!signals;
 
@@ -265,7 +283,7 @@
           { k: "Maths level",   v: safe(overall.maths_level) },
           { k: "English level", v: safe(overall.english_level) },
           { k: "Streak",        v: safe(overall.streak) },
-          { k: "Last updated",  v: safe(overall.updated_at) }
+          { k: "Last updated",  v: formatDateOnly(overall.updated_at) }
         ]);
       }
 
@@ -275,22 +293,73 @@
       } else {
         renderRows(signalsBox, [
           { k: "Last subject",   v: safe(signals.subject) },
-          { k: "Last area",      v: safe(signals.area) },
+          { k: "Last area",      v: safe(signals.area) },   // if empty -> —
           { k: "Difficulty",     v: safe(signals.difficulty) },
           { k: "Streak correct", v: safe(signals.streak_correct) },
           { k: "Streak wrong",   v: safe(signals.streak_wrong) },
           { k: "Last session",   v: safe(signals.last_session_id) },
-          { k: "Last seen",      v: safe(signals.last_seen_at) }
+          { k: "Last seen",      v: formatDateOnly(signals.last_seen_at) }
         ]);
       }
 
-      if (!hasAnyData) {
-        noDataBox.style.display = "block";
-      } else {
-        noDataBox.style.display = "none";
-      }
-
+      noDataBox.style.display = hasAnyData ? "none" : "block";
       showOk("Reports refreshed");
+    }
+
+    function pdfWriteLine(doc, text, x, y, maxWidth){
+      const lines = doc.splitTextToSize(String(text), maxWidth);
+      lines.forEach((ln, i) => doc.text(ln, x, y + (i * 6)));
+      return y + (lines.length * 6);
+    }
+
+    function downloadPDF(){
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y = 14;
+
+        doc.setFontSize(18);
+        doc.text("Learnlio Report", 14, y); y += 10;
+
+        doc.setFontSize(12);
+        y = pdfWriteLine(doc, `Child: ${safe(child?.child_name)}`, 14, y, 180); y += 2;
+        y = pdfWriteLine(doc, `DOB: ${safe(child?.child_dob)}`, 14, y, 180); y += 2;
+        y = pdfWriteLine(doc, `Generated: ${formatDateOnly(new Date())}`, 14, y, 180); y += 6;
+
+        doc.setFontSize(14);
+        doc.text("Overall progress", 14, y); y += 8;
+        doc.setFontSize(12);
+
+        if (!lastOverall) {
+          y = pdfWriteLine(doc, "No overall progress data yet.", 14, y, 180); y += 6;
+        } else {
+          y = pdfWriteLine(doc, `Maths level: ${safe(lastOverall.maths_level)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `English level: ${safe(lastOverall.english_level)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Streak: ${safe(lastOverall.streak)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Last updated: ${formatDateOnly(lastOverall.updated_at)}`, 14, y, 180); y += 6;
+        }
+
+        doc.setFontSize(14);
+        doc.text("Tutor signals", 14, y); y += 8;
+        doc.setFontSize(12);
+
+        if (!lastSignals) {
+          y = pdfWriteLine(doc, "No tutor signals data yet.", 14, y, 180); y += 6;
+        } else {
+          y = pdfWriteLine(doc, `Last subject: ${safe(lastSignals.subject)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Last area: ${safe(lastSignals.area)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Difficulty: ${safe(lastSignals.difficulty)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Streak correct: ${safe(lastSignals.streak_correct)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Streak wrong: ${safe(lastSignals.streak_wrong)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Last session: ${safe(lastSignals.last_session_id)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Last seen: ${formatDateOnly(lastSignals.last_seen_at)}`, 14, y, 180); y += 6;
+        }
+
+        doc.save(`Learnlio-Report-${safe(child?.child_name,"Child")}.pdf`);
+      } catch (e) {
+        showError("Could not create PDF on this device/browser. Try Chrome or Edge.");
+        console.error(e);
+      }
     }
 
     logoutBtn.addEventListener("click", async () => {
@@ -302,6 +371,11 @@
     refreshBtn.addEventListener("click", async () => {
       clearError();
       await loadReports();
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      clearError();
+      downloadPDF();
     });
 
     (async () => {
