@@ -1,55 +1,405 @@
-async function getAccessTokenOrThrow() {
-  // 1) Try current session
-  let { data: sessionData } = await sb.auth.getSession();
-  let accessToken = sessionData?.session?.access_token;
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio — Billing</title>
 
-  // 2) If missing, attempt a refresh (fixes “session not restored yet / stale”)
-  if (!accessToken) {
-    const refreshed = await sb.auth.refreshSession();
-    accessToken = refreshed?.data?.session?.access_token;
-  }
+  <link rel="stylesheet" href="/assets/css/app.css" />
 
-  // 3) Still missing = user is not logged in on this page
-  if (!accessToken) {
-    throw new Error("You are not logged in on this page (no Supabase session token). Please log out and log in again.");
-  }
+  <!-- Minimal fallback styles (if app.css path breaks) -->
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
+    .container { max-width: 980px; margin: 0 auto; padding: 18px; }
+    .card { background:#fff; border-radius:16px; padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .nav { background:#fff; border-bottom:1px solid #ececf4; }
+    .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:700; }
+    .brand img { height:34px; width:auto; display:block; }
+    .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
+    .links a.active { background:#eef2ff; }
+    .btn { background:#0b5cff; border:none; color:#fff; padding:12px 14px; border-radius:12px; cursor:pointer; font-size:15px; }
+    .btn:disabled { opacity:.6; cursor:not-allowed; }
+    .btn.light { background:#e5e7eb; color:#111; }
+    .btn.secondary { background:#111827; }
+    .muted { color:#6b7280; font-size: 14px; }
+    .status { margin-top:10px; font-size:14px; }
+    .status.good { color:#16a34a; }
+    .status.bad { color:#dc2626; }
+    .grid { display:grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 860px) { .grid { grid-template-columns: 1.2fr .8fr; } }
+    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#111; }
+    .hr { height:1px; background:#ececf4; margin:14px 0; }
+    .price { font-size:28px; font-weight:800; margin:8px 0 2px; }
+    .tiny { font-size:12px; color:#6b7280; }
+  </style>
 
-  return accessToken;
-}
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
 
-async function callApi(path, opts={}) {
-  if (!BILLING_API_BASE) throw new Error("Billing API base URL is not set.");
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="/dash.html" aria-label="Learnlio home">
+        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <span>Learnlio</span>
+      </a>
+      <nav class="links">
+        <a href="/dash.html">Dashboard</a>
+        <a href="/chat.html">Learnlio Tutor</a>
+        <a href="/screener.html">Dyslexia Screener</a>
+        <a href="/reports.html">Reports</a>
+        <a class="active" href="/billing.html">Billing</a>
+        <button id="logoutBtn" class="btn light" type="button">Log out</button>
+      </nav>
+    </div>
+  </header>
 
-  const accessToken = await getAccessTokenOrThrow();
+  <main class="container">
+    <div class="grid">
+      <section class="card">
+        <h1 style="margin:0 0 6px;">Access</h1>
+        <p class="muted" style="margin:0 0 14px;">
+          Keep using Learnlio across devices and save progress to your account.
+        </p>
 
-  const res = await fetch(`${BILLING_API_BASE}${path}`, {
-    method: opts.method || "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      "Authorization": `Bearer ${accessToken}`,
-      ...(opts.headers || {})
-    },
-    body: opts.body ? JSON.stringify(opts.body) : undefined
-  });
+        <div class="hr"></div>
 
-  const parsed = await safeJson(res);
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <span class="pill" id="statusPill">Checking…</span>
+          <span class="muted" id="statusText"></span>
+        </div>
 
-  if (!parsed.ok) {
-    const snippet = parsed.raw?.slice(0, 220) || "";
-    throw new Error(
-      `API did not return JSON.\n` +
-      `URL: ${BILLING_API_BASE}${path}\n` +
-      `HTTP: ${res.status}\n` +
-      `Starts with: ${snippet}`
-    );
-  }
+        <div class="hr"></div>
 
-  if (!res.ok) {
-    const msg = parsed.json?.error || `HTTP ${res.status}`;
-    throw new Error(msg);
-  }
+        <h2 style="margin:0 0 6px;">Trial</h2>
+        <p class="muted" id="trialCopy" style="margin:0 0 14px;">
+          Start your 7-day trial. No card required.
+        </p>
 
-  return parsed.json;
-}
+        <button id="primaryBtn" class="btn" type="button">Start 7-day trial</button>
+        <div id="primaryMsg" class="status" aria-live="polite"></div>
+
+        <div class="hr"></div>
+
+        <h2 style="margin:0 0 6px;">Manage</h2>
+        <p class="muted" style="margin:0 0 14px;">
+          If you’ve already subscribed, you can manage your plan here.
+        </p>
+
+        <button id="manageBtn" class="btn light" type="button">Open billing portal</button>
+        <div id="manageMsg" class="status" aria-live="polite"></div>
+      </section>
+
+      <aside class="card">
+        <h2 style="margin:0 0 6px;">What you get</h2>
+        <ul style="margin:0 0 14px; padding-left:18px;">
+          <li>Progress saved to your account</li>
+          <li>Multiple children on one parent login</li>
+          <li>Session reports for parents</li>
+          <li>Dyslexia-aware tutoring style</li>
+        </ul>
+
+        <div class="hr"></div>
+
+        <h3 style="margin:0 0 6px;">Pricing</h3>
+        <div class="price">£0.99 <span class="tiny">/ month</span></div>
+        <div class="muted">Cancel anytime.</div>
+
+        <div class="hr"></div>
+
+        <p class="muted" style="margin:0;">
+          Debug (only you will see this):
+        </p>
+        <div id="debugBox" class="status muted" style="white-space:pre-wrap;"></div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+  (() => {
+    // =========================
+    // CONFIG (YOUR VALUES)
+    // =========================
+    const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+
+    // Your Cloudflare Worker base URL:
+    const BILLING_API_BASE = "https://learnlio-billing.falling-grass-34ab.workers.dev";
+    // Expected endpoints:
+    //   GET  /me
+    //   POST /trial/start
+    //   POST /checkout   (start paid plan)
+    //   POST /portal     (customer portal)
+    // =========================
+
+    const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // UI
+    const logoutBtn = document.getElementById("logoutBtn");
+    const statusPill = document.getElementById("statusPill");
+    const statusText = document.getElementById("statusText");
+    const debugBox = document.getElementById("debugBox");
+
+    const trialCopy = document.getElementById("trialCopy");
+    const primaryBtn = document.getElementById("primaryBtn");
+    const primaryMsg = document.getElementById("primaryMsg");
+
+    const manageBtn = document.getElementById("manageBtn");
+    const manageMsg = document.getElementById("manageMsg");
+
+    let currentUser = null;
+    let currentStatus = "none"; // trialing | active | expired | none
+
+    function setStatus(pillText, text="") {
+      statusPill.textContent = pillText;
+      statusText.textContent = text;
+    }
+
+    function setMsg(el, text, good=false) {
+      el.textContent = text || "";
+      el.className = "status " + (good ? "good" : "bad");
+      if (!text) el.className = "status";
+    }
+
+    function setDebug(text) {
+      debugBox.textContent = text || "";
+    }
+
+    function formatDateDDMMYYYY(isoLike) {
+      if (!isoLike) return "";
+      const d = new Date(isoLike);
+      if (isNaN(d.getTime())) return String(isoLike).slice(0,10).split("-").reverse().join("/");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth()+1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
+
+    async function requireAuth() {
+      const { data, error } = await sb.auth.getUser();
+      if (error || !data?.user) {
+        window.location.href = "/login.html";
+        return false;
+      }
+      currentUser = data.user;
+      return true;
+    }
+
+    async function safeJson(response) {
+      const text = await response.text();
+      try {
+        return { ok: true, json: JSON.parse(text), raw: text };
+      } catch {
+        return { ok: false, raw: text };
+      }
+    }
+
+    async function getAccessTokenOrThrow() {
+      // 1) Try current session
+      let { data: sessionData } = await sb.auth.getSession();
+      let accessToken = sessionData?.session?.access_token;
+
+      // 2) If missing, attempt refresh (fixes “session not restored yet / stale”)
+      if (!accessToken) {
+        const refreshed = await sb.auth.refreshSession();
+        accessToken = refreshed?.data?.session?.access_token;
+      }
+
+      // 3) Still missing = user not logged in on this page
+      if (!accessToken) {
+        throw new Error("No Supabase session token found. Please log out and log in again.");
+      }
+      return accessToken;
+    }
+
+    async function callApi(path, opts={}) {
+      if (!BILLING_API_BASE) throw new Error("Billing API base URL is not set.");
+
+      const accessToken = await getAccessTokenOrThrow();
+
+      const res = await fetch(`${BILLING_API_BASE}${path}`, {
+        method: opts.method || "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+          ...(opts.headers || {})
+        },
+        body: opts.body ? JSON.stringify(opts.body) : undefined
+      });
+
+      const parsed = await safeJson(res);
+
+      if (!parsed.ok) {
+        const snippet = parsed.raw?.slice(0, 220) || "";
+        throw new Error(
+          `API did not return JSON.\n` +
+          `URL: ${BILLING_API_BASE}${path}\n` +
+          `HTTP: ${res.status}\n` +
+          `Starts with: ${snippet}`
+        );
+      }
+
+      if (!res.ok) {
+        const msg = parsed.json?.error || `HTTP ${res.status}`;
+        throw new Error(msg);
+      }
+
+      return parsed.json;
+    }
+
+    function applyUiFromStatus(me) {
+      // me expected:
+      // { ok:true, authenticated:true, status:"trialing"|"active"|"expired"|"none", trial_ends_at, plan, price, ... }
+      currentStatus = me.status || "none";
+
+      setMsg(primaryMsg, "");
+      setMsg(manageMsg, "");
+      primaryBtn.disabled = false;
+
+      if (currentStatus === "trialing") {
+        setStatus("Trial active", me.trial_ends_at ? `Ends: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "");
+        trialCopy.textContent = "Your trial is active. No card required.";
+        primaryBtn.textContent = "Trial active ✅";
+        primaryBtn.disabled = true;
+        setMsg(primaryMsg, "Enjoy the trial!", true);
+        return;
+      }
+
+      if (currentStatus === "active") {
+        setStatus("Access active", me.plan ? `Plan: ${me.plan}` : "");
+        trialCopy.textContent = "You have active access.";
+        primaryBtn.textContent = "Access active ✅";
+        primaryBtn.disabled = true;
+        return;
+      }
+
+      if (currentStatus === "expired") {
+        setStatus("Trial ended", me.trial_ends_at ? `Ended: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "");
+        trialCopy.textContent = "Your trial has ended. You can unlock full access for £0.99/month.";
+        primaryBtn.textContent = "Upgrade — £0.99/month";
+        primaryBtn.disabled = false;
+        return;
+      }
+
+      // none
+      setStatus("No trial yet", "");
+      trialCopy.textContent = "Start your 7-day trial. No card required.";
+      primaryBtn.textContent = "Start 7-day trial";
+      primaryBtn.disabled = false;
+    }
+
+    async function refreshStatus() {
+      setStatus("Checking…", "");
+      setDebug("");
+
+      try {
+        const me = await callApi("/me");
+
+        // If your worker returns { ok:true, authenticated:false, ... }
+        if (me && me.authenticated === false) {
+          throw new Error("Not authenticated. Billing API did not receive a Bearer token. Make sure you are logged in on this page.");
+        }
+
+        applyUiFromStatus(me);
+      } catch (e) {
+        setStatus("Error", "");
+        setMsg(primaryMsg, String(e.message || e), false);
+        setDebug(String(e.message || e));
+      }
+    }
+
+    async function startTrial() {
+      setMsg(primaryMsg, "");
+      setDebug("");
+      primaryBtn.disabled = true;
+
+      try {
+        await callApi("/trial/start", { method: "POST", body: {} });
+        setMsg(primaryMsg, "Trial started ✅", true);
+        await refreshStatus();
+      } catch (e) {
+        setMsg(primaryMsg, String(e.message || e), false);
+        setDebug(String(e.message || e));
+        primaryBtn.disabled = false;
+      }
+    }
+
+    async function startCheckout() {
+      setMsg(primaryMsg, "");
+      setDebug("");
+      primaryBtn.disabled = true;
+
+      try {
+        // Worker should return { url: "https://checkout.stripe.com/..." }
+        const out = await callApi("/checkout", {
+          method: "POST",
+          body: { return_url: window.location.href }
+        });
+
+        if (out?.url) {
+          window.location.href = out.url;
+          return;
+        }
+        throw new Error("No checkout URL returned from billing API.");
+      } catch (e) {
+        setMsg(primaryMsg, String(e.message || e), false);
+        setDebug(String(e.message || e));
+        primaryBtn.disabled = false;
+      }
+    }
+
+    primaryBtn.addEventListener("click", async () => {
+      // Behaviour:
+      // - none    => start trial
+      // - expired => upgrade (checkout)
+      // - trialing/active => disabled anyway
+      if (currentStatus === "expired") return startCheckout();
+      return startTrial();
+    });
+
+    manageBtn.addEventListener("click", async () => {
+      setMsg(manageMsg, "");
+      setDebug("");
+      manageBtn.disabled = true;
+
+      try {
+        const out = await callApi("/portal", {
+          method: "POST",
+          body: { return_url: window.location.href }
+        });
+        if (out?.url) {
+          window.location.href = out.url;
+          return;
+        }
+        setMsg(manageMsg, "No portal URL returned from billing API.", false);
+      } catch (e) {
+        setMsg(manageMsg, String(e.message || e), false);
+        setDebug(String(e.message || e));
+      } finally {
+        manageBtn.disabled = false;
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await sb.auth.signOut();
+      localStorage.removeItem("selectedChild");
+      window.location.href = "/login.html";
+    });
+
+    (async () => {
+      if (!sb) {
+        setStatus("Error", "Supabase failed to load");
+        return;
+      }
+      const ok = await requireAuth();
+      if (!ok) return;
+      await refreshStatus();
+    })();
+  })();
+  </script>
+</body>
+</html>
 
