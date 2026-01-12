@@ -1,1 +1,125 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio — Cookie Policy</title>
+
+  <link rel="stylesheet" href="/assets/css/app.css" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
+    .container { max-width: 980px; margin: 0 auto; padding: 18px; }
+    .card { background:#fff; border-radius:16px; padding:18px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .nav { background:#fff; border-bottom:1px solid #ececf4; }
+    .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:800; }
+    .brand img { height:34px; width:auto; display:block; }
+    .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
+    .links a.active { background:#eef2ff; }
+    .muted { color:#6b7280; font-size: 14px; }
+    .hr { height:1px; background:#ececf4; margin:14px 0; }
+    p, li { line-height:1.7; font-size:15px; }
+    ul { margin: 8px 0 0; padding-left: 18px; }
+
+    .cookie-banner {
+      position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 9999;
+      background: #111827; color: #fff; border-radius: 16px; padding: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25); display: none;
+    }
+    .cookie-row { max-width: 980px; margin: 0 auto; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .cookie-text { font-size: 14px; color:#e5e7eb; line-height:1.5; }
+    .cookie-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .cookie-actions button { border:none; border-radius:12px; padding:10px 12px; cursor:pointer; font-size:14px; }
+    .cookie-ok { background:#0b5cff; color:#fff; }
+    .cookie-close { background: rgba(255,255,255,.12); color:#fff; }
+  </style>
+</head>
+
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="/index.html" aria-label="Learnlio home">
+        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <span>Learnlio</span>
+      </a>
+      <nav class="links">
+        <a href="/dash.html">Dashboard</a>
+        <a href="/chat.html">Learnlio Tutor</a>
+        <a href="/screener.html">Dyslexia Screener</a>
+        <a href="/reports.html">Reports</a>
+        <a href="/billing.html">Billing</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h1 style="margin:0 0 6px;">Cookie Policy</h1>
+      <div class="muted">Learnlio uses essential cookies only.</div>
+
+      <div class="hr"></div>
+
+      <h2 style="margin:0 0 8px;">What cookies are used</h2>
+      <p>We use cookies to:</p>
+      <ul>
+        <li>Keep you signed in</li>
+        <li>Protect accounts and prevent unauthorised access</li>
+        <li>Ensure the app works correctly</li>
+      </ul>
+
+      <h2 style="margin:18px 0 8px;">What we don’t use</h2>
+      <ul>
+        <li>No advertising cookies</li>
+        <li>No marketing trackers</li>
+        <li>No third-party analytics cookies (unless we add them later and update this page)</li>
+      </ul>
+
+      <h2 style="margin:18px 0 8px;">Managing cookies</h2>
+      <p>
+        You can block cookies in your browser settings. Please note: blocking essential cookies may stop Learnlio from working correctly.
+      </p>
+
+      <div class="hr"></div>
+      <div class="muted" style="display:flex; gap:12px; flex-wrap:wrap;">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/safeguarding.html">Child Data & Safeguarding</a>
+      </div>
+    </section>
+  </main>
+
+  <div id="cookieBanner" class="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie notice">
+    <div class="cookie-row">
+      <div class="cookie-text">
+        We only use <strong>essential cookies</strong> to keep you signed in and keep Learnlio secure.
+      </div>
+      <div class="cookie-actions">
+        <button id="cookieOk" class="cookie-ok" type="button">OK</button>
+        <button id="cookieClose" class="cookie-close" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const KEY = "learnlio_cookie_notice_v1";
+      const banner = document.getElementById("cookieBanner");
+      const ok = document.getElementById("cookieOk");
+      const close = document.getElementById("cookieClose");
+
+      function accept() { try { localStorage.setItem(KEY, "1"); } catch {} banner.style.display = "none"; }
+      function showIfNeeded() {
+        let seen = "0";
+        try { seen = localStorage.getItem(KEY) || "0"; } catch {}
+        if (seen !== "1") banner.style.display = "block";
+      }
+
+      ok.addEventListener("click", accept);
+      close.addEventListener("click", accept);
+      showIfNeeded();
+    })();
+  </script>
+</body>
+</html>
 
