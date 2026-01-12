@@ -35,11 +35,10 @@
     .status { margin-top:10px; font-size:14px; }
     .status.good { color:#16a34a; }
     .status.bad { color:#dc2626; }
-    .banner { background:#fff7ed; border:1px solid #fed7aa; border-radius:16px; padding:14px; }
-    .banner h3 { margin:0 0 6px; }
+    .banner { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; padding:12px 14px; border-radius:14px; background:#fff7ed; border:1px solid #fed7aa; margin-bottom:14px; }
+    .banner strong { font-weight:700; }
   </style>
 
-  <!-- Supabase JS (must be loaded once) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -55,15 +54,27 @@
         <a href="/chat.html">Learnlio Tutor</a>
         <a href="/screener.html">Dyslexia Screener</a>
         <a href="/reports.html">Reports</a>
+        <a href="/billing.html">Billing</a>
         <button id="logoutBtn" class="btn light" type="button">Log out</button>
       </nav>
     </div>
   </header>
 
   <main class="container">
-    <div id="trialBanner" class="banner" style="display:none; margin-bottom:14px;"></div>
 
-    <div class="row" id="dashGrid">
+    <!-- Access banner -->
+    <div id="accessBanner" class="banner" style="display:none;">
+      <div>
+        <div class="pill" id="accessPill">Checking…</div>
+        <div class="muted" id="accessText" style="margin-top:6px;"></div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="refreshAccessBtn" class="btn light" type="button">Refresh access</button>
+        <a class="btn" href="/billing.html" style="text-decoration:none; display:none;" id="goBillingBtn">Go to Billing</a>
+      </div>
+    </div>
+
+    <div class="row">
       <section class="col">
         <div class="card">
           <h2 style="margin:0 0 6px;">Add a child</h2>
@@ -112,16 +123,14 @@
 
   <script>
   (() => {
-    // ====== CONFIG (PASTE YOUR VALUES) ======
+    // ========= CONFIG =========
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-    // =======================================
+    const BILLING_API_BASE = "https://learnlio-billing.falling-grass-34ab.workers.dev"; // Worker
+    // ==========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    if (!sb) {
-      console.error("Supabase JS failed to load.");
-      return;
-    }
+    if (!sb) { console.error("Supabase failed to load"); return; }
 
     // Elements
     const addBtn = document.getElementById("addChildBtn");
@@ -133,15 +142,18 @@
     const selectedChildLabel = document.getElementById("selectedChildLabel");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    const trialBanner = document.getElementById("trialBanner");
-    const dashGrid = document.getElementById("dashGrid");
+    const accessBanner = document.getElementById("accessBanner");
+    const accessPill = document.getElementById("accessPill");
+    const accessText = document.getElementById("accessText");
+    const refreshAccessBtn = document.getElementById("refreshAccessBtn");
+    const goBillingBtn = document.getElementById("goBillingBtn");
 
     let currentUser = null;
-    let trialAllowed = true;
 
     function setMsg(text, good=false) {
       msgEl.textContent = text || "";
-      msgEl.className = "status " + (text ? (good ? "good" : "bad") : "");
+      msgEl.className = "status " + (good ? "good" : "bad");
+      if (!text) msgEl.className = "status";
     }
 
     function escapeHtml(str){
@@ -161,17 +173,6 @@
       }
     }
 
-    function disableDashboard(disabled) {
-      addBtn.disabled = disabled;
-      refreshBtn.disabled = disabled;
-      nameInput.disabled = disabled;
-      dobInput.disabled = disabled;
-      if (disabled) {
-        // prevent accidental selection when expired
-        Array.from(document.querySelectorAll("#childrenList button")).forEach(b => b.disabled = true);
-      }
-    }
-
     async function requireAuth() {
       const { data, error } = await sb.auth.getUser();
       if (error || !data?.user) {
@@ -182,91 +183,111 @@
       return true;
     }
 
-    // -----------------------
-    // TRIAL GATE (Dash)
-    // -----------------------
-    async function enforceTrialGate() {
-      // If you decide later to allow "active" subs, this already does.
-      // Allowed statuses: trialing, active
-      // Blocks: expired trial (trial_ends_at < now) and status not allowed.
+    function formatDateDDMMYYYY(isoLike) {
+      if (!isoLike) return "";
+      const d = new Date(isoLike);
+      if (isNaN(d.getTime())) {
+        const s = String(isoLike).slice(0,10);
+        const parts = s.split("-");
+        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        return s;
+      }
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth()+1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
 
-      const { data, error } = await sb
-        .from("subscriptions")
-        .select("user_id, status, trial_ends_at, plan")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
+    async function getAccessTokenOrThrow() {
+      let { data: sessionData } = await sb.auth.getSession();
+      let accessToken = sessionData?.session?.access_token;
 
-      if (error) {
-        // If subscriptions table is missing or RLS blocks, surface clearly
-        trialBanner.style.display = "block";
-        trialBanner.innerHTML = `
-          <h3>We can’t check your trial right now.</h3>
-          <div class="muted">Error: ${escapeHtml(error.message)}</div>
-        `;
-        // Don’t hard-block if it’s a temporary check issue — but you can change this to block if you prefer.
+      if (!accessToken) {
+        const refreshed = await sb.auth.refreshSession();
+        accessToken = refreshed?.data?.session?.access_token;
+      }
+      if (!accessToken) throw new Error("No Supabase session token. Please log out and log in again.");
+      return accessToken;
+    }
+
+    async function fetchMeNoCache() {
+      const token = await getAccessTokenOrThrow();
+      const res = await fetch(`${BILLING_API_BASE}/me`, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "Cache-Control": "no-store",
+          "Pragma": "no-cache"
+        }
+      });
+      const text = await res.text();
+      let json;
+      try { json = JSON.parse(text); }
+      catch { throw new Error("Billing /me did not return JSON"); }
+      if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`);
+      return json;
+    }
+
+    function setAccessUi(pill, text, showBilling=false) {
+      accessBanner.style.display = "flex";
+      accessPill.textContent = pill;
+      accessText.textContent = text || "";
+      goBillingBtn.style.display = showBilling ? "inline-block" : "none";
+    }
+
+    // ✅ The important bit:
+    // Treat status=active as the override even if trial_ends_at is in the past.
+    function isAllowedByMe(me) {
+      const status = me?.status || "none";
+
+      if (status === "active") return { ok:true, reason:"Paid active" };
+
+      if (status === "trialing") {
+        if (!me.trial_ends_at) return { ok:true, reason:"Trial active" };
+        const end = new Date(me.trial_ends_at);
+        if (!isNaN(end.getTime()) && end.getTime() > Date.now()) return { ok:true, reason:"Trial active" };
+        return { ok:false, reason:"Trial ended" };
+      }
+
+      if (status === "expired") return { ok:false, reason:"Trial ended" };
+
+      // status "none" -> allowed for now (keep friction low)
+      return { ok:true, reason:"No trial yet" };
+    }
+
+    async function enforceAccessGate() {
+      // If you want dash to ALWAYS require active/trialing, change the "none" handling above.
+      try {
+        const me = await fetchMeNoCache();
+        const verdict = isAllowedByMe(me);
+
+        if (me.status === "active") {
+          setAccessUi("Access active", me.plan ? `Plan: ${me.plan}` : "Paid account ✅", false);
+          return true;
+        }
+
+        if (me.status === "trialing") {
+          setAccessUi("Trial active", me.trial_ends_at ? `Ends: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "", false);
+          return true;
+        }
+
+        if (!verdict.ok) {
+          setAccessUi("Trial ended", "Please activate access to continue.", true);
+          // NOTE: We do NOT auto-redirect on dashboard (less annoying).
+          // Tutor page can redirect if you prefer.
+          return false;
+        }
+
+        // none/unknown
+        setAccessUi("Free access", "You can start a trial or activate paid access anytime in Billing.", false);
+        return true;
+
+      } catch (e) {
+        // If billing is down, don't lock people out from dashboard creation.
+        setAccessUi("Access check failed", String(e.message || e), true);
         return true;
       }
-
-      // If no row exists yet, treat as allowed for MVP (or block if you prefer).
-      if (!data) return true;
-
-      const status = (data.status || "").toLowerCase();
-      const allowedStatus = (status === "trialing" || status === "active");
-
-      let endsOk = true;
-      if (data.trial_ends_at) {
-        const ends = new Date(data.trial_ends_at);
-        if (!isNaN(ends.getTime())) {
-          endsOk = ends.getTime() >= Date.now();
-        }
-      }
-
-      if (!allowedStatus || !endsOk) {
-        trialAllowed = false;
-        trialBanner.style.display = "block";
-        trialBanner.innerHTML = `
-          <h3>Your free trial has ended</h3>
-          <div class="muted" style="margin-top:6px;">
-            Please upgrade to keep using Learnlio.
-          </div>
-          <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-            <a class="btn" href="/billing.html" style="text-decoration:none; display:inline-block;">Upgrade</a>
-            <button id="logoutExpiredBtn" class="btn light" type="button">Log out</button>
-          </div>
-        `;
-
-        // Disable dashboard actions
-        disableDashboard(true);
-
-        // optional: hide the grid interaction feel
-        dashGrid.style.opacity = "0.6";
-
-        const lo = document.getElementById("logoutExpiredBtn");
-        if (lo) lo.addEventListener("click", async () => {
-          await sb.auth.signOut();
-          localStorage.removeItem("selectedChild");
-          window.location.href = "/login.html";
-        });
-
-        return false;
-      }
-
-      // Trial allowed — optionally show remaining days
-      if (data.trial_ends_at && status === "trialing") {
-        const ends = new Date(data.trial_ends_at);
-        const daysLeft = Math.ceil((ends.getTime() - Date.now()) / (1000*60*60*24));
-        if (!isNaN(daysLeft) && daysLeft >= 0) {
-          trialBanner.style.display = "block";
-          trialBanner.innerHTML = `
-            <h3>Trial active</h3>
-            <div class="muted" style="margin-top:6px;">
-              You have <strong>${daysLeft}</strong> day${daysLeft === 1 ? "" : "s"} left.
-            </div>
-          `;
-        }
-      }
-
-      return true;
     }
 
     async function loadChildren() {
@@ -316,18 +337,10 @@
 
         listEl.appendChild(card);
       });
-
-      // If trial is not allowed, disable select buttons too
-      if (!trialAllowed) disableDashboard(true);
     }
 
     async function addChild() {
       setMsg("");
-
-      if (!trialAllowed) {
-        setMsg("Your trial has ended. Please upgrade to add children.");
-        return;
-      }
 
       const name = nameInput.value.trim();
       const dob = dobInput.value;
@@ -359,6 +372,8 @@
       await loadChildren();
     }
 
+    refreshAccessBtn.addEventListener("click", enforceAccessGate);
+
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
@@ -368,21 +383,14 @@
     addBtn.addEventListener("click", addChild);
     refreshBtn.addEventListener("click", loadChildren);
 
-    // Init
     (async () => {
       const ok = await requireAuth();
       if (!ok) return;
 
+      // Access check first (so banner shows immediately)
+      await enforceAccessGate();
+
       setSelectedChildUI();
-
-      // Trial gate must run BEFORE loading
-      const trialOk = await enforceTrialGate();
-      if (!trialOk) {
-        // still load children list so they can see profiles, but disable actions
-        await loadChildren();
-        return;
-      }
-
       await loadChildren();
     })();
   })();
