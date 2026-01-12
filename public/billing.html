@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Learnlio — Billing</title>
 
-  <!-- App CSS -->
   <link rel="stylesheet" href="/assets/css/app.css" />
 
-  <!-- Minimal fallback styles -->
+  <!-- Minimal fallback styles (if app.css path breaks) -->
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
     .container { max-width: 980px; margin: 0 auto; padding: 18px; }
@@ -23,22 +22,16 @@
     .btn { background:#0b5cff; border:none; color:#fff; padding:12px 14px; border-radius:12px; cursor:pointer; font-size:15px; }
     .btn:disabled { opacity:.6; cursor:not-allowed; }
     .btn.light { background:#e5e7eb; color:#111; }
-    .btn.secondary { background:#111827; }
     .muted { color:#6b7280; font-size: 14px; }
-    .row { display:flex; gap:14px; flex-wrap:wrap; }
-    .col { flex:1 1 320px; }
-    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#111; }
     .status { margin-top:10px; font-size:14px; }
-    .status.bad { color:#dc2626; }
     .status.good { color:#16a34a; }
-    .big { font-size: 28px; font-weight: 800; letter-spacing:-0.02em; margin:0; }
-    .line { height:1px; background:#eef2f7; margin:14px 0; }
-    .kv { display:flex; justify-content:space-between; gap:10px; padding:8px 0; }
-    .kv div:first-child { color:#6b7280; font-size:14px; }
-    .kv div:last-child { font-weight:600; }
+    .status.bad { color:#dc2626; }
+    .grid { display:grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 860px) { .grid { grid-template-columns: 1.2fr .8fr; } }
+    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#111; }
+    .hr { height:1px; background:#ececf4; margin:14px 0; }
   </style>
 
-  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -61,100 +54,105 @@
   </header>
 
   <main class="container">
-    <div class="row">
-      <section class="col">
-        <div class="card">
-          <p class="muted" style="margin:0 0 8px;">Plan</p>
-          <h1 class="big">£0.99 / month</h1>
-          <p class="muted" style="margin:10px 0 0;">
-            7-day free trial. Upgrade when testers are happy — no friction.
-          </p>
+    <div class="grid">
+      <section class="card">
+        <h1 style="margin:0 0 6px;">Access</h1>
+        <p class="muted" style="margin:0 0 14px;">
+          Use Learnlio across devices and keep progress saved to your account.
+        </p>
 
-          <div class="line"></div>
+        <div class="hr"></div>
 
-          <div class="kv">
-            <div>Status</div>
-            <div id="statusPill" class="pill">Loading…</div>
-          </div>
-          <div class="kv">
-            <div>Trial ends</div>
-            <div id="trialEnds">—</div>
-          </div>
-          <div class="kv">
-            <div>Last updated</div>
-            <div id="updatedAt">—</div>
-          </div>
-
-          <div class="line"></div>
-
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button id="startTrialBtn" class="btn" type="button">Start / Resume trial</button>
-            <button id="manageBtn" class="btn secondary" type="button">Manage subscription</button>
-          </div>
-
-          <div id="msg" class="status" aria-live="polite"></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <span class="pill" id="statusPill">Checking…</span>
+          <span class="muted" id="statusText"></span>
         </div>
+
+        <div class="hr"></div>
+
+        <h2 style="margin:0 0 6px;">Trial</h2>
+        <p class="muted" style="margin:0 0 14px;">
+          Start your 7-day trial. No card required.
+        </p>
+
+        <button id="startTrialBtn" class="btn" type="button">Start 7-day trial</button>
+        <div id="trialMsg" class="status" aria-live="polite"></div>
+
+        <div class="hr"></div>
+
+        <h2 style="margin:0 0 6px;">Manage</h2>
+        <p class="muted" style="margin:0 0 14px;">
+          View or manage your access any time.
+        </p>
+
+        <button id="manageBtn" class="btn light" type="button">Manage access</button>
+        <div id="manageMsg" class="status" aria-live="polite"></div>
       </section>
 
-      <section class="col">
-        <div class="card">
-          <h2 style="margin:0 0 6px;">How billing works</h2>
-          <p class="muted" style="margin:0 0 10px;">
-            You can test Learnlio first. When you’re ready, billing is handled securely by Stripe.
-          </p>
+      <aside class="card">
+        <h2 style="margin:0 0 6px;">What you get</h2>
+        <ul style="margin:0 0 14px; padding-left:18px;">
+          <li>Progress saved to your account</li>
+          <li>Multiple children on one parent login</li>
+          <li>Session reports for parents</li>
+          <li>Dyslexia-aware tutoring style</li>
+        </ul>
 
-          <ul class="muted" style="margin:0; padding-left:18px;">
-            <li>Trial runs for 7 days</li>
-            <li>Cancel anytime in the billing portal</li>
-            <li>We never store card details</li>
-          </ul>
-        </div>
-      </section>
+        <div class="hr"></div>
+
+        <p class="muted" style="margin:0;">
+          Debug (only shown if something fails):
+        </p>
+        <div id="debugBox" class="status muted" style="white-space:pre-wrap;"></div>
+      </aside>
     </div>
   </main>
 
   <script>
   (() => {
     // =========================
-    // CONFIG (PASTE YOUR VALUES)
+    // CONFIG (YOUR VALUES)
     // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-    const BILLING_WORKER_BASE = "learnlio-billing.falling-grass-34ab.workers.dev";
+
+    // ✅ Your Worker base URL:
+    const BILLING_API_BASE = "https://learnlio-billing.falling-grass-34ab.workers.dev";
+    // Endpoints:
+    //   GET  /me
+    //   POST /trial/start
+    //   POST /portal
     // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    if (!sb) {
-      console.error("Supabase JS failed to load.");
-      return;
-    }
 
-    // UI
     const logoutBtn = document.getElementById("logoutBtn");
-    const startTrialBtn = document.getElementById("startTrialBtn");
-    const manageBtn = document.getElementById("manageBtn");
-    const msg = document.getElementById("msg");
-
     const statusPill = document.getElementById("statusPill");
-    const trialEnds = document.getElementById("trialEnds");
-    const updatedAt = document.getElementById("updatedAt");
+    const statusText = document.getElementById("statusText");
+    const debugBox = document.getElementById("debugBox");
+
+    const startTrialBtn = document.getElementById("startTrialBtn");
+    const trialMsg = document.getElementById("trialMsg");
+
+    const manageBtn = document.getElementById("manageBtn");
+    const manageMsg = document.getElementById("manageMsg");
 
     let currentUser = null;
-    let subRow = null;
 
-    function setMsg(text, good=false) {
-      msg.textContent = text || "";
-      msg.className = "status " + (text ? (good ? "good" : "bad") : "");
+    function setStatus(pillText, text="") {
+      statusPill.textContent = pillText;
+      statusText.textContent = text;
     }
 
-    function fmtDateOnly(isoOrNull) {
-      if (!isoOrNull) return "—";
-      const d = new Date(isoOrNull);
-      if (isNaN(d.getTime())) return "—";
-      const dd = String(d.getDate()).padStart(2,"0");
-      const mm = String(d.getMonth()+1).padStart(2,"0");
-      const yyyy = d.getFullYear();
-      return `${dd}/${mm}/${yyyy}`;
+    function setMsg(el, text, good=false) {
+      el.textContent = text || "";
+      el.className = "status " + (good ? "good" : "bad");
+      if (!text) el.className = "status";
+    }
+
+    function setDebug(text) {
+      debugBox.textContent = text || "";
+      debugBox.style.display = text ? "block" : "none";
     }
 
     async function requireAuth() {
@@ -167,138 +165,163 @@
       return true;
     }
 
-    async function loadSubscription() {
-      setMsg("");
+    async function safeJson(response) {
+      const text = await response.text();
+      try {
+        return { isJson: true, data: JSON.parse(text), raw: text };
+      } catch {
+        return { isJson: false, data: null, raw: text };
+      }
+    }
 
-      const { data, error } = await sb
-        .from("subscriptions")
-        .select("user_id, trial_starts_at, trial_ends_at, plan, status, stripe_customer_id, stripe_subscription_id, updated_at")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
+    async function callApi(path, opts={}) {
+      const { data: sessionData } = await sb.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
 
-      if (error) {
-        statusPill.textContent = "Error";
-        trialEnds.textContent = "—";
-        updatedAt.textContent = "—";
-        setMsg("Couldn’t load subscription: " + error.message);
-        return;
+      const res = await fetch(`${BILLING_API_BASE}${path}`, {
+        method: opts.method || "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : {}),
+          ...(opts.headers || {})
+        },
+        body: opts.body ? JSON.stringify(opts.body) : undefined
+      });
+
+      const parsed = await safeJson(res);
+
+      if (!parsed.isJson) {
+        const snippet = (parsed.raw || "").slice(0, 250);
+        throw new Error(
+          `Billing API did not return JSON.\n` +
+          `URL: ${BILLING_API_BASE}${path}\n` +
+          `HTTP: ${res.status}\n` +
+          `Response starts with:\n${snippet}`
+        );
       }
 
-      subRow = data;
+      if (!res.ok) {
+        throw new Error(parsed.data?.error || `HTTP ${res.status}`);
+      }
 
-      const status = (subRow?.status || "none").toLowerCase();
-      statusPill.textContent = status === "active" ? "Active" :
-                               status === "trialing" ? "Trialing" :
-                               status === "canceled" ? "Cancelled" :
-                               status === "past_due" ? "Past due" :
-                               "No plan yet";
-
-      trialEnds.textContent = fmtDateOnly(subRow?.trial_ends_at);
-      updatedAt.textContent = fmtDateOnly(subRow?.updated_at);
-
-      // If active/trialing, allow portal
-      manageBtn.disabled = !(subRow?.stripe_customer_id);
-
-      // Button label tweak
-      if (status === "trialing") startTrialBtn.textContent = "Continue trial";
-      else if (status === "active") startTrialBtn.textContent = "You’re subscribed ✅";
-      else startTrialBtn.textContent = "Start trial";
-      startTrialBtn.disabled = (status === "active");
+      return parsed.data;
     }
 
-    async function getAccessToken() {
-      const { data } = await sb.auth.getSession();
-      return data?.session?.access_token || null;
+    function formatDateDDMMYYYY(isoLike) {
+      if (!isoLike) return "";
+      const d = new Date(isoLike);
+      if (isNaN(d.getTime())) {
+        // fallback for plain YYYY-MM-DD
+        const p = String(isoLike).slice(0,10).split("-");
+        if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`;
+        return String(isoLike);
+      }
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth()+1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
     }
 
-    async function goCheckout() {
-      setMsg("");
+    // This handles BOTH:
+    // - "real" responses: { status, trial_ends_at, plan }
+    // - placeholder worker responses: { ok, authenticated, message }
+    async function refreshStatus() {
+      setStatus("Checking…", "");
+      setDebug("");
+      setMsg(trialMsg, "");
+      setMsg(manageMsg, "");
+
+      try {
+        const me = await callApi("/me");
+
+        // If your worker is still “placeholder mode”
+        if (me && typeof me.status === "undefined") {
+          setStatus("Connected ✅", me.authenticated ? "Logged in" : "No token");
+          startTrialBtn.disabled = false;
+          return;
+        }
+
+        if (me.status === "trialing") {
+          setStatus("Trial active", me.trial_ends_at ? `Ends: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "");
+          startTrialBtn.disabled = true;
+          setMsg(trialMsg, "You’re all set. Enjoy the trial!", true);
+        } else if (me.status === "active") {
+          setStatus("Access active", me.plan ? `Plan: ${me.plan}` : "");
+          startTrialBtn.disabled = true;
+        } else if (me.status === "expired") {
+          setStatus("Trial ended", "");
+          startTrialBtn.disabled = false;
+          setMsg(trialMsg, "Your trial has ended.", false);
+        } else {
+          setStatus("No trial yet", "");
+          startTrialBtn.disabled = false;
+        }
+
+      } catch (e) {
+        setStatus("Error", "");
+        setMsg(trialMsg, String(e.message || e), false);
+        setDebug(String(e.message || e));
+      }
+    }
+
+    startTrialBtn.addEventListener("click", async () => {
+      setMsg(trialMsg, "");
+      setDebug("");
       startTrialBtn.disabled = true;
 
       try {
-        const token = await getAccessToken();
-        if (!token) throw new Error("No session token found. Please log in again.");
+        const out = await callApi("/trial/start", { method: "POST", body: {} });
 
-        // Worker should verify JWT server-side and use token.sub as user_id
-        const resp = await fetch(`${BILLING_WORKER_BASE}/checkout?plan=monthly`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-
-        if (!resp.ok) {
-          const t = await resp.text();
-          throw new Error(t || "Checkout request failed");
+        // Placeholder worker returns: { ok:true, status:"trialing", ... }
+        if (out?.status === "trialing") {
+          setMsg(trialMsg, "Trial started ✅", true);
+        } else {
+          setMsg(trialMsg, "Trial started ✅", true);
         }
 
-        const json = await resp.json();
-        if (!json?.url) throw new Error("No checkout URL returned from billing service.");
-
-        window.location.href = json.url;
+        await refreshStatus();
       } catch (e) {
-        setMsg(String(e.message || e), false);
+        setMsg(trialMsg, String(e.message || e), false);
+        setDebug(String(e.message || e));
         startTrialBtn.disabled = false;
       }
-    }
+    });
 
-    async function goPortal() {
-      setMsg("");
+    manageBtn.addEventListener("click", async () => {
+      setMsg(manageMsg, "");
+      setDebug("");
       manageBtn.disabled = true;
 
       try {
-        const token = await getAccessToken();
-        if (!token) throw new Error("No session token found. Please log in again.");
-
-        const resp = await fetch(`${BILLING_WORKER_BASE}/portal`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-
-        if (!resp.ok) {
-          const t = await resp.text();
-          throw new Error(t || "Portal request failed");
+        const out = await callApi("/portal", { method: "POST", body: { return_url: window.location.href }});
+        if (out?.url) {
+          window.location.href = out.url;
+          return;
         }
-
-        const json = await resp.json();
-        if (!json?.url) throw new Error("No portal URL returned from billing service.");
-
-        window.location.href = json.url;
+        setMsg(manageMsg, "No portal URL returned from billing API.", false);
       } catch (e) {
-        setMsg(String(e.message || e), false);
+        setMsg(manageMsg, String(e.message || e), false);
+        setDebug(String(e.message || e));
+      } finally {
         manageBtn.disabled = false;
       }
-    }
+    });
 
-    // Logout
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
       window.location.href = "/login.html";
     });
 
-    startTrialBtn.addEventListener("click", goCheckout);
-    manageBtn.addEventListener("click", goPortal);
-
-    // Init
     (async () => {
+      if (!sb) {
+        setStatus("Error", "Supabase failed to load");
+        return;
+      }
       const ok = await requireAuth();
       if (!ok) return;
-
-      await loadSubscription();
-
-      // Optional: refresh status after returning from Stripe
-      // e.g. billing.html?success=1
-      const params = new URLSearchParams(location.search);
-      if (params.get("success") === "1") {
-        setMsg("✅ Billing updated. Loading status…", true);
-        setTimeout(loadSubscription, 600);
-      }
-      if (params.get("canceled") === "1") {
-        setMsg("No worries — billing was cancelled.", false);
-      }
+      await refreshStatus();
     })();
   })();
   </script>
