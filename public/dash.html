@@ -270,6 +270,26 @@
       await loadChildren();
     })();
   })();
+
+    (async () => {
+  // 1) Ensure Supabase client exists
+  if (!sb) return;
+
+  // 2) Require login (your existing code)
+  const { data, error } = await sb.auth.getUser();
+  if (error || !data?.user) {
+    window.location.href = "/login.html";
+    return;
+  }
+
+  // 3) Trial gate (NEW)
+  const ok = await enforceTrialGate(sb);
+  if (!ok) return;
+
+  // 4) Continue normal page load...
+  // e.g. load child, render dashboard, etc.
+})();
+
   </script>
 </body>
 </html>
