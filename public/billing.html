@@ -70,6 +70,7 @@
 
         <div class="hr"></div>
 
+        <!-- Trial -->
         <div id="trialSection">
           <h2 style="margin:0 0 6px;">Trial</h2>
           <p class="muted" style="margin:0 0 14px;">
@@ -82,12 +83,16 @@
           <div class="hr"></div>
         </div>
 
+        <!-- Paid -->
         <h2 style="margin:0 0 6px;">Paid access</h2>
         <p class="muted" id="paidText" style="margin:0 0 14px;">
           When you’re ready, you can activate paid access in one tap.
         </p>
 
-        <button id="manageBtn" class="btn light" type="button">Manage access</button>
+        <button id="paidBtn" class="btn" type="button" style="display:none;">Activate for £0.99/month</button>
+        <div id="paidMsg" class="status" aria-live="polite"></div>
+
+        <button id="manageBtn" class="btn light" type="button" style="margin-top:10px; display:none;">Manage access</button>
         <div id="manageMsg" class="status" aria-live="polite"></div>
       </section>
 
@@ -102,10 +107,12 @@
 
         <div class="hr"></div>
 
-        <p class="muted" style="margin:0;">
-          Debug (shows the exact API responses):
-        </p>
-        <div id="debugBox" class="status muted" style="white-space:pre-wrap;"></div>
+        <div id="debugWrap" style="display:none;">
+          <p class="muted" style="margin:0;">
+            Debug (only shows with <span class="pill">?debug=1</span>):
+          </p>
+          <div id="debugBox" class="status muted" style="white-space:pre-wrap;"></div>
+        </div>
       </aside>
     </div>
   </main>
@@ -123,6 +130,7 @@
     // Endpoints used:
     //   GET  /me
     //   POST /trial/start
+    //   POST /checkout
     //   POST /portal
     // =========================
 
@@ -132,15 +140,24 @@
 
     const statusPill = document.getElementById("statusPill");
     const statusText = document.getElementById("statusText");
-    const debugBox = document.getElementById("debugBox");
 
     const trialSection = document.getElementById("trialSection");
     const startTrialBtn = document.getElementById("startTrialBtn");
     const trialMsg = document.getElementById("trialMsg");
 
+    const paidText = document.getElementById("paidText");
+    const paidBtn = document.getElementById("paidBtn");
+    const paidMsg = document.getElementById("paidMsg");
+
     const manageBtn = document.getElementById("manageBtn");
     const manageMsg = document.getElementById("manageMsg");
-    const paidText = document.getElementById("paidText");
+
+    const debugWrap = document.getElementById("debugWrap");
+    const debugBox = document.getElementById("debugBox");
+
+    const url = new URL(window.location.href);
+    const DEBUG = url.searchParams.get("debug") === "1";
+    if (DEBUG) debugWrap.style.display = "block";
 
     function setStatus(pillText, text="") {
       statusPill.textContent = pillText;
@@ -154,6 +171,7 @@
     }
 
     function setDebug(text) {
+      if (!DEBUG) return;
       debugBox.textContent = text || "";
     }
 
@@ -168,19 +186,14 @@
 
     async function safeJson(response) {
       const text = await response.text();
-      try {
-        return { ok:true, json: JSON.parse(text), raw:text };
-      } catch {
-        return { ok:false, raw:text };
-      }
+      try { return { ok:true, json: JSON.parse(text), raw:text }; }
+      catch { return { ok:false, raw:text }; }
     }
 
     async function getAccessTokenOrThrow() {
-      // 1) current session
       let { data: sessionData } = await sb.auth.getSession();
       let accessToken = sessionData?.session?.access_token;
 
-      // 2) refresh if missing (helps on some browsers/pages)
       if (!accessToken) {
         const refreshed = await sb.auth.refreshSession();
         accessToken = refreshed?.data?.session?.access_token;
@@ -208,15 +221,14 @@
 
       const parsed = await safeJson(res);
 
-      // Always log responses (helps instantly)
       setDebug(
         `REQUEST: ${opts.method || "GET"} ${path}\n` +
         `HTTP: ${res.status}\n` +
-        `BODY:\n${parsed.ok ? JSON.stringify(parsed.json, null, 2) : parsed.raw.slice(0, 800)}`
+        `BODY:\n${parsed.ok ? JSON.stringify(parsed.json, null, 2) : (parsed.raw || "").slice(0, 800)}`
       );
 
       if (!parsed.ok) {
-        const snippet = parsed.raw?.slice(0, 140) || "";
+        const snippet = (parsed.raw || "").slice(0, 140);
         throw new Error(`API did not return JSON (starts with): ${snippet}`);
       }
       if (!res.ok) {
@@ -229,7 +241,6 @@
       if (!isoLike) return "";
       const d = new Date(isoLike);
       if (isNaN(d.getTime())) {
-        // fallback: YYYY-MM-DD -> DD/MM/YYYY
         const s = String(isoLike).slice(0,10);
         const parts = s.split("-");
         if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
@@ -241,47 +252,70 @@
       return `${dd}/${mm}/${yyyy}`;
     }
 
-    function applyUiForStatus(me) {
-      const status = me?.status || "none";
+    function resetUi() {
+      // messages
+      setMsg(trialMsg, "");
+      setMsg(paidMsg, "");
+      setMsg(manageMsg, "");
 
-      // Reset defaults
+      // visibility
       trialSection.style.display = "block";
       startTrialBtn.style.display = "inline-block";
       startTrialBtn.disabled = false;
-      manageBtn.className = "btn light";
-      manageBtn.textContent = "Manage access";
+
+      paidBtn.style.display = "none";
+      paidBtn.disabled = false;
+
+      manageBtn.style.display = "none";
+      manageBtn.disabled = false;
+
+      // text defaults
       paidText.textContent = "When you’re ready, you can activate paid access in one tap.";
-      setMsg(trialMsg, "");
-      setMsg(manageMsg, "");
+    }
+
+    function applyUiForStatus(me) {
+      resetUi();
+
+      const status = me?.status || "none";
 
       if (status === "trialing") {
         setStatus("Trial active", me.trial_ends_at ? `Ends: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "");
         startTrialBtn.disabled = true;
         setMsg(trialMsg, "You’re all set. Enjoy the trial!", true);
-        // keep manage as light
+
+        manageBtn.style.display = "inline-block";
+        manageBtn.textContent = "Manage access";
+        manageBtn.className = "btn light";
       }
       else if (status === "active") {
         setStatus("Access active", me.plan ? `Plan: ${me.plan}` : "");
-        startTrialBtn.disabled = true;
-        setMsg(trialMsg, "", true);
+        // hide trial actions
+        trialSection.style.display = "none";
+
+        manageBtn.style.display = "inline-block";
+        manageBtn.textContent = "Manage access";
         manageBtn.className = "btn light";
       }
       else if (status === "expired") {
         setStatus("Trial ended", me.trial_ends_at ? `Ended: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "");
-        // Hide trial button – they already used it
-        startTrialBtn.style.display = "none";
-        setMsg(trialMsg, "Your trial has ended.", false);
+        // hide trial section entirely
+        trialSection.style.display = "none";
 
-        // Show paid CTA
-        manageBtn.className = "btn";
-        manageBtn.textContent = "Activate for £0.99/month";
-        paidText.textContent = "You can activate paid access now. (You can cancel anytime.)";
+        paidText.textContent = "Your trial has ended. You can activate paid access anytime.";
+        paidBtn.style.display = "inline-block";
+        paidBtn.textContent = "Activate for £0.99/month";
+
+        // still allow portal too (useful after they subscribe)
+        manageBtn.style.display = "inline-block";
+        manageBtn.textContent = "Manage access";
+        manageBtn.className = "btn light";
       }
       else {
         // none / unknown
         setStatus("No trial yet", "");
-        startTrialBtn.style.display = "inline-block";
-        startTrialBtn.disabled = false;
+        // show trial section, hide paid checkout button for now
+        paidBtn.style.display = "none";
+        manageBtn.style.display = "none";
       }
     }
 
@@ -289,7 +323,7 @@
       setStatus("Checking…", "");
       setDebug("");
       try {
-        const me = await callApi("/me");
+        const me = await callApi("/me", { method: "GET" });
         applyUiForStatus(me);
       } catch (e) {
         setStatus("Error", "");
@@ -299,14 +333,17 @@
 
     startTrialBtn.addEventListener("click", async (e) => {
       e.preventDefault();
+      e.stopPropagation();
+
       setMsg(trialMsg, "");
       setDebug("");
 
       startTrialBtn.disabled = true;
+
       try {
         const out = await callApi("/trial/start", { method: "POST", body: {} });
-        // If the worker returns the new status, apply immediately
-        if (out && out.status) applyUiForStatus(out);
+        // If worker returns status payload, apply it right away:
+        if (out?.status) applyUiForStatus(out);
         setMsg(trialMsg, "Trial started ✅", true);
         await refreshStatus();
       } catch (err) {
@@ -315,20 +352,57 @@
       }
     });
 
-    manageBtn.addEventListener("click", async (e) => {
+    paidBtn.addEventListener("click", async (e) => {
       e.preventDefault();
-      setMsg(manageMsg, "");
+      e.stopPropagation();
+
+      setMsg(paidMsg, "");
       setDebug("");
 
-      manageBtn.disabled = true;
+      paidBtn.disabled = true;
+
       try {
-        // Worker should return a portal/checkout URL
-        const out = await callApi("/portal", { method: "POST", body: { return_url: window.location.href } });
+        // Worker should create Stripe Checkout session and return { url }
+        const out = await callApi("/checkout", {
+          method: "POST",
+          body: {
+            success_url: window.location.origin + "/billing.html?success=1",
+            cancel_url: window.location.origin + "/billing.html?canceled=1"
+          }
+        });
+
         if (out?.url) {
           window.location.href = out.url;
           return;
         }
-        setMsg(manageMsg, "No URL returned from billing API.", false);
+        setMsg(paidMsg, "No checkout URL returned from billing API.", false);
+      } catch (err) {
+        setMsg(paidMsg, String(err.message || err), false);
+        paidBtn.disabled = false;
+      }
+    });
+
+    manageBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      setMsg(manageMsg, "");
+      setDebug("");
+
+      manageBtn.disabled = true;
+
+      try {
+        // Worker should return { url } for Stripe customer portal
+        const out = await callApi("/portal", {
+          method: "POST",
+          body: { return_url: window.location.href }
+        });
+
+        if (out?.url) {
+          window.location.href = out.url;
+          return;
+        }
+        setMsg(manageMsg, "No portal URL returned from billing API.", false);
       } catch (err) {
         setMsg(manageMsg, String(err.message || err), false);
       } finally {
@@ -348,9 +422,19 @@
       }
       const ok = await requireAuth();
       if (!ok) return;
+
+      // optional: react to ?success=1 from Stripe
+      const u = new URL(window.location.href);
+      if (u.searchParams.get("success") === "1") {
+        setMsg(paidMsg, "Payment successful ✅ Checking access…", true);
+      } else if (u.searchParams.get("canceled") === "1") {
+        setMsg(paidMsg, "No worries — checkout was cancelled.", false);
+      }
+
       await refreshStatus();
     })();
   })();
   </script>
 </body>
 </html>
+
