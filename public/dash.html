@@ -5,23 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Learnlio — Dashboard</title>
 
-  <!-- App CSS (must exist at public/assets/css/app.css) -->
   <link rel="stylesheet" href="/assets/css/app.css" />
 
-  <!-- Minimal fallback styles (in case CSS path breaks) -->
+  <!-- Minimal fallback styles (in case app.css path breaks) -->
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
     .container { max-width: 980px; margin: 0 auto; padding: 18px; }
     .card { background:#fff; border-radius:16px; padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
-    .row { display:flex; gap:14px; flex-wrap:wrap; }
-    .col { flex:1 1 320px; }
-    .label { display:block; font-size: 13px; color:#333; margin: 10px 0 6px; }
-    .input { width:100%; padding:12px; border-radius:12px; border:1px solid #d6d6e3; font-size:16px; }
-    .btn { background:#0b5cff; border:none; color:#fff; padding:12px 14px; border-radius:12px; cursor:pointer; font-size:15px; }
-    .btn:disabled { opacity:.6; cursor:not-allowed; }
-    .btn.secondary { background:#111827; }
-    .btn.light { background:#e5e7eb; color:#111; }
-    .muted { color:#6b7280; font-size: 14px; }
     .nav { background:#fff; border-bottom:1px solid #ececf4; }
     .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:700; }
@@ -29,17 +19,39 @@
     .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
     .links a.active { background:#eef2ff; }
-    .children-list .child-card { border:1px solid #eef2f7; border-radius:14px; padding:12px; margin:10px 0; background:#fff; }
-    .child-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+
+    .grid { display:grid; grid-template-columns:1fr; gap:14px; }
+    @media (min-width: 860px) { .grid { grid-template-columns: 1.25fr .75fr; } }
+
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .hr { height:1px; background:#ececf4; margin:14px 0; }
+
+    .label { display:block; font-size: 13px; color:#333; margin: 10px 0 6px; }
+    .input { width:100%; padding:12px; border-radius:12px; border:1px solid #d6d6e3; font-size:16px; box-sizing:border-box; }
+    .btn { background:#0b5cff; border:none; color:#fff; padding:12px 14px; border-radius:12px; cursor:pointer; font-size:15px; font-weight:700; }
+    .btn:disabled { opacity:.6; cursor:not-allowed; }
+    .btn.light { background:#e5e7eb; color:#111; }
+    .btn.ghost { background:transparent; border:1px solid #d1d5db; color:#111; }
+    .muted { color:#6b7280; font-size: 14px; line-height:1.55; }
+
     .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#111; }
+    .pill.good { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
+    .pill.bad { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+    .pill.warn { background:#fffbeb; color:#92400e; border:1px solid #fde68a; }
+
     .status { margin-top:10px; font-size:14px; white-space:pre-wrap; }
     .status.good { color:#16a34a; }
     .status.bad { color:#dc2626; }
     .status.warn { color:#b45309; }
-    .locked { opacity: .55; pointer-events:none; user-select:none; }
+
+    .children-list .child-card { border:1px solid #eef2f7; border-radius:14px; padding:12px; margin:10px 0; background:#fff; }
+    .child-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+    .child-meta { margin-top:4px; }
+    .child-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+
+    .disabled-link { pointer-events:none; opacity:.55; }
   </style>
 
-  <!-- Supabase JS (must be loaded once) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -62,105 +74,139 @@
   </header>
 
   <main class="container">
-    <!-- Access banner -->
-    <div id="accessBanner" class="card" style="margin-bottom:14px; display:none;">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
-        <div>
-          <div style="font-weight:800; margin-bottom:6px;" id="accessTitle">Checking access…</div>
-          <div class="muted" id="accessSubtitle">Please wait.</div>
-          <div class="status" id="accessMsg"></div>
-        </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <a id="goBillingBtn" class="btn" href="/billing.html" style="text-decoration:none; display:none;">Go to Billing</a>
-          <button id="retryAccessBtn" class="btn secondary" type="button" style="display:none;">Retry</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="row" id="dashContent">
-      <section class="col">
-        <div class="card" id="addChildCard">
-          <h2 style="margin:0 0 6px;">Add a child</h2>
-          <p class="muted" style="margin:0 0 14px;">
-            Create a child profile. Then select them for Learnlio Tutor.
-          </p>
-
-          <label class="label" for="childName">Child name</label>
-          <input id="childName" class="input" placeholder="e.g. Ava" autocomplete="off"/>
-
-          <label class="label" for="childDob">Date of birth</label>
-          <input id="childDob" class="input" type="date"/>
-
-          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
-            <button id="addChildBtn" class="btn" type="button">Add child</button>
-            <button id="refreshBtn" class="btn secondary" type="button">Refresh list</button>
+    <div class="grid">
+      <!-- LEFT: Welcome / Access + Children -->
+      <section class="card">
+        <div class="row" style="justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h1 style="margin:0 0 6px; font-size:22px;">Dashboard</h1>
+            <div class="muted" id="welcomeLine">Loading…</div>
           </div>
 
-          <div id="formMessage" class="status" aria-live="polite"></div>
+          <div style="text-align:right;">
+            <div class="pill" id="accessPill">Checking access…</div>
+            <div class="muted" id="accessSub" style="margin-top:6px;"></div>
+          </div>
         </div>
+
+        <div id="accessNotice" class="status" style="display:none;"></div>
+
+        <div class="row" style="margin-top:12px;">
+          <a id="continueTutorBtn" class="btn" href="/chat.html" style="text-decoration:none;">Continue Tutor</a>
+          <a id="reportsBtn" class="btn light" href="/reports.html" style="text-decoration:none;">Reports</a>
+          <a id="billingBtn" class="btn ghost" href="/billing.html" style="text-decoration:none;">Billing</a>
+          <a id="upgradeBtn" class="btn" href="/billing.html" style="text-decoration:none; display:none;">Upgrade</a>
+        </div>
+
+        <div class="hr"></div>
+
+        <h2 style="margin:0 0 6px; font-size:18px;">Your children</h2>
+        <p class="muted" style="margin:0 0 14px;">
+          Select a child for the Tutor. If you only have one child, Learnlio will select them automatically.
+        </p>
+
+        <div id="childrenList" class="children-list">
+          <div class="muted">Loading…</div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div class="muted">Selected child:</div>
+          <div id="selectedChildLabel" class="pill">None selected</div>
+        </div>
+
+        <div class="hr"></div>
+
+        <h3 style="margin:0 0 6px; font-size:16px;">Add a child</h3>
+        <p class="muted" style="margin:0 0 12px;">Add a profile in 10 seconds.</p>
+
+        <label class="label" for="childName">Child name</label>
+        <input id="childName" class="input" placeholder="e.g. Ava" autocomplete="off"/>
+
+        <label class="label" for="childDob">Date of birth</label>
+        <input id="childDob" class="input" type="date"/>
+
+        <div class="row" style="margin-top:12px;">
+          <button id="addChildBtn" class="btn" type="button">Add child</button>
+          <button id="refreshBtn" class="btn light" type="button">Refresh list</button>
+        </div>
+
+        <div id="formMessage" class="status" aria-live="polite"></div>
       </section>
 
-      <section class="col">
-        <div class="card" id="childrenCard">
-          <h2 style="margin:0 0 6px;">Your children</h2>
-          <p class="muted" style="margin:0 0 14px;">
-            Click <strong>Select</strong> to set the active child for the Tutor.
-          </p>
+      <!-- RIGHT: Progress / Next step -->
+      <aside class="card">
+        <h2 style="margin:0 0 6px; font-size:18px;">Next step</h2>
+        <p class="muted" style="margin:0 0 14px;">
+          This will become smarter as Learnlio learns your child’s patterns.
+        </p>
 
-          <div id="childrenList" class="children-list">
-            <div class="muted">Loading…</div>
+        <div class="hr"></div>
+
+        <div id="nextStepBox">
+          <div class="pill" style="margin-bottom:10px;">Starter plan</div>
+          <div style="font-weight:900; margin-bottom:6px;">Try a short warm-up</div>
+          <div class="muted">
+            Start with a 5–7 minute Tutor session. If your child struggles, use hints and go slowly.
+            Progress and reports appear after a couple of sessions.
           </div>
 
-          <div style="margin-top:14px;">
-            <div class="muted">Selected child:</div>
-            <div id="selectedChildLabel" class="pill">None selected</div>
-          </div>
-
-          <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-            <a id="goTutorBtn" class="btn" href="/chat.html" style="text-decoration:none; display:inline-block;">Go to Tutor</a>
+          <div class="row" style="margin-top:14px;">
+            <a class="btn" href="/chat.html" style="text-decoration:none;">Start Tutor</a>
+            <a class="btn light" href="/screener.html" style="text-decoration:none;">Run screener</a>
           </div>
         </div>
-      </section>
+
+        <div class="hr"></div>
+
+        <h3 style="margin:0 0 6px; font-size:16px;">What Learnlio does well</h3>
+        <ul style="margin:0; padding-left:18px;" class="muted">
+          <li>Short steps (reduced overwhelm)</li>
+          <li>Hints on demand (no shame)</li>
+          <li>Dyslexia-friendly wording & spacing</li>
+          <li>Parent reports (clear next actions)</li>
+        </ul>
+
+        <div class="hr"></div>
+
+        <div class="muted" style="font-size:13px;">
+          Tip: most parents leave sessions signed in. We’re adding an auto-lock for extra safety soon.
+        </div>
+      </aside>
     </div>
   </main>
 
   <script>
   (() => {
     // =========================
-    // CONFIG (YOUR VALUES)
+    // CONFIG
     // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-
-    // ✅ your Worker base URL:
     const BILLING_API_BASE = "https://learnlio-billing.falling-grass-34ab.workers.dev";
-    // expects: GET /me -> { ok, authenticated, status: "none|trialing|active|expired", trial_ends_at, plan }
+    const LOGIN_URL = "/login.html";
     // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    if (!sb) {
-      console.error("Supabase JS failed to load.");
-      return;
-    }
+    if (!sb) return;
 
-    // Elements
+    // Nav + actions
     const logoutBtn = document.getElementById("logoutBtn");
-
-    const accessBanner = document.getElementById("accessBanner");
-    const accessTitle = document.getElementById("accessTitle");
-    const accessSubtitle = document.getElementById("accessSubtitle");
-    const accessMsg = document.getElementById("accessMsg");
-    const goBillingBtn = document.getElementById("goBillingBtn");
-    const retryAccessBtn = document.getElementById("retryAccessBtn");
-
-    const dashContent = document.getElementById("dashContent");
-    const addChildCard = document.getElementById("addChildCard");
-    const childrenCard = document.getElementById("childrenCard");
-    const goTutorBtn = document.getElementById("goTutorBtn");
     const navTutor = document.getElementById("navTutor");
-    const navScreener = document.getElementById("navScreener");
     const navReports = document.getElementById("navReports");
+    const navBilling = document.getElementById("navBilling");
 
+    const continueTutorBtn = document.getElementById("continueTutorBtn");
+    const reportsBtn = document.getElementById("reportsBtn");
+    const billingBtn = document.getElementById("billingBtn");
+    const upgradeBtn = document.getElementById("upgradeBtn");
+
+    // Header status
+    const welcomeLine = document.getElementById("welcomeLine");
+    const accessPill = document.getElementById("accessPill");
+    const accessSub = document.getElementById("accessSub");
+    const accessNotice = document.getElementById("accessNotice");
+
+    // Children
     const addBtn = document.getElementById("addChildBtn");
     const refreshBtn = document.getElementById("refreshBtn");
     const nameInput = document.getElementById("childName");
@@ -170,7 +216,7 @@
     const selectedChildLabel = document.getElementById("selectedChildLabel");
 
     let currentUser = null;
-    let accessStatus = "checking"; // checking|locked|ok|warn
+    let accessStatus = "checking"; // checking | ok | locked | unknown
 
     function escapeHtml(str){
       return String(str ?? "").replace(/[&<>"']/g, s => ({
@@ -183,39 +229,54 @@
       msgEl.className = "status" + (kind ? " " + kind : "");
     }
 
-    function setAccessBanner(show, title="", subtitle="", msg="", kind="") {
-      accessBanner.style.display = show ? "block" : "none";
-      accessTitle.textContent = title || "";
-      accessSubtitle.textContent = subtitle || "";
-      accessMsg.textContent = msg || "";
-      accessMsg.className = "status" + (kind ? " " + kind : "");
+    function setAccessNotice(show, text="", kind="") {
+      accessNotice.style.display = show ? "block" : "none";
+      accessNotice.textContent = text || "";
+      accessNotice.className = "status" + (kind ? " " + kind : "");
     }
 
-    function lockUi(locked) {
-      // lock main cards + nav buttons to paid areas
-      addChildCard.classList.toggle("locked", locked);
-      childrenCard.classList.toggle("locked", locked);
-      goTutorBtn.classList.toggle("locked", locked);
+    function setAccessPill(kind, text) {
+      accessPill.className = "pill" + (kind ? " " + kind : "");
+      accessPill.textContent = text;
+    }
 
-      // prevent navigation clicks if locked
-      [navTutor, navScreener, navReports, goTutorBtn].forEach(a => {
-        if (!a) return;
-        a.addEventListener("click", (e) => {
-          if (accessStatus === "locked") {
-            e.preventDefault();
-            window.location.href = "/billing.html";
-          }
-        }, { passive:false });
+    function disablePaidNav(disabled) {
+      // We only disable Tutor + Reports when locked. Billing always available.
+      const targets = [navTutor, navReports, continueTutorBtn, reportsBtn];
+      targets.forEach(el => {
+        if (!el) return;
+        if (disabled) {
+          el.classList.add("disabled-link");
+          el.setAttribute("aria-disabled", "true");
+        } else {
+          el.classList.remove("disabled-link");
+          el.removeAttribute("aria-disabled");
+        }
       });
     }
+
+    function interceptIfDisabled(e, isDisabled) {
+      if (!isDisabled) return;
+      e.preventDefault();
+      window.location.href = "/billing.html";
+    }
+
+    [navTutor, navReports, continueTutorBtn, reportsBtn].forEach(el => {
+      if (!el) return;
+      el.addEventListener("click", (e) => {
+        const locked = accessStatus === "locked";
+        interceptIfDisabled(e, locked);
+      }, { passive:false });
+    });
 
     async function requireAuth() {
       const { data, error } = await sb.auth.getUser();
       if (error || !data?.user) {
-        window.location.href = "/login.html";
+        window.location.href = LOGIN_URL;
         return false;
       }
       currentUser = data.user;
+      welcomeLine.textContent = currentUser.email ? `Signed in as ${currentUser.email}` : "Signed in";
       return true;
     }
 
@@ -227,10 +288,7 @@
         const refreshed = await sb.auth.refreshSession();
         accessToken = refreshed?.data?.session?.access_token;
       }
-
-      if (!accessToken) {
-        throw new Error("No Supabase session token found. Please log out and log in again.");
-      }
+      if (!accessToken) throw new Error("No Supabase session token found.");
       return accessToken;
     }
 
@@ -245,8 +303,8 @@
       });
 
       const text = await res.text();
-      let json;
-      try { json = JSON.parse(text); } catch { json = null; }
+      let json = null;
+      try { json = JSON.parse(text); } catch {}
 
       if (!res.ok) {
         const msg = (json && (json.error || json.message)) ? (json.error || json.message) : `HTTP ${res.status}`;
@@ -254,6 +312,31 @@
       }
       if (!json) throw new Error("Billing /me did not return JSON.");
       return json;
+    }
+
+    function formatDateDDMMYYYY(isoLike) {
+      if (!isoLike) return "";
+      const d = new Date(isoLike);
+      if (isNaN(d.getTime())) {
+        const s = String(isoLike).slice(0,10);
+        const p = s.split("-");
+        return (p.length === 3) ? `${p[2]}/${p[1]}/${p[0]}` : s;
+      }
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth()+1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
+
+    function computeAge(dob) {
+      if (!dob) return null;
+      const d = new Date(dob);
+      if (isNaN(d.getTime())) return null;
+      const now = new Date();
+      let age = now.getFullYear() - d.getFullYear();
+      const m = now.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+      return Math.max(0, age);
     }
 
     function setSelectedChildUI() {
@@ -267,9 +350,28 @@
       }
     }
 
+    function getSelectedChildId() {
+      try {
+        const raw = localStorage.getItem("selectedChild");
+        if (!raw) return null;
+        const obj = JSON.parse(raw);
+        return obj?.id || null;
+      } catch {
+        return null;
+      }
+    }
+
+    function setSelectedChild(ch) {
+      localStorage.setItem("selectedChild", JSON.stringify({
+        id: ch.id,
+        name: ch.child_name,
+        dob: ch.child_dob
+      }));
+      setSelectedChildUI();
+    }
+
     async function loadChildren() {
       setFormMsg("");
-
       listEl.innerHTML = `<div class="muted">Loading…</div>`;
 
       const { data, error } = await sb
@@ -283,38 +385,70 @@
         return;
       }
 
-      if (!data || data.length === 0) {
-        listEl.innerHTML = `<div class="muted">No children added yet.</div>`;
+      const rows = data || [];
+      if (rows.length === 0) {
+        listEl.innerHTML = `
+          <div class="muted">
+            No children added yet. Add one below, then you can start the Tutor.
+          </div>
+        `;
         return;
       }
 
+      // Auto-select if:
+      // - exactly one child AND nothing selected
+      // - selected child no longer exists
+      const selectedId = getSelectedChildId();
+      const selectedExists = selectedId ? rows.some(r => r.id === selectedId) : false;
+
+      if (rows.length === 1 && !selectedId) {
+        setSelectedChild(rows[0]);
+        setFormMsg(`Selected child: ${rows[0].child_name}`, "good");
+      } else if (selectedId && !selectedExists) {
+        localStorage.removeItem("selectedChild");
+        setSelectedChildUI();
+      }
+
+      // Render list
       listEl.innerHTML = "";
-      data.forEach(ch => {
+      rows.forEach(ch => {
         const card = document.createElement("div");
         card.className = "child-card";
 
         const name = ch.child_name ?? "(No name)";
-        const dob = ch.child_dob ?? "(No DOB)";
+        const dob = ch.child_dob ?? "";
+        const age = computeAge(dob);
+
+        const isSelected = (getSelectedChildId() === ch.id);
 
         card.innerHTML = `
           <div class="child-top">
             <div>
-              <div style="font-weight:800;">${escapeHtml(name)}</div>
-              <div class="muted" style="margin-top:4px;">DOB: ${escapeHtml(dob)}</div>
+              <div style="font-weight:900;">${escapeHtml(name)} ${isSelected ? `<span class="pill" style="margin-left:6px;">Selected</span>` : ""}</div>
+              <div class="muted child-meta">
+                DOB: ${escapeHtml(dob || "—")}${age !== null ? ` • Age: ${age}` : ""}
+              </div>
             </div>
-            <button class="btn" type="button" data-id="${ch.id}">Select</button>
+            <div class="child-actions">
+              <button class="btn ${isSelected ? "light" : ""}" type="button" data-id="${ch.id}">
+                ${isSelected ? "Selected" : "Select"}
+              </button>
+            </div>
           </div>
         `;
 
         const btn = card.querySelector("button[data-id]");
         btn.addEventListener("click", () => {
-          localStorage.setItem("selectedChild", JSON.stringify({ id: ch.id, name, dob }));
-          setSelectedChildUI();
+          setSelectedChild(ch);
           setFormMsg(`Selected child: ${name}`, "good");
+          // Re-render so the "Selected" pill updates cleanly
+          loadChildren();
         });
 
         listEl.appendChild(card);
       });
+
+      setSelectedChildUI();
     }
 
     async function addChild() {
@@ -350,90 +484,88 @@
       await loadChildren();
     }
 
-    async function enforceAccessGate() {
+    async function refreshAccess() {
       accessStatus = "checking";
-      lockUi(true);
+      setAccessPill("", "Checking access…");
+      accessSub.textContent = "";
+      setAccessNotice(false);
 
-      goBillingBtn.style.display = "none";
-      retryAccessBtn.style.display = "none";
+      // Default: allow usage while checking (no hard lock)
+      disablePaidNav(false);
+      upgradeBtn.style.display = "none";
 
-      setAccessBanner(true, "Checking access…", "One moment.", "", "");
       try {
         const me = await billingMe();
         const status = me?.status || "none";
 
-        if (status === "active" || status === "trialing") {
+        if (status === "active") {
           accessStatus = "ok";
-          setAccessBanner(false);
-          lockUi(false);
-          return true;
+          setAccessPill("good", "Access active");
+          accessSub.textContent = me.plan ? `Plan: ${me.plan}` : "";
+          disablePaidNav(false);
+          return;
         }
 
-        // Locked states
+        if (status === "trialing") {
+          accessStatus = "ok";
+          setAccessPill("good", "Trial active");
+          accessSub.textContent = me.trial_ends_at ? `Ends: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "";
+          // Show upgrade CTA even while in trial (as requested)
+          upgradeBtn.style.display = "inline-block";
+          upgradeBtn.textContent = "Upgrade now";
+          disablePaidNav(false);
+          return;
+        }
+
+        // expired / none => soft gate (disable Tutor+Reports, keep Dash usable)
         accessStatus = "locked";
-        lockUi(true);
+        if (status === "expired") {
+          setAccessPill("bad", "Trial ended");
+          accessSub.textContent = "Upgrade to continue";
+          setAccessNotice(true, "Your trial has ended. You can upgrade in Billing to continue using Tutor and Reports.", "bad");
+        } else {
+          setAccessPill("warn", "No access yet");
+          accessSub.textContent = "Start trial in Billing";
+          setAccessNotice(true, "Start your 7-day trial in Billing to unlock Tutor and Reports.", "warn");
+        }
 
-        let subtitle = "You need an active plan to use the app.";
-        if (status === "expired") subtitle = "Your trial has ended. Activate access to continue.";
-        if (status === "none") subtitle = "Start your 7-day trial to begin.";
-
-        setAccessBanner(true,
-          "Access needed",
-          subtitle,
-          "Go to Billing to start/activate access.",
-          "bad"
-        );
-
-        goBillingBtn.style.display = "inline-block";
-        retryAccessBtn.style.display = "inline-block";
-        return false;
+        disablePaidNav(true);
+        upgradeBtn.style.display = "inline-block";
+        upgradeBtn.textContent = "Go to Billing";
       } catch (e) {
-        // Network/CORS/etc. We show warning and allow retry. We keep UI locked to avoid “ghost unlock”.
-        accessStatus = "locked";
-        lockUi(true);
-
-        setAccessBanner(true,
-          "Couldn’t verify access",
-          "This is usually a Worker CORS issue or the billing worker being offline.",
-          `Error: ${String(e.message || e)}`,
+        // Don't break the dashboard — show “unknown” and keep it usable.
+        accessStatus = "unknown";
+        setAccessPill("warn", "Access: unknown");
+        accessSub.textContent = "Couldn’t verify right now";
+        setAccessNotice(true,
+          "We couldn’t verify access (billing check failed). You can still manage children here. If Tutor/Reports are blocked unexpectedly, open Billing.",
           "warn"
         );
 
-        goBillingBtn.style.display = "inline-block";
-        retryAccessBtn.style.display = "inline-block";
-        return false;
+        // Keep usable (no lock)
+        disablePaidNav(false);
       }
     }
-
-    retryAccessBtn.addEventListener("click", async () => {
-      await enforceAccessGate();
-      if (accessStatus === "ok") {
-        setSelectedChildUI();
-        await loadChildren();
-      }
-    });
 
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
-      window.location.href = "/login.html";
+      window.location.href = LOGIN_URL;
     });
 
     addBtn.addEventListener("click", addChild);
     refreshBtn.addEventListener("click", loadChildren);
 
-    // Init
     (async () => {
       const okAuth = await requireAuth();
       if (!okAuth) return;
 
-      const okAccess = await enforceAccessGate();
-      if (!okAccess) return;
-
       setSelectedChildUI();
+      await refreshAccess();
       await loadChildren();
     })();
   })();
   </script>
 </body>
 </html>
+
