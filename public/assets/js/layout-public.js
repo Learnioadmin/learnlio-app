@@ -1,78 +1,106 @@
-/* public/assets/js/layout-public.js */
 (() => {
-  const LINKS = [
-    { href: "/index.html", label: "Home" },
-    { href: "/why.html", label: "Why Learnlio" },
-    { href: "/pricing.html", label: "Pricing" },
-    { href: "/faq.html", label: "FAQ" },
-    { href: "/login.html", label: "Log in" },
+  // Simple helper
+  const $ = (id) => document.getElementById(id);
+
+  // --- Configure your public nav here ---
+  const PUBLIC_NAV = [
+    { label: "Home", href: "/" },
+    { label: "Why Learnlio", href: "/why.html" },
+    // FAQ is on homepage
+    { label: "FAQ", href: "/#how-it-works" }
   ];
 
-  function normPath(p) {
-    if (!p) return "/";
-    if (p === "/") return "/index.html";
-    return p;
+  function normalizePath(path) {
+    // Treat "/" and "/index.html" as the same
+    if (!path) return "/";
+    if (path === "/index.html") return "/";
+    return path;
   }
 
-  function isActive(linkHref) {
-    const cur = normPath(window.location.pathname);
-    const target = normPath(linkHref);
-    return cur === target;
+  function isActiveLink(linkHref, currentPath) {
+    // Active rules:
+    // - exact match for normal pages
+    // - for "/" active if currentPath is "/" only
+    const a = normalizePath(linkHref);
+    const p = normalizePath(currentPath);
+
+    if (a === "/") return p === "/";
+    return p === a;
   }
 
-  function navHTML() {
-    const links = LINKS.map(l => {
-      const active = isActive(l.href) ? "active" : "";
-      return `<a class="${active}" href="${l.href}">${l.label}</a>`;
+  function buildPublicNav() {
+    const currentPath = normalizePath(window.location.pathname);
+
+    const linksHtml = PUBLIC_NAV.map((item) => {
+      const active = isActiveLink(item.href, currentPath) ? "active" : "";
+      return `<a class="${active}" href="${item.href}">${item.label}</a>`;
     }).join("");
+
+    // Buttons: both go to login for now
+    // (Start free trial is the primary CTA)
+    const ctas = `
+      <a class="btn" href="/login.html">Start free trial</a>
+      <a class="btn light" href="/login.html">Log in</a>
+    `;
+
+    // Logo with fallback (webp -> png)
+    const brand = `
+      <a class="brand" href="/" aria-label="Learnlio home">
+        <picture>
+          <source srcset="/assets/img/logo.webp" type="image/webp">
+          <source srcset="/assets/img/logo.png" type="image/png">
+          <img src="/assets/img/logo.png" alt="Learnlio" />
+        </picture>
+        <span>Learnlio</span>
+      </a>
+    `;
 
     return `
       <header class="nav">
         <div class="nav-inner">
-          <a class="brand" href="/index.html" aria-label="Learnlio home">
-            <img class="brand-logo" src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
-            <span>Learnlio</span>
-          </a>
+          ${brand}
           <nav class="links">
-            ${links}
+            ${linksHtml}
+            ${ctas}
           </nav>
         </div>
       </header>
     `;
   }
 
-  function footerHTML() {
+  function buildFooter() {
     const year = new Date().getFullYear();
     return `
       <footer class="footer">
-        <div class="footer-inner">
-          <div class="footer-left">
-            <span>© ${year} Learnlio</span>
-            <span class="dot">•</span>
+        <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:center;">
+          <div>© ${year} Learnlio. Built in the UK.</div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
             <a href="/privacy.html">Privacy</a>
-            <span class="dot">•</span>
-            <a href="/cookies.html">Cookies</a>
-            <span class="dot">•</span>
             <a href="/terms.html">Terms</a>
-          </div>
-          <div class="footer-right">
-            <span class="muted">Child-led • Dyslexia-friendly • Safe tutoring</span>
+            <a href="/cookies.html">Cookies</a>
+            <a href="/contact.html">Contact</a>
           </div>
         </div>
       </footer>
     `;
   }
 
-  function inject() {
-    const navMount = document.getElementById("navMount");
-    const footerMount = document.getElementById("footerMount");
-    if (navMount) navMount.innerHTML = navHTML();
-    if (footerMount) footerMount.innerHTML = footerHTML();
-  }
+  // Mount
+  const navMount = $("navMount");
+  if (navMount) navMount.innerHTML = buildPublicNav();
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", inject);
-  } else {
-    inject();
-  }
+  const footerMount = $("footerMount");
+  if (footerMount) footerMount.innerHTML = buildFooter();
+
+  // Safety: ensure the logo size is consistent even if app.css misses it
+  const styleFix = document.createElement("style");
+  styleFix.textContent = `
+    .brand img { height:34px; width:auto; display:block; }
+    .links .btn { margin-left:6px; }
+    @media (max-width: 520px) {
+      .links .btn { padding:10px 12px; border-radius:12px; }
+    }
+  `;
+  document.head.appendChild(styleFix);
 })();
+
