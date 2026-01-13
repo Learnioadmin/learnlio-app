@@ -93,7 +93,7 @@
     // Your pages already handle logout in most cases.
     // This is a safe fallback redirect.
     logoutBtn.addEventListener("click", () => {
-      window.location.href = "/login.html";
+      window.location.href = "/.html";
     });
 
     navEl.appendChild(logoutBtn);
