@@ -4,95 +4,113 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  <title>Why Learnlio | Child-Led, Dyslexia-Friendly Learning</title>
-
+  <title>Why Learnlio | Child-led, Dyslexia-friendly Learning</title>
   <meta name="description" content="Learn why Learnlio is different. Child-led learning, dyslexia-friendly tutoring, calm adaptive lessons and meaningful progress for Maths and English." />
+  <link rel="canonical" href="https://learnlio.co.uk/why-learnlio.html" />
+  <meta name="robots" content="index,follow" />
 
   <link rel="stylesheet" href="/assets/css/app.css" />
 
+  <!-- Public page styling (matches Home/Pricing nav + vibe) -->
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
-    .container { max-width: 980px; margin: 0 auto; padding: 22px 18px; }
-    .card { background:#fff; border-radius:18px; padding:24px; box-shadow:0 6px 20px rgba(0,0,0,.08); }
-    .nav { background:#fff; border-bottom:1px solid #ececf4; }
-    .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:700; }
-    .brand img { height:34px; }
-    .links { display:flex; gap:10px; flex-wrap:wrap; }
-    .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
-    .links a.active { background:#eef2ff; }
-
-    h1 { font-size:34px; line-height:1.2; margin:0 0 12px; }
-    h2 { font-size:24px; margin:28px 0 10px; }
-    h3 { font-size:18px; margin:18px 0 6px; }
-
-    p { font-size:17px; line-height:1.8; margin:0 0 12px; }
-    .muted { color:#6b7280; }
-
-    .hero { padding:10px 0 22px; }
-    .hero p { font-size:18px; }
-
-    .grid { display:grid; gap:20px; }
-    @media (min-width: 800px) {
-      .grid { grid-template-columns:1fr 1fr; }
+    :root{
+      --bg:#f7f7fb;
+      --card:#ffffff;
+      --text:#0b0b0f;
+      --muted:#6b7280;
+      --line:#ececf4;
+      --brand:#0b5cff;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --radius: 18px;
     }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text);}
+    a{color:inherit}
+    .container{max-width:1100px; margin:0 auto; padding:18px;}
 
-    .principle {
+    /* NAV (same as Home) */
+    .nav{background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:50;}
+    .nav-inner{max-width:1100px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px;}
+    .brand{display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:800; letter-spacing:.2px;}
+    .brand img{height:34px; width:auto; display:block;}
+    .links{display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;}
+    .links a{ text-decoration:none; padding:10px 12px; border-radius:12px; color:#111; }
+    .links a:hover{ background:#f3f4f6; }
+    .links a.active{ background:#eef2ff; }
+
+    .btn{background:var(--brand); color:#fff; border:none; padding:12px 14px; border-radius:14px; cursor:pointer; font-size:14px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:10px;}
+    .btn:hover{filter:brightness(.95)}
+    .btn.light{background:#e5e7eb; color:#111;}
+    .btn.ghost{background:transparent; border:1px solid #d1d5db; color:#111;}
+
+    /* Page */
+    .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid rgba(236,236,244,.8);}
+    .section{margin-top:18px;}
+    .hero{padding:6px 0 8px;}
+    .tag{display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; color:#111; font-weight:650;}
+    h1{margin:10px 0 10px; font-size:40px; line-height:1.12; letter-spacing:-.6px;}
+    @media(max-width:520px){ h1{font-size:34px;} }
+    p{margin:0 0 12px; font-size:16px; line-height:1.8;}
+    .muted{color:var(--muted);}
+
+    .grid{display:grid; gap:12px; margin-top:12px;}
+    @media(min-width:900px){ .grid{grid-template-columns:1fr 1fr;} }
+
+    .principle{
       border:1px solid #eef2f7;
       border-radius:16px;
-      padding:18px;
+      padding:16px;
       background:#fafafa;
     }
+    .principle h3{margin:0 0 6px; font-size:16px;}
+    .principle p{margin:0; color:var(--muted); font-size:14px; line-height:1.75;}
 
-    .cta {
-      margin-top:30px;
-      padding:22px;
-      border-radius:18px;
-      background:#0b5cff;
-      color:#fff;
-      text-align:center;
-    }
-    .cta p { color:#e5edff; }
-    .cta a {
-      display:inline-block;
-      margin-top:12px;
-      background:#fff;
-      color:#0b5cff;
-      padding:12px 18px;
-      border-radius:14px;
-      text-decoration:none;
-      font-weight:600;
-    }
+    ul{margin:0; padding-left:18px; color:var(--muted); line-height:1.9; font-size:15px;}
 
-    footer {
-      margin-top:40px;
+    .cta{
+      margin-top:18px;
       padding:18px;
-      text-align:center;
-      font-size:14px;
-      color:#6b7280;
+      border-radius:18px;
+      background:linear-gradient(135deg, rgba(11,92,255,.12), rgba(124,58,237,.10));
+      border:1px solid rgba(11,92,255,.18);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
     }
-    footer a { color:#6b7280; text-decoration:none; margin:0 8px; }
+    .cta h2{margin:0 0 6px; font-size:20px; letter-spacing:-.2px;}
+    .cta p{margin:0; color:var(--muted); font-size:14px;}
+
+    .footer{margin-top:18px; padding:18px 0 40px; color:var(--muted); font-size:14px;}
+    .footer a{color:var(--muted); text-decoration:none;}
+    .footer a:hover{text-decoration:underline;}
   </style>
 </head>
 
 <body>
+  <!-- Public NAV -->
   <header class="nav">
     <div class="nav-inner">
-      <a class="brand" href="/">
+      <a class="brand" href="/" aria-label="Learnlio home">
         <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
         <span>Learnlio</span>
       </a>
-      <nav class="links">
+
+      <nav class="links" aria-label="Primary">
+        <a href="/">Home</a>
         <a class="active" href="/why-learnlio.html">Why Learnlio</a>
-        <a href="/how-it-works.html">How it works</a>
         <a href="/pricing.html">Pricing</a>
-        <a href="/login.html">Log in</a>
+        <a class="btn light" href="/login.html">Log in</a>
+        <a class="btn" href="/login.html">Start free trial</a>
       </nav>
     </div>
   </header>
 
   <main class="container">
+    <!-- HERO -->
     <section class="hero">
+      <span class="tag">Child-led • Dyslexia-friendly • Calm by design</span>
       <h1>Why Learnlio exists</h1>
       <p class="muted">
         Learnlio was built for children who don’t thrive under pressure, rigid systems, or one-size-fits-all teaching.
@@ -102,66 +120,50 @@
       </p>
     </section>
 
-    <section class="card">
-      <h2>Our principles</h2>
-      <p class="muted">
+    <!-- PRINCIPLES -->
+    <section class="card section" style="padding:18px;">
+      <h2 style="margin:0 0 6px; font-size:22px; letter-spacing:-.3px;">Our principles</h2>
+      <p class="muted" style="margin:0 0 12px;">
         These principles guide every lesson, interaction and design decision inside Learnlio.
       </p>
 
       <div class="grid">
         <div class="principle">
           <h3>Child-led learning</h3>
-          <p>
-            Children learn best when they feel in control. Learnlio follows the child’s pace,
-            interests and energy — not a rigid curriculum clock.
-          </p>
+          <p>Children learn best when they feel in control. Learnlio follows the child’s pace, interests and energy — not a rigid curriculum clock.</p>
         </div>
 
         <div class="principle">
           <h3>Dyslexia-friendly by design</h3>
-          <p>
-            We use clear spacing, simple language, reduced cognitive load and supportive feedback.
-            No visual clutter. No pressure.
-          </p>
+          <p>Clear spacing, simple language, reduced cognitive load and supportive feedback. No visual clutter. No pressure.</p>
         </div>
 
         <div class="principle">
           <h3>Safe, supportive tutoring</h3>
-          <p>
-            Learnlio is calm by default. No shaming. No “wrong answer” emphasis.
-            Mistakes are treated as part of learning, not failure.
-          </p>
+          <p>Calm by default. No shaming. No “wrong answer” emphasis. Mistakes are treated as learning, not failure.</p>
         </div>
 
         <div class="principle">
           <h3>Adaptive, not overwhelming</h3>
-          <p>
-            Difficulty adjusts gently within safe boundaries.
-            Children are challenged — but never pushed beyond confidence.
-          </p>
+          <p>Difficulty adjusts gently within safe boundaries. Children are challenged — but never pushed beyond confidence.</p>
         </div>
 
         <div class="principle">
           <h3>Meaningful progress</h3>
-          <p>
-            We focus on real understanding, not rushing levels.
-            Progress is remembered, reinforced, and shared clearly with parents.
-          </p>
+          <p>Real understanding over rushing levels. Progress is remembered, reinforced, and shared clearly with parents.</p>
         </div>
 
         <div class="principle">
           <h3>Parent clarity & trust</h3>
-          <p>
-            Parents can see what’s happening, why it matters, and what to do next —
-            without needing teaching expertise.
-          </p>
+          <p>Parents can see what’s happening, why it matters, and what to do next — without needing teaching expertise.</p>
         </div>
       </div>
     </section>
 
-    <section class="card" style="margin-top:24px;">
-      <h2>Who Learnlio is for</h2>
-      <p>
+    <!-- WHO IT'S FOR -->
+    <section class="card section" style="padding:18px;">
+      <h2 style="margin:0 0 6px; font-size:22px; letter-spacing:-.3px;">Who Learnlio is for</h2>
+      <p class="muted" style="margin:0 0 12px;">
         Learnlio is designed for parents who want:
       </p>
       <ul>
@@ -172,21 +174,35 @@
       </ul>
     </section>
 
-    <div class="cta">
-      <h2>Learning that feels safe, calm and personal</h2>
-      <p>
-        Start a 7-day trial. No card required.
-      </p>
-      <a href="/login.html">Get started</a>
-    </div>
+    <!-- CTA -->
+    <section class="cta card" style="box-shadow:none;">
+      <div>
+        <h2>Learning that feels safe, calm and personal</h2>
+        <p>Start a 7-day trial. No card required.</p>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn" href="/login.html">Start free trial</a>
+        <a class="btn ghost" href="/pricing.html">View pricing</a>
+      </div>
+    </section>
 
-    <footer>
-      <a href="/privacy.html">Privacy</a>
-      <a href="/terms.html">Terms</a>
-      <a href="/cookies.html">Cookies</a>
-      <a href="/contact.html">Contact</a>
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:center;">
+        <div>© <span id="year"></span> Learnlio. Built in the UK.</div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+          <a href="/cookies.html">Cookies</a>
+          <a href="/contact.html">Contact</a>
+        </div>
+      </div>
     </footer>
   </main>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
 
