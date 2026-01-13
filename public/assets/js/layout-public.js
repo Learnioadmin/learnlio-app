@@ -1,28 +1,27 @@
 (() => {
-  // Simple helper
   const $ = (id) => document.getElementById(id);
 
-  // --- Configure your public nav here ---
+  // --- Public nav ---
+  // FAQ stays as an anchor link to the homepage section.
   const PUBLIC_NAV = [
     { label: "Home", href: "/" },
-    { label: "Why Learnlio", href: "/why.html" },
-    // FAQ is on homepage
+    { label: "Why Learnlio", href: "/why-learnlio.html" },
+    { label: "Pricing", href: "/pricing.html" },
     { label: "FAQ", href: "/#how-it-works" }
   ];
 
   function normalizePath(path) {
-    // Treat "/" and "/index.html" as the same
     if (!path) return "/";
     if (path === "/index.html") return "/";
     return path;
   }
 
   function isActiveLink(linkHref, currentPath) {
-    // Active rules:
-    // - exact match for normal pages
-    // - for "/" active if currentPath is "/" only
     const a = normalizePath(linkHref);
     const p = normalizePath(currentPath);
+
+    // Don’t mark the FAQ anchor as active (it’s a jump link)
+    if (a.includes("#")) return false;
 
     if (a === "/") return p === "/";
     return p === a;
@@ -36,8 +35,7 @@
       return `<a class="${active}" href="${item.href}">${item.label}</a>`;
     }).join("");
 
-    // Buttons: both go to login for now
-    // (Start free trial is the primary CTA)
+    // Both go to login for now (Start free trial is the primary CTA)
     const ctas = `
       <a class="btn" href="/login.html">Start free trial</a>
       <a class="btn light" href="/login.html">Log in</a>
@@ -92,7 +90,7 @@
   const footerMount = $("footerMount");
   if (footerMount) footerMount.innerHTML = buildFooter();
 
-  // Safety: ensure the logo size is consistent even if app.css misses it
+  // Safety styling (keeps logo/buttons tidy even if app.css fails)
   const styleFix = document.createElement("style");
   styleFix.textContent = `
     .brand img { height:34px; width:auto; display:block; }
