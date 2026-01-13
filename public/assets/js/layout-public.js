@@ -74,9 +74,10 @@
           <div>© ${year} Learnlio. Built in the UK.</div>
           <div style="display:flex; gap:12px; flex-wrap:wrap;">
             <a href="/privacy.html">Privacy</a>
-            <a href="/terms.html">Terms</a>
+            <a href="/terms.html">Terms & Conditions</a>
             <a href="/cookies.html">Cookies</a>
             <a href="/contact.html">Contact</a>
+            <a href="/safeguarding.html">Safeguarding<a/>
           </div>
         </div>
       </footer>
