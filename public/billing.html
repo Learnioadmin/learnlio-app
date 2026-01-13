@@ -68,16 +68,16 @@
           <span class="muted" id="statusText"></span>
         </div>
 
-        <!-- ✅ NEW: Next payment + Cancellation -->
+        <!-- Billing meta -->
         <div id="billingMeta" style="margin-top:12px; display:none;">
           <div class="hr"></div>
 
           <div style="display:flex; gap:12px; flex-wrap:wrap;">
-            <div class="pill">
+            <div class="pill" id="nextPaymentPill" style="display:none;">
               Next payment: <strong id="nextPaymentLabel">—</strong>
             </div>
 
-            <div class="pill" id="cancelPill">
+            <div class="pill" id="cancelPill" style="display:none;">
               Cancellation: <strong id="cancelLabel">—</strong>
             </div>
           </div>
@@ -139,14 +139,7 @@
     // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-
     const BILLING_API_BASE = "https://learnlio-billing.falling-grass-34ab.workers.dev";
-    // Endpoints used:
-    //   GET  /me
-    //   POST /trial/start
-    //   POST /checkout
-    //   GET  /checkout/success?session_id=...
-    //   POST /portal
     // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -170,11 +163,12 @@
     const debugWrap = document.getElementById("debugWrap");
     const debugBox = document.getElementById("debugBox");
 
-    // ✅ NEW billing meta elements
+    // Billing meta
     const billingMeta = document.getElementById("billingMeta");
+    const nextPaymentPill = document.getElementById("nextPaymentPill");
     const nextPaymentLabel = document.getElementById("nextPaymentLabel");
-    const cancelLabel = document.getElementById("cancelLabel");
     const cancelPill = document.getElementById("cancelPill");
+    const cancelLabel = document.getElementById("cancelLabel");
 
     const pageUrl = new URL(window.location.href);
     const DEBUG = pageUrl.searchParams.get("debug") === "1";
@@ -273,39 +267,40 @@
       return `${dd}/${mm}/${yyyy}`;
     }
 
-    // ✅ NEW: robust “next payment” picker + meta renderer
-    function pickNextPaymentIso(me) {
-      return (
-        me?.current_period_end ||
-        me?.next_payment_due ||
-        me?.next_payment_due_at ||
-        me?.next_payment_at ||
-        me?.period_end ||
-        null
-      );
-    }
-
+    // Billing meta (next payment + cancellation)
     function renderBillingMeta(me) {
-      const nextIso = pickNextPaymentIso(me);
+      // Worker returns: current_period_end, cancel_at_period_end, cancel_at
+      const nextIso = me?.current_period_end || null;
       const cap = me?.cancel_at_period_end;
+      const cancelAtIso = me?.cancel_at || null;
 
-      const show = !!nextIso || typeof cap === "boolean";
-      billingMeta.style.display = show ? "block" : "none";
+      // Reset
+      billingMeta.style.display = "none";
+      nextPaymentPill.style.display = "none";
+      cancelPill.style.display = "none";
 
+      // Next payment
       if (nextIso) {
         nextPaymentLabel.textContent = formatDateDDMMYYYY(nextIso);
-      } else {
-        nextPaymentLabel.textContent = "—";
+        nextPaymentPill.style.display = "inline-block";
       }
 
+      // Cancellation
       if (typeof cap === "boolean") {
         cancelPill.style.display = "inline-block";
-        cancelLabel.textContent = cap
-          ? "Scheduled to cancel"
-          : "Active (not scheduled to cancel)";
-      } else {
-        cancelPill.style.display = "none";
+
+        if (cap && cancelAtIso) {
+          cancelLabel.textContent = `Cancels on ${formatDateDDMMYYYY(cancelAtIso)}`;
+        } else if (cap) {
+          cancelLabel.textContent = "Scheduled to cancel";
+        } else {
+          cancelLabel.textContent = "Active (not scheduled to cancel)";
+        }
       }
+
+      // Show wrapper only if at least one pill is visible
+      const showWrap = nextPaymentPill.style.display !== "none" || cancelPill.style.display !== "none";
+      billingMeta.style.display = showWrap ? "block" : "none";
     }
 
     function resetUi() {
@@ -373,7 +368,6 @@
       try {
         const me = await callApi("/me", { method: "GET" });
         applyUiForStatus(me);
-        // ✅ NEW
         renderBillingMeta(me);
       } catch (e) {
         setStatus("Error", "");
@@ -381,7 +375,6 @@
       }
     }
 
-    // ✅ Finalise Stripe checkout on return (if you use this flow)
     async function maybeFinalizeCheckout() {
       const u = new URL(window.location.href);
       const success = u.searchParams.get("success");
@@ -505,4 +498,5 @@
   </script>
 </body>
 </html>
+
 
