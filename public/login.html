@@ -85,7 +85,9 @@
       // =========================
       const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
       const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+
       const DASH_URL = "/dash.html";
+      const RESET_PASSWORD_URL = "/reset-password.html"; // ✅ make sure this file exists
       // =========================
 
       const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -142,15 +144,29 @@
         }
       }
 
+      // ✅ Detect Supabase recovery / PKCE callback and route to reset page
+      function isRecoveryOrPkceCallback() {
+        const u = new URL(window.location.href);
+        const hash = (u.hash || "").toLowerCase();
+        if (hash.includes("type=recovery")) return true; // recovery link
+        if (u.searchParams.get("code")) return true;     // PKCE callback
+        return false;
+      }
+
+      function redirectToResetPassword() {
+        const u = new URL(window.location.href);
+        // preserve query + hash because Supabase uses them for the session exchange
+        window.location.replace(`${RESET_PASSWORD_URL}${u.search}${u.hash}`);
+      }
+
       // Create or update trial row (runs only when user is authenticated)
       async function ensureSubscriptionRow(userId) {
         if (!userId) return;
 
-        // 7-day trial
+        // 7-day trial window
         const start = new Date();
         const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-        // If your table has extra nullable fields, this is still fine
         const payload = {
           user_id: userId,
           trial_starts_at: start.toISOString(),
@@ -166,8 +182,7 @@
           .upsert(payload, { onConflict: "user_id" });
 
         if (error) {
-          // Don’t hard-fail login if this insert fails.
-          // Show it clearly so you can fix RLS, but still let the user proceed.
+          // Don't hard-fail auth
           console.error("ensureSubscriptionRow error:", error);
           setStatus("Logged in, but trial record could not be saved (RLS/policy). We can fix this next.", "bad");
         }
@@ -184,26 +199,19 @@
       }
 
       async function signupFlow(email, password) {
-        // Note:
-        // If you have email confirmation enabled, you may NOT receive a session here.
         const { data, error } = await sb.auth.signUp({ email, password });
         if (error) throw error;
 
         const userId = data?.user?.id;
         const session = data?.session;
 
-        // If we have a session immediately, we can write subscription now.
-        // If not, we’ll write it on first login (handled in loginFlow).
         if (session && userId) {
           await ensureSubscriptionRow(userId);
           window.location.href = DASH_URL;
           return;
         }
 
-        setStatus(
-          "Account created. Please check your email to confirm, then come back and log in.",
-          "good"
-        );
+        setStatus("Account created. Please check your email to confirm, then come back and log in.", "good");
         setMode("login");
       }
 
@@ -251,11 +259,12 @@
 
         setBusy(true);
         try {
-          // Sends reset email (configure redirect URL in Supabase Auth settings)
+          // ✅ IMPORTANT: send users to reset-password page, NOT login
           const { error } = await sb.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + "/login.html"
+            redirectTo: window.location.origin + RESET_PASSWORD_URL
           });
           if (error) throw error;
+
           setStatus("Password reset email sent. Check your inbox.", "good");
         } catch (err) {
           console.error(err);
@@ -265,16 +274,26 @@
         }
       });
 
-      // If already logged in, go to dash
+      // Init
       (async () => {
-        const { data } = await sb.auth.getSession();
-        if (data?.session) window.location.href = DASH_URL;
-      })();
+        // ✅ If they arrived via recovery link, go straight to reset page
+        if (isRecoveryOrPkceCallback()) {
+          redirectToResetPassword();
+          return;
+        }
 
-      // Start in login mode
-      setMode("login");
+        // Normal behaviour: if already logged in, go to dash
+        const { data } = await sb.auth.getSession();
+        if (data?.session) {
+          window.location.href = DASH_URL;
+          return;
+        }
+
+        setMode("login");
+      })();
     })();
   </script>
 </body>
 </html>
+
 
