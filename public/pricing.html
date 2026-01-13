@@ -3,25 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Learnlio Pricing — Dyslexia-friendly AI Tutor (UK)</title>
+  <title>Learnlio Pricing — 7-day free trial, then £0.99/month</title>
 
   <!-- SEO -->
-  <meta name="description" content="Learnlio pricing: 7-day free trial, then £0.99/month. Dyslexia-friendly AI tutor for Maths & English with progress tracking, parent reports, and a child-friendly screener." />
+  <meta name="description" content="Learnlio pricing: start a 7-day free trial (no card). Then £0.99/month. Dyslexia-friendly AI tutor for Maths & English with screener and parent reports." />
   <link rel="canonical" href="https://learnlio.co.uk/pricing.html" />
   <meta name="robots" content="index,follow" />
 
-  <!-- Social -->
-  <meta property="og:title" content="Learnlio Pricing — 7-day free trial, then £0.99/month" />
-  <meta property="og:description" content="Dyslexia-friendly AI tutor for Maths & English. Calm, step-by-step learning, saved progress, and parent reports." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://learnlio.co.uk/pricing.html" />
-  <meta property="og:image" content="/assets/img/og-learnlio.png" />
-  <meta name="twitter:card" content="summary_large_image" />
-
-  <link rel="icon" href="/assets/img/favicon.png" />
+  <!-- App CSS -->
   <link rel="stylesheet" href="/assets/css/app.css" />
 
-  <!-- Minimal fallback styles (if app.css path breaks) -->
+  <!-- Same fallback styles as homepage (so nav looks identical) -->
   <style>
     :root{
       --bg:#f7f7fb;
@@ -40,217 +32,157 @@
     body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text);}
     a{color:inherit}
     .container{max-width:1100px; margin:0 auto; padding:18px;}
-    .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid rgba(236,236,244,.8);}
-    .btn{background:var(--brand); color:#fff; border:none; padding:12px 14px; border-radius:14px; cursor:pointer; font-size:14px; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; gap:10px;}
+
+    /* NAV (matches homepage) */
+    .nav{background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:50;}
+    .nav-inner{max-width:1100px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px;}
+    .brand{display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:800; letter-spacing:.2px;}
+    .brand img{height:34px; width:auto; display:block;}
+    .links{display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;}
+    .links a{ text-decoration:none; padding:10px 12px; border-radius:12px; color:#111; }
+    .links a:hover{ background:#f3f4f6; }
+    .links a.active{ background:#eef2ff; }
+
+    .btn{background:var(--brand); color:#fff; border:none; padding:12px 14px; border-radius:14px; cursor:pointer; font-size:14px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:10px;}
     .btn:hover{filter:brightness(.95)}
     .btn.light{background:#e5e7eb; color:#111;}
     .btn.ghost{background:transparent; border:1px solid #d1d5db; color:#111;}
-    .tag{display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; color:#111; font-weight:700;}
-    .muted{color:var(--muted);}
-    .grid{display:grid; grid-template-columns:1.1fr .9fr; gap:14px; margin-top:18px;}
+
+    /* Page */
+    .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid rgba(236,236,244,.8);}
+    .tag{display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; color:#111; font-weight:650;}
+    .h1{margin:10px 0 10px; font-size:38px; line-height:1.12; letter-spacing:-.6px;}
+    .lead{margin:0 0 18px; color:var(--muted); font-size:16px; line-height:1.65;}
+
+    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:14px; margin-top:16px;}
     @media(max-width:900px){ .grid{grid-template-columns:1fr;} }
-    .hero{padding:20px;}
-    .h1{margin:10px 0 10px; font-size:40px; line-height:1.1; letter-spacing:-.7px;}
-    @media(max-width:520px){ .h1{font-size:34px;} }
-    .lead{margin:0; color:var(--muted); font-size:16px; line-height:1.7;}
-    .pricing-card{padding:18px;}
-    .price{display:flex; align-items:flex-end; gap:8px; margin-top:8px;}
-    .price .amt{font-size:44px; font-weight:950; letter-spacing:-.8px;}
-    .price .per{color:var(--muted); font-weight:700; padding-bottom:8px;}
-    .list{margin:14px 0 0; padding-left:18px; color:#111;}
-    .list li{margin:8px 0; line-height:1.5;}
+
+    .panel{padding:18px;}
     .hr{height:1px; background:var(--line); margin:14px 0;}
-    .cta-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
-    .badge{display:inline-flex; align-items:center; gap:8px; padding:10px 12px; border-radius:14px; background:#f3f4f6; border:1px solid #e5e7eb; font-weight:700;}
-    .mini{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:12px;}
-    @media(max-width:700px){ .mini{grid-template-columns:1fr;} }
-    .mini .tile{padding:14px; border-radius:16px; border:1px solid var(--line); background:#fff;}
-    .mini .tile b{display:block; margin-bottom:4px;}
+    .muted{color:var(--muted);}
+    ul{margin:0; padding-left:18px; color:var(--muted); line-height:1.8;}
+    .priceBox{padding:18px; border-radius:18px; background:linear-gradient(135deg, rgba(11,92,255,.10), rgba(124,58,237,.10)); border:1px solid rgba(11,92,255,.18);}
+    .price{font-size:40px; font-weight:900; letter-spacing:-.6px; margin:6px 0;}
+    .small{font-size:13px; color:var(--muted); line-height:1.6;}
+    .row{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+    .badge{display:inline-flex; align-items:center; gap:8px; padding:10px 12px; border-radius:14px; border:1px solid #e5e7eb; background:#fff; font-size:13px;}
+
     .faq{margin-top:14px;}
     details{border:1px solid var(--line); background:#fff; border-radius:16px; padding:12px 14px;}
     details + details{margin-top:10px;}
-    summary{cursor:pointer; font-weight:900;}
+    summary{cursor:pointer; font-weight:800;}
     summary::-webkit-details-marker{display:none;}
-    .note{font-size:13px; color:var(--muted); line-height:1.6;}
-    .callout{padding:16px; border-radius:18px; background:linear-gradient(135deg, rgba(11,92,255,.12), rgba(124,58,237,.10)); border:1px solid rgba(11,92,255,.18);}
-  </style>
 
-  <!-- Structured Data (Offer) -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": "Learnlio",
-    "description": "Dyslexia-friendly AI tutor for Maths and English with progress tracking, parent reports, and a child-friendly screener.",
-    "offers": {
-      "@type": "Offer",
-      "price": "0.99",
-      "priceCurrency": "GBP",
-      "availability": "https://schema.org/InStock"
-    }
-  }
-  </script>
+    .footer{margin-top:18px; padding:18px 0 40px; color:var(--muted); font-size:14px;}
+    .footer a{color:var(--muted); text-decoration:none;}
+    .footer a:hover{text-decoration:underline;}
+  </style>
 </head>
 
 <body>
-  <!-- Public NAV (injected by layout.js) -->
-  <div id="navMount"></div>
+  <!-- Public NAV -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="/" aria-label="Learnlio home">
+        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <span>Learnlio</span>
+      </a>
+
+      <nav class="links" aria-label="Primary">
+        <a href="/" >Home</a>
+        <a href="/why.html">Why Learnlio</a>
+        <a class="active" href="/pricing.html">Pricing</a>
+        <a class="btn light" href="/login.html">Log in</a>
+        <a class="btn" href="/login.html">Start free trial</a>
+      </nav>
+    </div>
+  </header>
 
   <main class="container">
-    <section class="card hero">
-      <span class="tag">Simple pricing • UK families</span>
-      <h1 class="h1">7-day free trial, then £0.99/month.</h1>
+    <section class="card panel">
+      <span class="tag">Simple pricing • No card for trial</span>
+      <h1 class="h1">Start free. Upgrade only when you’re happy.</h1>
       <p class="lead">
-        Learnlio is built for children who need calm, structured support — especially dyslexic learners and kids who struggle with confidence.
-        Start the free trial, add your child profile, and try a short session in Maths or English.
+        Learnlio is a dyslexia-friendly AI tutor for <b>Maths</b> and <b>English</b>, with a dyslexia screener and parent reports.
+        Start with a <b>7-day free trial</b> (no card required). If it helps, keep it for <b>£0.99/month</b>.
       </p>
 
-      <div class="cta-row">
-        <a class="btn" href="/login.html">Start free trial</a>
-        <a class="btn ghost" href="/why.html">Why Learnlio</a>
-        <a class="btn light" href="/#how-it-works">Read FAQ on Home</a>
-      </div>
+      <div class="grid">
+        <!-- Main price card -->
+        <div class="card priceBox">
+          <div class="badge">✅ 7-day trial • No card</div>
+          <div class="price">£0.99<span style="font-size:16px; font-weight:700; color:var(--muted);">/month</span></div>
+          <div class="small">Cancel anytime. No awkward hoops.</div>
 
-      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-        <span class="badge">✅ No card required for trial</span>
-        <span class="badge">🧾 Cancel anytime</span>
-        <span class="badge">📄 Parent reports</span>
-      </div>
-    </section>
+          <div class="row">
+            <a class="btn" href="/login.html">Start free trial</a>
+            <a class="btn ghost" href="/why.html">See what makes it different</a>
+          </div>
 
-    <section class="grid">
-      <!-- Pricing box -->
-      <section class="card pricing-card" aria-label="Pricing">
-        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;">
-          <div>
-            <div class="tag" style="background:#ecfeff;">Best value</div>
-            <h2 style="margin:10px 0 6px; letter-spacing:-.3px;">Learnlio Access</h2>
-            <div class="muted">One parent login • Multiple children</div>
-          </div>
-          <div style="text-align:right;">
-            <div class="price">
-              <div class="amt">£0.99</div>
-              <div class="per">/ month</div>
-            </div>
-            <div class="note">After your 7-day free trial</div>
-          </div>
+          <div class="hr"></div>
+
+          <ul>
+            <li>Progress saved to your account</li>
+            <li>Multiple children on one login</li>
+            <li>Parent reports (downloadable)</li>
+            <li>Dyslexia-friendly wording & spacing</li>
+            <li>Child-controlled read-aloud button</li>
+          </ul>
         </div>
 
-        <div class="hr"></div>
-
-        <ul class="list">
-          <li><b>Dyslexia-friendly AI tutor</b> for Maths & English</li>
-          <li><b>Guided steps</b> when your child gets stuck (gentle, no shame)</li>
-          <li><b>Progress saved</b> to your account (use any device)</li>
-          <li><b>Parent reports</b> with “what happened” + next steps</li>
-          <li><b>Child-friendly screener</b> for risk signs (not a diagnosis)</li>
-          <li><b>Age-based session caps</b> to avoid overload</li>
-        </ul>
-
-        <div class="hr"></div>
-
-        <div class="cta-row">
-          <a class="btn" href="/login.html">Start free trial</a>
-          <a class="btn light" href="/login.html">Log in</a>
-        </div>
-
-        <p class="note" style="margin:12px 0 0;">
-          If you’ve already used your trial, you can subscribe from your Billing page after logging in.
-        </p>
-      </section>
-
-      <!-- Trust / what happens next -->
-      <aside class="card pricing-card">
-        <div class="callout">
-          <h2 style="margin:0 0 6px;">What happens after the trial?</h2>
+        <!-- Trust / explanation -->
+        <div class="card panel" style="box-shadow:none;">
+          <h2 style="margin:0 0 6px; font-size:18px;">What happens after the trial?</h2>
           <p class="muted" style="margin:0; line-height:1.7;">
-            Nothing automatic if you don’t want it. If Learnlio isn’t right for your family, you can stop and come back later.
-            If you do subscribe, you can cancel any time from the Billing page.
+            Nothing automatic during the trial. If you want to continue, you can activate paid access in Billing.
+            If not, you can stop — no stress.
           </p>
+
+          <div class="hr"></div>
+
+          <h2 style="margin:0 0 6px; font-size:18px;">Parents love it because…</h2>
+          <div class="badge" style="margin-top:10px;">🧠 Calm pacing and short steps</div>
+          <div class="badge" style="margin-top:10px;">💡 Hints without shame</div>
+          <div class="badge" style="margin-top:10px;">📄 Reports with next steps</div>
+          <div class="badge" style="margin-top:10px;">🔒 Progress saved across devices</div>
+
+          <div class="hr"></div>
+
+          <h2 style="margin:0 0 6px; font-size:18px;">FAQ</h2>
+          <div class="faq">
+            <details>
+              <summary>Do I need a card to start the trial?</summary>
+              <div class="muted" style="margin-top:8px; line-height:1.7;">No. You can start the trial without a card.</div>
+            </details>
+            <details>
+              <summary>Can I cancel easily?</summary>
+              <div class="muted" style="margin-top:8px; line-height:1.7;">Yes. You can manage or cancel from Billing in one tap.</div>
+            </details>
+            <details>
+              <summary>Is the screener a diagnosis?</summary>
+              <div class="muted" style="margin-top:8px; line-height:1.7;">No. It’s for early insight and risk signs, not a diagnosis.</div>
+            </details>
+          </div>
         </div>
-
-        <div class="mini" aria-label="Quick reassurance">
-          <div class="tile">
-            <b>Frictionless start</b>
-            <div class="muted">Try it first. No card required for the free trial.</div>
-          </div>
-          <div class="tile">
-            <b>Designed for confidence</b>
-            <div class="muted">Short lines. Gentle prompts. Calm progress.</div>
-          </div>
-          <div class="tile">
-            <b>Clear for parents</b>
-            <div class="muted">Reports you can use at home in minutes.</div>
-          </div>
-          <div class="tile">
-            <b>UK-first</b>
-            <div class="muted">British English. Built for UK families.</div>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <h3 style="margin:0 0 6px;">Need help choosing?</h3>
-        <p class="muted" style="margin:0; line-height:1.7;">
-          Start with the dyslexia screener, then try a short Tutor session. You’ll know quickly if your child likes the style.
-        </p>
-
-        <div class="cta-row" style="margin-top:12px;">
-          <a class="btn ghost" href="/screener.html">Try the screener</a>
-          <a class="btn light" href="/#how-it-works">How it works</a>
-        </div>
-      </aside>
-    </section>
-
-    <!-- Pricing FAQ (kept short; main FAQ stays on homepage) -->
-    <section class="card" style="padding:18px; margin-top:14px;">
-      <h2 style="margin:0 0 8px;">Pricing questions</h2>
-      <p class="muted" style="margin:0; line-height:1.7;">
-        Keep the big FAQ on the homepage — here are just the pricing bits.
-      </p>
-
-      <div class="faq" role="list" aria-label="Pricing FAQ">
-        <details>
-          <summary>Do I need a card to start the free trial?</summary>
-          <div class="muted" style="margin-top:8px; line-height:1.7;">
-            No — you can start the 7-day trial without a card.
-          </div>
-        </details>
-
-        <details>
-          <summary>Can I cancel easily?</summary>
-          <div class="muted" style="margin-top:8px; line-height:1.7;">
-            Yes. If you subscribe, you can cancel from the Billing page. No emails or “please call us”.
-          </div>
-        </details>
-
-        <details>
-          <summary>Is it per child or per family?</summary>
-          <div class="muted" style="margin-top:8px; line-height:1.7;">
-            It’s per parent login. You can add multiple children under one account.
-          </div>
-        </details>
-
-        <details>
-          <summary>Is the screener included?</summary>
-          <div class="muted" style="margin-top:8px; line-height:1.7;">
-            Yes — it’s available in the app. It provides insight and risk signs, not a diagnosis.
-          </div>
-        </details>
-      </div>
-
-      <div class="cta-row" style="margin-top:14px;">
-        <a class="btn" href="/login.html">Start free trial</a>
-        <a class="btn light" href="/why.html">Read “Why Learnlio”</a>
       </div>
     </section>
 
-    <!-- Footer injected by layout.js -->
-    <div id="footerMount"></div>
+    <footer class="footer">
+      <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:center;">
+        <div>© <span id="year"></span> Learnlio. Built in the UK.</div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+          <a href="/cookies.html">Cookies</a>
+          <a href="/contact.html">Contact</a>
+        </div>
+      </div>
+    </footer>
   </main>
 
-  <!-- Global layout (public nav + footer) -->
-  <script src="/assets/js/layout.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
 
