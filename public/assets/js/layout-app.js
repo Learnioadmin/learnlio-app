@@ -1,106 +1,123 @@
-/* public/assets/js/layout.js */
+/* layout-app.js
+   Logged-in app navigation (Dashboard/Tutor/Screener/Reports/Billing + Logout).
+   Mounts into:
+     <div id="navMount"></div>
+*/
+
 (() => {
-  const LINKS = [
-    { href: "/dash.html",    label: "Dashboard" },
-    { href: "/chat.html",    label: "Learnlio Tutor" },
-    { href: "/screener.html",label: "Dyslexia Screener" },
-    { href: "/reports.html", label: "Reports" },
-    { href: "/billing.html", label: "Billing" },
+  const NAV_MOUNT_ID = "navMount";
+
+  const LOGO_SRC = "/assets/img/logo.webp";
+  const BRAND_TEXT = "Learnlio";
+
+  const routes = [
+    { label: "Dashboard", href: "/dash.html" },
+    { label: "Learnlio Tutor", href: "/chat.html" },
+    { label: "Dyslexia Screener", href: "/screener.html" },
+    { label: "Reports", href: "/reports.html" },
+    { label: "Billing", href: "/billing.html" },
   ];
 
-  function normPath(p) {
-    if (!p) return "/";
-    // treat "/" as home if you have index.html (optional)
-    if (p === "/") return "/index.html";
-    return p;
+  function normalizePath(pathname) {
+    return pathname;
   }
 
-  function isActive(linkHref) {
-    const cur = normPath(window.location.pathname);
-    const target = normPath(linkHref);
-    return cur === target;
+  function isActive(href) {
+    const u = new URL(href, window.location.origin);
+    const currentPath = normalizePath(window.location.pathname);
+    const hrefPath = normalizePath(u.pathname);
+    return hrefPath === currentPath;
   }
 
-  function buildNavHTML() {
-    const linksHtml = LINKS.map(l => {
-      const active = isActive(l.href) ? "active" : "";
-      return `<a class="${active}" href="${l.href}">${l.label}</a>`;
-    }).join("");
+  function ensureBaseStyles() {
+    if (document.getElementById("learnlio-layout-app-style")) return;
 
-    return `
-      <header class="nav">
-        <div class="nav-inner">
-          <a class="brand" href="/dash.html" aria-label="Learnlio home">
-            <img class="brand-logo" src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
-            <span>Learnlio</span>
-          </a>
-
-          <nav class="links">
-            ${linksHtml}
-            <button id="logoutBtn" class="btn light" type="button" style="display:none;">Log out</button>
-          </nav>
-        </div>
-      </header>
+    const style = document.createElement("style");
+    style.id = "learnlio-layout-app-style";
+    style.textContent = `
+      .nav{background:#fff;border-bottom:1px solid #ececf4;position:sticky;top:0;z-index:50}
+      .nav-inner{max-width:980px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+      .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#111;font-weight:800}
+      .brand img{height:34px;width:auto;display:block}
+      .links{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+      .links a{text-decoration:none;color:#111;padding:10px 12px;border-radius:12px}
+      .links a:hover{background:#f3f4f6}
+      .links a.active{background:#eef2ff}
+      .btn{background:#0b5cff;border:none;color:#fff;padding:10px 12px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:700}
+      .btn.light{background:#e5e7eb;color:#111}
     `;
+    document.head.appendChild(style);
   }
 
-  function buildFooterHTML() {
-    const year = new Date().getFullYear();
-    return `
-      <footer class="footer">
-        <div class="footer-inner">
-          <div class="footer-left">
-            <span>© ${year} Learnlio</span>
-            <span class="dot">•</span>
-            <a href="/privacy.html">Privacy</a>
-            <span class="dot">•</span>
-            <a href="/cookies.html">Cookies</a>
-            <span class="dot">•</span>
-            <a href="/terms.html">Terms</a>
-          </div>
-          <div class="footer-right">
-            <span class="muted">Child-led • Dyslexia-friendly • Safe tutoring</span>
-          </div>
-        </div>
-      </footer>
-    `;
-  }
+  function buildNav() {
+    const nav = document.createElement("header");
+    nav.className = "nav";
 
-  function wireLogoutIfPossible() {
-    const btn = document.getElementById("logoutBtn");
-    if (!btn) return;
+    const inner = document.createElement("div");
+    inner.className = "nav-inner";
 
-    // If Supabase exists on the page, show logout
-    const hasSupabase = !!(window.supabase && window.supabase.createClient);
-    if (!hasSupabase) return;
+    const brand = document.createElement("a");
+    brand.className = "brand";
+    brand.href = "/dash.html";
+    brand.setAttribute("aria-label", "Learnlio home");
 
-    // You already create clients per page. If a page exposes window.sb we can use it.
-    // If not, we fall back to hiding logout so we don’t break pages.
-    const sb = window.sb;
-    if (!sb || !sb.auth) return;
+    const img = document.createElement("img");
+    img.src = LOGO_SRC;
+    img.alt = BRAND_TEXT;
+    img.onerror = () => (img.style.display = "none");
 
-    btn.style.display = "inline-block";
-    btn.addEventListener("click", async () => {
-      try { await sb.auth.signOut(); } catch {}
-      try { localStorage.removeItem("selectedChild"); } catch {}
+    const text = document.createElement("span");
+    text.textContent = BRAND_TEXT;
+
+    brand.appendChild(img);
+    brand.appendChild(text);
+
+    const navEl = document.createElement("nav");
+    navEl.className = "links";
+
+    routes.forEach((r) => {
+      const a = document.createElement("a");
+      a.href = r.href;
+      a.textContent = r.label;
+      if (isActive(r.href)) a.classList.add("active");
+      navEl.appendChild(a);
+    });
+
+    const logoutBtn = document.createElement("button");
+    logoutBtn.id = "logoutBtn";
+    logoutBtn.className = "btn light";
+    logoutBtn.type = "button";
+    logoutBtn.textContent = "Log out";
+
+    // If the page already has its own logout handler, it can still hook this ID.
+    // If not, we do a safe fallback:
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        if (window.supabase && window.supabase?.createClient) {
+          // If the page has sb client as `sb`, it will handle it.
+          // Fallback: do nothing.
+        }
+      } catch {}
+      // Always redirect to login (pages may also signOut)
       window.location.href = "/login.html";
     });
+
+    navEl.appendChild(logoutBtn);
+
+    inner.appendChild(brand);
+    inner.appendChild(navEl);
+    nav.appendChild(inner);
+    return nav;
   }
 
-  function inject() {
-    const navMount = document.getElementById("navMount");
-    const footerMount = document.getElementById("footerMount");
+  function mount() {
+    ensureBaseStyles();
+    const navMount = document.getElementById(NAV_MOUNT_ID);
+    if (!navMount) return;
 
-    if (navMount) navMount.innerHTML = buildNavHTML();
-    if (footerMount) footerMount.innerHTML = buildFooterHTML();
-
-    wireLogoutIfPossible();
+    navMount.innerHTML = "";
+    navMount.appendChild(buildNav());
   }
 
-  // Run ASAP once DOM exists
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", inject);
-  } else {
-    inject();
-  }
+  mount();
 })();
