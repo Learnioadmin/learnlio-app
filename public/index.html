@@ -109,8 +109,6 @@
     details + details{margin-top:10px;}
     summary{cursor:pointer; font-weight:800;}
     summary::-webkit-details-marker{display:none;}
-    .footer{margin-top:18px; padding:18px 0 40px; color:var(--muted); font-size:14px;}
-    .footer a{color:var(--muted);}
     .split{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;}
     @media(max-width:900px){ .split{grid-template-columns:1fr;} }
     .callout{padding:16px; border-radius:18px; background:linear-gradient(135deg, rgba(16,185,129,.14), rgba(11,92,255,.10)); border:1px solid rgba(16,185,129,.25);}
@@ -141,8 +139,8 @@
 </head>
 
 <body>
-  <!-- NAV -->
-<div id="navMount"></div>
+  <!-- PUBLIC NAV -->
+  <div id="navMount"></div>
 
   <!-- HERO -->
   <main class="container">
@@ -287,7 +285,7 @@
       </div>
     </section>
 
-    <!-- SEO-FRIENDLY CONTENT BLOCK (helps rankings for key intents) -->
+    <!-- SEO-FRIENDLY CONTENT BLOCK -->
     <section class="section">
       <h2>Dyslexia-friendly tutoring in the UK</h2>
       <p>
@@ -349,24 +347,12 @@
         </div>
       </div>
     </section>
-
-    <footer class="footer">
-      <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:center;">
-        <div>© <span id="year"></span> Learnlio. Built in the UK.</div>
-        <div style="display:flex; gap:12px; flex-wrap:wrap;">
-          <a href="/privacy.html">Privacy</a>
-          <a href="/terms.html">Terms</a>
-          <a href="/contact.html">Contact</a>
-        </div>
-      </div>
-    </footer>
   </main>
 
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <!-- PUBLIC FOOTER (injected) -->
   <div id="footerMount"></div>
-<script src="/assets/js/layout.js"></script>
+
+  <!-- IMPORTANT: use PUBLIC layout, not app layout -->
+  <script src="/assets/js/layout-public.js"></script>
 </body>
 </html>
-
