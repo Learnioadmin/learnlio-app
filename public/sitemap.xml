@@ -1,1 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Core marketing pages -->
+  <url>
+    <loc>https://learnlio.co.uk/</loc>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>https://learnlio.co.uk/why-learnlio.html</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://learnlio.co.uk/pricing.html</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Legal / trust pages -->
+  <url>
+    <loc>https://learnlio.co.uk/privacy.html</loc>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://learnlio.co.uk/terms.html</loc>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://learnlio.co.uk/cookies.html</loc>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://learnlio.co.uk/contact.html</loc>
+    <priority>0.3</priority>
+  </url>
+
+</urlset>
 
