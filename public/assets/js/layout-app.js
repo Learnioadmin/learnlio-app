@@ -1,11 +1,13 @@
 /* layout-app.js
-   Logged-in app navigation (Dashboard/Tutor/Screener/Reports/Billing + Logout).
+   Logged-in app navigation + app footer.
    Mounts into:
      <div id="navMount"></div>
+     <div id="footerMount"></div>
 */
 
 (() => {
   const NAV_MOUNT_ID = "navMount";
+  const FOOTER_MOUNT_ID = "footerMount";
 
   const LOGO_SRC = "/assets/img/logo.webp";
   const BRAND_TEXT = "Learnlio";
@@ -18,15 +20,9 @@
     { label: "Billing", href: "/billing.html" },
   ];
 
-  function normalizePath(pathname) {
-    return pathname;
-  }
-
   function isActive(href) {
     const u = new URL(href, window.location.origin);
-    const currentPath = normalizePath(window.location.pathname);
-    const hrefPath = normalizePath(u.pathname);
-    return hrefPath === currentPath;
+    return u.pathname === window.location.pathname;
   }
 
   function ensureBaseStyles() {
@@ -45,6 +41,11 @@
       .links a.active{background:#eef2ff}
       .btn{background:#0b5cff;border:none;color:#fff;padding:10px 12px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:700}
       .btn.light{background:#e5e7eb;color:#111}
+
+      .app-footer{border-top:1px solid #ececf4;margin-top:24px;padding:18px 0 34px;color:#6b7280;font-size:14px}
+      .app-footer-inner{max-width:980px;margin:0 auto;padding:0 18px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+      .app-footer-inner a{color:#6b7280;text-decoration:none}
+      .app-footer-inner a:hover{text-decoration:underline}
     `;
     document.head.appendChild(style);
   }
@@ -89,16 +90,9 @@
     logoutBtn.type = "button";
     logoutBtn.textContent = "Log out";
 
-    // If the page already has its own logout handler, it can still hook this ID.
-    // If not, we do a safe fallback:
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        if (window.supabase && window.supabase?.createClient) {
-          // If the page has sb client as `sb`, it will handle it.
-          // Fallback: do nothing.
-        }
-      } catch {}
-      // Always redirect to login (pages may also signOut)
+    // Your pages already handle logout in most cases.
+    // This is a safe fallback redirect.
+    logoutBtn.addEventListener("click", () => {
       window.location.href = "/login.html";
     });
 
@@ -110,13 +104,61 @@
     return nav;
   }
 
+  function buildFooter() {
+    const foot = document.createElement("footer");
+    foot.className = "app-footer";
+
+    const inner = document.createElement("div");
+    inner.className = "app-footer-inner";
+
+    const left = document.createElement("div");
+    left.innerHTML = `© <span id="llYearApp"></span> Learnlio`;
+
+    const right = document.createElement("div");
+    right.style.display = "flex";
+    right.style.gap = "12px";
+    right.style.flexWrap = "wrap";
+
+    const links = [
+      { label: "Privacy", href: "/privacy.html" },
+      { label: "Terms", href: "/terms.html" },
+      { label: "Cookies", href: "/cookies.html" },
+      { label: "Contact", href: "/contact.html" },
+    ];
+
+    links.forEach((l) => {
+      const a = document.createElement("a");
+      a.href = l.href;
+      a.textContent = l.label;
+      right.appendChild(a);
+    });
+
+    inner.appendChild(left);
+    inner.appendChild(right);
+    foot.appendChild(inner);
+
+    setTimeout(() => {
+      const y = document.getElementById("llYearApp");
+      if (y) y.textContent = String(new Date().getFullYear());
+    }, 0);
+
+    return foot;
+  }
+
   function mount() {
     ensureBaseStyles();
-    const navMount = document.getElementById(NAV_MOUNT_ID);
-    if (!navMount) return;
 
-    navMount.innerHTML = "";
-    navMount.appendChild(buildNav());
+    const navMount = document.getElementById(NAV_MOUNT_ID);
+    if (navMount) {
+      navMount.innerHTML = "";
+      navMount.appendChild(buildNav());
+    }
+
+    const footerMount = document.getElementById(FOOTER_MOUNT_ID);
+    if (footerMount) {
+      footerMount.innerHTML = "";
+      footerMount.appendChild(buildFooter());
+    }
   }
 
   mount();
