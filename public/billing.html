@@ -7,29 +7,39 @@
 
   <link rel="stylesheet" href="/assets/css/app.css" />
 
-  <!-- Minimal fallback styles (if app.css path breaks) -->
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
     .container { max-width: 980px; margin: 0 auto; padding: 18px; }
-    .card { background:#fff; border-radius:16px; padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .card { background:#fff; border-radius:16px; padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); border:1px solid rgba(236,236,244,.9); }
     .nav { background:#fff; border-bottom:1px solid #ececf4; }
     .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:700; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:800; letter-spacing:.2px; }
     .brand img { height:34px; width:auto; display:block; }
     .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
     .links a.active { background:#eef2ff; }
-    .btn { background:#0b5cff; border:none; color:#fff; padding:12px 14px; border-radius:12px; cursor:pointer; font-size:15px; }
+    .btn { background:#0b5cff; border:none; color:#fff; padding:12px 14px; border-radius:12px; cursor:pointer; font-size:15px; font-weight:800; display:inline-flex; align-items:center; gap:10px; }
     .btn:disabled { opacity:.6; cursor:not-allowed; }
     .btn.light { background:#e5e7eb; color:#111; }
-    .muted { color:#6b7280; font-size: 14px; }
-    .status { margin-top:10px; font-size:14px; }
+    .btn.ghost { background:transparent; color:#111; border:1px solid #d1d5db; }
+    .btn.danger { background:#111; }
+    .muted { color:#6b7280; font-size: 14px; line-height:1.6; }
+    .status { margin-top:10px; font-size:14px; line-height:1.5; }
     .status.good { color:#16a34a; }
     .status.bad { color:#dc2626; }
     .grid { display:grid; grid-template-columns: 1fr; gap: 14px; }
     @media (min-width: 860px) { .grid { grid-template-columns: 1.2fr .8fr; } }
-    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#111; }
+    .pill { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#111; border:1px solid #ececf4; }
     .hr { height:1px; background:#ececf4; margin:14px 0; }
+    .kpi { display:grid; grid-template-columns: 1fr; gap:10px; margin-top:12px; }
+    @media (min-width: 560px) { .kpi { grid-template-columns: 1fr 1fr; } }
+    .kpi .box { background:#fafafa; border:1px solid #ececf4; border-radius:14px; padding:12px; }
+    .kpi .label { font-size:12px; color:#6b7280; }
+    .kpi .value { font-weight:900; margin-top:4px; }
+    .callout { background:linear-gradient(135deg, rgba(11,92,255,.12), rgba(16,185,129,.10)); border:1px solid rgba(11,92,255,.18); border-radius:16px; padding:14px; }
+    .small { font-size:12px; color:#6b7280; line-height:1.55; }
+    .stack { display:flex; flex-direction:column; gap:10px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -56,91 +66,119 @@
   <main class="container">
     <div class="grid">
       <section class="card">
-        <h1 style="margin:0 0 6px;">Access</h1>
-        <p class="muted" style="margin:0 0 14px;">
-          Keep using Learnlio across devices and save progress to your account.
+        <h1 style="margin:0 0 6px;" id="pageTitle">Billing</h1>
+        <p class="muted" style="margin:0 0 14px;" id="pageSubtitle">
+          Manage your trial and subscription.
         </p>
 
         <div class="hr"></div>
 
-        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <div class="row">
           <span class="pill" id="statusPill">Checking…</span>
           <span class="muted" id="statusText"></span>
         </div>
 
-        <!-- Billing meta -->
-        <div id="billingMeta" style="margin-top:12px; display:none;">
-          <div class="hr"></div>
-
-          <div style="display:flex; gap:12px; flex-wrap:wrap;">
-            <div class="pill" id="nextPaymentPill" style="display:none;">
-              Next payment: <strong id="nextPaymentLabel">—</strong>
-            </div>
-
-            <div class="pill" id="cancelPill" style="display:none;">
-              Cancellation: <strong id="cancelLabel">—</strong>
-            </div>
+        <!-- KPI / Account summary -->
+        <div class="kpi" id="kpiWrap" style="display:none;">
+          <div class="box">
+            <div class="label">Plan</div>
+            <div class="value" id="planValue">—</div>
+          </div>
+          <div class="box">
+            <div class="label" id="nextPayLabel">Next payment due</div>
+            <div class="value" id="nextPayValue">—</div>
           </div>
         </div>
 
-        <div class="hr"></div>
+        <div class="hr" id="afterKpiHr" style="display:none;"></div>
 
-        <!-- Trial -->
-        <div id="trialSection">
+        <!-- Trial block -->
+        <div id="trialBlock" style="display:none;">
           <h2 style="margin:0 0 6px;">Trial</h2>
-          <p class="muted" style="margin:0 0 14px;">
+          <p class="muted" style="margin:0 0 12px;" id="trialCopy">
             Start your 7-day trial. No card required.
           </p>
-
-          <button id="startTrialBtn" class="btn" type="button">Start 7-day trial</button>
+          <div class="row">
+            <button id="startTrialBtn" class="btn" type="button">Start 7-day trial</button>
+          </div>
           <div id="trialMsg" class="status" aria-live="polite"></div>
-
           <div class="hr"></div>
         </div>
 
-        <!-- Paid -->
-        <h2 style="margin:0 0 6px;">Paid access</h2>
-        <p class="muted" id="paidText" style="margin:0 0 14px;">
-          When you’re ready, you can activate paid access in one tap.
-        </p>
+        <!-- Subscribe / Upgrade block (used for expired AND trialing AND none when you want it) -->
+        <div id="subscribeBlock" style="display:none;">
+          <h2 style="margin:0 0 6px;" id="subscribeTitle">Subscribe</h2>
+          <p class="muted" style="margin:0 0 12px;" id="subscribeCopy">
+            Continue for <b>£0.99/month</b>. Cancel anytime.
+          </p>
+          <div class="row">
+            <button id="paidBtn" class="btn" type="button">Activate £0.99/month</button>
+            <button id="manageBtnA" class="btn light" type="button">Manage billing</button>
+          </div>
+          <div id="paidMsg" class="status" aria-live="polite"></div>
+          <div id="manageMsgA" class="status" aria-live="polite"></div>
+          <div class="hr"></div>
+        </div>
 
-        <button id="paidBtn" class="btn" type="button" style="display:none;">Activate for £0.99/month</button>
-        <div id="paidMsg" class="status" aria-live="polite"></div>
+        <!-- Active subscription block -->
+        <div id="activeBlock" style="display:none;">
+          <h2 style="margin:0 0 6px;">Your subscription</h2>
+          <p class="muted" style="margin:0 0 12px;" id="activeCopy">
+            You’re subscribed. You can manage or cancel anytime.
+          </p>
 
-        <button id="manageBtn" class="btn light" type="button" style="margin-top:10px; display:none;">Manage access</button>
-        <div id="manageMsg" class="status" aria-live="polite"></div>
-      </section>
+          <div class="row">
+            <button id="manageBtnB" class="btn light" type="button">Manage billing</button>
+            <button id="cancelBtn" class="btn danger" type="button">Cancel subscription</button>
+          </div>
 
-      <aside class="card">
-        <h2 style="margin:0 0 6px;">What you get</h2>
-        <ul style="margin:0 0 14px; padding-left:18px;">
-          <li>Progress saved to your account</li>
-          <li>Multiple children on one parent login</li>
-          <li>Session reports for parents</li>
-          <li>Dyslexia-aware tutoring style</li>
-        </ul>
+          <div class="small" style="margin-top:10px;" id="cancelHint">
+            Cancelling takes effect in Stripe. If you cancel, you’ll keep access until the end of your paid period.
+          </div>
 
-        <div class="hr"></div>
+          <div id="manageMsgB" class="status" aria-live="polite"></div>
+          <div class="hr"></div>
+        </div>
 
-        <div id="debugWrap" style="display:none;">
-          <p class="muted" style="margin:0;">
+        <div class="callout">
+          <div style="font-weight:900; margin-bottom:6px;">No hassle policy</div>
+          <div class="muted">
+            If Learnlio isn’t right for your family, you can cancel in one tap in the billing portal.
+            No hoops. No awkward emails.
+          </div>
+        </div>
+
+        <div id="debugWrap" style="display:none; margin-top:14px;">
+          <div class="hr"></div>
+          <p class="muted" style="margin:0 0 8px;">
             Debug (only shows with <span class="pill">?debug=1</span>):
           </p>
           <div id="debugBox" class="status muted" style="white-space:pre-wrap;"></div>
         </div>
+      </section>
+
+      <aside class="card">
+        <h2 style="margin:0 0 8px;">What you get</h2>
+        <div class="stack">
+          <div class="pill">✅ Progress saved to your account</div>
+          <div class="pill">✅ Multiple children on one parent login</div>
+          <div class="pill">✅ Dyslexia-aware tutoring style</div>
+          <div class="pill">✅ Parent reports with “what to do next”</div>
+          <div class="pill">✅ Calm, child-led pacing (no pressure)</div>
+        </div>
+        <div class="hr"></div>
+        <p class="muted" style="margin:0;">
+          Built for confidence and clarity — especially for children who struggle with reading, spelling, or working memory.
+        </p>
       </aside>
     </div>
   </main>
 
   <script>
   (() => {
-    // =========================
-    // CONFIG (YOUR VALUES)
-    // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
     const BILLING_API_BASE = "https://learnlio-billing.falling-grass-34ab.workers.dev";
-    // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -149,26 +187,33 @@
     const statusPill = document.getElementById("statusPill");
     const statusText = document.getElementById("statusText");
 
-    const trialSection = document.getElementById("trialSection");
+    const kpiWrap = document.getElementById("kpiWrap");
+    const afterKpiHr = document.getElementById("afterKpiHr");
+    const planValue = document.getElementById("planValue");
+    const nextPayValue = document.getElementById("nextPayValue");
+    const nextPayLabel = document.getElementById("nextPayLabel");
+
+    const trialBlock = document.getElementById("trialBlock");
+    const trialCopy = document.getElementById("trialCopy");
     const startTrialBtn = document.getElementById("startTrialBtn");
     const trialMsg = document.getElementById("trialMsg");
 
-    const paidText = document.getElementById("paidText");
+    const subscribeBlock = document.getElementById("subscribeBlock");
+    const subscribeTitle = document.getElementById("subscribeTitle");
+    const subscribeCopy = document.getElementById("subscribeCopy");
     const paidBtn = document.getElementById("paidBtn");
+    const manageBtnA = document.getElementById("manageBtnA");
     const paidMsg = document.getElementById("paidMsg");
+    const manageMsgA = document.getElementById("manageMsgA");
 
-    const manageBtn = document.getElementById("manageBtn");
-    const manageMsg = document.getElementById("manageMsg");
+    const activeBlock = document.getElementById("activeBlock");
+    const manageBtnB = document.getElementById("manageBtnB");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const manageMsgB = document.getElementById("manageMsgB");
+    const cancelHint = document.getElementById("cancelHint");
 
     const debugWrap = document.getElementById("debugWrap");
     const debugBox = document.getElementById("debugBox");
-
-    // Billing meta
-    const billingMeta = document.getElementById("billingMeta");
-    const nextPaymentPill = document.getElementById("nextPaymentPill");
-    const nextPaymentLabel = document.getElementById("nextPaymentLabel");
-    const cancelPill = document.getElementById("cancelPill");
-    const cancelLabel = document.getElementById("cancelLabel");
 
     const pageUrl = new URL(window.location.href);
     const DEBUG = pageUrl.searchParams.get("debug") === "1";
@@ -267,98 +312,127 @@
       return `${dd}/${mm}/${yyyy}`;
     }
 
-    // Billing meta (next payment + cancellation)
-    function renderBillingMeta(me) {
-      // Worker returns: current_period_end, cancel_at_period_end, cancel_at
-      const nextIso = me?.current_period_end || null;
-      const cap = me?.cancel_at_period_end;
-      const cancelAtIso = me?.cancel_at || null;
-
-      // Reset
-      billingMeta.style.display = "none";
-      nextPaymentPill.style.display = "none";
-      cancelPill.style.display = "none";
-
-      // Next payment
-      if (nextIso) {
-        nextPaymentLabel.textContent = formatDateDDMMYYYY(nextIso);
-        nextPaymentPill.style.display = "inline-block";
-      }
-
-      // Cancellation
-      if (typeof cap === "boolean") {
-        cancelPill.style.display = "inline-block";
-
-        if (cap && cancelAtIso) {
-          cancelLabel.textContent = `Cancels on ${formatDateDDMMYYYY(cancelAtIso)}`;
-        } else if (cap) {
-          cancelLabel.textContent = "Scheduled to cancel";
-        } else {
-          cancelLabel.textContent = "Active (not scheduled to cancel)";
-        }
-      }
-
-      // Show wrapper only if at least one pill is visible
-      const showWrap = nextPaymentPill.style.display !== "none" || cancelPill.style.display !== "none";
-      billingMeta.style.display = showWrap ? "block" : "none";
+    function pickNextPaymentIso(me) {
+      return (
+        me?.current_period_end ||
+        me?.next_payment_due ||
+        me?.next_payment_due_at ||
+        me?.next_payment_at ||
+        me?.period_end ||
+        null
+      );
     }
 
     function resetUi() {
       setMsg(trialMsg, "");
       setMsg(paidMsg, "");
-      setMsg(manageMsg, "");
+      setMsg(manageMsgA, "");
+      setMsg(manageMsgB, "");
 
-      trialSection.style.display = "block";
-      startTrialBtn.style.display = "inline-block";
+      trialBlock.style.display = "none";
+      subscribeBlock.style.display = "none";
+      activeBlock.style.display = "none";
+
+      kpiWrap.style.display = "none";
+      afterKpiHr.style.display = "none";
+
       startTrialBtn.disabled = false;
-
-      paidBtn.style.display = "none";
       paidBtn.disabled = false;
+      manageBtnA.disabled = false;
+      manageBtnB.disabled = false;
+      cancelBtn.disabled = false;
 
-      manageBtn.style.display = "none";
-      manageBtn.disabled = false;
+      planValue.textContent = "—";
+      nextPayValue.textContent = "—";
+    }
 
-      paidText.textContent = "When you’re ready, you can activate paid access in one tap.";
+    function renderKpis(me) {
+      const plan = me?.plan || (me?.status === "trialing" ? "Trial" : null);
+      const nextIso = pickNextPaymentIso(me);
+
+      // Plan is useful to show for trialing/active; hide KPI if nothing meaningful
+      const showPlan = !!plan;
+      const showNext = !!nextIso && me?.status === "active"; // only show “Next payment” for active subs
+
+      if (!showPlan && !showNext) {
+        kpiWrap.style.display = "none";
+        afterKpiHr.style.display = "none";
+        return;
+      }
+
+      kpiWrap.style.display = "grid";
+      afterKpiHr.style.display = "block";
+
+      planValue.textContent = plan || "—";
+
+      if (showNext) {
+        nextPayLabel.textContent = "Next payment due";
+        nextPayValue.textContent = formatDateDDMMYYYY(nextIso);
+      } else {
+        nextPayLabel.textContent = "Next payment due";
+        nextPayValue.textContent = "—";
+      }
     }
 
     function applyUiForStatus(me) {
       resetUi();
 
       const status = me?.status || "none";
+      const trialEnds = me?.trial_ends_at ? formatDateDDMMYYYY(me.trial_ends_at) : null;
 
-      if (status === "trialing") {
-        setStatus("Trial active", me.trial_ends_at ? `Ends: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "");
-        startTrialBtn.disabled = true;
-        setMsg(trialMsg, "You’re all set. Enjoy the trial!", true);
+      renderKpis(me);
 
-        manageBtn.style.display = "inline-block";
-        manageBtn.textContent = "Manage access";
-        manageBtn.className = "btn light";
-      }
-      else if (status === "active") {
-        setStatus("Access active", me.plan ? `Plan: ${me.plan}` : "");
-        trialSection.style.display = "none";
-
-        manageBtn.style.display = "inline-block";
-        manageBtn.textContent = "Manage access";
-        manageBtn.className = "btn light";
-      }
-      else if (status === "expired") {
-        setStatus("Trial ended", me.trial_ends_at ? `Ended: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "");
-        trialSection.style.display = "none";
-
-        paidText.textContent = "Your trial has ended. You can activate paid access anytime.";
-        paidBtn.style.display = "inline-block";
-        paidBtn.textContent = "Activate for £0.99/month";
-
-        manageBtn.style.display = "inline-block";
-        manageBtn.textContent = "Manage access";
-        manageBtn.className = "btn light";
-      }
-      else {
+      if (status === "none") {
         setStatus("No trial yet", "");
-        paidBtn.style.display = "none";
-        manageBtn.style.display = "none";
+        trialBlock.style.display = "block";
+        trialCopy.textContent = "Start your 7-day trial. No card required.";
+        startTrialBtn.style.display = "inline-flex";
+      }
+
+      else if (status === "trialing") {
+        setStatus("Trial active", trialEnds ? `Ends: ${trialEnds}` : "");
+        trialBlock.style.display = "block";
+        trialCopy.innerHTML = trialEnds
+          ? `Your trial is active until <b>${trialEnds}</b>.`
+          : `Your trial is active.`;
+
+        // ✅ allow upgrade during trial
+        subscribeBlock.style.display = "block";
+        subscribeTitle.textContent = "Upgrade any time";
+        subscribeCopy.innerHTML = `Upgrade now for <b>£0.99/month</b>. You’ll keep access after the trial. Cancel anytime.`;
+        paidBtn.textContent = "Upgrade now (£0.99/month)";
+        manageBtnA.textContent = "Manage billing";
+
+        // show portal too (useful even during trial if Stripe customer exists later)
+      }
+
+      else if (status === "expired") {
+        setStatus("Trial ended", trialEnds ? `Ended: ${trialEnds}` : "");
+        subscribeBlock.style.display = "block";
+        subscribeTitle.textContent = "Subscribe";
+        subscribeCopy.innerHTML = `Continue for <b>£0.99/month</b>. Cancel anytime.`;
+        paidBtn.textContent = "Activate £0.99/month";
+        manageBtnA.textContent = "Manage billing";
+      }
+
+      else if (status === "active") {
+        setStatus("Access active", me?.plan ? `Plan: ${me.plan}` : "");
+        activeBlock.style.display = "block";
+
+        // If Stripe says cancel_at_period_end=true, tweak hint
+        const cap = me?.cancel_at_period_end;
+        if (typeof cap === "boolean" && cap) {
+          cancelHint.textContent = "Cancellation is already scheduled. You’ll keep access until the end of your paid period.";
+          cancelBtn.textContent = "View cancellation";
+        } else {
+          cancelHint.textContent = "Cancelling takes effect in Stripe. If you cancel, you’ll keep access until the end of your paid period.";
+          cancelBtn.textContent = "Cancel subscription";
+        }
+      }
+
+      else {
+        setStatus("Access", "");
+        trialBlock.style.display = "block";
       }
     }
 
@@ -368,10 +442,9 @@
       try {
         const me = await callApi("/me", { method: "GET" });
         applyUiForStatus(me);
-        renderBillingMeta(me);
       } catch (e) {
         setStatus("Error", "");
-        setMsg(trialMsg, String(e.message || e), false);
+        setMsg(paidMsg, String(e.message || e), false);
       }
     }
 
@@ -379,30 +452,25 @@
       const u = new URL(window.location.href);
       const success = u.searchParams.get("success");
       const sessionId = u.searchParams.get("session_id");
-
       if (success !== "1" || !sessionId) return;
 
-      setMsg(paidMsg, "Payment successful ✅ Unlocking access…", true);
-
+      setMsg(paidMsg, "Payment successful ✅ Updating access…", true);
       try {
         await callApi(`/checkout/success?session_id=${encodeURIComponent(sessionId)}`, { method: "GET" });
-
         u.searchParams.delete("session_id");
         u.searchParams.set("success", "1");
         window.history.replaceState({}, "", u.toString());
       } catch (e) {
-        setMsg(paidMsg, "Payment was successful, but we couldn’t unlock access yet. Please refresh the page.", false);
+        setMsg(paidMsg, "Payment was successful, but access didn’t update yet. Please refresh.", false);
         setDebug(String(e.message || e));
       }
     }
 
-    startTrialBtn.addEventListener("click", async (e) => {
+    startTrialBtn?.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
-
       setMsg(trialMsg, "");
       setDebug("");
-
       startTrialBtn.disabled = true;
 
       try {
@@ -416,13 +484,9 @@
       }
     });
 
-    paidBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
+    async function goCheckout() {
       setMsg(paidMsg, "");
       setDebug("");
-
       paidBtn.disabled = true;
 
       try {
@@ -444,33 +508,52 @@
         setMsg(paidMsg, String(err.message || err), false);
         paidBtn.disabled = false;
       }
-    });
+    }
 
-    manageBtn.addEventListener("click", async (e) => {
+    paidBtn?.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
+      await goCheckout();
+    });
 
-      setMsg(manageMsg, "");
+    async function goPortal(targetMsgEl) {
+      setMsg(targetMsgEl, "");
       setDebug("");
-
-      manageBtn.disabled = true;
-
       try {
-        const out = await callApi("/portal", {
-          method: "POST",
-          body: { return_url: window.location.href }
-        });
-
+        const out = await callApi("/portal", { method: "POST", body: { return_url: window.location.href } });
         if (out?.url) {
           window.location.href = out.url;
           return;
         }
-        setMsg(manageMsg, "No portal URL returned from billing API.", false);
+        setMsg(targetMsgEl, "No portal URL returned from billing API.", false);
       } catch (err) {
-        setMsg(manageMsg, String(err.message || err), false);
-      } finally {
-        manageBtn.disabled = false;
+        setMsg(targetMsgEl, String(err.message || err), false);
       }
+    }
+
+    manageBtnA?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      manageBtnA.disabled = true;
+      await goPortal(manageMsgA);
+      manageBtnA.disabled = false;
+    });
+
+    manageBtnB?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      manageBtnB.disabled = true;
+      await goPortal(manageMsgB);
+      manageBtnB.disabled = false;
+    });
+
+    cancelBtn?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      cancelBtn.disabled = true;
+      // Cancellation should happen in Stripe portal (best practice)
+      await goPortal(manageMsgB);
+      cancelBtn.disabled = false;
     });
 
     logoutBtn.addEventListener("click", async () => {
