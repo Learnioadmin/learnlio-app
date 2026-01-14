@@ -8,77 +8,152 @@
   <!-- App CSS -->
   <link rel="stylesheet" href="/assets/css/app.css" />
 
-  <!-- Minimal fallback styles -->
+  <!-- Polished fallback styles (keeps branding even if app.css breaks) -->
   <style>
     :root{
       --bg:#f7f7fb;
       --card:#ffffff;
-      --text:#111;
-      --muted:#6b7280;
-      --line:#ececf4;
+      --text:#0b1220;
+      --muted:#5b6475;
+      --line:#e8eaf2;
+
       --brand:#0b5cff;
+      --brand-2:#5b7cff;
+      --brand-soft:#eef3ff;
+
       --ok:#16a34a;
-      --bad:#dc2626;
       --warn:#b45309;
-      --shadow: 0 10px 30px rgba(0,0,0,.08);
-      --radius: 16px;
+      --bad:#dc2626;
+
+      --shadow: 0 12px 32px rgba(12, 18, 32, .08);
+      --radius: 18px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
+
+    *{ box-sizing:border-box; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:var(--bg); color:var(--text); }
-    .container { max-width: 980px; margin: 0 auto; padding: 18px; }
-    .card { background:var(--card); border-radius:var(--radius); padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
-    .nav { background:#fff; border-bottom:1px solid var(--line); }
-    .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:800; }
+    .container { max-width: 1020px; margin: 0 auto; padding: 18px; }
+
+    /* Top Nav */
+    .nav { background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:10; }
+    .nav-inner { max-width:1020px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); font-weight:900; letter-spacing:-.2px; }
     .brand img { height:34px; width:auto; display:block; }
     .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
-    .links a.active { background:#eef2ff; }
-    .btn { background:var(--brand); border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:800; }
-    .btn:disabled { opacity:.6; cursor:not-allowed; }
-    .btn.light { background:#e5e7eb; color:#111; }
-    .muted { color:var(--muted); font-size: 14px; }
-    .status { margin-top:10px; font-size:14px; }
-    .status.bad { color:var(--bad); }
-    .status.good { color:var(--ok); }
-    .status.warn { color:var(--warn); }
+    .links a { text-decoration:none; color:var(--text); padding:10px 12px; border-radius:12px; font-weight:800; }
+    .links a.active { background:var(--brand-soft); color:var(--brand); }
+
+    /* Buttons */
+    .btn {
+      background:linear-gradient(180deg, var(--brand), #0846d8);
+      border:none; color:#fff; padding:10px 12px; border-radius:14px;
+      cursor:pointer; font-size:14px; font-weight:900;
+      box-shadow: 0 10px 18px rgba(11,92,255,.18);
+    }
+    .btn:disabled { opacity:.6; cursor:not-allowed; box-shadow:none; }
+    .btn.light {
+      background:#eef2f7; color:var(--text);
+      box-shadow:none; border:1px solid #dde3ef;
+    }
+
+    /* Cards / layout */
+    .card {
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:16px;
+      box-shadow: var(--shadow);
+      border:1px solid rgba(232,234,242,.8);
+    }
+    .box { box-shadow:none; border:1px solid var(--line); }
+    .muted { color:var(--muted); font-size: 14px; line-height:1.6; }
+    .small { font-size:13px; }
+    .hr { height:1px; background:var(--line); margin:14px 0; }
 
     .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
-    @media(min-width: 900px){ .grid { grid-template-columns: 1fr 1fr; } }
-
-    .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; font-weight:800; color:#111; }
-    .pill.soft { background:#f3f4f6; font-weight:700; }
-    .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid #f1f1f6; }
-    .row:last-child { border-bottom:none; }
-    .k { color:var(--muted); font-size:13px; }
-    .v { font-weight:750; text-align:right; }
+    @media(min-width: 980px){ .grid { grid-template-columns: 1fr 1fr; } }
 
     .top-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+
+    /* Page header */
+    .hero {
+      background: radial-gradient(1200px 420px at 20% -10%, rgba(11,92,255,.22), transparent 55%),
+                  radial-gradient(900px 420px at 90% -10%, rgba(124,58,237,.16), transparent 52%),
+                  #fff;
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: calc(var(--radius) + 2px);
+    }
+    .hero-title { margin:0; font-size:22px; letter-spacing:-.4px; }
+    .strap {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      background:rgba(11,92,255,.08);
+      border:1px solid rgba(11,92,255,.16);
+      color:var(--brand);
+      font-weight:900;
+      font-size:12px;
+    }
+    .strap svg{ width:16px; height:16px; }
+
+    /* Pills / tags */
+    .pill {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      background:var(--brand-soft);
+      border:1px solid rgba(11,92,255,.14);
+      font-size:12px; font-weight:900; color:var(--brand);
+    }
+    .pill.soft { background:#f3f5fb; border-color:#e6eaf6; color:var(--text); font-weight:800; }
+    .pill.ok { background:#ecfdf5; border-color:#a7f3d0; color:var(--ok); }
+    .pill.warn { background:#fffbeb; border-color:#fde68a; color:var(--warn); }
+    .pill.bad { background:#fef2f2; border-color:#fecaca; color:var(--bad); }
+
+    /* Status text */
+    .status { margin-top:10px; font-size:14px; }
+    .status.bad { color:var(--bad); font-weight:800; }
+    .status.good { color:var(--ok); font-weight:800; }
+    .status.warn { color:var(--warn); font-weight:800; }
+
+    /* Key-value rows */
+    .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid #f1f2f7; }
+    .row:last-child { border-bottom:none; }
+    .k { color:var(--muted); font-size:13px; }
+    .v { font-weight:900; text-align:right; }
+
+    /* Select */
     .select {
-      border:1px solid #e5e7eb; border-radius:12px; padding:10px 12px; background:#fff;
-      font-size:14px; color:#111; cursor:pointer;
+      border:1px solid #dde3ef; border-radius:14px; padding:10px 12px; background:#fff;
+      font-size:14px; color:var(--text); cursor:pointer; font-weight:800;
+      box-shadow: 0 8px 16px rgba(12,18,32,.06);
     }
     .select-wrap { display:none; gap:8px; align-items:center; }
-    .label { font-size:13px; color:var(--muted); }
+    .label { font-size:13px; color:var(--muted); font-weight:800; }
 
-    .box { box-shadow:none; border:1px solid var(--line); }
-    .hr { height:1px; background:var(--line); margin:14px 0; }
-    .subtle { background:#fafafa; border:1px solid #eef2f7; border-radius:14px; padding:12px; }
-    .small { font-size:13px; }
+    /* Weekly toggle */
     .toggle {
       display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px;
-      border-radius:14px; border:1px solid #eef2f7; background:#fafafa;
+      border-radius:16px; border:1px solid #eef2f7; background:#fbfcff;
     }
     .switch {
-      position:relative; width:52px; height:30px; background:#e5e7eb; border-radius:999px; cursor:pointer; flex:0 0 auto;
-      border:1px solid #d1d5db;
+      position:relative; width:54px; height:32px; background:#e8ecf6; border-radius:999px; cursor:pointer; flex:0 0 auto;
+      border:1px solid #d5dbec;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
     }
     .switch::after{
-      content:""; position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:999px; background:#fff;
+      content:""; position:absolute; top:3px; left:3px; width:26px; height:26px; border-radius:999px; background:#fff;
       transition: all .15s ease;
-      box-shadow: 0 6px 14px rgba(0,0,0,.12);
+      box-shadow: 0 10px 18px rgba(12,18,32,.16);
     }
-    .switch.on{ background:#dbeafe; border-color:#bfdbfe; }
-    .switch.on::after{ left:25px; background:var(--brand); }
+    .switch.on{
+      background: rgba(11,92,255,.25);
+      border-color: rgba(11,92,255,.35);
+    }
+    .switch.on::after{
+      left:25px;
+      background: linear-gradient(180deg, var(--brand), #0846d8);
+    }
 
     /* Skills table */
     .skills {
@@ -87,34 +162,78 @@
       border-spacing:0;
       overflow:hidden;
       border:1px solid var(--line);
-      border-radius:14px;
+      border-radius:16px;
       background:#fff;
     }
     .skills th, .skills td{
-      padding:10px 12px;
+      padding:12px 12px;
       font-size:13px;
-      border-bottom:1px solid #f1f1f6;
+      border-bottom:1px solid #f1f2f7;
       vertical-align:middle;
       text-align:left;
       font-variant-numeric: tabular-nums;
     }
     .skills th{
-      background:#fafafa;
+      background: linear-gradient(180deg, #fbfcff, #f5f7ff);
       color:var(--muted);
-      font-weight:800;
+      font-weight:900;
+      letter-spacing:.2px;
     }
     .skills tr:last-child td{ border-bottom:none; }
     .skills td.num, .skills th.num{
       text-align:center;
-      width:90px;
+      width:96px;
     }
+
     .tag {
-      display:inline-flex; align-items:center; padding:5px 10px; border-radius:999px;
-      background:#f3f4f6; border:1px solid #e5e7eb; font-size:12px; font-weight:800;
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      background:#f3f5fb; border:1px solid #e6eaf6;
+      font-size:12px; font-weight:900;
+      white-space:nowrap;
     }
-    .tag.good { background:#ecfdf5; border-color:#a7f3d0; }
-    .tag.warn { background:#fffbeb; border-color:#fde68a; }
-    .tag.bad  { background:#fef2f2; border-color:#fecaca; }
+    .tag.good { background:#ecfdf5; border-color:#a7f3d0; color:var(--ok); }
+    .tag.warn { background:#fffbeb; border-color:#fde68a; color:var(--warn); }
+    .tag.bad  { background:#fef2f2; border-color:#fecaca; color:var(--bad); }
+
+    /* Next steps blocks */
+    .callout {
+      border-radius:16px;
+      padding:12px;
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #fbfcff);
+    }
+    .callout h3 { margin:0 0 8px; font-size:14px; letter-spacing:-.2px; }
+    .bullets { margin:0; padding-left:18px; }
+    .bullets li{ margin: 6px 0; line-height:1.55; }
+
+    .hint-box{
+      background: radial-gradient(600px 240px at 0% 0%, rgba(11,92,255,.10), transparent 65%),
+                  #fbfcff;
+      border:1px solid rgba(11,92,255,.16);
+    }
+
+    /* Weekly list item */
+    .weekly-item{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+    }
+
+    /* Empty dashed box */
+    .dashed { border-style:dashed !important; background:#fff; }
+
+    /* Small code-like text */
+    .mono { font-family: var(--mono); font-size:12px; color:var(--muted); }
+
+    /* Print niceties */
+    @media print{
+      .nav, .top-actions, #downloadBtn, #refreshBtn { display:none !important; }
+      body{ background:#fff; }
+      .card{ box-shadow:none; }
+      .hero{ box-shadow:none; }
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -139,10 +258,17 @@
   </header>
 
   <main class="container">
-    <div class="card">
+    <div class="card hero">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
         <div>
-          <h1 style="margin:0 0 6px;">Reports</h1>
+          <div class="strap" aria-label="strapline">
+            <!-- simple sparkle icon -->
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2l1.4 6.2L20 10l-6.6 1.8L12 18l-1.4-6.2L4 10l6.6-1.8L12 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+            Calm, dyslexia-aware learning — with clear parent insight
+          </div>
+          <h1 class="hero-title" style="margin-top:10px;">Reports</h1>
           <div id="childHeader" class="muted">Loading child…</div>
         </div>
 
@@ -161,92 +287,111 @@
       <div id="pageError" class="status bad" style="display:none;"></div>
       <div id="pageOk" class="status good" style="display:none;"></div>
 
-      <!-- Weekly reports toggle -->
-      <section class="card box" style="margin-top:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-          <div>
-            <h2 style="margin:0 0 6px; font-size:16px;">Weekly summary</h2>
-            <div class="muted">Store a weekly summary here. (Email delivery can be added later.)</div>
-          </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span id="weeklyState" class="pill soft">Checking…</span>
-            <div id="weeklySwitch" class="switch" role="switch" aria-checked="false" tabindex="0" title="Toggle weekly summary"></div>
-          </div>
+      <!-- Quick summary strip -->
+      <div id="quickStrip" style="display:none; margin-top:14px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <span id="pillMaths" class="pill soft">Maths: —</span>
+          <span id="pillEnglish" class="pill soft">English: —</span>
+          <span id="pillStreak" class="pill soft">Streak: —</span>
+          <span id="pillFocus" class="pill soft">Focus: —</span>
         </div>
-        <div id="weeklyMsg" class="status" aria-live="polite"></div>
+      </div>
+    </div>
 
-        <div class="hr"></div>
-
-        <div id="weeklyList" class="subtle">
-          <div class="muted">Loading…</div>
+    <!-- Weekly reports toggle -->
+    <section class="card box" style="margin-top:14px;">
+      <div class="toggle">
+        <div>
+          <h2 style="margin:0 0 6px; font-size:16px;">Weekly summary</h2>
+          <div class="muted">Save a weekly snapshot here. (Email delivery can be added later.)</div>
         </div>
-      </section>
-
-      <div class="grid" style="margin-top:14px;">
-        <!-- Overall -->
-        <section class="card box">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2 style="margin:0; font-size:16px;">Overall progress</h2>
-            <span class="pill">Summary</span>
-          </div>
-          <div id="overallBox" style="margin-top:10px;">
-            <div class="muted">Loading…</div>
-          </div>
-        </section>
-
-        <!-- Tutor signals -->
-        <section class="card box">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2 style="margin:0; font-size:16px;">Tutor signals</h2>
-            <span class="pill">Recent learning</span>
-          </div>
-          <div id="signalsBox" style="margin-top:10px;">
-            <div class="muted">Loading…</div>
-          </div>
-        </section>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span id="weeklyState" class="pill soft">Checking…</span>
+          <div id="weeklySwitch" class="switch" role="switch" aria-checked="false" tabindex="0" title="Toggle weekly summary"></div>
+        </div>
       </div>
 
-      <!-- Skills -->
-      <section class="card box" style="margin-top:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-          <div>
-            <h2 style="margin:0; font-size:16px;">Skills</h2>
-            <div class="muted">A simple view of practice by subject and area.</div>
-          </div>
-          <span class="pill">From Tutor sessions</span>
-        </div>
+      <div id="weeklyMsg" class="status" aria-live="polite"></div>
 
-        <div id="skillsBox" style="margin-top:10px;">
+      <div class="hr"></div>
+
+      <div id="weeklyList" class="callout hint-box">
+        <div class="muted">Loading…</div>
+      </div>
+    </section>
+
+    <div class="grid" style="margin-top:14px;">
+      <!-- Overall -->
+      <section class="card box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0; font-size:16px;">Overall progress</h2>
+          <span class="pill">Summary</span>
+        </div>
+        <div id="overallBox" style="margin-top:10px;">
           <div class="muted">Loading…</div>
         </div>
       </section>
 
-      <!-- What to do next -->
-      <section class="card box" style="margin-top:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-          <div>
-            <h2 style="margin:0; font-size:16px;">What to do next</h2>
-            <div class="muted">Based on the last few sessions.</div>
-          </div>
-          <span class="pill">Next steps</span>
+      <!-- Tutor signals -->
+      <section class="card box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0; font-size:16px;">Tutor signals</h2>
+          <span class="pill">Recent learning</span>
         </div>
-
-        <div id="nextBox" style="margin-top:10px;">
+        <div class="muted small" style="margin-top:6px;">
+          A quick view of what the Tutor has worked on most recently.
+        </div>
+        <div id="signalsBox" style="margin-top:10px;">
           <div class="muted">Loading…</div>
         </div>
       </section>
+    </div>
 
-      <section id="noDataBox" class="card box" style="margin-top:14px; border-style:dashed; display:none;">
-        <h2 style="margin:0 0 8px; font-size:16px;">No tutor data yet</h2>
-        <div class="muted" style="line-height:1.6;">
-          I can’t see any saved Tutor sessions for this child yet.<br>
-          Do a short Tutor session, then come back and press <b>Refresh</b>.
+    <!-- Skills -->
+    <section class="card box" style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h2 style="margin:0; font-size:16px;">Skills</h2>
+          <div class="muted">Attempts + accuracy per subject and area (from Tutor sessions).</div>
         </div>
-        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-          <a class="btn" href="/chat.html" style="text-decoration:none; display:inline-block;">Go to Tutor</a>
-          <a class="btn light" href="/dash.html" style="text-decoration:none; display:inline-block;">Go to Dashboard</a>
+        <span class="pill">Skills</span>
+      </div>
+
+      <div id="skillsBox" style="margin-top:10px;">
+        <div class="muted">Loading…</div>
+      </div>
+    </section>
+
+    <!-- What to do next -->
+    <section class="card box" style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h2 style="margin:0; font-size:16px;">What to do next</h2>
+          <div class="muted">Clear next steps based on the last few sessions.</div>
         </div>
-      </section>
+        <span class="pill">Next steps</span>
+      </div>
+
+      <div id="nextBox" style="margin-top:10px;">
+        <div class="muted">Loading…</div>
+      </div>
+    </section>
+
+    <section id="noDataBox" class="card box dashed" style="margin-top:14px; display:none;">
+      <h2 style="margin:0 0 8px; font-size:16px;">No tutor data yet</h2>
+      <div class="muted" style="line-height:1.6;">
+        I can’t see any saved Tutor sessions for this child yet.<br>
+        Do a short Tutor session, then come back and press <b>Refresh</b>.
+      </div>
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn" href="/chat.html" style="text-decoration:none; display:inline-block;">Go to Tutor</a>
+        <a class="btn light" href="/dash.html" style="text-decoration:none; display:inline-block;">Go to Dashboard</a>
+      </div>
+    </section>
+
+    <!-- Tiny footer note (professional) -->
+    <div class="muted small" style="margin-top:14px; text-align:center;">
+      Learnlio helps children learn calmly and confidently — and keeps parents informed with simple, clear insight.
     </div>
   </main>
 
@@ -268,6 +413,12 @@
     const pageError = document.getElementById("pageError");
     const pageOk = document.getElementById("pageOk");
     const childHeader = document.getElementById("childHeader");
+
+    const quickStrip = document.getElementById("quickStrip");
+    const pillMaths = document.getElementById("pillMaths");
+    const pillEnglish = document.getElementById("pillEnglish");
+    const pillStreak = document.getElementById("pillStreak");
+    const pillFocus = document.getElementById("pillFocus");
 
     const overallBox = document.getElementById("overallBox");
     const signalsBox = document.getElementById("signalsBox");
@@ -342,6 +493,12 @@
       return t;
     }
 
+    function escapeHtml(str){
+      return String(str ?? "").replace(/[&<>"']/g, s => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[s]));
+    }
+
     function confidenceTag(attempts, accuracy){
       // accuracy: 0..1
       if (!attempts || attempts < 3) return { label:"Getting started", cls:"warn" };
@@ -369,7 +526,6 @@
     }
 
     function setSelectedChild(id, name){
-      // keep existing shape flexible
       localStorage.setItem("selectedChild", JSON.stringify({ id, child_name: name }));
     }
 
@@ -529,7 +685,6 @@
     async function loadWeeklyReports(){
       weeklyList.innerHTML = `<div class="muted">Loading…</div>`;
 
-      // We expect weekly_reports: parent_user_id, child_id, week_start, summary(jsonb), created_at
       const { data, error } = await sb
         .from("weekly_reports")
         .select("id, week_start, created_at, summary")
@@ -562,10 +717,7 @@
 
       lastWeekly.forEach(r => {
         const box = document.createElement("div");
-        box.style.background = "#fff";
-        box.style.border = "1px solid var(--line)";
-        box.style.borderRadius = "14px";
-        box.style.padding = "12px";
+        box.className = "weekly-item";
 
         const week = r.week_start ? formatDateOnly(r.week_start) : "—";
         const created = r.created_at ? formatDateOnly(r.created_at) : "—";
@@ -577,7 +729,7 @@
 
         box.innerHTML = `
           <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div style="font-weight:900;">${escapeHtml(String(headline))}</div>
+            <div style="font-weight:950; letter-spacing:-.2px;">${escapeHtml(String(headline))}</div>
             <span class="pill soft">Week starting: ${week}</span>
           </div>
           <div class="muted small" style="margin-top:6px;">Stored: ${created}</div>
@@ -590,12 +742,6 @@
 
       weeklyList.innerHTML = "";
       weeklyList.appendChild(wrap);
-    }
-
-    function escapeHtml(str){
-      return String(str ?? "").replace(/[&<>"']/g, s => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-      }[s]));
     }
 
     // -------------------------
@@ -614,7 +760,6 @@
       if (overallErr) console.error("progress read error", overallErr);
       lastOverall = overall || null;
 
-      // We now have many rows in child_progress (per subject+area), so we fetch the most recent few:
       const { data: signals, error: signalsErr } = await sb
         .from("child_progress")
         .select("subject, area, difficulty, streak_correct, streak_wrong, last_seen_at")
@@ -629,6 +774,7 @@
       // Render overall
       if (!lastOverall) {
         overallBox.innerHTML = `<div class="muted">No overall progress saved yet.</div>`;
+        quickStrip.style.display = "none";
       } else {
         renderRows(overallBox, [
           { k: "Maths level",   v: safe(lastOverall.maths_level) },
@@ -636,6 +782,12 @@
           { k: "Streak",        v: safe(lastOverall.streak) },
           { k: "Last updated",  v: formatDateOnly(lastOverall.updated_at) }
         ]);
+
+        // quick strip
+        quickStrip.style.display = "block";
+        pillMaths.textContent = `Maths: ${safe(lastOverall.maths_level)}`;
+        pillEnglish.textContent = `English: ${safe(lastOverall.english_level)}`;
+        pillStreak.textContent = `Streak: ${safe(lastOverall.streak)}`;
       }
 
       // Render tutor signals (mixed)
@@ -648,7 +800,13 @@
           const ar = prettyArea(s.area);
           const diff = safe(s.difficulty);
           const when = formatDateOnly(s.last_seen_at);
-          rows.push({ k: `${subj} • ${ar}`, v: `Difficulty ${diff} • Seen ${when}` });
+
+          // Human-friendly signal sentence
+          const sc = Number(s.streak_correct || 0);
+          const sw = Number(s.streak_wrong || 0);
+          const signal = (sc >= 2) ? "Doing well" : (sw >= 2) ? "Needs support" : "In progress";
+
+          rows.push({ k: `${subj} • ${ar}`, v: `${signal} • Difficulty ${diff} • ${when}` });
         });
         renderRows(signalsBox, rows);
       }
@@ -658,15 +816,13 @@
       skillsBox.innerHTML = `<div class="muted">Loading…</div>`;
       lastSkills = null;
 
-      // sessions table: id, parent_user_id, child_id, subject, area, questions_done, correct_count, created_at
-      // We'll use sessions because it’s stable and avoids raw "session_items" wording.
       const { data: sess, error } = await sb
         .from("sessions")
         .select("subject, area, questions_done, correct_count, created_at")
         .eq("parent_user_id", currentUser.id)
         .eq("child_id", child.id)
         .order("created_at", { ascending:false })
-        .limit(50);
+        .limit(80);
 
       if (error) {
         console.error("sessions read error", error);
@@ -699,11 +855,15 @@
         obj.correct += correct;
       });
 
-      // Prepare table
       const items = Array.from(map.values())
         .sort((a,b) => (b.questions - a.questions) || (b.attempts - a.attempts));
 
       lastSkills = items;
+
+      // pick a reasonable focus for quick strip
+      const focus = pickFocusSkill(items);
+      if (focus) pillFocus.textContent = `Focus: ${focus.subject} — ${focus.area}`;
+      else pillFocus.textContent = `Focus: —`;
 
       const table = document.createElement("table");
       table.className = "skills";
@@ -725,6 +885,7 @@
         const accuracy = it.questions > 0 ? (it.correct / it.questions) : null;
         const accPct = (accuracy === null) ? "—" : (Math.round(accuracy * 100) + "%");
         const conf = confidenceTag(it.attempts, accuracy ?? 0);
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><b>${escapeHtml(it.subject)}</b> — ${escapeHtml(it.area)}</td>
@@ -739,14 +900,22 @@
       skillsBox.appendChild(table);
     }
 
-    function buildNextSteps(){
-      // Uses skills + signals to produce plain English
-      const steps = [];
-      const highlights = [];
-      const support = [];
+    function pickFocusSkill(items){
+      // Focus = enough questions + lowish accuracy, else null
+      const scored = (items || []).map(s => {
+        const accuracy = s.questions > 0 ? (s.correct / s.questions) : null;
+        return { ...s, accuracy };
+      }).filter(s => s.accuracy !== null);
 
+      const enough = scored.filter(s => s.questions >= 6);
+      if (!enough.length) return null;
+
+      // choose worst accuracy but also practiced
+      return enough.sort((a,b) => (a.accuracy - b.accuracy) || (b.questions - a.questions))[0] || null;
+    }
+
+    function buildNextSteps(){
       const skills = lastSkills || [];
-      // identify best and weakest by accuracy (with enough questions)
       const scored = skills
         .map(s => {
           const accuracy = s.questions > 0 ? (s.correct / s.questions) : null;
@@ -754,28 +923,35 @@
         })
         .filter(s => s.accuracy !== null);
 
-      const enough = scored.filter(s => s.questions >= 6); // avoid noisy
-      const best = enough.sort((a,b) => b.accuracy - a.accuracy)[0];
-      const worst = enough.sort((a,b) => a.accuracy - b.accuracy)[0];
+      const enough = scored.filter(s => s.questions >= 6); // reduce noise
+      const best = enough.slice().sort((a,b) => b.accuracy - a.accuracy)[0];
+      const worst = enough.slice().sort((a,b) => a.accuracy - b.accuracy)[0];
+
+      const doingWell = [];
+      const needsSupport = [];
+      const steps = [];
 
       if (best && best.accuracy >= 0.8) {
-        highlights.push(`${best.subject} — ${best.area} looks strong right now.`);
+        doingWell.push(`${best.subject} — ${best.area} is looking strong.`);
       }
       if (worst && worst.accuracy < 0.6) {
-        support.push(`${worst.subject} — ${worst.area} needs a bit more practice.`);
+        needsSupport.push(`${worst.subject} — ${worst.area} needs a little more practice.`);
       }
 
-      // Always provide clear “do this” actions
-      if (support.length) {
-        steps.push(`Do 5 minutes on <b>${escapeHtml(worst.subject)} — ${escapeHtml(worst.area)}</b> with easy questions first.`);
-        steps.push(`If your child gets stuck, encourage one small step at a time (no rushing).`);
-      } else if (highlights.length) {
+      // Always: concrete steps
+      if (needsSupport.length) {
+        steps.push(`Do <b>5 minutes</b> on <b>${escapeHtml(worst.subject)} — ${escapeHtml(worst.area)}</b> using easy questions first.`);
+        steps.push(`If your child gets stuck: encourage <b>one small step</b> at a time (no rushing).`);
+        steps.push(`Finish with <b>one easy win</b> so they end confident.`);
+      } else if (doingWell.length) {
         steps.push(`Keep momentum with <b>${escapeHtml(best.subject)} — ${escapeHtml(best.area)}</b> for 5 minutes, then try one new area.`);
+        steps.push(`Aim for short sessions (5–10 minutes) more often, instead of long sessions.`);
       } else {
         steps.push(`Do a short Tutor session (5–10 minutes). Focus on one area only.`);
+        steps.push(`After the session, come back here and press <b>Refresh</b>.`);
       }
 
-      // Recent mix suggestion based on signals
+      // Balance suggestion based on recent signals
       if (lastSignals && lastSignals.length >= 2) {
         const recentSubjects = Array.from(new Set(lastSignals.map(s => prettySubject(s.subject))));
         if (recentSubjects.length === 1) {
@@ -784,18 +960,43 @@
         }
       }
 
-      // Render
-      const box = document.createElement("div");
-      box.className = "subtle";
-      box.innerHTML = `
-        ${highlights.length ? `<div style="margin-bottom:8px;"><b>Doing well:</b><br>${highlights.map(h => "• " + escapeHtml(h)).join("<br>")}</div>` : ``}
-        ${support.length ? `<div style="margin-bottom:8px;"><b>Needs support:</b><br>${support.map(s => "• " + escapeHtml(s)).join("<br>")}</div>` : ``}
-        <div><b>Next steps:</b><br>${steps.map(s => "• " + s).join("<br>")}</div>
-      `;
-      nextBox.innerHTML = "";
-      nextBox.appendChild(box);
+      // Render professionally with clear sections
+      const wrap = document.createElement("div");
+      wrap.style.display = "grid";
+      wrap.style.gap = "10px";
 
-      lastNext = { highlights, support, steps };
+      if (doingWell.length) {
+        const box = document.createElement("div");
+        box.className = "callout";
+        box.innerHTML = `
+          <h3>Doing well ✅</h3>
+          <ul class="bullets">${doingWell.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+        `;
+        wrap.appendChild(box);
+      }
+
+      if (needsSupport.length) {
+        const box = document.createElement("div");
+        box.className = "callout";
+        box.innerHTML = `
+          <h3>Needs support 💛</h3>
+          <ul class="bullets">${needsSupport.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+        `;
+        wrap.appendChild(box);
+      }
+
+      const boxSteps = document.createElement("div");
+      boxSteps.className = "callout hint-box";
+      boxSteps.innerHTML = `
+        <h3>Next steps 🎯</h3>
+        <ul class="bullets">${steps.map(s => `<li>${s}</li>`).join("")}</ul>
+      `;
+      wrap.appendChild(boxSteps);
+
+      nextBox.innerHTML = "";
+      nextBox.appendChild(wrap);
+
+      lastNext = { doingWell, needsSupport, steps };
     }
 
     async function loadEverything(){
@@ -815,18 +1016,15 @@
       await loadWeeklySetting();
       await loadWeeklyReports();
 
-      // No tutor data guard
       const hasTutorData = (lastSkills && lastSkills.length) || (lastSignals && lastSignals.length);
       noDataBox.style.display = hasTutorData ? "none" : "block";
 
-      // Next steps
       buildNextSteps();
-
       showOk("Reports refreshed");
     }
 
     // -------------------------
-    // PDF
+    // PDF (professional styling + branding strapline)
     // -------------------------
     function pdfWriteLine(doc, text, x, y, maxWidth){
       const lines = doc.splitTextToSize(String(text), maxWidth);
@@ -834,75 +1032,104 @@
       return y + (lines.length * 6);
     }
 
+    function drawBadge(doc, text, x, y){
+      // simple pill badge in PDF
+      doc.setFillColor(238, 243, 255);
+      doc.roundedRect(x, y-6, doc.getTextWidth(text) + 10, 8, 3, 3, "F");
+      doc.setTextColor(11, 92, 255);
+      doc.setFont(undefined, "bold");
+      doc.text(text, x+5, y);
+      doc.setTextColor(20, 20, 24);
+      doc.setFont(undefined, "normal");
+    }
+
     function downloadPDF(){
       try {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
+
+        const pageW = doc.internal.pageSize.getWidth();
         let y = 14;
 
-        doc.setFontSize(18);
-        doc.text("Learnlio Report", 14, y); y += 10;
+        // Header
+        doc.setFillColor(11, 92, 255);
+        doc.rect(0, 0, pageW, 18, "F");
 
+        doc.setTextColor(255,255,255);
+        doc.setFontSize(16);
+        doc.setFont(undefined, "bold");
+        doc.text("Learnlio — Parent Report", 14, 12);
+
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+        doc.text("Calm, dyslexia-aware learning — with clear parent insight", 14, 16);
+
+        doc.setTextColor(20,20,24);
+        y = 28;
+
+        // Child + date
         doc.setFontSize(12);
-        y = pdfWriteLine(doc, `Child: ${safe(child?.child_name)}`, 14, y, 180); y += 2;
-        y = pdfWriteLine(doc, `DOB: ${safe(child?.child_dob ? formatDateOnly(child.child_dob) : "—")}`, 14, y, 180); y += 2;
-        y = pdfWriteLine(doc, `Generated: ${formatDateOnly(new Date())}`, 14, y, 180); y += 6;
+        doc.setFont(undefined, "bold");
+        doc.text(`Child: ${safe(child?.child_name)}`, 14, y); y += 7;
 
-        doc.setFontSize(14);
-        doc.text("Overall progress", 14, y); y += 8;
-        doc.setFontSize(12);
+        doc.setFont(undefined, "normal");
+        doc.text(`DOB: ${safe(child?.child_dob ? formatDateOnly(child.child_dob) : "—")}`, 14, y); y += 7;
+        doc.text(`Generated: ${formatDateOnly(new Date())}`, 14, y); y += 10;
 
-        if (!lastOverall) {
-          y = pdfWriteLine(doc, "No overall progress data yet.", 14, y, 180); y += 6;
-        } else {
-          y = pdfWriteLine(doc, `Maths level: ${safe(lastOverall.maths_level)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `English level: ${safe(lastOverall.english_level)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Streak: ${safe(lastOverall.streak)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Last updated: ${formatDateOnly(lastOverall.updated_at)}`, 14, y, 180); y += 6;
-        }
+        // Quick badges
+        const m = safe(lastOverall?.maths_level);
+        const e = safe(lastOverall?.english_level);
+        const s = safe(lastOverall?.streak);
+        drawBadge(doc, `Maths: ${m}`, 14, y);
+        drawBadge(doc, `English: ${e}`, 55, y);
+        drawBadge(doc, `Streak: ${s}`, 104, y);
+        y += 14;
 
-        doc.setFontSize(14);
-        doc.text("Tutor signals", 14, y); y += 8;
-        doc.setFontSize(12);
-
-        if (!lastSignals || !lastSignals.length) {
-          y = pdfWriteLine(doc, "No tutor signals yet.", 14, y, 180); y += 6;
-        } else {
-          lastSignals.slice(0,6).forEach(s => {
-            const line = `${prettySubject(s.subject)} — ${prettyArea(s.area)} (difficulty ${safe(s.difficulty)})`;
-            y = pdfWriteLine(doc, line, 14, y, 180); y += 2;
-          });
-          y += 4;
-        }
-
-        doc.setFontSize(14);
+        // Section: Skills (top 8)
+        doc.setFont(undefined, "bold");
+        doc.setFontSize(13);
         doc.text("Skills", 14, y); y += 8;
-        doc.setFontSize(12);
+        doc.setFont(undefined, "normal");
+        doc.setFontSize(11);
 
         if (!lastSkills || !lastSkills.length) {
-          y = pdfWriteLine(doc, "No skill data yet.", 14, y, 180); y += 6;
+          doc.text("No skill data yet.", 14, y); y += 10;
         } else {
-          lastSkills.slice(0,10).forEach(s => {
-            const acc = s.questions ? Math.round((s.correct / s.questions) * 100) + "%" : "—";
-            const line = `${s.subject} — ${s.area}: attempts ${s.attempts}, accuracy ${acc}`;
-            y = pdfWriteLine(doc, line, 14, y, 180); y += 2;
+          const top = lastSkills.slice(0, 8);
+          top.forEach((it) => {
+            const acc = it.questions ? Math.round((it.correct / it.questions) * 100) + "%" : "—";
+            const line = `${it.subject} — ${it.area} | Attempts: ${it.attempts} | Accuracy: ${acc}`;
+            y = pdfWriteLine(doc, line, 14, y, 180);
+            y += 2;
+            if (y > 270) { doc.addPage(); y = 16; }
           });
-          y += 4;
+          y += 6;
         }
 
-        doc.setFontSize(14);
+        // Section: What to do next
+        doc.setFont(undefined, "bold");
+        doc.setFontSize(13);
         doc.text("What to do next", 14, y); y += 8;
-        doc.setFontSize(12);
+        doc.setFont(undefined, "normal");
+        doc.setFontSize(11);
 
         const steps = lastNext?.steps || [];
         if (!steps.length) {
-          y = pdfWriteLine(doc, "No next steps yet.", 14, y, 180); y += 6;
+          doc.text("No next steps yet.", 14, y); y += 8;
         } else {
-          steps.slice(0,8).forEach(s => {
-            y = pdfWriteLine(doc, "- " + String(s).replace(/<[^>]+>/g, ""), 14, y, 180); y += 1;
+          steps.slice(0, 8).forEach((s) => {
+            const plain = String(s).replace(/<[^>]+>/g, "");
+            y = pdfWriteLine(doc, "• " + plain, 14, y, 180);
+            y += 1;
+            if (y > 270) { doc.addPage(); y = 16; }
           });
           y += 4;
         }
+
+        // Footer
+        doc.setFontSize(9);
+        doc.setTextColor(90, 100, 120);
+        doc.text("Learnlio — calm learning, clear insight for parents.", 14, 290);
 
         doc.save(`Learnlio-Report-${safe(child?.child_name,"Child")}.pdf`);
       } catch (e) {
@@ -934,10 +1161,7 @@
       setWeeklySwitchUI(next);
       weeklyState.textContent = next ? "On" : "Off";
       const ok = await saveWeeklySetting(next);
-      if (ok) {
-        // keep list as-is; it will fill when weekly jobs are added
-        await loadWeeklyReports();
-      }
+      if (ok) await loadWeeklyReports();
     }
 
     weeklySwitch.addEventListener("click", toggleWeekly);
@@ -968,4 +1192,5 @@
   </script>
 </body>
 </html>
+
 
