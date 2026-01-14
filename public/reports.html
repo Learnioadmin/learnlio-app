@@ -71,7 +71,7 @@
     .weekly-item .bullets{ margin:8px 0 0; padding-left:18px; color:#111; }
     .weekly-item .bullets li{ margin:4px 0; }
 
-    /* Skills table (fixed alignment) */
+    /* Skills table (alignment fixed) */
     .skills-wrap{ overflow-x:auto; }
     .skills-table{
       width:100%;
@@ -97,9 +97,10 @@
       font-weight:700;
     }
     .skills-table td.num, .skills-table th.num{
-      text-align:center; /* keeps numbers centered under headings */
+      text-align:center;
     }
     .skills-table tr:last-child td{ border-bottom:none; }
+
     .chip{
       display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; font-weight:650;
     }
@@ -152,26 +153,22 @@
       <div id="pageError" class="status bad" style="display:none;"></div>
       <div id="pageOk" class="status good" style="display:none;"></div>
 
-      <!-- Weekly reports (opt-in + stored weekly reports) -->
+      <!-- Weekly reports -->
       <section class="card" style="margin-top:14px; box-shadow:none; border:1px solid #ececf4;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
           <div>
-            <h2 style="margin:0; font-size:16px;">Weekly reports</h2>
+            <h2 style="margin:0; font-size:16px;">Weekly summaries</h2>
             <div class="muted" style="margin-top:6px; line-height:1.6;">
-              Turn this on to receive a weekly summary by email (we store the report here too).
-              <br><span class="muted">Email sending can be switched on later without changing this page.</span>
+              Turn this on to save a weekly summary here.
+              <br>We’ll add email delivery later.
             </div>
           </div>
 
           <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;">
-            <div class="toggle-wrap" aria-label="Weekly report toggle">
+            <div class="toggle-wrap">
               <span class="muted" id="weeklyToggleLabel">Off</span>
               <div id="weeklyToggle" class="toggle" role="switch" aria-checked="false" tabindex="0"></div>
             </div>
-
-            <button id="generateWeeklyBtn" class="btn ghost" type="button" style="display:none;">
-              Generate weekly report now
-            </button>
           </div>
         </div>
 
@@ -183,7 +180,7 @@
         </div>
 
         <div id="weeklyList" class="weekly-list">
-          <div class="muted">Loading weekly reports…</div>
+          <div class="muted">Loading weekly summaries…</div>
         </div>
 
         <div id="weeklyMsg" class="status" aria-live="polite"></div>
@@ -211,7 +208,7 @@
         </section>
       </div>
 
-      <!-- NEW: What to do next (clear language) -->
+      <!-- What to do next -->
       <section class="card" style="margin-top:14px; box-shadow:none; border:1px solid #ececf4;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <h2 style="margin:0; font-size:16px;">What to do next</h2>
@@ -222,14 +219,14 @@
         </div>
       </section>
 
-      <!-- Skills section -->
+      <!-- Skills -->
       <section class="card" style="margin-top:14px; box-shadow:none; border:1px solid #ececf4;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <h2 style="margin:0; font-size:16px;">Skills</h2>
           <span class="pill">from session_items</span>
         </div>
         <div class="muted" style="margin-top:6px; line-height:1.6;">
-          Attempts and accuracy are calculated from saved Tutor questions.
+          Attempts come from saved Tutor activity. Accuracy is shown when questions are marked correct/incorrect.
         </div>
 
         <div class="hr"></div>
@@ -271,19 +268,11 @@
 
   <script>
   (() => {
-    // =========================
-    // CONFIG
-    // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-    // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const u = new URL(window.location.href);
-    const DEBUG = u.searchParams.get("debug") === "1";
-
-    // Top
     const logoutBtn = document.getElementById("logoutBtn");
     const refreshBtn = document.getElementById("refreshBtn");
     const downloadBtn = document.getElementById("downloadBtn");
@@ -291,11 +280,9 @@
     const pageOk = document.getElementById("pageOk");
     const childHeader = document.getElementById("childHeader");
 
-    // Child switcher
     const childSwitcher = document.getElementById("childSwitcher");
     const childSelect = document.getElementById("childSelect");
 
-    // Sections
     const overallBox = document.getElementById("overallBox");
     const signalsBox = document.getElementById("signalsBox");
     const nextStepsBox = document.getElementById("nextStepsBox");
@@ -303,20 +290,17 @@
     const skillsMsg = document.getElementById("skillsMsg");
     const noDataBox = document.getElementById("noDataBox");
 
-    // Weekly UI
     const weeklyToggle = document.getElementById("weeklyToggle");
     const weeklyToggleLabel = document.getElementById("weeklyToggleLabel");
     const weeklyStatusPill = document.getElementById("weeklyStatusPill");
     const weeklyStatusText = document.getElementById("weeklyStatusText");
     const weeklyList = document.getElementById("weeklyList");
     const weeklyMsg = document.getElementById("weeklyMsg");
-    const generateWeeklyBtn = document.getElementById("generateWeeklyBtn");
-    if (DEBUG) generateWeeklyBtn.style.display = "inline-block";
 
     let currentUser = null;
     let child = null;
 
-    // cached for PDF
+    // cache for PDF
     let lastOverall = null;
     let lastSignals = null;
     let lastSkills = [];
@@ -324,23 +308,28 @@
     let weeklyRows = [];
     let weeklySettings = null;
 
-    function showError(msg){
-      pageError.style.display = "block";
-      pageError.textContent = msg;
-    }
-    function clearError(){
-      pageError.style.display = "none";
-      pageError.textContent = "";
-    }
+    function showError(msg){ pageError.style.display="block"; pageError.textContent=msg; }
+    function clearError(){ pageError.style.display="none"; pageError.textContent=""; }
     function showOk(msg){
-      pageOk.style.display = "block";
-      pageOk.textContent = msg;
-      setTimeout(() => { pageOk.style.display="none"; }, 1800);
+      pageOk.style.display="block"; pageOk.textContent=msg;
+      setTimeout(()=>{ pageOk.style.display="none"; }, 1800);
     }
+    function safe(v, fallback="—"){ return (v===null||v===undefined||v==="") ? fallback : String(v); }
 
-    function safe(v, fallback="—"){
-      if (v === null || v === undefined || v === "") return fallback;
-      return String(v);
+    function formatDOB(value){
+      if (!value) return "—";
+      const d = new Date(value);
+      if (isNaN(d.getTime())) {
+        // try yyyy-mm-dd
+        const s = String(value).slice(0,10);
+        const parts = s.split("-");
+        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        return s;
+      }
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth()+1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
     }
 
     function formatDateOnly(value){
@@ -348,16 +337,9 @@
       const d = new Date(value);
       if (isNaN(d.getTime())) return "—";
       const dd = String(d.getDate()).padStart(2, "0");
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const mm = String(d.getMonth()+1).padStart(2, "0");
       const yyyy = d.getFullYear();
       return `${dd}/${mm}/${yyyy}`;
-    }
-
-    function formatDateTime(value){
-      if (!value) return "—";
-      const d = new Date(value);
-      if (isNaN(d.getTime())) return "—";
-      return d.toLocaleString("en-GB");
     }
 
     function renderRows(targetEl, rows){
@@ -371,23 +353,16 @@
     }
 
     function getSelectedChild(){
-      try {
-        const raw = localStorage.getItem("selectedChild");
-        if (!raw) return null;
-        return JSON.parse(raw);
-      } catch { return null; }
+      try { return JSON.parse(localStorage.getItem("selectedChild") || "null"); }
+      catch { return null; }
     }
-
     function setSelectedChild(id, name){
       localStorage.setItem("selectedChild", JSON.stringify({ id, child_name: name }));
     }
 
     async function requireAuth(){
       const { data, error } = await sb.auth.getUser();
-      if (error || !data?.user){
-        window.location.href = "/login.html";
-        return false;
-      }
+      if (error || !data?.user){ window.location.href="/login.html"; return false; }
       currentUser = data.user;
       return true;
     }
@@ -399,21 +374,13 @@
         .eq("parent_user_id", currentUser.id)
         .order("created_at", { ascending: true });
 
-      if (error) {
-        console.error("children list error", error);
-        childSwitcher.style.display = "none";
-        return;
-      }
+      if (error) { console.error(error); childSwitcher.style.display="none"; return; }
 
       const children = data || [];
-      if (children.length <= 1) {
-        childSwitcher.style.display = "none";
-        return;
-      }
+      if (children.length <= 1) { childSwitcher.style.display="none"; return; }
 
-      childSwitcher.style.display = "flex";
+      childSwitcher.style.display="flex";
       childSelect.innerHTML = "";
-
       children.forEach(c => {
         const opt = document.createElement("option");
         opt.value = c.id;
@@ -439,8 +406,7 @@
       if (!selected?.id){
         showError("No child selected. Please go to Dashboard and select a child.");
         childHeader.textContent = "No child selected";
-        downloadBtn.disabled = true;
-        downloadBtn.style.opacity = "0.6";
+        downloadBtn.disabled = true; downloadBtn.style.opacity="0.6";
         return false;
       }
 
@@ -452,29 +418,26 @@
 
       if (error || !data){
         showError("Could not load child profile. Please re-select the child on Dashboard.");
-        downloadBtn.disabled = true;
-        downloadBtn.style.opacity = "0.6";
+        downloadBtn.disabled = true; downloadBtn.style.opacity="0.6";
         return false;
       }
 
       if (data.parent_user_id !== currentUser.id){
         showError("This child profile does not belong to this account.");
-        downloadBtn.disabled = true;
-        downloadBtn.style.opacity = "0.6";
+        downloadBtn.disabled = true; downloadBtn.style.opacity="0.6";
         return false;
       }
 
       child = data;
-      const dob = data.child_dob ? ` • DOB: ${data.child_dob}` : "";
+      const dob = data.child_dob ? ` • DOB: ${formatDOB(data.child_dob)}` : "";
       childHeader.textContent = `Child: ${data.child_name || "Child"}${dob}`;
-      clearError();
 
-      downloadBtn.disabled = false;
-      downloadBtn.style.opacity = "1";
+      clearError();
+      downloadBtn.disabled = false; downloadBtn.style.opacity="1";
       return true;
     }
 
-    // ---------- Weekly helpers ----------
+    // ---------- Weekly (safe + graceful) ----------
     function setWeeklyMsg(text, kind=""){
       weeklyMsg.textContent = text || "";
       weeklyMsg.className = "status" + (kind ? " " + kind : "");
@@ -488,18 +451,34 @@
       weeklyToggle.setAttribute("aria-checked", !!isOn ? "true" : "false");
       weeklyToggleLabel.textContent = isOn ? "On" : "Off";
     }
-    function mondayOfWeek(dateObj){
-      const d = new Date(dateObj);
-      const day = d.getDay(); // 0 Sun ... 1 Mon ... 6 Sat
-      const diff = (day === 0 ? -6 : 1 - day);
-      d.setDate(d.getDate() + diff);
-      d.setHours(0,0,0,0);
-      return d;
-    }
-    function addDays(dateObj, n){
-      const d = new Date(dateObj);
-      d.setDate(d.getDate() + n);
-      return d;
+
+    function renderWeeklyList(rows){
+      weeklyList.innerHTML = "";
+      if (!rows || !rows.length){
+        weeklyList.innerHTML = `<div class="muted">No weekly summaries yet.</div>`;
+        return;
+      }
+      rows.forEach(r => {
+        const sum = r.summary || {};
+        const recs = Array.isArray(sum.recommendations) ? sum.recommendations : [];
+        const item = document.createElement("div");
+        item.className = "weekly-item";
+        item.innerHTML = `
+          <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start;">
+            <div>
+              <h3>Week starting ${formatDOB(r.week_start)}</h3>
+              <div class="meta">Stored: ${formatDOB(r.created_at)}</div>
+            </div>
+            <span class="pill">summary</span>
+          </div>
+          ${recs.length ? `
+            <ul class="bullets">
+              ${recs.slice(0,6).map(x => `<li>${String(x)}</li>`).join("")}
+            </ul>
+          ` : `<div class="muted" style="margin-top:10px;">No next steps saved in this summary yet.</div>`}
+        `;
+        weeklyList.appendChild(item);
+      });
     }
 
     async function loadWeeklySettings(){
@@ -508,54 +487,76 @@
       setWeeklyMsg("");
       setWeeklyStatus("Loading…", "");
 
-      const { data, error } = await sb
-        .from("weekly_report_settings")
-        .select("id, parent_user_id, child_id, enabled, frequency, last_sent_at, created_at, updated_at")
-        .eq("parent_user_id", currentUser.id)
-        .eq("child_id", child.id)
-        .maybeSingle();
+      try {
+        const { data, error } = await sb
+          .from("weekly_report_settings")
+          .select("id, parent_user_id, child_id, enabled, frequency, last_sent_at, created_at, updated_at")
+          .eq("parent_user_id", currentUser.id)
+          .eq("child_id", child.id)
+          .maybeSingle();
 
-      if (error) {
-        console.error("weekly_report_settings read error", error);
+        if (error) throw error;
+
+        weeklySettings = data || null;
+        const enabled = !!weeklySettings?.enabled;
+        setToggleUI(enabled);
+
+        if (enabled) setWeeklyStatus("Enabled", "Weekly summaries will appear here.");
+        else setWeeklyStatus("Off", "Turn on to save weekly summaries here.");
+      } catch (e) {
+        // table missing or RLS — don't scare user
         weeklySettings = null;
         setToggleUI(false);
-        setWeeklyStatus("Not enabled", "Turn on weekly reports to store them here (email later).");
-        return;
+        setWeeklyStatus("Not available", "Weekly summaries aren’t set up yet.");
       }
+    }
 
-      weeklySettings = data || null;
-      const enabled = !!weeklySettings?.enabled;
-      setToggleUI(enabled);
+    async function loadWeeklyReports(){
+      if (!child?.id) return;
 
-      if (enabled) {
-        const last = weeklySettings?.last_sent_at ? `Last sent: ${formatDateTime(weeklySettings.last_sent_at)}` : "No emails sent yet.";
-        setWeeklyStatus("Enabled", last);
-      } else {
-        setWeeklyStatus("Not enabled", "You can turn this on any time.");
+      weeklyList.innerHTML = `<div class="muted">Loading weekly summaries…</div>`;
+      weeklyRows = [];
+
+      try {
+        const { data, error } = await sb
+          .from("weekly_reports")
+          .select("id, parent_user_id, child_id, week_start, summary, created_at")
+          .eq("parent_user_id", currentUser.id)
+          .eq("child_id", child.id)
+          .order("week_start", { ascending: false })
+          .limit(12);
+
+        if (error) throw error;
+
+        weeklyRows = data || [];
+        renderWeeklyList(weeklyRows);
+        setWeeklyMsg("");
+      } catch (e) {
+        // table missing or RLS — show clean
+        weeklyList.innerHTML = `<div class="muted">Weekly summaries aren’t available yet.</div>`;
+        setWeeklyMsg("", "");
       }
     }
 
     async function upsertWeeklySettings(enabled){
       if (!child?.id) return;
 
-      if (weeklySettings?.id) {
+      if (weeklySettings?.id){
         const { error } = await sb
           .from("weekly_report_settings")
           .update({ enabled: !!enabled, updated_at: new Date().toISOString() })
           .eq("id", weeklySettings.id);
-
         if (error) throw error;
       } else {
-        const payload = {
-          parent_user_id: currentUser.id,
-          child_id: child.id,
-          enabled: !!enabled,
-          frequency: "weekly",
-          updated_at: new Date().toISOString()
-        };
         const { data, error } = await sb
           .from("weekly_report_settings")
-          .insert(payload)
+          .insert({
+            parent_user_id: currentUser.id,
+            child_id: child.id,
+            enabled: !!enabled,
+            frequency: "weekly",
+            updated_at: new Date().toISOString()
+          })
           .select("id, parent_user_id, child_id, enabled, frequency, last_sent_at, created_at, updated_at")
           .single();
 
@@ -564,71 +565,32 @@
       }
     }
 
-    function renderWeeklyList(rows){
-      weeklyList.innerHTML = "";
-      if (!rows || !rows.length) {
-        weeklyList.innerHTML = `<div class="muted">No weekly reports stored yet.</div>`;
-        return;
+    async function toggleWeekly(){
+      const currentlyOn = weeklyToggle.classList.contains("on");
+      const next = !currentlyOn;
+
+      setToggleUI(next);
+      setWeeklyMsg("");
+
+      try {
+        weeklyToggle.style.pointerEvents = "none";
+        await upsertWeeklySettings(next);
+        await loadWeeklySettings();
+        showOk(next ? "Weekly summaries enabled" : "Weekly summaries disabled");
+      } catch (e) {
+        setToggleUI(currentlyOn);
+        setWeeklyMsg("Couldn’t save that setting yet.", "bad");
+      } finally {
+        weeklyToggle.style.pointerEvents = "auto";
       }
-
-      rows.forEach(r => {
-        const sum = r.summary || {};
-        const recs = Array.isArray(sum.recommendations) ? sum.recommendations : [];
-
-        const maths = sum.maths || {};
-        const english = sum.english || {};
-
-        const item = document.createElement("div");
-        item.className = "weekly-item";
-
-        item.innerHTML = `
-          <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start;">
-            <div>
-              <h3>Week starting ${formatDateOnly(r.week_start)}</h3>
-              <div class="meta">Stored: ${formatDateTime(r.created_at)}</div>
-            </div>
-            <span class="pill">weekly report</span>
-          </div>
-
-          <div style="margin-top:10px; display:grid; gap:8px;">
-            <div><b>Maths</b>: Level ${safe(maths.level, "—")} • Attempts ${safe(maths.attempts, "0")} • Accuracy ${maths.accuracy!=null ? Math.round(maths.accuracy*100) + "%" : "—"} • Confidence ${safe(maths.confidence,"—")}</div>
-            <div><b>English</b>: Level ${safe(english.level, "—")} • Attempts ${safe(english.attempts, "0")} • Accuracy ${english.accuracy!=null ? Math.round(english.accuracy*100) + "%" : "—"} • Confidence ${safe(english.confidence,"—")}</div>
-          </div>
-
-          ${recs.length ? `
-            <ul class="bullets">
-              ${recs.slice(0,6).map(x => `<li>${String(x)}</li>`).join("")}
-            </ul>
-          ` : `<div class="muted" style="margin-top:10px;">No next steps saved in this report yet.</div>`}
-        `;
-
-        weeklyList.appendChild(item);
-      });
     }
 
-    async function loadWeeklyReports(){
-      if (!child?.id) return;
+    weeklyToggle.addEventListener("click", toggleWeekly);
+    weeklyToggle.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleWeekly(); }
+    });
 
-      weeklyList.innerHTML = `<div class="muted">Loading weekly reports…</div>`;
-
-      const { data, error } = await sb
-        .from("weekly_reports")
-        .select("id, parent_user_id, child_id, week_start, summary, created_at")
-        .eq("parent_user_id", currentUser.id)
-        .eq("child_id", child.id)
-        .order("week_start", { ascending: false })
-        .limit(12);
-
-      if (error) {
-        console.error("weekly_reports read error", error);
-        weeklyList.innerHTML = `<div class="status bad">Couldn’t load weekly reports.</div>`;
-        return;
-      }
-
-      weeklyRows = data || [];
-      renderWeeklyList(weeklyRows);
-    }
-
+    // ---------- Progress + Skills ----------
     function confidenceLabel(acc){
       if (acc === null || acc === undefined) return "—";
       if (acc >= 0.85) return "High";
@@ -636,7 +598,6 @@
       if (acc >= 0.45) return "Growing";
       return "Needs support";
     }
-
     function chipForConfidence(label){
       const s = String(label || "").toLowerCase();
       if (s.includes("high") || s.includes("good")) return "chip good";
@@ -645,162 +606,57 @@
       return "chip";
     }
 
-    function nextStepsFor(subject, needsAreas){
+    function nextStepsFor(subject, areas){
       const out = [];
-      const s = String(subject||"").toLowerCase();
-
-      (needsAreas || []).forEach(a => {
+      (areas || []).forEach(a => {
         const area = String(a||"").toLowerCase();
-
-        if (s === "maths") {
-          if (area.includes("division")) out.push("Maths: Do 5 minutes of division using objects (coins/counters). Keep it slow.");
+        const subj = String(subject||"").toLowerCase();
+        if (subj === "maths") {
+          if (area.includes("division")) out.push("Maths: 5 minutes of division using counters/coins. Slow and calm.");
           else if (area.includes("multiplication")) out.push("Maths: Practise one times table per day (short bursts).");
           else if (area.includes("subtraction")) out.push("Maths: Use a number line and count back slowly.");
-          else if (area.includes("addition")) out.push("Maths: Practise number bonds for 5 minutes (calm pace).");
-          else out.push(`Maths: 5 minutes of gentle practice on ${a}.`);
+          else if (area.includes("addition")) out.push("Maths: Practise number bonds for 5 minutes.");
+          else out.push(`Maths: 5 minutes of calm practice on ${a}.`);
         } else {
-          if (area.includes("spelling")) out.push("English: Practise 5 spellings using: look → cover → write → check.");
-          else if (area.includes("reading")) out.push("English: Read together for 10 minutes. Ask 1 simple question about the paragraph.");
+          if (area.includes("spelling")) out.push("English: Practise 5 spellings using look → cover → write → check.");
+          else if (area.includes("reading")) out.push("English: Read together for 10 minutes. Ask 1 simple question.");
           else if (area.includes("sentence")) out.push("English: Write 3 short sentences using a ‘word of the day’.");
+          else if (area.includes("word")) out.push("English: Play a 5-minute word game (rhymes, synonyms, categories).");
           else out.push(`English: 10 minutes of calm practice on ${a}.`);
         }
       });
-
       return Array.from(new Set(out)).slice(0,6);
     }
 
-    async function generateWeeklyReportNow(){
-      if (!child?.id) return;
+    function normaliseSubjectArea(meta, promptText){
+      const m = (meta && typeof meta === "object") ? meta : {};
+      let subject = m.subject || m.Subject || m.subj || null;
+      let area = m.area || m.Area || m.focus || m.topic || null;
 
-      setWeeklyMsg("", "");
-      generateWeeklyBtn.disabled = true;
-
-      try {
-        const weekStart = mondayOfWeek(new Date());
-        const weekEnd = addDays(weekStart, 7);
-
-        const { data: sessions, error } = await sb
-          .from("sessions")
-          .select("id, parent_user_id, child_id, subject, area, questions_done, correct_count, created_at")
-          .eq("parent_user_id", currentUser.id)
-          .eq("child_id", child.id)
-          .gte("created_at", weekStart.toISOString())
-          .lt("created_at", weekEnd.toISOString())
-          .order("created_at", { ascending: true });
-
-        if (error) throw error;
-
-        const rows = sessions || [];
-
-        const agg = {
-          Maths: { totalQ:0, totalC:0, areas:{} },
-          English:{ totalQ:0, totalC:0, areas:{} }
-        };
-
-        for (const s of rows) {
-          const subj = String(s.subject||"").toLowerCase().includes("english") ? "English" : "Maths";
-          const area = s.area || "General";
-          const q = Number(s.questions_done || 0);
-          const c = Number(s.correct_count || 0);
-
-          agg[subj].totalQ += q;
-          agg[subj].totalC += c;
-
-          if (!agg[subj].areas[area]) agg[subj].areas[area] = { q:0, c:0 };
-          agg[subj].areas[area].q += q;
-          agg[subj].areas[area].c += c;
-        }
-
-        function strengthsNeeds(subjectKey){
-          const areas = agg[subjectKey].areas;
-          const list = Object.entries(areas).map(([area, v]) => {
-            const q = v.q || 0;
-            const c = v.c || 0;
-            const acc = q ? (c/q) : 0;
-            return { area, q, c, acc };
-          }).filter(x => x.q > 0);
-
-          list.sort((a,b) => b.acc - a.acc);
-
-          const strengths = list.filter(x => x.acc >= 0.75).slice(0,2).map(x => x.area);
-          const needs = list.filter(x => x.acc < 0.55).slice(0,2).map(x => x.area);
-
-          return { strengths, needs };
-        }
-
-        const mathsAcc = agg.Maths.totalQ ? (agg.Maths.totalC / agg.Maths.totalQ) : null;
-        const englishAcc = agg.English.totalQ ? (agg.English.totalC / agg.English.totalQ) : null;
-
-        const mathsSN = strengthsNeeds("Maths");
-        const englishSN = strengthsNeeds("English");
-
-        const summary = {
-          week_start: weekStart.toISOString().slice(0,10),
-          week_end: weekEnd.toISOString().slice(0,10),
-          maths: {
-            level: Number(lastOverall?.maths_level ?? 1),
-            attempts: agg.Maths.totalQ,
-            accuracy: mathsAcc === null ? null : Math.round(mathsAcc * 100) / 100,
-            confidence: confidenceLabel(mathsAcc),
-            strengths: mathsSN.strengths,
-            needs_support: mathsSN.needs
-          },
-          english: {
-            level: Number(lastOverall?.english_level ?? 1),
-            attempts: agg.English.totalQ,
-            accuracy: englishAcc === null ? null : Math.round(englishAcc * 100) / 100,
-            confidence: confidenceLabel(englishAcc),
-            strengths: englishSN.strengths,
-            needs_support: englishSN.needs
-          },
-          recommendations: [
-            ...nextStepsFor("Maths", mathsSN.needs),
-            ...nextStepsFor("English", englishSN.needs),
-          ].slice(0,6),
-          notes: rows.length
-            ? "This summary is based on Tutor sessions completed this week."
-            : "No Tutor sessions were found this week. Do a short session, then generate again."
-        };
-
-        const weekStartDate = weekStart.toISOString().slice(0,10);
-
-        const { data: existing } = await sb
-          .from("weekly_reports")
-          .select("id")
-          .eq("parent_user_id", currentUser.id)
-          .eq("child_id", child.id)
-          .eq("week_start", weekStartDate)
-          .maybeSingle();
-
-        if (existing?.id) {
-          const { error: upErr } = await sb
-            .from("weekly_reports")
-            .update({ summary, created_at: new Date().toISOString() })
-            .eq("id", existing.id);
-          if (upErr) throw upErr;
-        } else {
-          const { error: inErr } = await sb
-            .from("weekly_reports")
-            .insert({
-              parent_user_id: currentUser.id,
-              child_id: child.id,
-              week_start: weekStartDate,
-              summary
-            });
-          if (inErr) throw inErr;
-        }
-
-        setWeeklyMsg("Weekly report generated ✅", "good");
-        await loadWeeklyReports();
-      } catch (e) {
-        console.error(e);
-        setWeeklyMsg(`Couldn’t generate weekly report: ${String(e.message || e)}`, "bad");
-      } finally {
-        generateWeeklyBtn.disabled = false;
+      // If missing, infer lightly from prompt text (fallback)
+      const p = String(promptText || "").toLowerCase();
+      if (!subject) {
+        if (p.includes("english") || p.includes("spelling") || p.includes("reading") || p.includes("sentence")) subject = "English";
+        else subject = "Maths";
       }
+      if (!area) {
+        if (p.includes("spelling")) area = "Spelling";
+        else if (p.includes("reading")) area = "Reading";
+        else if (p.includes("sentence")) area = "Sentence building";
+        else if (p.includes("addition") || p.includes("+")) area = "Addition";
+        else if (p.includes("subtraction") || p.includes("-")) area = "Subtraction";
+        else if (p.includes("multiplication") || p.includes("×") || p.includes("times")) area = "Multiplication";
+        else if (p.includes("division") || p.includes("÷")) area = "Division";
+        else area = "General";
+      }
+
+      // Friendly names
+      if (String(area).toLowerCase().includes("sentence")) area = "Sentence building";
+      if (String(area).toLowerCase().includes("word")) area = "Word games";
+
+      return { subject, area };
     }
 
-    // ---------- Core report loads ----------
     async function loadReportsCore(){
       if (!child?.id) return;
 
@@ -816,30 +672,36 @@
       lastSkills = [];
       lastNextSteps = [];
 
-      // Overall progress row
+      // Progress (overall)
       const { data: overall, error: overallErr } = await sb
         .from("progress")
         .select("id, parent_user_id, child_id, maths_level, english_level, streak, updated_at")
         .eq("child_id", child.id)
         .maybeSingle();
-
       if (overallErr) console.error("progress read error", overallErr);
       lastOverall = overall || null;
 
-      // Tutor signals row
-      const { data: signals, error: signalsErr } = await sb
-        .from("child_progress")
-        .select("id, child_id, owner_id, subject, area, difficulty, streak_correct, streak_wrong, last_session_id, last_seen_at")
-        .eq("child_id", child.id)
-        .eq("owner_id", currentUser.id)
-        .maybeSingle();
-
-      if (signalsErr) console.error("child_progress read error", signalsErr);
-      lastSignals = signals || null;
+      // Signals: get latest child_progress row (NOT maybeSingle)
+      let signals = null;
+      try {
+        const { data: sigRows, error: sigErr } = await sb
+          .from("child_progress")
+          .select("id, child_id, owner_id, subject, area, difficulty, streak_correct, streak_wrong, last_session_id, last_seen_at")
+          .eq("child_id", child.id)
+          .eq("owner_id", currentUser.id)
+          .order("last_seen_at", { ascending: false })
+          .limit(1);
+        if (sigErr) throw sigErr;
+        signals = (sigRows && sigRows[0]) ? sigRows[0] : null;
+      } catch (e) {
+        console.error("child_progress read error", e);
+        signals = null;
+      }
+      lastSignals = signals;
 
       const hasAnyData = !!overall || !!signals;
 
-      // Render overall
+      // Render overall (still show if english_level null)
       if (!overall) {
         overallBox.innerHTML = `<div class="muted">No overall progress row yet.</div>`;
       } else {
@@ -853,7 +715,7 @@
 
       // Render signals
       if (!signals) {
-        signalsBox.innerHTML = `<div class="muted">No tutor signals row yet.</div>`;
+        signalsBox.innerHTML = `<div class="muted">No tutor signals yet.</div>`;
       } else {
         renderRows(signalsBox, [
           { k: "Last subject",        v: safe(signals.subject) },
@@ -866,52 +728,56 @@
         ]);
       }
 
-      // Skills derived from session_items
-      // We pull last 250 items for this child + owner and group by subject+area
+      // Skills: include English attempts even if unmarked (is_correct null)
       const { data: items, error: itemsErr } = await sb
         .from("session_items")
-        .select("id, child_id, owner_id, created_at, is_correct, meta, item_type")
+        .select("id, child_id, owner_id, created_at, is_correct, meta, item_type, prompt_text")
         .eq("child_id", child.id)
         .eq("owner_id", currentUser.id)
         .order("created_at", { ascending: false })
-        .limit(250);
+        .limit(400);
 
       if (itemsErr) {
         console.error("session_items read error", itemsErr);
         skillsBody.innerHTML = `<tr><td colspan="6" class="muted">No skill data yet.</td></tr>`;
       } else {
         const rows = (items || [])
-          .filter(x => x.item_type !== "system") // safe default
+          .filter(x => x.item_type !== "system")
           .map(x => {
+            const { subject, area } = normaliseSubjectArea(x.meta, x.prompt_text);
             const m = (x.meta && typeof x.meta === "object") ? x.meta : {};
-            const subj = m.subject || m.Subject || m.subj || null;
-            const area = m.area || m.Area || m.focus || null;
             const diff = m.difficulty || m.level || null;
-            return {
-              subject: subj || (m && String(m).includes("English") ? "English" : null) || "Maths",
-              area: area || "General",
-              difficulty: (typeof diff === "number" ? diff : parseInt(diff, 10)) || null,
-              correct: (x.is_correct === true) ? 1 : 0,
-              attempted: (x.is_correct === null || x.is_correct === undefined) ? 0 : 1
-            };
+            const level = (typeof diff === "number") ? diff : parseInt(diff, 10);
+
+            // Attempts:
+            // - Maths: is_correct true/false = attempt
+            // - English: is_correct null still counts as attempt (we just can't compute accuracy)
+            const attempted =
+              (x.is_correct === true || x.is_correct === false) ? 1 :
+              (String(subject).toLowerCase() === "english") ? 1 : 0;
+
+            const correct = (x.is_correct === true) ? 1 : 0;
+            const marked = (x.is_correct === true || x.is_correct === false) ? 1 : 0;
+
+            return { subject, area, attempted, correct, marked, level: Number.isFinite(level) ? level : null };
           })
           .filter(r => r.attempted === 1);
 
         const map = new Map();
         for (const r of rows) {
           const key = `${r.subject}||${r.area}`;
-          if (!map.has(key)) map.set(key, { subject:r.subject, area:r.area, attempts:0, correct:0, maxLevel:0 });
+          if (!map.has(key)) map.set(key, { subject:r.subject, area:r.area, attempts:0, correct:0, marked:0, maxLevel:0 });
           const agg = map.get(key);
           agg.attempts += 1;
           agg.correct += r.correct;
-          if (r.difficulty && r.difficulty > agg.maxLevel) agg.maxLevel = r.difficulty;
+          agg.marked += r.marked;
+          if (r.level && r.level > agg.maxLevel) agg.maxLevel = r.level;
         }
 
         let skillRows = Array.from(map.values());
-        // Prefer more attempted skills; keep table readable
         skillRows.sort((a,b) => (b.attempts - a.attempts));
 
-        // Fill in level fallback from overall progress when possible
+        // Fill level fallback from overall progress
         skillRows = skillRows.map(r => {
           const subj = String(r.subject||"");
           const overallLevel =
@@ -920,8 +786,11 @@
             null;
 
           const level = r.maxLevel || overallLevel || 1;
-          const accuracy = r.attempts ? (r.correct / r.attempts) : null;
+
+          // Accuracy only if marked attempts exist
+          const accuracy = r.marked ? (r.correct / r.marked) : null;
           const conf = confidenceLabel(accuracy);
+
           return { ...r, level, accuracy, confidence: conf };
         });
 
@@ -931,7 +800,7 @@
           skillsBody.innerHTML = `<tr><td colspan="6" class="muted">No skill data yet. Do a Tutor session first.</td></tr>`;
         } else {
           skillsBody.innerHTML = "";
-          skillRows.slice(0, 12).forEach(r => {
+          skillRows.slice(0, 14).forEach(r => {
             const tr = document.createElement("tr");
             const accPct = (r.accuracy === null) ? "—" : `${Math.round(r.accuracy*100)}%`;
             tr.innerHTML = `
@@ -946,42 +815,42 @@
           });
         }
 
-        // Build "What to do next" from skills:
-        // - Choose 1–2 lowest accuracy areas per subject (with enough attempts)
-        const maths = skillRows.filter(r => r.subject === "Maths" && r.attempts >= 3 && r.accuracy !== null);
-        const eng   = skillRows.filter(r => r.subject === "English" && r.attempts >= 3 && r.accuracy !== null);
+        // What to do next:
+        // 1) Use lowest accuracy areas where we have marked data
+        // 2) If English accuracy unknown, still suggest based on most-attempted English area
+        const maths = skillRows.filter(r => r.subject === "Maths" && r.marked >= 3 && r.accuracy !== null).sort((a,b)=>a.accuracy-b.accuracy);
+        const engMarked = skillRows.filter(r => r.subject === "English" && r.marked >= 3 && r.accuracy !== null).sort((a,b)=>a.accuracy-b.accuracy);
 
-        maths.sort((a,b)=>a.accuracy-b.accuracy);
-        eng.sort((a,b)=>a.accuracy-b.accuracy);
+        const engAny = skillRows.filter(r => r.subject === "English").sort((a,b)=>b.attempts-a.attempts);
 
         const mathsNeeds = maths.slice(0,2).filter(x=>x.accuracy < 0.6).map(x=>x.area);
-        const engNeeds   = eng.slice(0,2).filter(x=>x.accuracy < 0.6).map(x=>x.area);
-
-        // If we don't have enough skills data, fall back to lastSignals
-        const fallbackSubject = lastSignals?.subject || null;
-        const fallbackArea = lastSignals?.area || null;
+        const engNeeds = engMarked.slice(0,2).filter(x=>x.accuracy < 0.6).map(x=>x.area);
 
         const steps = [
           ...nextStepsFor("Maths", mathsNeeds),
           ...nextStepsFor("English", engNeeds),
         ];
 
-        if (!steps.length && fallbackSubject && fallbackArea) {
-          steps.push(...nextStepsFor(fallbackSubject, [fallbackArea]));
+        // If still empty, use most attempted English area + lastSignals
+        if (!steps.length && engAny.length) {
+          steps.push(...nextStepsFor("English", [engAny[0].area]));
+        }
+        if (!steps.length && lastSignals?.subject && lastSignals?.area) {
+          steps.push(...nextStepsFor(lastSignals.subject, [lastSignals.area]));
         }
 
         if (!steps.length) {
           nextStepsBox.innerHTML = `
             <div class="muted" style="line-height:1.6;">
-              Do a short Tutor session first, then come back and press <b>Refresh</b>.<br>
-              When we have a few attempts saved, we’ll show clear next steps here.
+              We’ve saved activity, but we need a little more marked data to give tailored next steps.<br>
+              Do a short Maths session (so we can calculate accuracy), then refresh.
             </div>
           `;
         } else {
           lastNextSteps = steps.slice(0,6);
           nextStepsBox.innerHTML = `
             <div style="line-height:1.7;">
-              <div class="muted" style="margin-bottom:8px;">Simple next actions for this week:</div>
+              <div class="muted" style="margin-bottom:8px;">Simple next actions:</div>
               <ul style="margin:0; padding-left:18px;">
                 ${lastNextSteps.map(s => `<li>${s}</li>`).join("")}
               </ul>
@@ -1018,7 +887,7 @@
 
         doc.setFontSize(12);
         y = pdfWriteLine(doc, `Child: ${safe(child?.child_name)}`, 14, y, 180); y += 2;
-        y = pdfWriteLine(doc, `DOB: ${safe(child?.child_dob)}`, 14, y, 180); y += 2;
+        y = pdfWriteLine(doc, `DOB: ${formatDOB(child?.child_dob)}`, 14, y, 180); y += 2;
         y = pdfWriteLine(doc, `Generated: ${formatDateOnly(new Date())}`, 14, y, 180); y += 6;
 
         doc.setFontSize(14);
@@ -1035,29 +904,12 @@
         }
 
         doc.setFontSize(14);
-        doc.text("Tutor signals", 14, y); y += 8;
-        doc.setFontSize(12);
-
-        if (!lastSignals) {
-          y = pdfWriteLine(doc, "No tutor signals data yet.", 14, y, 180); y += 6;
-        } else {
-          y = pdfWriteLine(doc, `Last subject: ${safe(lastSignals.subject)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Last focus area: ${safe(lastSignals.area)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Current difficulty: ${safe(lastSignals.difficulty)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Correct streak: ${safe(lastSignals.streak_correct)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Wrong streak: ${safe(lastSignals.streak_wrong)}`, 14, y, 180); y += 6;
-        }
-
-        doc.setFontSize(14);
         doc.text("What to do next", 14, y); y += 8;
         doc.setFontSize(12);
         if (!lastNextSteps?.length) {
           y = pdfWriteLine(doc, "No next steps available yet.", 14, y, 180); y += 6;
         } else {
-          lastNextSteps.slice(0,6).forEach(s => {
-            y = pdfWriteLine(doc, `• ${String(s)}`, 14, y, 180); y += 1;
-            if (y > 270) { doc.addPage(); y = 14; }
-          });
+          lastNextSteps.slice(0,6).forEach(s => { y = pdfWriteLine(doc, `• ${String(s)}`, 14, y, 180); y += 1; });
           y += 4;
         }
 
@@ -1070,32 +922,6 @@
           y += 2;
           if (y > 270) { doc.addPage(); y = 14; }
         });
-
-        // Add latest weekly report if present
-        if (weeklyRows?.length) {
-          const w = weeklyRows[0];
-          const sum = w.summary || {};
-          y += 4;
-          doc.setFontSize(14);
-          doc.text("Latest weekly report", 14, y); y += 8;
-          doc.setFontSize(12);
-
-          y = pdfWriteLine(doc, `Week starting: ${formatDateOnly(w.week_start)}`, 14, y, 180); y += 2;
-
-          const m = sum.maths || {};
-          const e = sum.english || {};
-          y = pdfWriteLine(doc, `Maths — Level ${safe(m.level)} • Attempts ${safe(m.attempts)} • Accuracy ${m.accuracy!=null ? Math.round(m.accuracy*100) + "%" : "—"} • Confidence ${safe(m.confidence)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `English — Level ${safe(e.level)} • Attempts ${safe(e.attempts)} • Accuracy ${e.accuracy!=null ? Math.round(e.accuracy*100) + "%" : "—"} • Confidence ${safe(e.confidence)}`, 14, y, 180); y += 4;
-
-          const recs = Array.isArray(sum.recommendations) ? sum.recommendations : [];
-          if (recs.length) {
-            y = pdfWriteLine(doc, "Weekly next steps:", 14, y, 180); y += 2;
-            recs.slice(0,6).forEach((r) => {
-              y = pdfWriteLine(doc, `• ${String(r)}`, 14, y, 180); y += 1;
-              if (y > 270) { doc.addPage(); y = 14; }
-            });
-          }
-        }
 
         doc.save(`Learnlio-Report-${safe(child?.child_name,"Child")}.pdf`);
       } catch (e) {
@@ -1121,42 +947,6 @@
       downloadPDF();
     });
 
-    async function toggleWeekly(){
-      if (!child?.id) return;
-
-      const currentlyOn = weeklyToggle.classList.contains("on");
-      const next = !currentlyOn;
-
-      setToggleUI(next);
-      setWeeklyMsg("");
-
-      try {
-        weeklyToggle.style.pointerEvents = "none";
-        await upsertWeeklySettings(next);
-        await loadWeeklySettings();
-        showOk(next ? "Weekly reports enabled" : "Weekly reports disabled");
-      } catch (e) {
-        console.error(e);
-        setToggleUI(currentlyOn);
-        setWeeklyMsg(`Couldn’t save setting: ${String(e.message || e)}`, "bad");
-      } finally {
-        weeklyToggle.style.pointerEvents = "auto";
-      }
-    }
-
-    weeklyToggle.addEventListener("click", toggleWeekly);
-    weeklyToggle.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        toggleWeekly();
-      }
-    });
-
-    generateWeeklyBtn.addEventListener("click", async () => {
-      clearError();
-      await generateWeeklyReportNow();
-    });
-
     // ---------- Init ----------
     (async () => {
       if (!sb) { showError("Supabase did not load."); return; }
@@ -1175,5 +965,4 @@
   </script>
 </body>
 </html>
-
 
