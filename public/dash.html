@@ -139,10 +139,8 @@
       <!-- RIGHT: Progress / Next step -->
       <aside class="card">
         <h2 style="margin:0 0 6px; font-size:18px;">Next step</h2>
-
-        <!-- ✅ NOW DYNAMIC -->
-        <p class="muted" id="nextStepIntro" style="margin:0 0 14px;">
-          Loading your child’s next step…
+        <p class="muted" style="margin:0 0 14px;">
+          We personalise this using your child’s latest Tutor sessions.
         </p>
 
         <div class="hr"></div>
@@ -198,11 +196,9 @@
     const logoutBtn = document.getElementById("logoutBtn");
     const navTutor = document.getElementById("navTutor");
     const navReports = document.getElementById("navReports");
-    const navBilling = document.getElementById("navBilling");
 
     const continueTutorBtn = document.getElementById("continueTutorBtn");
     const reportsBtn = document.getElementById("reportsBtn");
-    const billingBtn = document.getElementById("billingBtn");
     const upgradeBtn = document.getElementById("upgradeBtn");
 
     // Header status
@@ -221,7 +217,6 @@
     const selectedChildLabel = document.getElementById("selectedChildLabel");
 
     // Next step UI
-    const nextStepIntro = document.getElementById("nextStepIntro"); // ✅ NEW
     const nextStepTag = document.getElementById("nextStepTag");
     const nextStepTitle = document.getElementById("nextStepTitle");
     const nextStepBody = document.getElementById("nextStepBody");
@@ -381,22 +376,16 @@
 
     async function updateSelectedChildLocalStorageIfMatches(ch) {
       const selectedId = getSelectedChildId();
-      if (selectedId && selectedId === ch.id) {
-        setSelectedChild(ch);
-      }
+      if (selectedId && selectedId === ch.id) setSelectedChild(ch);
     }
 
     // ---------------------------
     // NEXT STEP (dynamic)
     // ---------------------------
-    function setNextStep(tag, title, body, introText) {
+    function setNextStep(tag, title, body) {
       nextStepTag.textContent = tag;
       nextStepTitle.textContent = title;
       nextStepBody.textContent = body;
-
-      if (nextStepIntro) {
-        nextStepIntro.textContent = introText || "Here’s what to do next based on recent Tutor sessions.";
-      }
     }
 
     function sentence(s){ return String(s || "").trim(); }
@@ -417,39 +406,42 @@
         setNextStep(
           "Starter plan",
           "Try a short warm-up",
-          "Start with a 5–7 minute Tutor session. If your child struggles, use hints and go slowly. Progress and reports appear after a couple of sessions.",
-          "Select a child to see personalised next steps."
+          "Start with a 5–7 minute Tutor session. If your child struggles, use hints and go slowly. Progress and reports appear after a couple of sessions."
         );
         nextStepPrimaryBtn.textContent = "Start Tutor";
         nextStepPrimaryBtn.href = "/chat.html";
         return;
       }
 
-      // Pull latest signals for that child
-      const { data: signals, error: sigErr } = await sb
+      // ✅ FIX: get latest child_progress row (table may contain multiple rows)
+      const { data: signalsRows, error: sigErr } = await sb
         .from("child_progress")
         .select("subject, area, difficulty, streak_correct, streak_wrong, last_seen_at")
         .eq("child_id", selectedId)
         .eq("owner_id", currentUser.id)
-        .maybeSingle();
+        .order("last_seen_at", { ascending: false })
+        .limit(1);
 
       if (sigErr) console.error("child_progress loadNextStep error", sigErr);
+      const signals = (signalsRows && signalsRows.length) ? signalsRows[0] : null;
 
-      const { data: overall, error: progErr } = await sb
+      // ✅ Also robust progress read (in case of duplicates)
+      const { data: overallRows, error: progErr } = await sb
         .from("progress")
         .select("maths_level, english_level, streak, updated_at")
         .eq("child_id", selectedId)
-        .maybeSingle();
+        .order("updated_at", { ascending: false })
+        .limit(1);
 
       if (progErr) console.error("progress loadNextStep error", progErr);
+      const overall = (overallRows && overallRows.length) ? overallRows[0] : null;
 
       // If no signals yet
       if (!signals) {
         setNextStep(
           "Starter plan",
           "Do one short Tutor session",
-          "Do a quick Maths or English session. After a couple of sessions, Learnlio will start showing specific strengths and what to work on next.",
-          "We’ll personalise this after the first couple of Tutor sessions."
+          "Do a quick Maths or English session. After a couple of sessions, Learnlio will start showing specific strengths and what to work on next."
         );
         nextStepPrimaryBtn.textContent = "Start Tutor";
         nextStepPrimaryBtn.href = "/chat.html";
@@ -470,8 +462,7 @@
             `In the last Tutor session, Learnlio noticed this was a bit tricky.` +
             ` Try a short session in ${area || "that topic"} again, and encourage slow step-by-step working.` +
             ` Use hints early so confidence stays high.`
-          ),
-          "Based on recent Tutor signals, this is the best next step."
+          )
         );
         nextStepPrimaryBtn.textContent = "Continue Tutor";
         nextStepPrimaryBtn.href = "/chat.html";
@@ -497,8 +488,7 @@
             ` Keep sessions short (5–10 minutes) and finish on a win.` +
             (levelHint ? ` ${levelHint}` : "") +
             ` ${nextIdea}`
-          ),
-          "Great progress recently — here’s how to keep it moving."
+          )
         );
         nextStepPrimaryBtn.textContent = "Continue Tutor";
         nextStepPrimaryBtn.href = "/chat.html";
@@ -512,8 +502,7 @@
           `Keep it light and regular. Aim for a short session, 3–4 times a week.` +
           (area ? ` Stay on ${area} until it feels easy.` : "") +
           ` Learnlio will gently adjust difficulty as confidence grows.`
-        ),
-        "Here’s what to do next based on recent Tutor sessions."
+        )
       );
       nextStepPrimaryBtn.textContent = "Continue Tutor";
       nextStepPrimaryBtn.href = "/chat.html";
@@ -547,6 +536,9 @@
         return;
       }
 
+      // Auto-select if:
+      // - exactly one child AND nothing selected
+      // - selected child no longer exists
       const selectedId = getSelectedChildId();
       const selectedExists = selectedId ? rows.some(r => r.id === selectedId) : false;
 
@@ -558,6 +550,7 @@
         setSelectedChildUI();
       }
 
+      // Render list
       listEl.innerHTML = "";
       rows.forEach(ch => {
         const card = document.createElement("div");
@@ -610,6 +603,7 @@
           </div>
         `;
 
+        // Wire up buttons
         const selectBtn = card.querySelector(`button[data-action="select"][data-id="${ch.id}"]`);
         const editBtn   = card.querySelector(`button[data-action="edit"][data-id="${ch.id}"]`);
         const wrap      = card.querySelector(`[data-editwrap="${ch.id}"]`);
@@ -814,4 +808,3 @@
   </script>
 </body>
 </html>
-
