@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Learnlio — Reports</title>
 
-  <!-- App CSS -->
   <link rel="stylesheet" href="/assets/css/app.css" />
 
-  <!-- Minimal fallback styles -->
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
     .container { max-width: 980px; margin: 0 auto; padding: 18px; }
@@ -20,7 +18,7 @@
     .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
     .links a.active { background:#eef2ff; }
-    .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:700; }
+    .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:800; }
     .btn.light { background:#e5e7eb; color:#111; }
     .btn.ghost { background:transparent; border:1px solid #d1d5db; color:#111; }
     .muted { color:#6b7280; font-size: 14px; }
@@ -31,16 +29,16 @@
     .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
     @media(min-width: 900px){ .grid { grid-template-columns: 1fr 1fr; } }
 
-    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; font-weight:800; }
-    .pill.gray { background:#f3f4f6; font-weight:700; }
-    .pill.ok { background:#ecfdf5; }
-    .pill.warn { background:#fff7ed; }
-    .pill.bad { background:#fef2f2; }
+    .pill { display:inline-block; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:900; }
+    .pill.gray { background:#f3f4f6; color:#111; }
+    .pill.ok { background:#ecfdf5; color:#065f46; }
+    .pill.warn { background:#fff7ed; color:#9a3412; }
+    .pill.bad { background:#fef2f2; color:#991b1b; }
 
     .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid #f1f1f6; }
     .row:last-child { border-bottom:none; }
     .k { color:#6b7280; font-size:13px; }
-    .v { font-weight:750; text-align:right; }
+    .v { font-weight:800; text-align:right; }
 
     .top-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
     .select {
@@ -103,7 +101,6 @@
         </div>
 
         <div class="top-actions">
-          <!-- Change child (only shows if 2+ children) -->
           <div id="childSwitcher" class="select-wrap">
             <span class="label">Child:</span>
             <select id="childSelect" class="select" aria-label="Select child"></select>
@@ -118,11 +115,10 @@
       <div id="pageOk" class="status good" style="display:none;"></div>
 
       <div class="grid" style="margin-top:14px;">
-        <!-- What to do next -->
         <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
             <h2 style="margin:0; font-size:16px;">What to do next</h2>
-            <span class="pill">insights</span>
+            <span class="pill gray">next steps</span>
           </div>
 
           <div id="nextBox" style="margin-top:12px;">
@@ -145,7 +141,6 @@
           </div>
         </section>
 
-        <!-- Summary -->
         <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
             <h2 style="margin:0; font-size:16px;">Summary</h2>
@@ -158,14 +153,13 @@
         </section>
       </div>
 
-      <!-- Skills table -->
       <section class="card" style="margin-top:14px; box-shadow:none; border:1px solid #ececf4;">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
           <div>
             <h2 style="margin:0; font-size:16px;">Skills</h2>
-            <div class="muted" style="margin-top:6px;">This is the “true progress” view: levels move up per subject + area.</div>
+            <div class="muted" style="margin-top:6px;">Levels move up per subject + area.</div>
           </div>
-          <span class="pill">v_child_report_overview</span>
+          <span class="pill gray">v_child_report_overview</span>
         </div>
 
         <div id="skillsBox" style="margin-top:12px;">
@@ -177,7 +171,7 @@
         <h2 style="margin:0 0 8px; font-size:16px;">No progress data yet</h2>
         <div class="muted" style="line-height:1.6;">
           I can’t see any saved learning data for this child yet.<br>
-          Do a short Tutor session (Maths or English), then come back and press <b>Refresh</b>.
+          Do a short Tutor session, then come back and press <b>Refresh</b>.
         </div>
         <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
           <a class="btn" href="/chat.html" style="text-decoration:none; display:inline-block;">Go to Tutor</a>
@@ -189,12 +183,8 @@
 
   <script>
   (() => {
-    // =========================
-    // CONFIG
-    // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-    // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -212,17 +202,16 @@
     const nextBox = document.getElementById("nextBox");
     const noDataBox = document.getElementById("noDataBox");
 
-    // Child switcher
     const childSwitcher = document.getElementById("childSwitcher");
     const childSelect = document.getElementById("childSelect");
 
     let currentUser = null;
     let child = null;
 
-    // cache latest for PDF
-    let lastSummary = null;
+    // cache for PDF
     let lastSkills = [];
-    let lastNext = [];
+    let derivedSummary = null;
+    let derivedNext = null;
 
     function showError(msg){
       pageError.style.display = "block";
@@ -255,22 +244,55 @@
       return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
     }
 
-    function formatPct(v){
-      if (v === null || v === undefined || Number.isNaN(Number(v))) return "—";
+    function asNumber(v){
       const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function formatPct(v){
+      const n = asNumber(v);
+      if (n === null) return "—";
       return `${Math.round(n * 100)}%`;
     }
 
-    function pillForStatus(status){
-      const s = String(status || "").toLowerCase();
-      if (s.includes("excelling") || s.includes("strong") || s.includes("good")) return `<span class="pill ok">Doing well</span>`;
-      if (s.includes("support") || s.includes("focus") || s.includes("struggle")) return `<span class="pill warn">Support</span>`;
-      if (s.includes("avoid") || s.includes("risk")) return `<span class="pill bad">Needs attention</span>`;
-      return `<span class="pill gray">${safe(status, "—")}</span>`;
+    function pillHtml(kind, text){
+      const cls = kind === "ok" ? "pill ok" : kind === "warn" ? "pill warn" : kind === "bad" ? "pill bad" : "pill gray";
+      return `<span class="${cls}">${safe(text, "—")}</span>`;
     }
 
-    // ---- localStorage selectedChild compatibility ----
-    // You’ve used different shapes over time, so we accept them all.
+    function normaliseStatus(row){
+      // Prefer explicit status from your view if present
+      const raw = String(row.status || "").toLowerCase().trim();
+      if (raw) {
+        if (raw.includes("support") || raw.includes("focus") || raw.includes("struggle")) return "support";
+        if (raw.includes("excel") || raw.includes("strong") || raw.includes("good")) return "good";
+        if (raw.includes("risk") || raw.includes("avoid") || raw.includes("attention")) return "risk";
+      }
+
+      // Otherwise infer from accuracy/confidence
+      const acc = asNumber(row.accuracy);
+      const conf = asNumber(row.confidence);
+
+      // If no metrics yet, neutral
+      if (acc === null && conf === null) return "neutral";
+
+      // Support if either metric is low
+      if ((acc !== null && acc < 0.6) || (conf !== null && conf < 0.55)) return "support";
+
+      // Doing well if both are strong
+      if ((acc !== null && acc >= 0.8) && (conf !== null && conf >= 0.75)) return "good";
+
+      return "neutral";
+    }
+
+    function statusPill(row){
+      const s = normaliseStatus(row);
+      if (s === "support") return pillHtml("warn", "Support");
+      if (s === "good") return pillHtml("ok", "Doing well");
+      if (s === "risk") return pillHtml("bad", "Needs attention");
+      return pillHtml("gray", "Building");
+    }
+
     function getSelectedChild(){
       try {
         const raw = localStorage.getItem("selectedChild");
@@ -346,11 +368,6 @@
       if (!selected?.id){
         showError("No child selected. Please go to Dashboard and select a child.");
         childHeader.textContent = "No child selected";
-        summaryBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
-        skillsBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
-        nextBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
-        noDataBox.style.display = "none";
-        lastSeenEl.style.display = "none";
         downloadBtn.disabled = true;
         downloadBtn.style.opacity = "0.6";
         return false;
@@ -378,8 +395,6 @@
 
       child = data;
       clearError();
-
-      // normalise local storage to the current shape
       setSelectedChild(child.id, child.child_name || "Child", child.child_dob || null);
 
       const dob = child.child_dob ? ` • DOB: ${child.child_dob}` : "";
@@ -390,20 +405,61 @@
       return true;
     }
 
-    function renderSummary(summary){
-      if (!summary){
+    function renderSummaryFromSkills(skills){
+      if (!skills || !skills.length){
         summaryBox.innerHTML = `<div class="muted">No summary yet.</div>`;
+        lastSeenEl.style.display = "none";
+        derivedSummary = null;
         return;
       }
 
-      const rows = [
-        { k: "Skills tracked", v: safe(summary.skills_tracked) },
-        { k: "Total attempts", v: safe(summary.total_attempts) },
-        { k: "Overall accuracy", v: formatPct(summary.overall_accuracy) },
-        { k: "Last activity", v: formatDateTime(summary.last_activity_at) }
-      ];
+      const skillsTracked = skills.length;
+
+      // weighted accuracy by attempts (fallback to simple avg)
+      let totalAttempts = 0;
+      let weightedAccSum = 0;
+
+      let lastTs = null;
+
+      skills.forEach(r => {
+        const attempts = asNumber(r.attempts) ?? 0;
+        const acc = asNumber(r.accuracy);
+        totalAttempts += attempts;
+
+        if (acc !== null) weightedAccSum += (acc * attempts);
+
+        const t = r.last_seen_at || r.updated_at || null;
+        if (t) {
+          const dt = new Date(t);
+          if (!isNaN(dt.getTime())) {
+            if (!lastTs || dt.getTime() > lastTs.getTime()) lastTs = dt;
+          }
+        }
+      });
+
+      const overallAcc =
+        totalAttempts > 0
+          ? (weightedAccSum / totalAttempts)
+          : (() => {
+              const vals = skills.map(r => asNumber(r.accuracy)).filter(v => v !== null);
+              if (!vals.length) return null;
+              return vals.reduce((a,b) => a+b, 0) / vals.length;
+            })();
+
+      derivedSummary = {
+        skills_tracked: skillsTracked,
+        total_attempts: totalAttempts,
+        overall_accuracy: overallAcc,
+        last_activity_at: lastTs ? lastTs.toISOString() : null
+      };
 
       summaryBox.innerHTML = "";
+      const rows = [
+        { k: "Skills tracked", v: safe(derivedSummary.skills_tracked) },
+        { k: "Total attempts", v: safe(derivedSummary.total_attempts) },
+        { k: "Overall accuracy", v: derivedSummary.overall_accuracy === null ? "—" : formatPct(derivedSummary.overall_accuracy) },
+        { k: "Last activity", v: derivedSummary.last_activity_at ? formatDateTime(derivedSummary.last_activity_at) : "—" }
+      ];
       rows.forEach(r => {
         const div = document.createElement("div");
         div.className = "row";
@@ -411,41 +467,64 @@
         summaryBox.appendChild(div);
       });
 
-      if (summary?.last_activity_at) {
+      if (derivedSummary.last_activity_at) {
         lastSeenEl.style.display = "block";
-        lastSeenEl.textContent = `Last tutor activity: ${formatDateTime(summary.last_activity_at)}`;
+        lastSeenEl.textContent = `Last tutor activity: ${formatDateTime(derivedSummary.last_activity_at)}`;
       } else {
         lastSeenEl.style.display = "none";
       }
     }
 
-    function renderNextActions(items){
-      // Items are from report_skill_snapshot()
-      if (!items || !items.length){
+    function renderNextFromSkills(skills){
+      if (!skills || !skills.length){
         nextBox.innerHTML = `<div class="muted">No next steps yet. Do a short tutor session first.</div>`;
+        derivedNext = null;
         return;
       }
 
-      // Split into support vs doing well
-      const support = items.filter(x => String(x.status || "").toLowerCase().includes("support") || String(x.status || "").toLowerCase().includes("focus"));
-      const doingWell = items.filter(x => String(x.status || "").toLowerCase().includes("excelling") || String(x.status || "").toLowerCase().includes("strong") || String(x.status || "").toLowerCase().includes("good"));
+      // Rank support: low confidence/accuracy first
+      const scored = skills.map(r => {
+        const acc = asNumber(r.accuracy);
+        const conf = asNumber(r.confidence);
+        const attempts = asNumber(r.attempts) ?? 0;
 
-      // Fallback if statuses differ
-      const primary = support.length ? support : items.slice(0, 3);
-      const secondary = doingWell.length ? doingWell : items.slice(0, 2);
+        // “need score” higher means needs more support
+        let need = 0;
+        if (acc !== null) need += (1 - acc);
+        if (conf !== null) need += (1 - conf);
+        // prefer skills with some attempts (more evidence)
+        need += attempts > 0 ? 0.15 : 0;
+
+        return { ...r, __status: normaliseStatus(r), __need: need };
+      });
+
+      const support = scored
+        .filter(r => r.__status === "support" || r.__status === "risk")
+        .sort((a,b) => (b.__need - a.__need))
+        .slice(0, 3);
+
+      const doingWell = scored
+        .filter(r => r.__status === "good")
+        .sort((a,b) => (b.__need - a.__need)) // not critical
+        .slice(0, 2);
+
+      // Fallbacks if not enough
+      const supportFinal = support.length ? support : scored.sort((a,b) => (b.__need - a.__need)).slice(0, 3);
+      const doingFinal = doingWell.length ? doingWell : scored.sort((a,b) => (a.__need - b.__need)).slice(0, 2);
+
+      derivedNext = { support: supportFinal, doingWell: doingFinal };
 
       const makeLine = (x) => {
         const subj = safe(x.subject);
         const area = safe(x.area);
         const lvl = (x.level !== null && x.level !== undefined) ? `Level ${x.level}` : "Level —";
-        const acc = (x.accuracy !== null && x.accuracy !== undefined) ? formatPct(x.accuracy) : "—";
-        const conf = (x.confidence !== null && x.confidence !== undefined) ? formatPct(x.confidence) : "—";
-        const badge = pillForStatus(x.status);
+        const acc = formatPct(x.accuracy);
+        const conf = formatPct(x.confidence);
         return `
           <li>
             <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;">
-              <div style="font-weight:800;">${subj} • ${area}</div>
-              <div>${badge}</div>
+              <div style="font-weight:900;">${subj} • ${area}</div>
+              <div>${statusPill(x)}</div>
             </div>
             <div class="small" style="margin-top:4px;">
               ${lvl} • Accuracy ${acc} • Confidence ${conf}
@@ -461,16 +540,16 @@
         </div>
 
         <div style="margin-top:10px;">
-          <div style="font-weight:800; margin-bottom:6px;">Focus first (5–10 mins)</div>
+          <div style="font-weight:900; margin-bottom:6px;">Focus first (5–10 mins)</div>
           <ul class="list">
-            ${primary.slice(0, 3).map(makeLine).join("")}
+            ${supportFinal.map(makeLine).join("")}
           </ul>
         </div>
 
         <div style="margin-top:12px;">
-          <div style="font-weight:800; margin-bottom:6px;">Finish on confidence (2–5 mins)</div>
+          <div style="font-weight:900; margin-bottom:6px;">Finish on confidence (2–5 mins)</div>
           <ul class="list">
-            ${secondary.slice(0, 2).map(makeLine).join("")}
+            ${doingFinal.map(makeLine).join("")}
           </ul>
         </div>
       `;
@@ -485,21 +564,24 @@
       const tr = rows.map(r => {
         const subj = safe(r.subject);
         const area = safe(r.area);
+
         const level = (r.level !== null && r.level !== undefined) ? r.level : "—";
         const attempts = (r.attempts !== null && r.attempts !== undefined) ? r.attempts : "—";
-        const accuracy = (r.accuracy !== null && r.accuracy !== undefined) ? formatPct(r.accuracy) : "—";
-        const confidence = (r.confidence !== null && r.confidence !== undefined) ? formatPct(r.confidence) : "—";
-        const statusPill = pillForStatus(r.status);
+        const accuracy = formatPct(r.accuracy);
+        const confidence = formatPct(r.confidence);
         const last = formatDateTime(r.last_seen_at || r.updated_at);
 
         return `
           <tr>
-            <td><div style="font-weight:800;">${subj}</div><div class="small">${area}</div></td>
+            <td>
+              <div style="font-weight:900;">${subj}</div>
+              <div class="small">${area}</div>
+            </td>
             <td class="right">${level}</td>
             <td class="right">${attempts}</td>
             <td class="right">${accuracy}</td>
             <td class="right">${confidence}</td>
-            <td class="right">${statusPill}</td>
+            <td class="right">${statusPill(r)}</td>
             <td class="right"><span class="small">${last}</span></td>
           </tr>
         `;
@@ -535,23 +617,11 @@
       nextBox.innerHTML = `<div class="muted">Loading…</div>`;
       skillsBox.innerHTML = `<div class="muted">Loading…</div>`;
 
-      lastSummary = null;
       lastSkills = [];
-      lastNext = [];
+      derivedSummary = null;
+      derivedNext = null;
 
-      // 1) Summary function
-      const { data: summary, error: sumErr } = await sb
-        .rpc("report_child_summary", { p_owner_id: currentUser.id, p_child_id: child.id });
-
-      if (sumErr) console.error("report_child_summary error:", sumErr);
-
-      // 2) Next steps function
-      const { data: nextSteps, error: nextErr } = await sb
-        .rpc("report_skill_snapshot", { p_owner_id: currentUser.id, p_child_id: child.id });
-
-      if (nextErr) console.error("report_skill_snapshot error:", nextErr);
-
-      // 3) Skills view
+      // IMPORTANT: this page is now powered by your skills view only
       const { data: skills, error: skillsErr } = await sb
         .from("v_child_report_overview")
         .select("*")
@@ -560,27 +630,30 @@
         .order("subject", { ascending: true })
         .order("area", { ascending: true });
 
-      if (skillsErr) console.error("v_child_report_overview error:", skillsErr);
+      if (skillsErr) {
+        console.error("v_child_report_overview error:", skillsErr);
+        showError("Could not load skills overview. Check RLS/view permissions.");
+        summaryBox.innerHTML = `<div class="muted">—</div>`;
+        nextBox.innerHTML = `<div class="muted">—</div>`;
+        skillsBox.innerHTML = `<div class="muted">—</div>`;
+        noDataBox.style.display = "block";
+        return;
+      }
 
-      // Cache
-      lastSummary = (summary && Array.isArray(summary)) ? summary[0] : summary || null;
-      lastNext = Array.isArray(nextSteps) ? nextSteps : (nextSteps ? [nextSteps] : []);
       lastSkills = Array.isArray(skills) ? skills : [];
 
-      const hasAnyData =
-        !!lastSummary ||
-        (lastSkills && lastSkills.length > 0) ||
-        (lastNext && lastNext.length > 0);
-
-      renderSummary(lastSummary);
-      renderNextActions(lastNext);
+      // derive everything from skills
       renderSkillsTable(lastSkills);
+      renderSummaryFromSkills(lastSkills);
+      renderNextFromSkills(lastSkills);
 
+      const hasAnyData = lastSkills.length > 0;
       noDataBox.style.display = hasAnyData ? "none" : "block";
+
       showOk("Reports refreshed");
     }
 
-    // ---------------- PDF ----------------
+    // ---------- PDF ----------
     function pdfWriteLine(doc, text, x, y, maxWidth){
       const lines = doc.splitTextToSize(String(text), maxWidth);
       lines.forEach((ln, i) => doc.text(ln, x, y + (i * 6)));
@@ -605,25 +678,25 @@
         doc.text("Summary", 14, y); y += 8;
         doc.setFontSize(12);
 
-        if (!lastSummary) {
+        if (!derivedSummary) {
           y = pdfWriteLine(doc, "No summary data yet.", 14, y, 180); y += 6;
         } else {
-          y = pdfWriteLine(doc, `Skills tracked: ${safe(lastSummary.skills_tracked)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Total attempts: ${safe(lastSummary.total_attempts)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Overall accuracy: ${formatPct(lastSummary.overall_accuracy)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Last activity: ${formatDateTime(lastSummary.last_activity_at)}`, 14, y, 180); y += 6;
+          y = pdfWriteLine(doc, `Skills tracked: ${safe(derivedSummary.skills_tracked)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Total attempts: ${safe(derivedSummary.total_attempts)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Overall accuracy: ${derivedSummary.overall_accuracy === null ? "—" : formatPct(derivedSummary.overall_accuracy)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Last activity: ${derivedSummary.last_activity_at ? formatDateTime(derivedSummary.last_activity_at) : "—"}`, 14, y, 180); y += 6;
         }
 
         doc.setFontSize(14);
         doc.text("What to do next", 14, y); y += 8;
         doc.setFontSize(12);
 
-        if (!lastNext || !lastNext.length) {
-          y = pdfWriteLine(doc, "No next steps yet. Do a tutor session first.", 14, y, 180); y += 6;
+        if (!derivedNext) {
+          y = pdfWriteLine(doc, "No next steps yet.", 14, y, 180); y += 6;
         } else {
-          const top = lastNext.slice(0, 5);
+          const top = [...(derivedNext.support || []), ...(derivedNext.doingWell || [])].slice(0, 6);
           top.forEach((x, idx) => {
-            const line = `${idx+1}) ${safe(x.subject)} • ${safe(x.area)} — Level ${safe(x.level)} — Accuracy ${formatPct(x.accuracy)} — Status: ${safe(x.status)}`;
+            const line = `${idx+1}) ${safe(x.subject)} • ${safe(x.area)} — Level ${safe(x.level)} — Accuracy ${formatPct(x.accuracy)} — Confidence ${formatPct(x.confidence)}`;
             y = pdfWriteLine(doc, line, 14, y, 180);
             y += 2;
             if (y > 270) { doc.addPage(); y = 14; }
@@ -638,9 +711,8 @@
         if (!lastSkills || !lastSkills.length) {
           y = pdfWriteLine(doc, "No skills tracked yet.", 14, y, 180); y += 6;
         } else {
-          const rows = lastSkills.slice(0, 40); // keep PDF sane
-          rows.forEach((r) => {
-            const line = `${safe(r.subject)} • ${safe(r.area)} — Level ${safe(r.level)} — Attempts ${safe(r.attempts)} — Acc ${formatPct(r.accuracy)} — Conf ${formatPct(r.confidence)} — ${safe(r.status)}`;
+          lastSkills.slice(0, 40).forEach((r) => {
+            const line = `${safe(r.subject)} • ${safe(r.area)} — Level ${safe(r.level)} — Attempts ${safe(r.attempts)} — Acc ${formatPct(r.accuracy)} — Conf ${formatPct(r.confidence)}`;
             y = pdfWriteLine(doc, line, 14, y, 180);
             y += 2;
             if (y > 270) { doc.addPage(); y = 14; }
@@ -654,7 +726,7 @@
       }
     }
 
-    // ---------------- events ----------------
+    // ---------- events ----------
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
@@ -669,7 +741,7 @@
       downloadPDF();
     });
 
-    // ---------------- init ----------------
+    // ---------- init ----------
     (async () => {
       if (!sb) { showError("Supabase did not load."); return; }
 
@@ -687,4 +759,5 @@
   </script>
 </body>
 </html>
+
 
