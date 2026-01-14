@@ -20,21 +20,27 @@
     .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
     .links a.active { background:#eef2ff; }
-    .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; }
+    .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:700; }
     .btn.light { background:#e5e7eb; color:#111; }
+    .btn.ghost { background:transparent; border:1px solid #d1d5db; color:#111; }
     .muted { color:#6b7280; font-size: 14px; }
-    .status { margin-top:10px; font-size:14px; }
+    .status { margin-top:10px; font-size:14px; white-space:pre-wrap; }
     .status.bad { color:#dc2626; }
     .status.good { color:#16a34a; }
 
     .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
     @media(min-width: 900px){ .grid { grid-template-columns: 1fr 1fr; } }
 
-    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; }
-    .row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f1f1f6; }
+    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; font-weight:800; }
+    .pill.gray { background:#f3f4f6; font-weight:700; }
+    .pill.ok { background:#ecfdf5; }
+    .pill.warn { background:#fff7ed; }
+    .pill.bad { background:#fef2f2; }
+
+    .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid #f1f1f6; }
     .row:last-child { border-bottom:none; }
     .k { color:#6b7280; font-size:13px; }
-    .v { font-weight:650; text-align:right; }
+    .v { font-weight:750; text-align:right; }
 
     .top-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
     .select {
@@ -43,6 +49,26 @@
     }
     .select-wrap { display:none; gap:8px; align-items:center; }
     .label { font-size:13px; color:#6b7280; }
+
+    .table { width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border:1px solid #ececf4; border-radius:14px; }
+    .table th, .table td { padding:10px 12px; font-size:14px; border-bottom:1px solid #f1f1f6; vertical-align:top; }
+    .table th { text-align:left; background:#fafafa; color:#374151; font-size:12px; letter-spacing:.2px; text-transform:uppercase; }
+    .table tr:last-child td { border-bottom:none; }
+    .right { text-align:right; }
+    .small { font-size:12px; color:#6b7280; }
+    .hr { height:1px; background:#ececf4; margin:14px 0; }
+
+    .callout {
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      padding:14px;
+      background:linear-gradient(135deg, rgba(11,92,255,.06), rgba(16,185,129,.05));
+    }
+    .callout h3{ margin:0 0 6px; font-size:14px; }
+    .callout p{ margin:0; color:#6b7280; line-height:1.6; font-size:14px; }
+
+    .list { margin:10px 0 0; padding-left:18px; color:#111; }
+    .list li { margin:6px 0; line-height:1.5; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -61,6 +87,7 @@
         <a href="/chat.html">Learnlio Tutor</a>
         <a href="/screener.html">Dyslexia Screener</a>
         <a class="active" href="/reports.html">Reports</a>
+        <a href="/billing.html">Billing</a>
         <button id="logoutBtn" class="btn light" type="button">Log out</button>
       </nav>
     </div>
@@ -72,6 +99,7 @@
         <div>
           <h1 style="margin:0 0 6px;">Reports</h1>
           <div id="childHeader" class="muted">Loading child…</div>
+          <div id="lastSeen" class="small" style="margin-top:6px; display:none;"></div>
         </div>
 
         <div class="top-actions">
@@ -90,31 +118,65 @@
       <div id="pageOk" class="status good" style="display:none;"></div>
 
       <div class="grid" style="margin-top:14px;">
+        <!-- What to do next -->
         <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2 style="margin:0; font-size:16px;">Overall progress</h2>
-            <span class="pill">progress</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <h2 style="margin:0; font-size:16px;">What to do next</h2>
+            <span class="pill">insights</span>
           </div>
-          <div id="overallBox" style="margin-top:10px;">
+
+          <div id="nextBox" style="margin-top:12px;">
             <div class="muted">Loading…</div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="callout">
+            <h3>How to use this</h3>
+            <p>
+              Pick one “Support” skill and practise it for 5–10 minutes.
+              Then do one “Doing well” skill to end on confidence.
+            </p>
+          </div>
+
+          <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="btn" href="/chat.html" style="text-decoration:none;">Go to Tutor</a>
+            <a class="btn ghost" href="/dash.html" style="text-decoration:none;">Change child</a>
           </div>
         </section>
 
+        <!-- Summary -->
         <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2 style="margin:0; font-size:16px;">Tutor signals</h2>
-            <span class="pill">child_progress</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <h2 style="margin:0; font-size:16px;">Summary</h2>
+            <span class="pill gray">overview</span>
           </div>
-          <div id="signalsBox" style="margin-top:10px;">
+
+          <div id="summaryBox" style="margin-top:12px;">
             <div class="muted">Loading…</div>
           </div>
         </section>
       </div>
 
+      <!-- Skills table -->
+      <section class="card" style="margin-top:14px; box-shadow:none; border:1px solid #ececf4;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div>
+            <h2 style="margin:0; font-size:16px;">Skills</h2>
+            <div class="muted" style="margin-top:6px;">This is the “true progress” view: levels move up per subject + area.</div>
+          </div>
+          <span class="pill">v_child_report_overview</span>
+        </div>
+
+        <div id="skillsBox" style="margin-top:12px;">
+          <div class="muted">Loading…</div>
+        </div>
+      </section>
+
       <section id="noDataBox" class="card" style="margin-top:14px; box-shadow:none; border:1px dashed #cbd5e1; display:none;">
         <h2 style="margin:0 0 8px; font-size:16px;">No progress data yet</h2>
         <div class="muted" style="line-height:1.6;">
-          I can’t see any saved progress for this child yet.<br>
+          I can’t see any saved learning data for this child yet.<br>
           Do a short Tutor session (Maths or English), then come back and press <b>Refresh</b>.
         </div>
         <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
@@ -143,9 +205,11 @@
     const pageError = document.getElementById("pageError");
     const pageOk = document.getElementById("pageOk");
     const childHeader = document.getElementById("childHeader");
+    const lastSeenEl = document.getElementById("lastSeen");
 
-    const overallBox = document.getElementById("overallBox");
-    const signalsBox = document.getElementById("signalsBox");
+    const summaryBox = document.getElementById("summaryBox");
+    const skillsBox = document.getElementById("skillsBox");
+    const nextBox = document.getElementById("nextBox");
     const noDataBox = document.getElementById("noDataBox");
 
     // Child switcher
@@ -155,9 +219,10 @@
     let currentUser = null;
     let child = null;
 
-    // cache latest data for PDF
-    let lastOverall = null;
-    let lastSignals = null;
+    // cache latest for PDF
+    let lastSummary = null;
+    let lastSkills = [];
+    let lastNext = [];
 
     function showError(msg){
       pageError.style.display = "block";
@@ -170,19 +235,7 @@
     function showOk(msg){
       pageOk.style.display = "block";
       pageOk.textContent = msg;
-      setTimeout(() => { pageOk.style.display="none"; }, 1800);
-    }
-
-    function getSelectedChild(){
-      try {
-        const raw = localStorage.getItem("selectedChild");
-        if (!raw) return null;
-        return JSON.parse(raw);
-      } catch { return null; }
-    }
-
-    function setSelectedChild(id, name){
-      localStorage.setItem("selectedChild", JSON.stringify({ id, child_name: name }));
+      setTimeout(() => { pageOk.style.display="none"; }, 1600);
     }
 
     function safe(v, fallback="—"){
@@ -190,24 +243,48 @@
       return String(v);
     }
 
-    function formatDateOnly(value){
+    function formatDateTime(value){
       if (!value) return "—";
       const d = new Date(value);
       if (isNaN(d.getTime())) return "—";
       const dd = String(d.getDate()).padStart(2, "0");
       const mm = String(d.getMonth() + 1).padStart(2, "0");
       const yyyy = d.getFullYear();
-      return `${dd}/${mm}/${yyyy}`;
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mi = String(d.getMinutes()).padStart(2, "0");
+      return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
     }
 
-    function renderRows(targetEl, rows){
-      targetEl.innerHTML = "";
-      rows.forEach(r => {
-        const div = document.createElement("div");
-        div.className = "row";
-        div.innerHTML = `<div class="k">${r.k}</div><div class="v">${r.v}</div>`;
-        targetEl.appendChild(div);
-      });
+    function formatPct(v){
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return "—";
+      const n = Number(v);
+      return `${Math.round(n * 100)}%`;
+    }
+
+    function pillForStatus(status){
+      const s = String(status || "").toLowerCase();
+      if (s.includes("excelling") || s.includes("strong") || s.includes("good")) return `<span class="pill ok">Doing well</span>`;
+      if (s.includes("support") || s.includes("focus") || s.includes("struggle")) return `<span class="pill warn">Support</span>`;
+      if (s.includes("avoid") || s.includes("risk")) return `<span class="pill bad">Needs attention</span>`;
+      return `<span class="pill gray">${safe(status, "—")}</span>`;
+    }
+
+    // ---- localStorage selectedChild compatibility ----
+    // You’ve used different shapes over time, so we accept them all.
+    function getSelectedChild(){
+      try {
+        const raw = localStorage.getItem("selectedChild");
+        if (!raw) return null;
+        const obj = JSON.parse(raw);
+        const id = obj?.id || obj?.child_id;
+        const name = obj?.name || obj?.child_name || "Child";
+        const dob = obj?.dob || obj?.child_dob || null;
+        return id ? { id, name, dob } : null;
+      } catch { return null; }
+    }
+
+    function setSelectedChild(id, name, dob){
+      localStorage.setItem("selectedChild", JSON.stringify({ id, name, dob }));
     }
 
     async function requireAuth(){
@@ -221,10 +298,9 @@
     }
 
     async function loadChildSwitcher(){
-      // Load all children for this parent
       const { data, error } = await sb
         .from("children")
-        .select("id, child_name, child_dob, parent_user_id")
+        .select("id, child_name, child_dob, parent_user_id, created_at")
         .eq("parent_user_id", currentUser.id)
         .order("created_at", { ascending: true });
 
@@ -236,12 +312,10 @@
 
       const children = data || [];
       if (children.length <= 1) {
-        // Hide switcher if 0/1 child
         childSwitcher.style.display = "none";
         return;
       }
 
-      // Show switcher
       childSwitcher.style.display = "flex";
       childSelect.innerHTML = "";
 
@@ -252,16 +326,15 @@
         childSelect.appendChild(opt);
       });
 
-      // Set currently selected value
       const selected = getSelectedChild();
       if (selected?.id) childSelect.value = selected.id;
 
-      // Change handler
       childSelect.addEventListener("change", async () => {
         const id = childSelect.value;
         const name = childSelect.options[childSelect.selectedIndex]?.textContent || "Child";
-        setSelectedChild(id, name);
-        // Reload child + reports
+        const chosen = children.find(x => x.id === id);
+        const dob = chosen?.child_dob || null;
+        setSelectedChild(id, name, dob);
         await loadChildProfile();
         await loadReports();
         showOk("Child changed");
@@ -273,9 +346,11 @@
       if (!selected?.id){
         showError("No child selected. Please go to Dashboard and select a child.");
         childHeader.textContent = "No child selected";
-        overallBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
-        signalsBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
+        summaryBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
+        skillsBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
+        nextBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
         noDataBox.style.display = "none";
+        lastSeenEl.style.display = "none";
         downloadBtn.disabled = true;
         downloadBtn.style.opacity = "0.6";
         return false;
@@ -302,76 +377,210 @@
       }
 
       child = data;
-      const dob = data.child_dob ? ` • DOB: ${data.child_dob}` : "";
-      childHeader.textContent = `Child: ${data.child_name}${dob}`;
       clearError();
+
+      // normalise local storage to the current shape
+      setSelectedChild(child.id, child.child_name || "Child", child.child_dob || null);
+
+      const dob = child.child_dob ? ` • DOB: ${child.child_dob}` : "";
+      childHeader.textContent = `Child: ${safe(child.child_name)}${dob}`;
 
       downloadBtn.disabled = false;
       downloadBtn.style.opacity = "1";
       return true;
     }
 
+    function renderSummary(summary){
+      if (!summary){
+        summaryBox.innerHTML = `<div class="muted">No summary yet.</div>`;
+        return;
+      }
+
+      const rows = [
+        { k: "Skills tracked", v: safe(summary.skills_tracked) },
+        { k: "Total attempts", v: safe(summary.total_attempts) },
+        { k: "Overall accuracy", v: formatPct(summary.overall_accuracy) },
+        { k: "Last activity", v: formatDateTime(summary.last_activity_at) }
+      ];
+
+      summaryBox.innerHTML = "";
+      rows.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "row";
+        div.innerHTML = `<div class="k">${r.k}</div><div class="v">${r.v}</div>`;
+        summaryBox.appendChild(div);
+      });
+
+      if (summary?.last_activity_at) {
+        lastSeenEl.style.display = "block";
+        lastSeenEl.textContent = `Last tutor activity: ${formatDateTime(summary.last_activity_at)}`;
+      } else {
+        lastSeenEl.style.display = "none";
+      }
+    }
+
+    function renderNextActions(items){
+      // Items are from report_skill_snapshot()
+      if (!items || !items.length){
+        nextBox.innerHTML = `<div class="muted">No next steps yet. Do a short tutor session first.</div>`;
+        return;
+      }
+
+      // Split into support vs doing well
+      const support = items.filter(x => String(x.status || "").toLowerCase().includes("support") || String(x.status || "").toLowerCase().includes("focus"));
+      const doingWell = items.filter(x => String(x.status || "").toLowerCase().includes("excelling") || String(x.status || "").toLowerCase().includes("strong") || String(x.status || "").toLowerCase().includes("good"));
+
+      // Fallback if statuses differ
+      const primary = support.length ? support : items.slice(0, 3);
+      const secondary = doingWell.length ? doingWell : items.slice(0, 2);
+
+      const makeLine = (x) => {
+        const subj = safe(x.subject);
+        const area = safe(x.area);
+        const lvl = (x.level !== null && x.level !== undefined) ? `Level ${x.level}` : "Level —";
+        const acc = (x.accuracy !== null && x.accuracy !== undefined) ? formatPct(x.accuracy) : "—";
+        const conf = (x.confidence !== null && x.confidence !== undefined) ? formatPct(x.confidence) : "—";
+        const badge = pillForStatus(x.status);
+        return `
+          <li>
+            <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;">
+              <div style="font-weight:800;">${subj} • ${area}</div>
+              <div>${badge}</div>
+            </div>
+            <div class="small" style="margin-top:4px;">
+              ${lvl} • Accuracy ${acc} • Confidence ${conf}
+            </div>
+          </li>
+        `;
+      };
+
+      nextBox.innerHTML = `
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="pill warn">Support</span>
+          <span class="pill ok">Doing well</span>
+        </div>
+
+        <div style="margin-top:10px;">
+          <div style="font-weight:800; margin-bottom:6px;">Focus first (5–10 mins)</div>
+          <ul class="list">
+            ${primary.slice(0, 3).map(makeLine).join("")}
+          </ul>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div style="font-weight:800; margin-bottom:6px;">Finish on confidence (2–5 mins)</div>
+          <ul class="list">
+            ${secondary.slice(0, 2).map(makeLine).join("")}
+          </ul>
+        </div>
+      `;
+    }
+
+    function renderSkillsTable(rows){
+      if (!rows || !rows.length){
+        skillsBox.innerHTML = `<div class="muted">No skills tracked yet.</div>`;
+        return;
+      }
+
+      const tr = rows.map(r => {
+        const subj = safe(r.subject);
+        const area = safe(r.area);
+        const level = (r.level !== null && r.level !== undefined) ? r.level : "—";
+        const attempts = (r.attempts !== null && r.attempts !== undefined) ? r.attempts : "—";
+        const accuracy = (r.accuracy !== null && r.accuracy !== undefined) ? formatPct(r.accuracy) : "—";
+        const confidence = (r.confidence !== null && r.confidence !== undefined) ? formatPct(r.confidence) : "—";
+        const statusPill = pillForStatus(r.status);
+        const last = formatDateTime(r.last_seen_at || r.updated_at);
+
+        return `
+          <tr>
+            <td><div style="font-weight:800;">${subj}</div><div class="small">${area}</div></td>
+            <td class="right">${level}</td>
+            <td class="right">${attempts}</td>
+            <td class="right">${accuracy}</td>
+            <td class="right">${confidence}</td>
+            <td class="right">${statusPill}</td>
+            <td class="right"><span class="small">${last}</span></td>
+          </tr>
+        `;
+      }).join("");
+
+      skillsBox.innerHTML = `
+        <table class="table" aria-label="Skills progress table">
+          <thead>
+            <tr>
+              <th>Skill</th>
+              <th class="right">Level</th>
+              <th class="right">Attempts</th>
+              <th class="right">Accuracy</th>
+              <th class="right">Confidence</th>
+              <th class="right">Status</th>
+              <th class="right">Last seen</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tr}
+          </tbody>
+        </table>
+      `;
+    }
+
     async function loadReports(){
       if (!child?.id) return;
 
-      overallBox.innerHTML = `<div class="muted">Loading…</div>`;
-      signalsBox.innerHTML = `<div class="muted">Loading…</div>`;
+      clearError();
       noDataBox.style.display = "none";
 
-      lastOverall = null;
-      lastSignals = null;
+      summaryBox.innerHTML = `<div class="muted">Loading…</div>`;
+      nextBox.innerHTML = `<div class="muted">Loading…</div>`;
+      skillsBox.innerHTML = `<div class="muted">Loading…</div>`;
 
-      const { data: overall, error: overallErr } = await sb
-        .from("progress")
-        .select("id, parent_user_id, child_id, maths_level, english_level, streak, updated_at")
-        .eq("child_id", child.id)
-        .maybeSingle();
+      lastSummary = null;
+      lastSkills = [];
+      lastNext = [];
 
-      if (overallErr) console.error("progress read error", overallErr);
+      // 1) Summary function
+      const { data: summary, error: sumErr } = await sb
+        .rpc("report_child_summary", { p_owner_id: currentUser.id, p_child_id: child.id });
 
-      const { data: signals, error: signalsErr } = await sb
-        .from("child_progress")
-        .select("id, child_id, owner_id, subject, area, difficulty, streak_correct, streak_wrong, last_session_id, last_seen_at")
-        .eq("child_id", child.id)
+      if (sumErr) console.error("report_child_summary error:", sumErr);
+
+      // 2) Next steps function
+      const { data: nextSteps, error: nextErr } = await sb
+        .rpc("report_skill_snapshot", { p_owner_id: currentUser.id, p_child_id: child.id });
+
+      if (nextErr) console.error("report_skill_snapshot error:", nextErr);
+
+      // 3) Skills view
+      const { data: skills, error: skillsErr } = await sb
+        .from("v_child_report_overview")
+        .select("*")
         .eq("owner_id", currentUser.id)
-        .maybeSingle();
+        .eq("child_id", child.id)
+        .order("subject", { ascending: true })
+        .order("area", { ascending: true });
 
-      if (signalsErr) console.error("child_progress read error", signalsErr);
+      if (skillsErr) console.error("v_child_report_overview error:", skillsErr);
 
-      lastOverall = overall || null;
-      lastSignals = signals || null;
+      // Cache
+      lastSummary = (summary && Array.isArray(summary)) ? summary[0] : summary || null;
+      lastNext = Array.isArray(nextSteps) ? nextSteps : (nextSteps ? [nextSteps] : []);
+      lastSkills = Array.isArray(skills) ? skills : [];
 
-      const hasAnyData = !!overall || !!signals;
+      const hasAnyData =
+        !!lastSummary ||
+        (lastSkills && lastSkills.length > 0) ||
+        (lastNext && lastNext.length > 0);
 
-      if (!overall) {
-        overallBox.innerHTML = `<div class="muted">No overall progress row yet.</div>`;
-      } else {
-        renderRows(overallBox, [
-          { k: "Maths level",   v: safe(overall.maths_level) },
-          { k: "English level", v: safe(overall.english_level) },
-          { k: "Streak",        v: safe(overall.streak) },
-          { k: "Last updated",  v: formatDateOnly(overall.updated_at) }
-        ]);
-      }
-
-      if (!signals) {
-        signalsBox.innerHTML = `<div class="muted">No tutor signals row yet.</div>`;
-      } else {
-        renderRows(signalsBox, [
-          { k: "Last subject",   v: safe(signals.subject) },
-          { k: "Last area",      v: safe(signals.area) },     // clean fallback handled in safe()
-          { k: "Difficulty",     v: safe(signals.difficulty) },
-          { k: "Streak correct", v: safe(signals.streak_correct) },
-          { k: "Streak wrong",   v: safe(signals.streak_wrong) },
-          { k: "Last session",   v: safe(signals.last_session_id) },
-          { k: "Last seen",      v: formatDateOnly(signals.last_seen_at) }
-        ]);
-      }
+      renderSummary(lastSummary);
+      renderNextActions(lastNext);
+      renderSkillsTable(lastSkills);
 
       noDataBox.style.display = hasAnyData ? "none" : "block";
       showOk("Reports refreshed");
     }
 
+    // ---------------- PDF ----------------
     function pdfWriteLine(doc, text, x, y, maxWidth){
       const lines = doc.splitTextToSize(String(text), maxWidth);
       lines.forEach((ln, i) => doc.text(ln, x, y + (i * 6)));
@@ -390,35 +599,52 @@
         doc.setFontSize(12);
         y = pdfWriteLine(doc, `Child: ${safe(child?.child_name)}`, 14, y, 180); y += 2;
         y = pdfWriteLine(doc, `DOB: ${safe(child?.child_dob)}`, 14, y, 180); y += 2;
-        y = pdfWriteLine(doc, `Generated: ${formatDateOnly(new Date())}`, 14, y, 180); y += 6;
+        y = pdfWriteLine(doc, `Generated: ${formatDateTime(new Date())}`, 14, y, 180); y += 6;
 
         doc.setFontSize(14);
-        doc.text("Overall progress", 14, y); y += 8;
+        doc.text("Summary", 14, y); y += 8;
         doc.setFontSize(12);
 
-        if (!lastOverall) {
-          y = pdfWriteLine(doc, "No overall progress data yet.", 14, y, 180); y += 6;
+        if (!lastSummary) {
+          y = pdfWriteLine(doc, "No summary data yet.", 14, y, 180); y += 6;
         } else {
-          y = pdfWriteLine(doc, `Maths level: ${safe(lastOverall.maths_level)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `English level: ${safe(lastOverall.english_level)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Streak: ${safe(lastOverall.streak)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Last updated: ${formatDateOnly(lastOverall.updated_at)}`, 14, y, 180); y += 6;
+          y = pdfWriteLine(doc, `Skills tracked: ${safe(lastSummary.skills_tracked)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Total attempts: ${safe(lastSummary.total_attempts)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Overall accuracy: ${formatPct(lastSummary.overall_accuracy)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Last activity: ${formatDateTime(lastSummary.last_activity_at)}`, 14, y, 180); y += 6;
         }
 
         doc.setFontSize(14);
-        doc.text("Tutor signals", 14, y); y += 8;
+        doc.text("What to do next", 14, y); y += 8;
         doc.setFontSize(12);
 
-        if (!lastSignals) {
-          y = pdfWriteLine(doc, "No tutor signals data yet.", 14, y, 180); y += 6;
+        if (!lastNext || !lastNext.length) {
+          y = pdfWriteLine(doc, "No next steps yet. Do a tutor session first.", 14, y, 180); y += 6;
         } else {
-          y = pdfWriteLine(doc, `Last subject: ${safe(lastSignals.subject)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Last area: ${safe(lastSignals.area)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Difficulty: ${safe(lastSignals.difficulty)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Streak correct: ${safe(lastSignals.streak_correct)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Streak wrong: ${safe(lastSignals.streak_wrong)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Last session: ${safe(lastSignals.last_session_id)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Last seen: ${formatDateOnly(lastSignals.last_seen_at)}`, 14, y, 180); y += 6;
+          const top = lastNext.slice(0, 5);
+          top.forEach((x, idx) => {
+            const line = `${idx+1}) ${safe(x.subject)} • ${safe(x.area)} — Level ${safe(x.level)} — Accuracy ${formatPct(x.accuracy)} — Status: ${safe(x.status)}`;
+            y = pdfWriteLine(doc, line, 14, y, 180);
+            y += 2;
+            if (y > 270) { doc.addPage(); y = 14; }
+          });
+          y += 6;
+        }
+
+        doc.setFontSize(14);
+        doc.text("Skills", 14, y); y += 8;
+        doc.setFontSize(12);
+
+        if (!lastSkills || !lastSkills.length) {
+          y = pdfWriteLine(doc, "No skills tracked yet.", 14, y, 180); y += 6;
+        } else {
+          const rows = lastSkills.slice(0, 40); // keep PDF sane
+          rows.forEach((r) => {
+            const line = `${safe(r.subject)} • ${safe(r.area)} — Level ${safe(r.level)} — Attempts ${safe(r.attempts)} — Acc ${formatPct(r.accuracy)} — Conf ${formatPct(r.confidence)} — ${safe(r.status)}`;
+            y = pdfWriteLine(doc, line, 14, y, 180);
+            y += 2;
+            if (y > 270) { doc.addPage(); y = 14; }
+          });
         }
 
         doc.save(`Learnlio-Report-${safe(child?.child_name,"Child")}.pdf`);
@@ -428,6 +654,7 @@
       }
     }
 
+    // ---------------- events ----------------
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
@@ -435,26 +662,20 @@
     });
 
     refreshBtn.addEventListener("click", async () => {
-      clearError();
       await loadReports();
     });
 
     downloadBtn.addEventListener("click", () => {
-      clearError();
       downloadPDF();
     });
 
+    // ---------------- init ----------------
     (async () => {
       if (!sb) { showError("Supabase did not load."); return; }
 
-      const { data, error } = await sb.auth.getUser();
-      if (error || !data?.user){
-        window.location.href = "/login.html";
-        return;
-      }
-      currentUser = data.user;
+      const ok = await requireAuth();
+      if (!ok) return;
 
-      // Show switcher only if 2+ children
       await loadChildSwitcher();
 
       const childOk = await loadChildProfile();
@@ -466,3 +687,4 @@
   </script>
 </body>
 </html>
+
