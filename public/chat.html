@@ -23,7 +23,7 @@
     .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; }
     .btn.light { background:#e5e7eb; color:#111; }
     .muted { color:#6b7280; font-size: 14px; }
-    .status { margin-top:10px; font-size:14px; }
+    .status { margin-top:10px; font-size:14px; white-space:pre-wrap; }
     .status.bad { color:#dc2626; }
     .status.good { color:#16a34a; }
     .status.warn { color:#b45309; }
@@ -43,6 +43,8 @@
     .speak-btn:hover{ background:#094bd1; }
     .hint-btn:hover{ background:#059669; }
     .next-btn:hover{ background:#6d28d9; }
+
+    .calcBtn{ padding:14px; font-size:18px; border-radius:10px; border:none; background:#fff; cursor:pointer; }
   </style>
 
   <!-- Dependencies -->
@@ -66,6 +68,7 @@
         <a class="active" href="/chat.html">Learnlio Tutor</a>
         <a href="/screener.html">Dyslexia Screener</a>
         <a href="/reports.html">Reports</a>
+        <a href="/billing.html">Billing</a>
         <button id="logoutBtn" class="btn light" type="button">Log out</button>
       </nav>
     </div>
@@ -74,6 +77,9 @@
   <main class="container">
     <div class="card">
       <div id="pageError" class="status bad" style="display:none;"></div>
+
+      <!-- ✅ NEW: DB debug panel (shows real Supabase errors) -->
+      <div id="dbDebug" class="status warn" style="display:none; margin-top:10px;"></div>
 
       <!-- Progress header -->
       <div id="progress-header" style="display:none; margin-bottom:10px;">
@@ -161,6 +167,7 @@
 
     // Elements
     const pageError = document.getElementById("pageError");
+    const dbDebug = document.getElementById("dbDebug");
     const logoutBtn = document.getElementById("logoutBtn");
 
     const progressHeader = document.getElementById("progress-header");
@@ -181,7 +188,7 @@
 
     // Auth + child profile
     let currentUser = null;
-    let child = null; // { id, child_name, child_dob }
+    let child = null; // { id, parent_user_id, child_name, child_dob }
     let childName = "Child";
     let childAge = 10;
 
@@ -189,31 +196,28 @@
     let subject = null; // "Maths" | "English"
     let area = null;
 
-    // Session state (DB-backed)
-    let activeSessionDbId = null;     // sessions.id (uuid) returned from Supabase
-    let maxQuestions = 10;
-    let questionsAnswered = 0;        // completed questions/turns (Maths: per question, English: per turn)
-    let correctCount = 0;             // Maths correct total in session
+    // Session + progress in-memory
+    let sessionDbId = null;             // UUID from sessions table
+    let questionsAnswered = 0;
+    let correctCount = 0;
     let badges = [];
     let sessionLog = [];
 
-    // Adaptive difficulty (lightweight)
-    // 1 = easy, 2 = medium, 3 = harder (still within age bands)
-    let difficultyLevel = 1;
-
-    // Streak tracking (for storage)
+    // Simple adaptive difficulty
+    let difficultyLevel = 1;            // 1..3
     let streakCorrect = 0;
     let streakWrong = 0;
 
     // Maths question + guided mode
-    let currentQuestion = null; // { displayText, correctAnswer }
+    let currentQuestion = null;         // { displayText, correctAnswer }
     let hintUsedForCurrent = false;
     let waitingForNextButton = false;
     let guided = { active:false, steps:[], idx:0 };
 
-    // ---------- small helpers ----------
-    function isoNow() { return new Date().toISOString(); }
+    // Limits by age
+    let maxQuestions = 10;
 
+    // ---------- UI helpers ----------
     function showError(msg) {
       pageError.style.display = "block";
       pageError.textContent = msg;
@@ -221,6 +225,17 @@
     function clearError() {
       pageError.style.display = "none";
       pageError.textContent = "";
+    }
+
+    function showDbDebug(msg) {
+      if (!dbDebug) return;
+      dbDebug.style.display = "block";
+      dbDebug.textContent = String(msg || "");
+    }
+    function clearDbDebug() {
+      if (!dbDebug) return;
+      dbDebug.style.display = "none";
+      dbDebug.textContent = "";
     }
 
     function disableInput(disabled) {
@@ -336,6 +351,7 @@
       areaSelection.style.display = "block";
     }
 
+    function nowIso() { return new Date().toISOString(); }
     function nowTs() { return new Date().toLocaleString("en-GB"); }
 
     // ---------- Backend (AI) ----------
@@ -387,9 +403,8 @@
       progressBar.style.width = pct + "%";
     }
 
-    function resetSessionProgress() {
-      // Reset in-memory session stats
-      maxQuestions = computeMaxQuestions();
+    function resetSessionMemory() {
+      sessionDbId = null;
       questionsAnswered = 0;
       correctCount = 0;
       badges = [];
@@ -397,16 +412,11 @@
       difficultyLevel = 1;
       streakCorrect = 0;
       streakWrong = 0;
-
-      // Reset DB session pointer (new session will be created when area starts)
-      activeSessionDbId = null;
-
+      maxQuestions = computeMaxQuestions();
       updateProgressUI();
     }
 
-    function sessionComplete() {
-      return questionsAnswered >= maxQuestions;
-    }
+    function sessionComplete() { return questionsAnswered >= maxQuestions; }
 
     function maybeAwardBadge() {
       if (correctCount === 3 && !badges.includes("⭐")) badges.push("⭐");
@@ -422,124 +432,120 @@
       if (correctCount === 10 && badges.includes("🏆")) addBotMessage("🏆 Badge unlocked: Learning Champion!");
     }
 
-    // =========================================================
-    // ✅ PROGRESS SYNC (sessions, session_items, child_progress)
-    // =========================================================
+    // ---------- DB: sessions / session_items / child_progress / progress ----------
+    async function ensureSessionRow() {
+      if (sessionDbId) return sessionDbId;
+      if (!currentUser?.id || !child?.id) throw new Error("Missing user/child for session.");
 
-    function toSubjectKey(s) {
-      // Keep your existing display values but normalise casing
-      if (!s) return null;
-      const t = String(s).trim();
-      if (!t) return null;
-      // You can switch to lowercase later; for now keep consistent with existing app usage.
-      return (t.toLowerCase() === "maths") ? "Maths" : (t.toLowerCase() === "english") ? "English" : t;
-    }
-
-    function toAreaKey(a) {
-      if (!a) return null;
-      return String(a).trim();
-    }
-
-    function toDifficultyKey(d) {
-      const n = Number(d);
-      if (!Number.isFinite(n)) return 1;
-      return Math.max(1, Math.min(10, Math.round(n))); // safe clamp
-    }
-
-    async function startSessionInDbIfNeeded() {
-      if (activeSessionDbId) return activeSessionDbId;
-      if (!currentUser?.id || !child?.id) throw new Error("Missing user/child for session start.");
-      if (!subject || !area) throw new Error("Missing subject/area for session start.");
+      // Create a new sessions row and keep its UUID
+      const payload = {
+        parent_user_id: currentUser.id,
+        owner_id: currentUser.id,
+        child_id: child.id,
+        subject: subject || null,
+        area: area || null,
+        questions_done: 0,
+        correct_count: 0,
+        badges: badges,                 // expects json/jsonb
+        summary: null,
+        raw_log: null,                  // expects json/jsonb (nullable)
+        created_at: nowIso()
+      };
 
       const { data, error } = await sb
         .from("sessions")
-        .insert({
-          parent_user_id: currentUser.id,
-          owner_id: currentUser.id,
-          child_id: child.id,
-          subject: toSubjectKey(subject),
-          area: toAreaKey(area),
-          questions_done: 0,
-          correct_count: 0,
-          badges: [],
-          summary: null,
-          raw_log: null,
-          created_at: isoNow()
-        })
+        .insert(payload)
         .select("id")
         .single();
 
-      if (error) throw error;
-      activeSessionDbId = data.id;
-      return activeSessionDbId;
+      if (error) {
+        showDbDebug("Supabase error in ensureSessionRow:\n" + JSON.stringify(error, null, 2));
+        throw error;
+      }
+
+      sessionDbId = data?.id || null;
+      if (!sessionDbId) throw new Error("Session row created but no id returned.");
+      return sessionDbId;
     }
 
     async function insertSessionItem({ item_type, prompt_text, child_text, is_correct, meta }) {
-      const session_id = await startSessionInDbIfNeeded();
-
+      const sid = await ensureSessionRow();
       const payload = {
-        session_id,
+        session_id: sid,
         child_id: child.id,
         owner_id: currentUser.id,
-        created_at: isoNow(),
-        item_type: item_type || "attempt",
-        prompt_text: prompt_text || "",
-        child_text: child_text || "",
+        item_type: item_type || "turn",
+        prompt_text: prompt_text || null,
+        child_text: child_text || null,
         is_correct: (typeof is_correct === "boolean") ? is_correct : null,
-        meta: meta || {}
+        meta: meta || null,             // expects json/jsonb
+        created_at: nowIso()
       };
 
-      const { error } = await sb.from("session_items").insert(payload);
-      if (error) throw error;
+      const { error } = await sb
+        .from("session_items")
+        .insert(payload);
+
+      if (error) {
+        showDbDebug("Supabase error in insertSessionItem:\n" + JSON.stringify(error, null, 2));
+        throw error;
+      }
     }
 
-    async function updateSessionAggregatesInDb() {
-      const session_id = await startSessionInDbIfNeeded();
+    async function updateSessionAggregates() {
+      if (!sessionDbId) return;
+
       const { error } = await sb
         .from("sessions")
         .update({
+          subject: subject || null,
+          area: area || null,
           questions_done: questionsAnswered,
           correct_count: correctCount,
           badges: badges,
-          // Optional: you can store a small summary later
-          raw_log: null
+          raw_log: sessionLog,          // expects json/jsonb
         })
-        .eq("id", session_id);
+        .eq("id", sessionDbId);
 
-      if (error) throw error;
+      if (error) {
+        showDbDebug("Supabase error in updateSessionAggregates:\n" + JSON.stringify(error, null, 2));
+        throw error;
+      }
     }
 
     async function upsertChildProgress() {
-      // child_progress unique key should be: (child_id, subject, area, difficulty)
-      // Make sure you've created:
-      //   create unique index if not exists child_progress_unique on public.child_progress (child_id, subject, area, difficulty);
-
-      const session_id = await startSessionInDbIfNeeded();
+      // child_progress columns you gave:
+      // id, child_id, owner_id, subject, area, difficulty, streak_correct, streak_wrong, last_session_id, last_seen_at
+      if (!currentUser?.id || !child?.id) return;
+      if (!subject || !area) return; // we store per subject+area+difficulty
 
       const payload = {
         child_id: child.id,
         owner_id: currentUser.id,
-        subject: toSubjectKey(subject),
-        area: toAreaKey(area),
-        difficulty: toDifficultyKey(difficultyLevel),
+        subject: subject,
+        area: area,
+        difficulty: difficultyLevel,
         streak_correct: streakCorrect,
         streak_wrong: streakWrong,
-        last_session_id: session_id,
-        last_seen_at: isoNow()
+        last_session_id: sessionDbId,
+        last_seen_at: nowIso()
       };
 
+      // IMPORTANT: this requires a unique index on (child_id, subject, area, difficulty)
       const { error } = await sb
         .from("child_progress")
         .upsert(payload, { onConflict: "child_id,subject,area,difficulty" });
 
-      if (error) throw error;
+      if (error) {
+        showDbDebug("Supabase error in upsertChildProgress:\n" + JSON.stringify(error, null, 2));
+        throw error;
+      }
     }
 
     async function saveSummaryProgress() {
-      // Optional/legacy: your progress tab already uses this
-      // progress table:
-      // Id, parent_user_id, child_id, maths_level, english_level, streak, updated_at
-      if (!child?.id || !currentUser?.id) return;
+      // Your existing "progress" table (used by progress tab / streaks)
+      // Assumes columns: parent_user_id, child_id, maths_level, english_level, streak, updated_at
+      if (!currentUser?.id || !child?.id) return;
 
       const payload = {
         parent_user_id: currentUser.id,
@@ -547,16 +553,14 @@
         maths_level: null,
         english_level: null,
         streak: null,
-        updated_at: isoNow()
+        updated_at: nowIso()
       };
 
-      const safeDifficulty = toDifficultyKey(difficultyLevel);
-
-      if (toSubjectKey(subject) === "Maths") {
-        payload.maths_level = safeDifficulty;
+      if (subject === "Maths") {
+        payload.maths_level = difficultyLevel;
         payload.streak = streakCorrect;
-      } else if (toSubjectKey(subject) === "English") {
-        payload.english_level = safeDifficulty;
+      } else if (subject === "English") {
+        payload.english_level = difficultyLevel;
         payload.streak = questionsAnswered;
       }
 
@@ -564,31 +568,27 @@
         .from("progress")
         .upsert(payload, { onConflict: "child_id" });
 
-      if (error) console.error("progress upsert failed:", error);
+      if (error) {
+        showDbDebug("Supabase error in saveSummaryProgress:\n" + JSON.stringify(error, null, 2));
+        throw error;
+      }
     }
 
-    async function syncAllProgress({ item_type, prompt_text, child_text, is_correct, meta }) {
-      // Write event log + update aggregates + upsert child_progress (+ optional progress)
+    async function syncAllProgress(args) {
       try {
-        await insertSessionItem({ item_type, prompt_text, child_text, is_correct, meta });
-      } catch (e) {
-        console.error("session_items insert failed:", e);
-      }
-
-      try {
-        await updateSessionAggregatesInDb();
-      } catch (e) {
-        console.error("sessions update failed:", e);
-      }
-
-      try {
+        clearDbDebug();
+        await insertSessionItem(args);
+        await updateSessionAggregates();
         await upsertChildProgress();
+        await saveSummaryProgress();
       } catch (e) {
-        console.error("child_progress upsert failed:", e);
+        showDbDebug(
+          "Progress sync failed.\n\n" +
+          (e?.message || String(e)) +
+          "\n\nIf this mentions RLS / policy, we must add policies for sessions, session_items, child_progress, progress."
+        );
+        console.error(e);
       }
-
-      // Keep your legacy progress table updated too
-      await saveSummaryProgress();
     }
 
     // ---------- Adaptive difficulty ----------
@@ -689,6 +689,15 @@
         : `✏️ Question:\n\n${q.displayText}\n\nTake your time.\nWhat do you think the answer is?`;
 
       addBotMessage(intro, { showHint:true, showNext:false });
+
+      // record prompt shown
+      syncAllProgress({
+        item_type: "prompt",
+        prompt_text: q.displayText,
+        child_text: null,
+        is_correct: null,
+        meta: { subject, area, difficulty: difficultyLevel, kind: "maths_question" }
+      });
     }
 
     function shortLineBreaks(text) {
@@ -741,17 +750,15 @@ Short sentences.
 Dyslexia-friendly spacing.
 `;
       const hintReply = await callBackend(hintPrompt);
+      addBotMessage(hintReply);
 
-      // Log hint usage to session_items (doesn't affect streaks)
       await syncAllProgress({
         item_type: "hint",
         prompt_text: currentQuestion.displayText,
-        child_text: "",
+        child_text: null,
         is_correct: null,
-        meta: { hint_used: true }
+        meta: { subject, area, difficulty: difficultyLevel, hintUsed:true }
       });
-
-      addBotMessage(hintReply);
     }
 
     async function giveMathFeedback_AI(q, childAnswerText) {
@@ -808,10 +815,14 @@ Dyslexia-friendly.
             areaSelection.style.display = "none";
             disableInput(true);
 
-            // final aggregate push (safe)
-            try { await updateSessionAggregatesInDb(); } catch(e){ console.error(e); }
-            try { await upsertChildProgress(); } catch(e){ console.error(e); }
-            await saveSummaryProgress();
+            // Final save
+            await syncAllProgress({
+              item_type: "end",
+              prompt_text: null,
+              child_text: null,
+              is_correct: null,
+              meta: { subject, area, difficulty: difficultyLevel, finished:true }
+            });
 
             showFinishOptions();
           }
@@ -838,7 +849,7 @@ Dyslexia-friendly.
           onClick: () => {
             addUserMessage("Start a new session");
             areaSelection.style.display = "none";
-            resetSessionProgress();
+            resetSessionMemory();
             progressHeader.style.display = "none";
             subject = null; area = null;
             disableInput(false);
@@ -948,18 +959,17 @@ Dyslexia-friendly.
 
           area = opt.area;
 
-          resetSessionProgress(); // also clears DB session pointer
+          resetSessionMemory();
           disableInput(false);
 
-          guided.active = false; guided.steps = []; guided.idx = 0;
-
-          // ✅ Create DB session now that we have subject+area
-          try {
-            await startSessionInDbIfNeeded();
-          } catch (e) {
-            console.error(e);
-            showError("Couldn’t start a session in the database. Check Supabase policies for sessions table.");
-          }
+          // Record selection as a session item (creates session row too)
+          await syncAllProgress({
+            item_type: "select_area",
+            prompt_text: null,
+            child_text: null,
+            is_correct: null,
+            meta: { subject, area, difficulty: difficultyLevel }
+          });
 
           if (subject === "Maths") {
             calculator.style.display = "block";
@@ -983,13 +993,12 @@ Short sentences.
             const reply = await callBackend(prompt);
             addBotMessage(reply);
 
-            // Log that the activity started
             await syncAllProgress({
-              item_type: "start",
-              prompt_text: `English activity started: ${area}`,
-              child_text: "",
+              item_type: "prompt",
+              prompt_text: `English start: ${area}`,
+              child_text: null,
               is_correct: null,
-              meta: { subject: "English", area }
+              meta: { subject, area, difficulty: difficultyLevel, kind:"english_start" }
             });
           }
         });
@@ -1013,11 +1022,12 @@ Short sentences.
       progressHeader.style.display = "none";
       calculator.style.display = "none";
 
-      // Reset session pointer whenever subject changes
-      activeSessionDbId = null;
+      addBotMessage(selected === "Maths"
+        ? "✏️ Great!\n\nWhich Maths area would you like to try first?"
+        : "📚 Great!\n\nWhich English area would you like to practise?"
+      );
 
       if (selected === "Maths") {
-        addBotMessage("✏️ Great!\n\nWhich Maths area would you like to try first?");
         showAreaSelection([
           { label: "Addition ➕", area: "Addition" },
           { label: "Subtraction ➖", area: "Subtraction" },
@@ -1025,7 +1035,6 @@ Short sentences.
           { label: "Division ➗", area: "Division" }
         ]);
       } else {
-        addBotMessage("📚 Great!\n\nWhich English area would you like to practise?");
         showAreaSelection([
           { label: "Reading aloud 📖", area: "Reading" },
           { label: "Spelling 📝", area: "Spelling" },
@@ -1064,9 +1073,6 @@ Short sentences.
           return;
         }
 
-        // Ensure DB session exists before logging attempts
-        try { await startSessionInDbIfNeeded(); } catch(e){ console.error(e); }
-
         // Guided mode step validation
         if (guided.active) {
           const n = parseChildNumber(text);
@@ -1075,13 +1081,13 @@ Short sentences.
 
           sessionLog.push({ ts: nowTs(), subject, area, question: `[Guided step ${guided.idx+1}/${guided.steps.length}]`, childAnswer: text, correct: ok });
 
-          // Log guided step attempt
+          // log session item
           await syncAllProgress({
-            item_type: "guided_step",
-            prompt_text: step.prompt,
+            item_type: "answer",
+            prompt_text: `[Guided step ${guided.idx+1}/${guided.steps.length}]`,
             child_text: text,
             is_correct: ok,
-            meta: { step_index: guided.idx, steps_total: guided.steps.length, question: currentQuestion.displayText }
+            meta: { subject, area, difficulty: difficultyLevel, guided:true, step: guided.idx+1 }
           });
 
           if (ok) {
@@ -1106,15 +1112,13 @@ Short sentences.
             updateProgressUI();
             maybeRewardMessage();
 
-            sessionLog.push({ ts: nowTs(), subject, area, question: currentQuestion.displayText, childAnswer: "(completed via guided steps)", correct: true });
-
-            // Sync aggregates + child_progress after completion
+            // update aggregates + child_progress
             await syncAllProgress({
-              item_type: "complete",
+              item_type: "complete_question",
               prompt_text: currentQuestion.displayText,
               child_text: "(completed via guided steps)",
               is_correct: true,
-              meta: { difficulty: difficultyLevel, guided: true }
+              meta: { subject, area, difficulty: difficultyLevel, via:"guided" }
             });
 
             if (sessionComplete()) { endSessionUI(); return; }
@@ -1123,20 +1127,9 @@ Short sentences.
             addBotMessage(`Brilliant, ${childName}!\n\nThat is correct.\n\nReady for the next one?`, { showNext:true });
             return;
           } else {
-            // wrong in guided step
             streakWrong += 1;
             streakCorrect = 0;
-
             adjustDifficultyAfterAnswer(false);
-
-            // Sync streak change
-            await syncAllProgress({
-              item_type: "attempt",
-              prompt_text: currentQuestion.displayText,
-              child_text: text,
-              is_correct: false,
-              meta: { difficulty: difficultyLevel, guided: true }
-            });
 
             addBotMessage(`Good try, ${childName}.\n\nLet’s do the same step again.\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${step.prompt}`);
             return;
@@ -1149,13 +1142,13 @@ Short sentences.
 
         sessionLog.push({ ts: nowTs(), subject, area, question: currentQuestion.displayText, childAnswer: text, correct });
 
-        // Log attempt to DB
+        // log session item
         await syncAllProgress({
-          item_type: "attempt",
+          item_type: "answer",
           prompt_text: currentQuestion.displayText,
           child_text: text,
           is_correct: correct,
-          meta: { difficulty: difficultyLevel, hint_used: hintUsedForCurrent }
+          meta: { subject, area, difficulty: difficultyLevel, guided:false }
         });
 
         if (correct) {
@@ -1170,16 +1163,16 @@ Short sentences.
           updateProgressUI();
           maybeRewardMessage();
 
-          // Update aggregates + streak after completion
+          const reply = await giveMathFeedback_AI(currentQuestion, text);
+
+          // persist aggregates and progress (again) after completion
           await syncAllProgress({
-            item_type: "complete",
+            item_type: "complete_question",
             prompt_text: currentQuestion.displayText,
             child_text: text,
             is_correct: true,
-            meta: { difficulty: difficultyLevel }
+            meta: { subject, area, difficulty: difficultyLevel }
           });
-
-          const reply = await giveMathFeedback_AI(currentQuestion, text);
 
           if (sessionComplete()) {
             addBotMessage(reply);
@@ -1197,15 +1190,6 @@ Short sentences.
         streakCorrect = 0;
 
         adjustDifficultyAfterAnswer(false);
-
-        // Save streak update
-        await syncAllProgress({
-          item_type: "wrong",
-          prompt_text: currentQuestion.displayText,
-          child_text: text,
-          is_correct: false,
-          meta: { difficulty: difficultyLevel }
-        });
 
         const steps = buildGuidedSteps(currentQuestion);
         if (steps.length) {
@@ -1230,21 +1214,17 @@ Short sentences.
           return;
         }
 
-        // Ensure DB session exists
-        try { await startSessionInDbIfNeeded(); } catch(e){ console.error(e); }
-
         questionsAnswered += 1;
         updateProgressUI();
 
         sessionLog.push({ ts: nowTs(), subject, area, question: "(English turn)", childAnswer: text, correct: null });
 
-        // Log the turn
         await syncAllProgress({
           item_type: "turn",
           prompt_text: `English: ${area}`,
           child_text: text,
           is_correct: null,
-          meta: { area, difficulty: difficultyLevel }
+          meta: { subject, area, difficulty: difficultyLevel }
         });
 
         const prompt = `
@@ -1272,7 +1252,7 @@ British English.
     function setupCalculator() {
       const btns = Array.from(document.querySelectorAll(".calcBtn"));
       btns.forEach(b => {
-        b.style.cssText = "padding:14px; font-size:18px; border-radius:10px; border:none; background:#fff; cursor:pointer;";
+        b.classList.add("calcBtn");
         b.addEventListener("click", () => {
           const val = b.textContent;
           if (val === "C") return;
@@ -1337,10 +1317,12 @@ British English.
       child = data;
       childName = child.child_name || "Child";
       childAge = computeAgeFromDob(child.child_dob);
+      maxQuestions = computeMaxQuestions();
 
       clearError();
       disableInput(false);
 
+      // Welcome
       addBotMessage(`👋 Hi ${childName}!\n\nI’ll help you in a calm, step-by-step way.\n\nWhat are we working on today?`);
       subjectSelection.style.display = "block";
 
@@ -1364,7 +1346,6 @@ British English.
     // ---------- Init ----------
     (async () => {
       if (!sb) { showError("Supabase did not load. Check the supabase script tag."); return; }
-
       setupCalculator();
       disableInput(false);
 
