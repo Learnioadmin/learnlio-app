@@ -5,39 +5,52 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Learnlio — Reports</title>
 
+  <!-- App CSS -->
   <link rel="stylesheet" href="/assets/css/app.css" />
 
+  <!-- Minimal fallback styles -->
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
+    :root{
+      --bg:#f7f7fb;
+      --card:#ffffff;
+      --text:#111;
+      --muted:#6b7280;
+      --line:#ececf4;
+      --brand:#0b5cff;
+      --ok:#16a34a;
+      --bad:#dc2626;
+      --warn:#b45309;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --radius: 16px;
+    }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:var(--bg); color:var(--text); }
     .container { max-width: 980px; margin: 0 auto; padding: 18px; }
-    .card { background:#fff; border-radius:16px; padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
-    .nav { background:#fff; border-bottom:1px solid #ececf4; }
+    .card { background:var(--card); border-radius:var(--radius); padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .nav { background:#fff; border-bottom:1px solid var(--line); }
     .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:700; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:800; }
     .brand img { height:34px; width:auto; display:block; }
     .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
     .links a.active { background:#eef2ff; }
-    .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; }
-    .btn.light { background:#e5e7eb; color:#111; }
-    .btn.ghost { background:transparent; border:1px solid #d1d5db; color:#111; }
+    .btn { background:var(--brand); border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:800; }
     .btn:disabled { opacity:.6; cursor:not-allowed; }
-    .muted { color:#6b7280; font-size: 14px; }
-    .status { margin-top:10px; font-size:14px; line-height:1.5; }
-    .status.bad { color:#dc2626; }
-    .status.good { color:#16a34a; }
-    .status.warn { color:#b45309; }
+    .btn.light { background:#e5e7eb; color:#111; }
+    .muted { color:var(--muted); font-size: 14px; }
+    .status { margin-top:10px; font-size:14px; }
+    .status.bad { color:var(--bad); }
+    .status.good { color:var(--ok); }
+    .status.warn { color:var(--warn); }
 
     .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
     @media(min-width: 900px){ .grid { grid-template-columns: 1fr 1fr; } }
 
-    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; font-weight:650; }
-    .hr { height:1px; background:#ececf4; margin:14px 0; }
-
+    .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; font-weight:800; color:#111; }
+    .pill.soft { background:#f3f4f6; font-weight:700; }
     .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid #f1f1f6; }
     .row:last-child { border-bottom:none; }
-    .k { color:#6b7280; font-size:13px; }
-    .v { font-weight:650; text-align:right; }
+    .k { color:var(--muted); font-size:13px; }
+    .v { font-weight:750; text-align:right; }
 
     .top-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
     .select {
@@ -45,69 +58,63 @@
       font-size:14px; color:#111; cursor:pointer;
     }
     .select-wrap { display:none; gap:8px; align-items:center; }
-    .label { font-size:13px; color:#6b7280; }
+    .label { font-size:13px; color:var(--muted); }
 
-    /* Toggle */
-    .toggle-wrap{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-    .toggle{
-      width:46px; height:28px; border-radius:999px; background:#e5e7eb; position:relative; cursor:pointer;
+    .box { box-shadow:none; border:1px solid var(--line); }
+    .hr { height:1px; background:var(--line); margin:14px 0; }
+    .subtle { background:#fafafa; border:1px solid #eef2f7; border-radius:14px; padding:12px; }
+    .small { font-size:13px; }
+    .toggle {
+      display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px;
+      border-radius:14px; border:1px solid #eef2f7; background:#fafafa;
+    }
+    .switch {
+      position:relative; width:52px; height:30px; background:#e5e7eb; border-radius:999px; cursor:pointer; flex:0 0 auto;
       border:1px solid #d1d5db;
     }
-    .toggle::after{
-      content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:999px; background:#fff;
-      box-shadow:0 3px 10px rgba(0,0,0,.12);
-      transition: transform .18s ease;
+    .switch::after{
+      content:""; position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:999px; background:#fff;
+      transition: all .15s ease;
+      box-shadow: 0 6px 14px rgba(0,0,0,.12);
     }
-    .toggle.on{ background:#0b5cff; border-color:#0b5cff; }
-    .toggle.on::after{ transform: translateX(18px); }
+    .switch.on{ background:#dbeafe; border-color:#bfdbfe; }
+    .switch.on::after{ left:25px; background:var(--brand); }
 
-    /* Weekly list */
-    .weekly-list{ display:grid; gap:10px; margin-top:12px; }
-    .weekly-item{
-      border:1px solid #eef2f7; border-radius:14px; padding:12px; background:#fff;
-    }
-    .weekly-item h3{ margin:0 0 6px; font-size:14px; }
-    .weekly-item .meta{ color:#6b7280; font-size:13px; }
-    .weekly-item .bullets{ margin:8px 0 0; padding-left:18px; color:#111; }
-    .weekly-item .bullets li{ margin:4px 0; }
-
-    /* Skills table (alignment fixed) */
-    .skills-wrap{ overflow-x:auto; }
-    .skills-table{
+    /* Skills table */
+    .skills {
       width:100%;
       border-collapse:separate;
       border-spacing:0;
-      min-width: 680px;
-      border:1px solid #eef2f7;
-      border-radius:14px;
       overflow:hidden;
+      border:1px solid var(--line);
+      border-radius:14px;
       background:#fff;
     }
-    .skills-table th, .skills-table td{
+    .skills th, .skills td{
       padding:10px 12px;
-      border-bottom:1px solid #f1f1f6;
       font-size:13px;
+      border-bottom:1px solid #f1f1f6;
       vertical-align:middle;
-      white-space:nowrap;
-    }
-    .skills-table th{
       text-align:left;
-      color:#6b7280;
+      font-variant-numeric: tabular-nums;
+    }
+    .skills th{
       background:#fafafa;
-      font-weight:700;
+      color:var(--muted);
+      font-weight:800;
     }
-    .skills-table td.num, .skills-table th.num{
+    .skills tr:last-child td{ border-bottom:none; }
+    .skills td.num, .skills th.num{
       text-align:center;
+      width:90px;
     }
-    .skills-table tr:last-child td{ border-bottom:none; }
-
-    .chip{
-      display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; font-weight:650;
+    .tag {
+      display:inline-flex; align-items:center; padding:5px 10px; border-radius:999px;
+      background:#f3f4f6; border:1px solid #e5e7eb; font-size:12px; font-weight:800;
     }
-    .chip.good{ background:#e8fff3; color:#067647; }
-    .chip.warn{ background:#fff7e6; color:#92400e; }
-    .chip.bad{ background:#ffecec; color:#b91c1c; }
-    code.small{ font-size:12px; background:#f3f4f6; padding:2px 6px; border-radius:8px; }
+    .tag.good { background:#ecfdf5; border-color:#a7f3d0; }
+    .tag.warn { background:#fffbeb; border-color:#fde68a; }
+    .tag.bad  { background:#fef2f2; border-color:#fecaca; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -140,6 +147,7 @@
         </div>
 
         <div class="top-actions">
+          <!-- Change child (only shows if 2+ children) -->
           <div id="childSwitcher" class="select-wrap">
             <span class="label">Child:</span>
             <select id="childSelect" class="select" aria-label="Select child"></select>
@@ -153,54 +161,44 @@
       <div id="pageError" class="status bad" style="display:none;"></div>
       <div id="pageOk" class="status good" style="display:none;"></div>
 
-      <!-- Weekly reports -->
-      <section class="card" style="margin-top:14px; box-shadow:none; border:1px solid #ececf4;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+      <!-- Weekly reports toggle -->
+      <section class="card box" style="margin-top:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
           <div>
-            <h2 style="margin:0; font-size:16px;">Weekly summaries</h2>
-            <div class="muted" style="margin-top:6px; line-height:1.6;">
-              Turn this on to save a weekly summary here.
-              <br>We’ll add email delivery later.
-            </div>
+            <h2 style="margin:0 0 6px; font-size:16px;">Weekly summary</h2>
+            <div class="muted">Store a weekly summary here. (Email delivery can be added later.)</div>
           </div>
-
-          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;">
-            <div class="toggle-wrap">
-              <span class="muted" id="weeklyToggleLabel">Off</span>
-              <div id="weeklyToggle" class="toggle" role="switch" aria-checked="false" tabindex="0"></div>
-            </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span id="weeklyState" class="pill soft">Checking…</span>
+            <div id="weeklySwitch" class="switch" role="switch" aria-checked="false" tabindex="0" title="Toggle weekly summary"></div>
           </div>
         </div>
+        <div id="weeklyMsg" class="status" aria-live="polite"></div>
 
         <div class="hr"></div>
 
-        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-          <span class="pill" id="weeklyStatusPill">Loading…</span>
-          <span class="muted" id="weeklyStatusText"></span>
+        <div id="weeklyList" class="subtle">
+          <div class="muted">Loading…</div>
         </div>
-
-        <div id="weeklyList" class="weekly-list">
-          <div class="muted">Loading weekly summaries…</div>
-        </div>
-
-        <div id="weeklyMsg" class="status" aria-live="polite"></div>
       </section>
 
       <div class="grid" style="margin-top:14px;">
-        <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
+        <!-- Overall -->
+        <section class="card box">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <h2 style="margin:0; font-size:16px;">Overall progress</h2>
-            <span class="pill">progress</span>
+            <span class="pill">Summary</span>
           </div>
           <div id="overallBox" style="margin-top:10px;">
             <div class="muted">Loading…</div>
           </div>
         </section>
 
-        <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
+        <!-- Tutor signals -->
+        <section class="card box">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <h2 style="margin:0; font-size:16px;">Tutor signals</h2>
-            <span class="pill">child_progress</span>
+            <span class="pill">Recent learning</span>
           </div>
           <div id="signalsBox" style="margin-top:10px;">
             <div class="muted">Loading…</div>
@@ -208,55 +206,41 @@
         </section>
       </div>
 
-      <!-- What to do next -->
-      <section class="card" style="margin-top:14px; box-shadow:none; border:1px solid #ececf4;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h2 style="margin:0; font-size:16px;">What to do next</h2>
-          <span class="pill">next steps</span>
+      <!-- Skills -->
+      <section class="card box" style="margin-top:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div>
+            <h2 style="margin:0; font-size:16px;">Skills</h2>
+            <div class="muted">A simple view of practice by subject and area.</div>
+          </div>
+          <span class="pill">From Tutor sessions</span>
         </div>
-        <div id="nextStepsBox" style="margin-top:10px;">
+
+        <div id="skillsBox" style="margin-top:10px;">
           <div class="muted">Loading…</div>
         </div>
       </section>
 
-      <!-- Skills -->
-      <section class="card" style="margin-top:14px; box-shadow:none; border:1px solid #ececf4;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h2 style="margin:0; font-size:16px;">Skills</h2>
-          <span class="pill">from session_items</span>
-        </div>
-        <div class="muted" style="margin-top:6px; line-height:1.6;">
-          Attempts come from saved Tutor activity. Accuracy is shown when questions are marked correct/incorrect.
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="skills-wrap">
-          <table class="skills-table" aria-label="Skills table">
-            <thead>
-              <tr>
-                <th>Subject</th>
-                <th>Area</th>
-                <th class="num">Level</th>
-                <th class="num">Attempts</th>
-                <th class="num">Accuracy</th>
-                <th class="num">Confidence</th>
-              </tr>
-            </thead>
-            <tbody id="skillsBody">
-              <tr><td colspan="6" class="muted">Loading…</td></tr>
-            </tbody>
-          </table>
+      <!-- What to do next -->
+      <section class="card box" style="margin-top:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div>
+            <h2 style="margin:0; font-size:16px;">What to do next</h2>
+            <div class="muted">Based on the last few sessions.</div>
+          </div>
+          <span class="pill">Next steps</span>
         </div>
 
-        <div id="skillsMsg" class="status" aria-live="polite"></div>
+        <div id="nextBox" style="margin-top:10px;">
+          <div class="muted">Loading…</div>
+        </div>
       </section>
 
-      <section id="noDataBox" class="card" style="margin-top:14px; box-shadow:none; border:1px dashed #cbd5e1; display:none;">
-        <h2 style="margin:0 0 8px; font-size:16px;">No progress data yet</h2>
+      <section id="noDataBox" class="card box" style="margin-top:14px; border-style:dashed; display:none;">
+        <h2 style="margin:0 0 8px; font-size:16px;">No tutor data yet</h2>
         <div class="muted" style="line-height:1.6;">
-          I can’t see any saved progress for this child yet.<br>
-          Do a short Tutor session (Maths or English), then come back and press <b>Refresh</b>.
+          I can’t see any saved Tutor sessions for this child yet.<br>
+          Do a short Tutor session, then come back and press <b>Refresh</b>.
         </div>
         <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
           <a class="btn" href="/chat.html" style="text-decoration:none; display:inline-block;">Go to Tutor</a>
@@ -268,78 +252,102 @@
 
   <script>
   (() => {
+    // =========================
+    // CONFIG
+    // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+    // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const logoutBtn = document.getElementById("logoutBtn");
     const refreshBtn = document.getElementById("refreshBtn");
     const downloadBtn = document.getElementById("downloadBtn");
+
     const pageError = document.getElementById("pageError");
     const pageOk = document.getElementById("pageOk");
     const childHeader = document.getElementById("childHeader");
 
+    const overallBox = document.getElementById("overallBox");
+    const signalsBox = document.getElementById("signalsBox");
+    const skillsBox = document.getElementById("skillsBox");
+    const nextBox = document.getElementById("nextBox");
+    const noDataBox = document.getElementById("noDataBox");
+
+    // Child switcher
     const childSwitcher = document.getElementById("childSwitcher");
     const childSelect = document.getElementById("childSelect");
 
-    const overallBox = document.getElementById("overallBox");
-    const signalsBox = document.getElementById("signalsBox");
-    const nextStepsBox = document.getElementById("nextStepsBox");
-    const skillsBody = document.getElementById("skillsBody");
-    const skillsMsg = document.getElementById("skillsMsg");
-    const noDataBox = document.getElementById("noDataBox");
-
-    const weeklyToggle = document.getElementById("weeklyToggle");
-    const weeklyToggleLabel = document.getElementById("weeklyToggleLabel");
-    const weeklyStatusPill = document.getElementById("weeklyStatusPill");
-    const weeklyStatusText = document.getElementById("weeklyStatusText");
-    const weeklyList = document.getElementById("weeklyList");
+    // Weekly
+    const weeklyState = document.getElementById("weeklyState");
+    const weeklySwitch = document.getElementById("weeklySwitch");
     const weeklyMsg = document.getElementById("weeklyMsg");
+    const weeklyList = document.getElementById("weeklyList");
 
     let currentUser = null;
     let child = null;
 
-    // cache for PDF
+    // cached for PDF
     let lastOverall = null;
     let lastSignals = null;
-    let lastSkills = [];
-    let lastNextSteps = [];
-    let weeklyRows = [];
-    let weeklySettings = null;
+    let lastSkills = null;
+    let lastNext = null;
+    let lastWeekly = null;
+    let weeklyEnabled = false;
 
-    function showError(msg){ pageError.style.display="block"; pageError.textContent=msg; }
-    function clearError(){ pageError.style.display="none"; pageError.textContent=""; }
+    function showError(msg){
+      pageError.style.display = "block";
+      pageError.textContent = msg;
+    }
+    function clearError(){
+      pageError.style.display = "none";
+      pageError.textContent = "";
+    }
     function showOk(msg){
-      pageOk.style.display="block"; pageOk.textContent=msg;
-      setTimeout(()=>{ pageOk.style.display="none"; }, 1800);
+      pageOk.style.display = "block";
+      pageOk.textContent = msg;
+      setTimeout(() => { pageOk.style.display="none"; }, 1600);
     }
-    function safe(v, fallback="—"){ return (v===null||v===undefined||v==="") ? fallback : String(v); }
-
-    function formatDOB(value){
-      if (!value) return "—";
-      const d = new Date(value);
-      if (isNaN(d.getTime())) {
-        // try yyyy-mm-dd
-        const s = String(value).slice(0,10);
-        const parts = s.split("-");
-        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        return s;
-      }
-      const dd = String(d.getDate()).padStart(2, "0");
-      const mm = String(d.getMonth()+1).padStart(2, "0");
-      const yyyy = d.getFullYear();
-      return `${dd}/${mm}/${yyyy}`;
+    function setWeeklyMsg(text, kind=""){
+      weeklyMsg.textContent = text || "";
+      weeklyMsg.className = "status" + (kind ? " " + kind : "");
     }
+    function safe(v, fallback="—"){
+      if (v === null || v === undefined || v === "") return fallback;
+      return String(v);
+    }
+    function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
 
     function formatDateOnly(value){
       if (!value) return "—";
       const d = new Date(value);
       if (isNaN(d.getTime())) return "—";
       const dd = String(d.getDate()).padStart(2, "0");
-      const mm = String(d.getMonth()+1).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
       const yyyy = d.getFullYear();
       return `${dd}/${mm}/${yyyy}`;
+    }
+
+    function prettySubject(s){
+      const t = String(s||"").toLowerCase();
+      if (t.includes("math")) return "Maths";
+      if (t.includes("eng")) return "English";
+      return s || "—";
+    }
+
+    function prettyArea(s){
+      const t = String(s||"").trim();
+      if (!t) return "—";
+      return t;
+    }
+
+    function confidenceTag(attempts, accuracy){
+      // accuracy: 0..1
+      if (!attempts || attempts < 3) return { label:"Getting started", cls:"warn" };
+      if (accuracy >= 0.8) return { label:"Confident", cls:"good" };
+      if (accuracy >= 0.55) return { label:"Improving", cls:"warn" };
+      return { label:"Needs support", cls:"bad" };
     }
 
     function renderRows(targetEl, rows){
@@ -353,16 +361,24 @@
     }
 
     function getSelectedChild(){
-      try { return JSON.parse(localStorage.getItem("selectedChild") || "null"); }
-      catch { return null; }
+      try {
+        const raw = localStorage.getItem("selectedChild");
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch { return null; }
     }
+
     function setSelectedChild(id, name){
+      // keep existing shape flexible
       localStorage.setItem("selectedChild", JSON.stringify({ id, child_name: name }));
     }
 
     async function requireAuth(){
       const { data, error } = await sb.auth.getUser();
-      if (error || !data?.user){ window.location.href="/login.html"; return false; }
+      if (error || !data?.user){
+        window.location.href = "/login.html";
+        return false;
+      }
       currentUser = data.user;
       return true;
     }
@@ -374,13 +390,21 @@
         .eq("parent_user_id", currentUser.id)
         .order("created_at", { ascending: true });
 
-      if (error) { console.error(error); childSwitcher.style.display="none"; return; }
+      if (error) {
+        console.error("children list error", error);
+        childSwitcher.style.display = "none";
+        return;
+      }
 
       const children = data || [];
-      if (children.length <= 1) { childSwitcher.style.display="none"; return; }
+      if (children.length <= 1) {
+        childSwitcher.style.display = "none";
+        return;
+      }
 
-      childSwitcher.style.display="flex";
+      childSwitcher.style.display = "flex";
       childSelect.innerHTML = "";
+
       children.forEach(c => {
         const opt = document.createElement("option");
         opt.value = c.id;
@@ -406,7 +430,8 @@
       if (!selected?.id){
         showError("No child selected. Please go to Dashboard and select a child.");
         childHeader.textContent = "No child selected";
-        downloadBtn.disabled = true; downloadBtn.style.opacity="0.6";
+        downloadBtn.disabled = true;
+        downloadBtn.style.opacity = "0.6";
         return false;
       }
 
@@ -418,458 +443,391 @@
 
       if (error || !data){
         showError("Could not load child profile. Please re-select the child on Dashboard.");
-        downloadBtn.disabled = true; downloadBtn.style.opacity="0.6";
+        downloadBtn.disabled = true;
+        downloadBtn.style.opacity = "0.6";
         return false;
       }
 
       if (data.parent_user_id !== currentUser.id){
         showError("This child profile does not belong to this account.");
-        downloadBtn.disabled = true; downloadBtn.style.opacity="0.6";
+        downloadBtn.disabled = true;
+        downloadBtn.style.opacity = "0.6";
         return false;
       }
 
       child = data;
-      const dob = data.child_dob ? ` • DOB: ${formatDOB(data.child_dob)}` : "";
-      childHeader.textContent = `Child: ${data.child_name || "Child"}${dob}`;
+
+      const dobNice = data.child_dob ? formatDateOnly(data.child_dob) : "—";
+      childHeader.textContent = `Child: ${safe(data.child_name)} • DOB: ${dobNice}`;
 
       clearError();
-      downloadBtn.disabled = false; downloadBtn.style.opacity="1";
+      downloadBtn.disabled = false;
+      downloadBtn.style.opacity = "1";
       return true;
     }
 
-    // ---------- Weekly (safe + graceful) ----------
-    function setWeeklyMsg(text, kind=""){
-      weeklyMsg.textContent = text || "";
-      weeklyMsg.className = "status" + (kind ? " " + kind : "");
-    }
-    function setWeeklyStatus(pill, text){
-      weeklyStatusPill.textContent = pill;
-      weeklyStatusText.textContent = text || "";
-    }
-    function setToggleUI(isOn){
-      weeklyToggle.classList.toggle("on", !!isOn);
-      weeklyToggle.setAttribute("aria-checked", !!isOn ? "true" : "false");
-      weeklyToggleLabel.textContent = isOn ? "On" : "Off";
+    // -------------------------
+    // WEEKLY SETTINGS + LIST
+    // -------------------------
+    function setWeeklySwitchUI(enabled){
+      weeklyEnabled = !!enabled;
+      weeklyState.textContent = enabled ? "On" : "Off";
+      weeklySwitch.classList.toggle("on", enabled);
+      weeklySwitch.setAttribute("aria-checked", enabled ? "true" : "false");
     }
 
-    function renderWeeklyList(rows){
-      weeklyList.innerHTML = "";
-      if (!rows || !rows.length){
-        weeklyList.innerHTML = `<div class="muted">No weekly summaries yet.</div>`;
+    async function loadWeeklySetting(){
+      weeklyState.textContent = "Checking…";
+      setWeeklyMsg("");
+
+      const { data, error } = await sb
+        .from("weekly_report_settings")
+        .select("enabled")
+        .eq("parent_user_id", currentUser.id)
+        .eq("child_id", child.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("weekly_report_settings read error", error);
+        setWeeklySwitchUI(false);
+        weeklyState.textContent = "Off";
         return;
       }
-      rows.forEach(r => {
-        const sum = r.summary || {};
-        const recs = Array.isArray(sum.recommendations) ? sum.recommendations : [];
-        const item = document.createElement("div");
-        item.className = "weekly-item";
-        item.innerHTML = `
-          <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start;">
-            <div>
-              <h3>Week starting ${formatDOB(r.week_start)}</h3>
-              <div class="meta">Stored: ${formatDOB(r.created_at)}</div>
-            </div>
-            <span class="pill">summary</span>
-          </div>
-          ${recs.length ? `
-            <ul class="bullets">
-              ${recs.slice(0,6).map(x => `<li>${String(x)}</li>`).join("")}
-            </ul>
-          ` : `<div class="muted" style="margin-top:10px;">No next steps saved in this summary yet.</div>`}
-        `;
-        weeklyList.appendChild(item);
-      });
+
+      setWeeklySwitchUI(!!data?.enabled);
     }
 
-    async function loadWeeklySettings(){
-      if (!child?.id) return;
-
+    async function saveWeeklySetting(enabled){
       setWeeklyMsg("");
-      setWeeklyStatus("Loading…", "");
+      weeklySwitch.style.pointerEvents = "none";
 
-      try {
-        const { data, error } = await sb
-          .from("weekly_report_settings")
-          .select("id, parent_user_id, child_id, enabled, frequency, last_sent_at, created_at, updated_at")
-          .eq("parent_user_id", currentUser.id)
-          .eq("child_id", child.id)
-          .maybeSingle();
+      const payload = {
+        parent_user_id: currentUser.id,
+        child_id: child.id,
+        enabled: !!enabled,
+        updated_at: new Date().toISOString()
+      };
 
-        if (error) throw error;
+      const { error } = await sb
+        .from("weekly_report_settings")
+        .upsert(payload, { onConflict: "parent_user_id,child_id" });
 
-        weeklySettings = data || null;
-        const enabled = !!weeklySettings?.enabled;
-        setToggleUI(enabled);
+      weeklySwitch.style.pointerEvents = "auto";
 
-        if (enabled) setWeeklyStatus("Enabled", "Weekly summaries will appear here.");
-        else setWeeklyStatus("Off", "Turn on to save weekly summaries here.");
-      } catch (e) {
-        // table missing or RLS — don't scare user
-        weeklySettings = null;
-        setToggleUI(false);
-        setWeeklyStatus("Not available", "Weekly summaries aren’t set up yet.");
+      if (error) {
+        console.error("weekly_report_settings upsert error", error);
+        setWeeklySwitchUI(!enabled); // revert
+        setWeeklyMsg("Couldn’t save that setting yet. Please try again.", "bad");
+        return false;
       }
+
+      setWeeklySwitchUI(enabled);
+      setWeeklyMsg(enabled ? "Weekly summary is on ✅" : "Weekly summary is off.", "good");
+      return true;
     }
 
     async function loadWeeklyReports(){
-      if (!child?.id) return;
+      weeklyList.innerHTML = `<div class="muted">Loading…</div>`;
 
-      weeklyList.innerHTML = `<div class="muted">Loading weekly summaries…</div>`;
-      weeklyRows = [];
+      // We expect weekly_reports: parent_user_id, child_id, week_start, summary(jsonb), created_at
+      const { data, error } = await sb
+        .from("weekly_reports")
+        .select("id, week_start, created_at, summary")
+        .eq("parent_user_id", currentUser.id)
+        .eq("child_id", child.id)
+        .order("week_start", { ascending: false })
+        .limit(8);
 
-      try {
-        const { data, error } = await sb
-          .from("weekly_reports")
-          .select("id, parent_user_id, child_id, week_start, summary, created_at")
-          .eq("parent_user_id", currentUser.id)
-          .eq("child_id", child.id)
-          .order("week_start", { ascending: false })
-          .limit(12);
-
-        if (error) throw error;
-
-        weeklyRows = data || [];
-        renderWeeklyList(weeklyRows);
-        setWeeklyMsg("");
-      } catch (e) {
-        // table missing or RLS — show clean
-        weeklyList.innerHTML = `<div class="muted">Weekly summaries aren’t available yet.</div>`;
-        setWeeklyMsg("", "");
+      if (error) {
+        console.error("weekly_reports read error", error);
+        weeklyList.innerHTML = `<div class="status bad">Could not load weekly summaries.</div>`;
+        lastWeekly = null;
+        return;
       }
-    }
 
-    async function upsertWeeklySettings(enabled){
-      if (!child?.id) return;
+      lastWeekly = data || [];
 
-      if (weeklySettings?.id){
-        const { error } = await sb
-          .from("weekly_report_settings")
-          .update({ enabled: !!enabled, updated_at: new Date().toISOString() })
-          .eq("id", weeklySettings.id);
-        if (error) throw error;
-      } else {
-        const { data, error } = await sb
-          .from("weekly_report_settings")
-          .insert({
-            parent_user_id: currentUser.id,
-            child_id: child.id,
-            enabled: !!enabled,
-            frequency: "weekly",
-            updated_at: new Date().toISOString()
-          })
-          .select("id, parent_user_id, child_id, enabled, frequency, last_sent_at, created_at, updated_at")
-          .single();
-
-        if (error) throw error;
-        weeklySettings = data;
+      if (!lastWeekly.length) {
+        weeklyList.innerHTML = `
+          <div class="muted" style="line-height:1.6;">
+            No weekly summaries stored yet.<br>
+            Once enabled, you’ll see a short weekly summary appear here.
+          </div>`;
+        return;
       }
-    }
 
-    async function toggleWeekly(){
-      const currentlyOn = weeklyToggle.classList.contains("on");
-      const next = !currentlyOn;
+      const wrap = document.createElement("div");
+      wrap.style.display = "grid";
+      wrap.style.gap = "10px";
 
-      setToggleUI(next);
-      setWeeklyMsg("");
+      lastWeekly.forEach(r => {
+        const box = document.createElement("div");
+        box.style.background = "#fff";
+        box.style.border = "1px solid var(--line)";
+        box.style.borderRadius = "14px";
+        box.style.padding = "12px";
 
-      try {
-        weeklyToggle.style.pointerEvents = "none";
-        await upsertWeeklySettings(next);
-        await loadWeeklySettings();
-        showOk(next ? "Weekly summaries enabled" : "Weekly summaries disabled");
-      } catch (e) {
-        setToggleUI(currentlyOn);
-        setWeeklyMsg("Couldn’t save that setting yet.", "bad");
-      } finally {
-        weeklyToggle.style.pointerEvents = "auto";
-      }
-    }
+        const week = r.week_start ? formatDateOnly(r.week_start) : "—";
+        const created = r.created_at ? formatDateOnly(r.created_at) : "—";
+        const summary = r.summary || {};
 
-    weeklyToggle.addEventListener("click", toggleWeekly);
-    weeklyToggle.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleWeekly(); }
-    });
+        const headline = summary.headline || summary.title || "Weekly summary";
+        const bullets = Array.isArray(summary.bullets) ? summary.bullets : [];
+        const next = summary.next_steps || summary.next || "";
 
-    // ---------- Progress + Skills ----------
-    function confidenceLabel(acc){
-      if (acc === null || acc === undefined) return "—";
-      if (acc >= 0.85) return "High";
-      if (acc >= 0.65) return "Good";
-      if (acc >= 0.45) return "Growing";
-      return "Needs support";
-    }
-    function chipForConfidence(label){
-      const s = String(label || "").toLowerCase();
-      if (s.includes("high") || s.includes("good")) return "chip good";
-      if (s.includes("growing")) return "chip warn";
-      if (s.includes("needs")) return "chip bad";
-      return "chip";
-    }
+        box.innerHTML = `
+          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div style="font-weight:900;">${escapeHtml(String(headline))}</div>
+            <span class="pill soft">Week starting: ${week}</span>
+          </div>
+          <div class="muted small" style="margin-top:6px;">Stored: ${created}</div>
+          ${bullets.length ? `<ul style="margin:10px 0 0; padding-left:18px;">${bullets.slice(0,6).map(b => `<li>${escapeHtml(String(b))}</li>`).join("")}</ul>` : ``}
+          ${next ? `<div class="hr"></div><div class="small"><b>Next steps:</b> ${escapeHtml(String(next))}</div>` : ``}
+        `;
 
-    function nextStepsFor(subject, areas){
-      const out = [];
-      (areas || []).forEach(a => {
-        const area = String(a||"").toLowerCase();
-        const subj = String(subject||"").toLowerCase();
-        if (subj === "maths") {
-          if (area.includes("division")) out.push("Maths: 5 minutes of division using counters/coins. Slow and calm.");
-          else if (area.includes("multiplication")) out.push("Maths: Practise one times table per day (short bursts).");
-          else if (area.includes("subtraction")) out.push("Maths: Use a number line and count back slowly.");
-          else if (area.includes("addition")) out.push("Maths: Practise number bonds for 5 minutes.");
-          else out.push(`Maths: 5 minutes of calm practice on ${a}.`);
-        } else {
-          if (area.includes("spelling")) out.push("English: Practise 5 spellings using look → cover → write → check.");
-          else if (area.includes("reading")) out.push("English: Read together for 10 minutes. Ask 1 simple question.");
-          else if (area.includes("sentence")) out.push("English: Write 3 short sentences using a ‘word of the day’.");
-          else if (area.includes("word")) out.push("English: Play a 5-minute word game (rhymes, synonyms, categories).");
-          else out.push(`English: 10 minutes of calm practice on ${a}.`);
-        }
+        wrap.appendChild(box);
       });
-      return Array.from(new Set(out)).slice(0,6);
+
+      weeklyList.innerHTML = "";
+      weeklyList.appendChild(wrap);
     }
 
-    function normaliseSubjectArea(meta, promptText){
-      const m = (meta && typeof meta === "object") ? meta : {};
-      let subject = m.subject || m.Subject || m.subj || null;
-      let area = m.area || m.Area || m.focus || m.topic || null;
-
-      // If missing, infer lightly from prompt text (fallback)
-      const p = String(promptText || "").toLowerCase();
-      if (!subject) {
-        if (p.includes("english") || p.includes("spelling") || p.includes("reading") || p.includes("sentence")) subject = "English";
-        else subject = "Maths";
-      }
-      if (!area) {
-        if (p.includes("spelling")) area = "Spelling";
-        else if (p.includes("reading")) area = "Reading";
-        else if (p.includes("sentence")) area = "Sentence building";
-        else if (p.includes("addition") || p.includes("+")) area = "Addition";
-        else if (p.includes("subtraction") || p.includes("-")) area = "Subtraction";
-        else if (p.includes("multiplication") || p.includes("×") || p.includes("times")) area = "Multiplication";
-        else if (p.includes("division") || p.includes("÷")) area = "Division";
-        else area = "General";
-      }
-
-      // Friendly names
-      if (String(area).toLowerCase().includes("sentence")) area = "Sentence building";
-      if (String(area).toLowerCase().includes("word")) area = "Word games";
-
-      return { subject, area };
+    function escapeHtml(str){
+      return String(str ?? "").replace(/[&<>"']/g, s => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[s]));
     }
 
-    async function loadReportsCore(){
-      if (!child?.id) return;
-
-      overallBox.innerHTML = `<div class="muted">Loading…</div>`;
-      signalsBox.innerHTML = `<div class="muted">Loading…</div>`;
-      nextStepsBox.innerHTML = `<div class="muted">Loading…</div>`;
-      skillsBody.innerHTML = `<tr><td colspan="6" class="muted">Loading…</td></tr>`;
-      noDataBox.style.display = "none";
-      skillsMsg.textContent = "";
-
+    // -------------------------
+    // OVERALL / SIGNALS / SKILLS / NEXT
+    // -------------------------
+    async function loadOverallAndSignals(){
       lastOverall = null;
       lastSignals = null;
-      lastSkills = [];
-      lastNextSteps = [];
 
-      // Progress (overall)
       const { data: overall, error: overallErr } = await sb
         .from("progress")
         .select("id, parent_user_id, child_id, maths_level, english_level, streak, updated_at")
         .eq("child_id", child.id)
         .maybeSingle();
+
       if (overallErr) console.error("progress read error", overallErr);
       lastOverall = overall || null;
 
-      // Signals: get latest child_progress row (NOT maybeSingle)
-      let signals = null;
-      try {
-        const { data: sigRows, error: sigErr } = await sb
-          .from("child_progress")
-          .select("id, child_id, owner_id, subject, area, difficulty, streak_correct, streak_wrong, last_session_id, last_seen_at")
-          .eq("child_id", child.id)
-          .eq("owner_id", currentUser.id)
-          .order("last_seen_at", { ascending: false })
-          .limit(1);
-        if (sigErr) throw sigErr;
-        signals = (sigRows && sigRows[0]) ? sigRows[0] : null;
-      } catch (e) {
-        console.error("child_progress read error", e);
-        signals = null;
-      }
-      lastSignals = signals;
-
-      const hasAnyData = !!overall || !!signals;
-
-      // Render overall (still show if english_level null)
-      if (!overall) {
-        overallBox.innerHTML = `<div class="muted">No overall progress row yet.</div>`;
-      } else {
-        renderRows(overallBox, [
-          { k: "Maths level",   v: safe(overall.maths_level) },
-          { k: "English level", v: safe(overall.english_level) },
-          { k: "Streak",        v: safe(overall.streak) },
-          { k: "Last updated",  v: formatDateOnly(overall.updated_at) }
-        ]);
-      }
-
-      // Render signals
-      if (!signals) {
-        signalsBox.innerHTML = `<div class="muted">No tutor signals yet.</div>`;
-      } else {
-        renderRows(signalsBox, [
-          { k: "Last subject",        v: safe(signals.subject) },
-          { k: "Last focus area",     v: safe(signals.area) },
-          { k: "Current difficulty",  v: safe(signals.difficulty) },
-          { k: "Correct streak",      v: safe(signals.streak_correct) },
-          { k: "Wrong streak",        v: safe(signals.streak_wrong) },
-          { k: "Last session id",     v: `<code class="small">${safe(signals.last_session_id)}</code>` },
-          { k: "Last seen",           v: formatDateOnly(signals.last_seen_at) }
-        ]);
-      }
-
-      // Skills: include English attempts even if unmarked (is_correct null)
-      const { data: items, error: itemsErr } = await sb
-        .from("session_items")
-        .select("id, child_id, owner_id, created_at, is_correct, meta, item_type, prompt_text")
+      // We now have many rows in child_progress (per subject+area), so we fetch the most recent few:
+      const { data: signals, error: signalsErr } = await sb
+        .from("child_progress")
+        .select("subject, area, difficulty, streak_correct, streak_wrong, last_seen_at")
         .eq("child_id", child.id)
         .eq("owner_id", currentUser.id)
-        .order("created_at", { ascending: false })
-        .limit(400);
+        .order("last_seen_at", { ascending:false })
+        .limit(6);
 
-      if (itemsErr) {
-        console.error("session_items read error", itemsErr);
-        skillsBody.innerHTML = `<tr><td colspan="6" class="muted">No skill data yet.</td></tr>`;
+      if (signalsErr) console.error("child_progress read error", signalsErr);
+      lastSignals = signals || [];
+
+      // Render overall
+      if (!lastOverall) {
+        overallBox.innerHTML = `<div class="muted">No overall progress saved yet.</div>`;
       } else {
-        const rows = (items || [])
-          .filter(x => x.item_type !== "system")
-          .map(x => {
-            const { subject, area } = normaliseSubjectArea(x.meta, x.prompt_text);
-            const m = (x.meta && typeof x.meta === "object") ? x.meta : {};
-            const diff = m.difficulty || m.level || null;
-            const level = (typeof diff === "number") ? diff : parseInt(diff, 10);
+        renderRows(overallBox, [
+          { k: "Maths level",   v: safe(lastOverall.maths_level) },
+          { k: "English level", v: safe(lastOverall.english_level) },
+          { k: "Streak",        v: safe(lastOverall.streak) },
+          { k: "Last updated",  v: formatDateOnly(lastOverall.updated_at) }
+        ]);
+      }
 
-            // Attempts:
-            // - Maths: is_correct true/false = attempt
-            // - English: is_correct null still counts as attempt (we just can't compute accuracy)
-            const attempted =
-              (x.is_correct === true || x.is_correct === false) ? 1 :
-              (String(subject).toLowerCase() === "english") ? 1 : 0;
-
-            const correct = (x.is_correct === true) ? 1 : 0;
-            const marked = (x.is_correct === true || x.is_correct === false) ? 1 : 0;
-
-            return { subject, area, attempted, correct, marked, level: Number.isFinite(level) ? level : null };
-          })
-          .filter(r => r.attempted === 1);
-
-        const map = new Map();
-        for (const r of rows) {
-          const key = `${r.subject}||${r.area}`;
-          if (!map.has(key)) map.set(key, { subject:r.subject, area:r.area, attempts:0, correct:0, marked:0, maxLevel:0 });
-          const agg = map.get(key);
-          agg.attempts += 1;
-          agg.correct += r.correct;
-          agg.marked += r.marked;
-          if (r.level && r.level > agg.maxLevel) agg.maxLevel = r.level;
-        }
-
-        let skillRows = Array.from(map.values());
-        skillRows.sort((a,b) => (b.attempts - a.attempts));
-
-        // Fill level fallback from overall progress
-        skillRows = skillRows.map(r => {
-          const subj = String(r.subject||"");
-          const overallLevel =
-            subj === "English" ? (lastOverall?.english_level ?? null) :
-            subj === "Maths" ? (lastOverall?.maths_level ?? null) :
-            null;
-
-          const level = r.maxLevel || overallLevel || 1;
-
-          // Accuracy only if marked attempts exist
-          const accuracy = r.marked ? (r.correct / r.marked) : null;
-          const conf = confidenceLabel(accuracy);
-
-          return { ...r, level, accuracy, confidence: conf };
+      // Render tutor signals (mixed)
+      if (!lastSignals.length) {
+        signalsBox.innerHTML = `<div class="muted">No tutor signals saved yet.</div>`;
+      } else {
+        const rows = [];
+        lastSignals.forEach(s => {
+          const subj = prettySubject(s.subject);
+          const ar = prettyArea(s.area);
+          const diff = safe(s.difficulty);
+          const when = formatDateOnly(s.last_seen_at);
+          rows.push({ k: `${subj} • ${ar}`, v: `Difficulty ${diff} • Seen ${when}` });
         });
+        renderRows(signalsBox, rows);
+      }
+    }
 
-        lastSkills = skillRows;
+    async function loadSkills(){
+      skillsBox.innerHTML = `<div class="muted">Loading…</div>`;
+      lastSkills = null;
 
-        if (!skillRows.length) {
-          skillsBody.innerHTML = `<tr><td colspan="6" class="muted">No skill data yet. Do a Tutor session first.</td></tr>`;
-        } else {
-          skillsBody.innerHTML = "";
-          skillRows.slice(0, 14).forEach(r => {
-            const tr = document.createElement("tr");
-            const accPct = (r.accuracy === null) ? "—" : `${Math.round(r.accuracy*100)}%`;
-            tr.innerHTML = `
-              <td>${safe(r.subject)}</td>
-              <td>${safe(r.area)}</td>
-              <td class="num">${safe(r.level)}</td>
-              <td class="num">${safe(r.attempts, "0")}</td>
-              <td class="num">${accPct}</td>
-              <td class="num"><span class="${chipForConfidence(r.confidence)}">${safe(r.confidence)}</span></td>
-            `;
-            skillsBody.appendChild(tr);
-          });
-        }
+      // sessions table: id, parent_user_id, child_id, subject, area, questions_done, correct_count, created_at
+      // We'll use sessions because it’s stable and avoids raw "session_items" wording.
+      const { data: sess, error } = await sb
+        .from("sessions")
+        .select("subject, area, questions_done, correct_count, created_at")
+        .eq("parent_user_id", currentUser.id)
+        .eq("child_id", child.id)
+        .order("created_at", { ascending:false })
+        .limit(50);
 
-        // What to do next:
-        // 1) Use lowest accuracy areas where we have marked data
-        // 2) If English accuracy unknown, still suggest based on most-attempted English area
-        const maths = skillRows.filter(r => r.subject === "Maths" && r.marked >= 3 && r.accuracy !== null).sort((a,b)=>a.accuracy-b.accuracy);
-        const engMarked = skillRows.filter(r => r.subject === "English" && r.marked >= 3 && r.accuracy !== null).sort((a,b)=>a.accuracy-b.accuracy);
+      if (error) {
+        console.error("sessions read error", error);
+        skillsBox.innerHTML = `<div class="status bad">Could not load skills right now.</div>`;
+        return;
+      }
 
-        const engAny = skillRows.filter(r => r.subject === "English").sort((a,b)=>b.attempts-a.attempts);
+      const rows = sess || [];
+      if (!rows.length) {
+        skillsBox.innerHTML = `<div class="muted">No tutor sessions yet.</div>`;
+        lastSkills = [];
+        return;
+      }
 
-        const mathsNeeds = maths.slice(0,2).filter(x=>x.accuracy < 0.6).map(x=>x.area);
-        const engNeeds = engMarked.slice(0,2).filter(x=>x.accuracy < 0.6).map(x=>x.area);
+      // Aggregate by subject+area
+      const map = new Map(); // key -> {subject, area, attempts, correct, questions}
+      rows.forEach(r => {
+        const subj = prettySubject(r.subject);
+        const ar = prettyArea(r.area);
+        const key = subj + "||" + ar;
 
-        const steps = [
-          ...nextStepsFor("Maths", mathsNeeds),
-          ...nextStepsFor("English", engNeeds),
-        ];
+        const attempts = 1;
+        const questions = Number(r.questions_done || 0);
+        const correct = Number(r.correct_count || 0);
 
-        // If still empty, use most attempted English area + lastSignals
-        if (!steps.length && engAny.length) {
-          steps.push(...nextStepsFor("English", [engAny[0].area]));
-        }
-        if (!steps.length && lastSignals?.subject && lastSignals?.area) {
-          steps.push(...nextStepsFor(lastSignals.subject, [lastSignals.area]));
-        }
+        if (!map.has(key)) map.set(key, { subject: subj, area: ar, attempts:0, questions:0, correct:0 });
+        const obj = map.get(key);
+        obj.attempts += attempts;
+        obj.questions += questions;
+        obj.correct += correct;
+      });
 
-        if (!steps.length) {
-          nextStepsBox.innerHTML = `
-            <div class="muted" style="line-height:1.6;">
-              We’ve saved activity, but we need a little more marked data to give tailored next steps.<br>
-              Do a short Maths session (so we can calculate accuracy), then refresh.
-            </div>
-          `;
-        } else {
-          lastNextSteps = steps.slice(0,6);
-          nextStepsBox.innerHTML = `
-            <div style="line-height:1.7;">
-              <div class="muted" style="margin-bottom:8px;">Simple next actions:</div>
-              <ul style="margin:0; padding-left:18px;">
-                ${lastNextSteps.map(s => `<li>${s}</li>`).join("")}
-              </ul>
-            </div>
-          `;
+      // Prepare table
+      const items = Array.from(map.values())
+        .sort((a,b) => (b.questions - a.questions) || (b.attempts - a.attempts));
+
+      lastSkills = items;
+
+      const table = document.createElement("table");
+      table.className = "skills";
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Skill</th>
+            <th class="num">Attempts</th>
+            <th class="num">Accuracy</th>
+            <th class="num">Confidence</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      const tbody = table.querySelector("tbody");
+
+      items.forEach(it => {
+        const accuracy = it.questions > 0 ? (it.correct / it.questions) : null;
+        const accPct = (accuracy === null) ? "—" : (Math.round(accuracy * 100) + "%");
+        const conf = confidenceTag(it.attempts, accuracy ?? 0);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><b>${escapeHtml(it.subject)}</b> — ${escapeHtml(it.area)}</td>
+          <td class="num">${it.attempts}</td>
+          <td class="num">${accPct}</td>
+          <td class="num"><span class="tag ${conf.cls}">${conf.label}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      skillsBox.innerHTML = "";
+      skillsBox.appendChild(table);
+    }
+
+    function buildNextSteps(){
+      // Uses skills + signals to produce plain English
+      const steps = [];
+      const highlights = [];
+      const support = [];
+
+      const skills = lastSkills || [];
+      // identify best and weakest by accuracy (with enough questions)
+      const scored = skills
+        .map(s => {
+          const accuracy = s.questions > 0 ? (s.correct / s.questions) : null;
+          return { ...s, accuracy };
+        })
+        .filter(s => s.accuracy !== null);
+
+      const enough = scored.filter(s => s.questions >= 6); // avoid noisy
+      const best = enough.sort((a,b) => b.accuracy - a.accuracy)[0];
+      const worst = enough.sort((a,b) => a.accuracy - b.accuracy)[0];
+
+      if (best && best.accuracy >= 0.8) {
+        highlights.push(`${best.subject} — ${best.area} looks strong right now.`);
+      }
+      if (worst && worst.accuracy < 0.6) {
+        support.push(`${worst.subject} — ${worst.area} needs a bit more practice.`);
+      }
+
+      // Always provide clear “do this” actions
+      if (support.length) {
+        steps.push(`Do 5 minutes on <b>${escapeHtml(worst.subject)} — ${escapeHtml(worst.area)}</b> with easy questions first.`);
+        steps.push(`If your child gets stuck, encourage one small step at a time (no rushing).`);
+      } else if (highlights.length) {
+        steps.push(`Keep momentum with <b>${escapeHtml(best.subject)} — ${escapeHtml(best.area)}</b> for 5 minutes, then try one new area.`);
+      } else {
+        steps.push(`Do a short Tutor session (5–10 minutes). Focus on one area only.`);
+      }
+
+      // Recent mix suggestion based on signals
+      if (lastSignals && lastSignals.length >= 2) {
+        const recentSubjects = Array.from(new Set(lastSignals.map(s => prettySubject(s.subject))));
+        if (recentSubjects.length === 1) {
+          const other = recentSubjects[0] === "Maths" ? "English" : "Maths";
+          steps.push(`Balance the week: add one short <b>${other}</b> session too.`);
         }
       }
 
-      noDataBox.style.display = hasAnyData ? "none" : "block";
+      // Render
+      const box = document.createElement("div");
+      box.className = "subtle";
+      box.innerHTML = `
+        ${highlights.length ? `<div style="margin-bottom:8px;"><b>Doing well:</b><br>${highlights.map(h => "• " + escapeHtml(h)).join("<br>")}</div>` : ``}
+        ${support.length ? `<div style="margin-bottom:8px;"><b>Needs support:</b><br>${support.map(s => "• " + escapeHtml(s)).join("<br>")}</div>` : ``}
+        <div><b>Next steps:</b><br>${steps.map(s => "• " + s).join("<br>")}</div>
+      `;
+      nextBox.innerHTML = "";
+      nextBox.appendChild(box);
+
+      lastNext = { highlights, support, steps };
     }
 
     async function loadEverything(){
-      await loadReportsCore();
-      await loadWeeklySettings();
+      clearError();
+
+      overallBox.innerHTML = `<div class="muted">Loading…</div>`;
+      signalsBox.innerHTML = `<div class="muted">Loading…</div>`;
+      skillsBox.innerHTML = `<div class="muted">Loading…</div>`;
+      nextBox.innerHTML = `<div class="muted">Loading…</div>`;
+      noDataBox.style.display = "none";
+
+      // Load core blocks
+      await loadOverallAndSignals();
+      await loadSkills();
+
+      // Weekly
+      await loadWeeklySetting();
       await loadWeeklyReports();
+
+      // No tutor data guard
+      const hasTutorData = (lastSkills && lastSkills.length) || (lastSignals && lastSignals.length);
+      noDataBox.style.display = hasTutorData ? "none" : "block";
+
+      // Next steps
+      buildNextSteps();
+
       showOk("Reports refreshed");
     }
 
-    // ---------- PDF ----------
+    // -------------------------
+    // PDF
+    // -------------------------
     function pdfWriteLine(doc, text, x, y, maxWidth){
       const lines = doc.splitTextToSize(String(text), maxWidth);
       lines.forEach((ln, i) => doc.text(ln, x, y + (i * 6)));
@@ -887,7 +845,7 @@
 
         doc.setFontSize(12);
         y = pdfWriteLine(doc, `Child: ${safe(child?.child_name)}`, 14, y, 180); y += 2;
-        y = pdfWriteLine(doc, `DOB: ${formatDOB(child?.child_dob)}`, 14, y, 180); y += 2;
+        y = pdfWriteLine(doc, `DOB: ${safe(child?.child_dob ? formatDateOnly(child.child_dob) : "—")}`, 14, y, 180); y += 2;
         y = pdfWriteLine(doc, `Generated: ${formatDateOnly(new Date())}`, 14, y, 180); y += 6;
 
         doc.setFontSize(14);
@@ -904,24 +862,47 @@
         }
 
         doc.setFontSize(14);
-        doc.text("What to do next", 14, y); y += 8;
+        doc.text("Tutor signals", 14, y); y += 8;
         doc.setFontSize(12);
-        if (!lastNextSteps?.length) {
-          y = pdfWriteLine(doc, "No next steps available yet.", 14, y, 180); y += 6;
+
+        if (!lastSignals || !lastSignals.length) {
+          y = pdfWriteLine(doc, "No tutor signals yet.", 14, y, 180); y += 6;
         } else {
-          lastNextSteps.slice(0,6).forEach(s => { y = pdfWriteLine(doc, `• ${String(s)}`, 14, y, 180); y += 1; });
+          lastSignals.slice(0,6).forEach(s => {
+            const line = `${prettySubject(s.subject)} — ${prettyArea(s.area)} (difficulty ${safe(s.difficulty)})`;
+            y = pdfWriteLine(doc, line, 14, y, 180); y += 2;
+          });
           y += 4;
         }
 
         doc.setFontSize(14);
-        doc.text("Skills (top)", 14, y); y += 8;
+        doc.text("Skills", 14, y); y += 8;
         doc.setFontSize(12);
-        (lastSkills || []).slice(0,10).forEach(r => {
-          const accPct = (r.accuracy === null) ? "—" : `${Math.round(r.accuracy*100)}%`;
-          y = pdfWriteLine(doc, `${r.subject} • ${r.area} — Level ${r.level} — Attempts ${r.attempts} — Accuracy ${accPct} — Confidence ${r.confidence}`, 14, y, 180);
-          y += 2;
-          if (y > 270) { doc.addPage(); y = 14; }
-        });
+
+        if (!lastSkills || !lastSkills.length) {
+          y = pdfWriteLine(doc, "No skill data yet.", 14, y, 180); y += 6;
+        } else {
+          lastSkills.slice(0,10).forEach(s => {
+            const acc = s.questions ? Math.round((s.correct / s.questions) * 100) + "%" : "—";
+            const line = `${s.subject} — ${s.area}: attempts ${s.attempts}, accuracy ${acc}`;
+            y = pdfWriteLine(doc, line, 14, y, 180); y += 2;
+          });
+          y += 4;
+        }
+
+        doc.setFontSize(14);
+        doc.text("What to do next", 14, y); y += 8;
+        doc.setFontSize(12);
+
+        const steps = lastNext?.steps || [];
+        if (!steps.length) {
+          y = pdfWriteLine(doc, "No next steps yet.", 14, y, 180); y += 6;
+        } else {
+          steps.slice(0,8).forEach(s => {
+            y = pdfWriteLine(doc, "- " + String(s).replace(/<[^>]+>/g, ""), 14, y, 180); y += 1;
+          });
+          y += 4;
+        }
 
         doc.save(`Learnlio-Report-${safe(child?.child_name,"Child")}.pdf`);
       } catch (e) {
@@ -930,7 +911,9 @@
       }
     }
 
-    // ---------- Events ----------
+    // -------------------------
+    // EVENTS
+    // -------------------------
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
@@ -938,16 +921,36 @@
     });
 
     refreshBtn.addEventListener("click", async () => {
-      clearError();
       await loadEverything();
     });
 
     downloadBtn.addEventListener("click", () => {
-      clearError();
       downloadPDF();
     });
 
-    // ---------- Init ----------
+    async function toggleWeekly(){
+      const next = !weeklyEnabled;
+      // optimistic UI
+      setWeeklySwitchUI(next);
+      weeklyState.textContent = next ? "On" : "Off";
+      const ok = await saveWeeklySetting(next);
+      if (ok) {
+        // keep list as-is; it will fill when weekly jobs are added
+        await loadWeeklyReports();
+      }
+    }
+
+    weeklySwitch.addEventListener("click", toggleWeekly);
+    weeklySwitch.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleWeekly();
+      }
+    });
+
+    // -------------------------
+    // INIT
+    // -------------------------
     (async () => {
       if (!sb) { showError("Supabase did not load."); return; }
 
