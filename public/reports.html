@@ -48,11 +48,43 @@
     .select-wrap { display:none; gap:8px; align-items:center; }
     .label { font-size:13px; color:#6b7280; }
 
-    .table { width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border:1px solid #ececf4; border-radius:14px; }
-    .table th, .table td { padding:10px 12px; font-size:14px; border-bottom:1px solid #f1f1f6; vertical-align:top; }
+    /* ✅ Skills table alignment fix */
+    .table-wrap { overflow-x:auto; }
+    .table {
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      table-layout:fixed;                 /* forces consistent column geometry */
+      border:1px solid #ececf4;
+      border-radius:14px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .table col.skill   { width: 36%; }
+    .table col.level   { width: 10%; }
+    .table col.attempt { width: 12%; }
+    .table col.acc     { width: 12%; }
+    .table col.conf    { width: 12%; }
+    .table col.status  { width: 10%; }
+    .table col.last    { width: 18%; }
+
+    .table th, .table td {
+      padding:10px 12px;
+      font-size:14px;
+      border-bottom:1px solid #f1f1f6;
+      vertical-align:top;
+      white-space:nowrap;               /* keeps numbers under headings */
+    }
     .table th { text-align:left; background:#fafafa; color:#374151; font-size:12px; letter-spacing:.2px; text-transform:uppercase; }
     .table tr:last-child td { border-bottom:none; }
-    .right { text-align:right; }
+
+    /* Make numeric columns actually align under their headers */
+    .table th.num, .table td.num {
+      text-align:center;                 /* ✅ this is the key visual fix */
+      font-variant-numeric: tabular-nums; /* nice even digit width */
+    }
+    .table th.right, .table td.right { text-align:right; }
+
     .small { font-size:12px; color:#6b7280; }
     .hr { height:1px; background:#ececf4; margin:14px 0; }
 
@@ -208,7 +240,6 @@
     let currentUser = null;
     let child = null;
 
-    // cache for PDF
     let lastSkills = [];
     let derivedSummary = null;
     let derivedNext = null;
@@ -244,7 +275,6 @@
       return Number.isFinite(n) ? n : null;
     }
 
-    // Supports 0.73 or 73
     function formatPctSmart(v){
       const n = asNumber(v);
       if (n === null) return null;
@@ -270,7 +300,6 @@
     }
 
     function normaliseStatus(row){
-      // Accept many possible column names
       const explicit = String(pickField(row, ["status","skill_status"]) || "").toLowerCase().trim();
       if (explicit) {
         if (explicit.includes("support") || explicit.includes("focus") || explicit.includes("struggle")) return "support";
@@ -278,7 +307,6 @@
         if (explicit.includes("risk") || explicit.includes("urgent") || explicit.includes("attention")) return "risk";
       }
 
-      // Infer from accuracy/confidence if present
       const acc = asNumber(pickField(row, ["accuracy","accuracy_rate","accuracy_pct"]));
       const conf = asNumber(pickField(row, ["confidence","confidence_score","confidence_pct"]));
 
@@ -429,8 +457,6 @@
       skills.forEach(r => {
         const attempts = asNumber(pickField(r, ["attempts","attempt_count","attempts_total","total_attempts"])) ?? 0;
         const accRaw = pickField(r, ["accuracy","accuracy_rate","accuracy_pct"]);
-        const accPct = formatPctSmart(accRaw); // string or null
-
         totalAttempts += attempts;
 
         const accN = asNumber(accRaw);
@@ -449,9 +475,7 @@
         }
       });
 
-      const overallAcc01 = haveAnyAcc
-        ? (weightedAccSum / Math.max(1, totalAttempts))
-        : null;
+      const overallAcc01 = haveAnyAcc ? (weightedAccSum / Math.max(1, totalAttempts)) : null;
 
       derivedSummary = {
         skills_tracked: skills.length,
@@ -593,33 +617,44 @@
               <div style="font-weight:900;">${subj}</div>
               <div class="small">${area}</div>
             </td>
-            <td class="right">${level === null ? "—" : safe(level)}</td>
-            <td class="right">${attempts === null ? "—" : safe(attempts)}</td>
-            <td class="right">${accuracy === null ? "—" : accuracy}</td>
-            <td class="right">${confidence === null ? "—" : confidence}</td>
-            <td class="right">${statusPill(r)}</td>
+            <td class="num">${level === null ? "—" : safe(level)}</td>
+            <td class="num">${attempts === null ? "—" : safe(attempts)}</td>
+            <td class="num">${accuracy === null ? "—" : accuracy}</td>
+            <td class="num">${confidence === null ? "—" : confidence}</td>
+            <td class="num">${statusPill(r)}</td>
             <td class="right"><span class="small">${last}</span></td>
           </tr>
         `;
       }).join("");
 
       skillsBox.innerHTML = `
-        <table class="table" aria-label="Skills progress table">
-          <thead>
-            <tr>
-              <th>Skill</th>
-              <th class="right">Level</th>
-              <th class="right">Attempts</th>
-              <th class="right">Accuracy</th>
-              <th class="right">Confidence</th>
-              <th class="right">Status</th>
-              <th class="right">Last seen</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tr}
-          </tbody>
-        </table>
+        <div class="table-wrap">
+          <table class="table" aria-label="Skills progress table">
+            <colgroup>
+              <col class="skill">
+              <col class="level">
+              <col class="attempt">
+              <col class="acc">
+              <col class="conf">
+              <col class="status">
+              <col class="last">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Skill</th>
+                <th class="num">Level</th>
+                <th class="num">Attempts</th>
+                <th class="num">Accuracy</th>
+                <th class="num">Confidence</th>
+                <th class="num">Status</th>
+                <th class="right">Last seen</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tr}
+            </tbody>
+          </table>
+        </div>
       `;
     }
 
@@ -662,7 +697,6 @@
       showOk("Reports refreshed");
     }
 
-    // ---------- PDF ----------
     function pdfWriteLine(doc, text, x, y, maxWidth){
       const lines = doc.splitTextToSize(String(text), maxWidth);
       lines.forEach((ln, i) => doc.text(ln, x, y + (i * 6)));
@@ -723,7 +757,6 @@
       }
     }
 
-    // ---------- events ----------
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
@@ -741,8 +774,12 @@
     (async () => {
       if (!sb) { showError("Supabase did not load."); return; }
 
-      const ok = await requireAuth();
-      if (!ok) return;
+      const { data, error } = await sb.auth.getUser();
+      if (error || !data?.user){
+        window.location.href = "/login.html";
+        return;
+      }
+      currentUser = data.user;
 
       await loadChildSwitcher();
 
@@ -761,4 +798,5 @@
   </script>
 </body>
 </html>
+
 
