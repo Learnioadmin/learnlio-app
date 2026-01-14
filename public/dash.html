@@ -139,8 +139,10 @@
       <!-- RIGHT: Progress / Next step -->
       <aside class="card">
         <h2 style="margin:0 0 6px; font-size:18px;">Next step</h2>
-        <p class="muted" style="margin:0 0 14px;">
-          This will become smarter as Learnlio learns your child’s patterns.
+
+        <!-- ✅ NOW DYNAMIC -->
+        <p class="muted" id="nextStepIntro" style="margin:0 0 14px;">
+          Loading your child’s next step…
         </p>
 
         <div class="hr"></div>
@@ -219,6 +221,7 @@
     const selectedChildLabel = document.getElementById("selectedChildLabel");
 
     // Next step UI
+    const nextStepIntro = document.getElementById("nextStepIntro"); // ✅ NEW
     const nextStepTag = document.getElementById("nextStepTag");
     const nextStepTitle = document.getElementById("nextStepTitle");
     const nextStepBody = document.getElementById("nextStepBody");
@@ -376,13 +379,6 @@
       setSelectedChildUI();
     }
 
-    function clearSelectedChildIfMatches(childId) {
-      const selectedId = getSelectedChildId();
-      if (selectedId && selectedId === childId) {
-        localStorage.removeItem("selectedChild");
-      }
-    }
-
     async function updateSelectedChildLocalStorageIfMatches(ch) {
       const selectedId = getSelectedChildId();
       if (selectedId && selectedId === ch.id) {
@@ -393,10 +389,14 @@
     // ---------------------------
     // NEXT STEP (dynamic)
     // ---------------------------
-    function setNextStep(tag, title, body) {
+    function setNextStep(tag, title, body, introText) {
       nextStepTag.textContent = tag;
       nextStepTitle.textContent = title;
       nextStepBody.textContent = body;
+
+      if (nextStepIntro) {
+        nextStepIntro.textContent = introText || "Here’s what to do next based on recent Tutor sessions.";
+      }
     }
 
     function sentence(s){ return String(s || "").trim(); }
@@ -405,7 +405,6 @@
       if (!area) return null;
       const a = String(area).trim();
       if (!a) return null;
-      // Normalise a little (keeps it parent-friendly)
       if (a.toLowerCase() === "sentence building") return "Building sentences";
       return a;
     }
@@ -418,7 +417,8 @@
         setNextStep(
           "Starter plan",
           "Try a short warm-up",
-          "Start with a 5–7 minute Tutor session. If your child struggles, use hints and go slowly. Progress and reports appear after a couple of sessions."
+          "Start with a 5–7 minute Tutor session. If your child struggles, use hints and go slowly. Progress and reports appear after a couple of sessions.",
+          "Select a child to see personalised next steps."
         );
         nextStepPrimaryBtn.textContent = "Start Tutor";
         nextStepPrimaryBtn.href = "/chat.html";
@@ -448,7 +448,8 @@
         setNextStep(
           "Starter plan",
           "Do one short Tutor session",
-          "Do a quick Maths or English session. After a couple of sessions, Learnlio will start showing specific strengths and what to work on next."
+          "Do a quick Maths or English session. After a couple of sessions, Learnlio will start showing specific strengths and what to work on next.",
+          "We’ll personalise this after the first couple of Tutor sessions."
         );
         nextStepPrimaryBtn.textContent = "Start Tutor";
         nextStepPrimaryBtn.href = "/chat.html";
@@ -459,11 +460,9 @@
       const area = niceArea(signals.area);
       const wrong = Number(signals.streak_wrong || 0);
       const correct = Number(signals.streak_correct || 0);
-      const diff = Number(signals.difficulty || 1);
 
       // Build parent-friendly next step
       if (wrong >= 2) {
-        // child has struggled recently in last area
         setNextStep(
           "Support focus",
           `Support with ${area || "the last topic"}`,
@@ -471,7 +470,8 @@
             `In the last Tutor session, Learnlio noticed this was a bit tricky.` +
             ` Try a short session in ${area || "that topic"} again, and encourage slow step-by-step working.` +
             ` Use hints early so confidence stays high.`
-          )
+          ),
+          "Based on recent Tutor signals, this is the best next step."
         );
         nextStepPrimaryBtn.textContent = "Continue Tutor";
         nextStepPrimaryBtn.href = "/chat.html";
@@ -479,7 +479,6 @@
       }
 
       if (correct >= 2) {
-        // doing well recently
         const nextIdea =
           subj === "Maths"
             ? "Try a new Maths area for variety (e.g. Multiplication or Division)."
@@ -498,22 +497,23 @@
             ` Keep sessions short (5–10 minutes) and finish on a win.` +
             (levelHint ? ` ${levelHint}` : "") +
             ` ${nextIdea}`
-          )
+          ),
+          "Great progress recently — here’s how to keep it moving."
         );
         nextStepPrimaryBtn.textContent = "Continue Tutor";
         nextStepPrimaryBtn.href = "/chat.html";
         return;
       }
 
-      // Neutral / early learning signals
       setNextStep(
         "Next step",
         `Continue ${subj || "Tutor"} practice`,
         sentence(
           `Keep it light and regular. Aim for a short session, 3–4 times a week.` +
           (area ? ` Stay on ${area} until it feels easy.` : "") +
-          (diff ? ` Learnlio will gently adjust difficulty as confidence grows.` : "")
-        )
+          ` Learnlio will gently adjust difficulty as confidence grows.`
+        ),
+        "Here’s what to do next based on recent Tutor sessions."
       );
       nextStepPrimaryBtn.textContent = "Continue Tutor";
       nextStepPrimaryBtn.href = "/chat.html";
@@ -547,9 +547,6 @@
         return;
       }
 
-      // Auto-select if:
-      // - exactly one child AND nothing selected
-      // - selected child no longer exists
       const selectedId = getSelectedChildId();
       const selectedExists = selectedId ? rows.some(r => r.id === selectedId) : false;
 
@@ -561,7 +558,6 @@
         setSelectedChildUI();
       }
 
-      // Render list
       listEl.innerHTML = "";
       rows.forEach(ch => {
         const card = document.createElement("div");
@@ -572,7 +568,6 @@
         const age = computeAge(dob);
         const isSelected = (getSelectedChildId() === ch.id);
 
-        // IMPORTANT: we keep your layout; we only add an "Edit" button + an inline edit panel.
         card.innerHTML = `
           <div class="child-top">
             <div>
@@ -615,7 +610,6 @@
           </div>
         `;
 
-        // Wire up buttons
         const selectBtn = card.querySelector(`button[data-action="select"][data-id="${ch.id}"]`);
         const editBtn   = card.querySelector(`button[data-action="edit"][data-id="${ch.id}"]`);
         const wrap      = card.querySelector(`[data-editwrap="${ch.id}"]`);
@@ -633,19 +627,17 @@
         selectBtn.addEventListener("click", async () => {
           setSelectedChild(ch);
           setFormMsg(`Selected child: ${name}`, "good");
-          await loadChildren();      // refresh pills
-          await loadNextStep();      // refresh next step for selected child
+          await loadChildren();
+          await loadNextStep();
         });
 
         editBtn.addEventListener("click", () => {
-          // toggle
           const open = wrap.style.display !== "none";
           wrap.style.display = open ? "none" : "block";
           setEditMsg("");
         });
 
         cancelBtn.addEventListener("click", () => {
-          // reset inputs to current values and close
           editName.value = ch.child_name ?? "";
           editDob.value = ch.child_dob ?? "";
           wrap.style.display = "none";
@@ -678,14 +670,11 @@
 
             if (upErr) throw upErr;
 
-            // Update local copy + selected child storage if needed
             ch.child_name = updated.child_name;
             ch.child_dob = updated.child_dob;
             await updateSelectedChildLocalStorageIfMatches(ch);
 
             setEditMsg("Saved ✅", "good");
-
-            // Close, refresh UI
             wrap.style.display = "none";
             setFormMsg("Child details updated ✅", "good");
             await loadChildren();
@@ -745,7 +734,6 @@
       accessSub.textContent = "";
       setAccessNotice(false);
 
-      // Default: allow usage while checking (no hard lock)
       disablePaidNav(false);
       upgradeBtn.style.display = "none";
 
@@ -765,14 +753,12 @@
           accessStatus = "ok";
           setAccessPill("good", "Trial active");
           accessSub.textContent = me.trial_ends_at ? `Ends: ${formatDateDDMMYYYY(me.trial_ends_at)}` : "";
-          // Show upgrade CTA even while in trial (as requested)
           upgradeBtn.style.display = "inline-block";
           upgradeBtn.textContent = "Upgrade now";
           disablePaidNav(false);
           return;
         }
 
-        // expired / none => soft gate (disable Tutor+Reports, keep Dash usable)
         accessStatus = "locked";
         if (status === "expired") {
           setAccessPill("bad", "Trial ended");
@@ -788,7 +774,6 @@
         upgradeBtn.style.display = "inline-block";
         upgradeBtn.textContent = "Go to Billing";
       } catch (e) {
-        // Don't break the dashboard — show “unknown” and keep it usable.
         accessStatus = "unknown";
         setAccessPill("warn", "Access: unknown");
         accessSub.textContent = "Couldn’t verify right now";
@@ -796,8 +781,6 @@
           "We couldn’t verify access (billing check failed). You can still manage children here. If Tutor/Reports are blocked unexpectedly, open Billing.",
           "warn"
         );
-
-        // Keep usable (no lock)
         disablePaidNav(false);
       }
     }
@@ -814,7 +797,6 @@
       await loadNextStep();
     });
 
-    // Also refresh Next Step if user returns and selection changed elsewhere
     window.addEventListener("focus", async () => {
       await loadNextStep();
     });
@@ -832,5 +814,4 @@
   </script>
 </body>
 </html>
-
 
