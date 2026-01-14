@@ -66,7 +66,7 @@
     .callout p{ margin:0; color:#6b7280; line-height:1.6; font-size:14px; }
 
     .list { margin:10px 0 0; padding-left:18px; color:#111; }
-    .list li { margin:6px 0; line-height:1.5; }
+    .list li { margin:8px 0; line-height:1.5; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -118,7 +118,7 @@
         <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
             <h2 style="margin:0; font-size:16px;">What to do next</h2>
-            <span class="pill gray">next steps</span>
+            <span class="pill gray">simple plan</span>
           </div>
 
           <div id="nextBox" style="margin-top:12px;">
@@ -128,10 +128,10 @@
           <div class="hr"></div>
 
           <div class="callout">
-            <h3>How to use this</h3>
+            <h3>Best way to use this</h3>
             <p>
-              Pick one “Support” skill and practise it for 5–10 minutes.
-              Then do one “Doing well” skill to end on confidence.
+              Pick one “Needs support” skill and practise it for 5–10 minutes.
+              Then do one “Doing well” skill to finish on confidence.
             </p>
           </div>
 
@@ -157,9 +157,9 @@
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
           <div>
             <h2 style="margin:0; font-size:16px;">Skills</h2>
-            <div class="muted" style="margin-top:6px;">Levels move up per subject + area.</div>
+            <div class="muted" style="margin-top:6px;">Progress is tracked per subject and area (e.g. Maths → Multiplication).</div>
           </div>
-          <span class="pill gray">v_child_report_overview</span>
+          <span class="pill gray">skills overview</span>
         </div>
 
         <div id="skillsBox" style="margin-top:12px;">
@@ -168,7 +168,7 @@
       </section>
 
       <section id="noDataBox" class="card" style="margin-top:14px; box-shadow:none; border:1px dashed #cbd5e1; display:none;">
-        <h2 style="margin:0 0 8px; font-size:16px;">No progress data yet</h2>
+        <h2 style="margin:0 0 8px; font-size:16px;">No learning data yet</h2>
         <div class="muted" style="line-height:1.6;">
           I can’t see any saved learning data for this child yet.<br>
           Do a short Tutor session, then come back and press <b>Refresh</b>.
@@ -224,12 +224,32 @@
     function showOk(msg){
       pageOk.style.display = "block";
       pageOk.textContent = msg;
-      setTimeout(() => { pageOk.style.display="none"; }, 1600);
+      setTimeout(() => { pageOk.style.display="none"; }, 1400);
     }
 
     function safe(v, fallback="—"){
       if (v === null || v === undefined || v === "") return fallback;
       return String(v);
+    }
+
+    function pickField(row, keys){
+      for (const k of keys){
+        if (row && row[k] !== undefined && row[k] !== null && row[k] !== "") return row[k];
+      }
+      return null;
+    }
+
+    function asNumber(v){
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    // Supports 0.73 or 73
+    function formatPctSmart(v){
+      const n = asNumber(v);
+      if (n === null) return null;
+      const pct = (n <= 1) ? (n * 100) : n;
+      return `${Math.round(pct)}%`;
     }
 
     function formatDateTime(value){
@@ -244,53 +264,40 @@
       return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
     }
 
-    function asNumber(v){
-      const n = Number(v);
-      return Number.isFinite(n) ? n : null;
-    }
-
-    function formatPct(v){
-      const n = asNumber(v);
-      if (n === null) return "—";
-      return `${Math.round(n * 100)}%`;
-    }
-
     function pillHtml(kind, text){
       const cls = kind === "ok" ? "pill ok" : kind === "warn" ? "pill warn" : kind === "bad" ? "pill bad" : "pill gray";
       return `<span class="${cls}">${safe(text, "—")}</span>`;
     }
 
     function normaliseStatus(row){
-      // Prefer explicit status from your view if present
-      const raw = String(row.status || "").toLowerCase().trim();
-      if (raw) {
-        if (raw.includes("support") || raw.includes("focus") || raw.includes("struggle")) return "support";
-        if (raw.includes("excel") || raw.includes("strong") || raw.includes("good")) return "good";
-        if (raw.includes("risk") || raw.includes("avoid") || raw.includes("attention")) return "risk";
+      // Accept many possible column names
+      const explicit = String(pickField(row, ["status","skill_status"]) || "").toLowerCase().trim();
+      if (explicit) {
+        if (explicit.includes("support") || explicit.includes("focus") || explicit.includes("struggle")) return "support";
+        if (explicit.includes("strong") || explicit.includes("good") || explicit.includes("excel")) return "good";
+        if (explicit.includes("risk") || explicit.includes("urgent") || explicit.includes("attention")) return "risk";
       }
 
-      // Otherwise infer from accuracy/confidence
-      const acc = asNumber(row.accuracy);
-      const conf = asNumber(row.confidence);
+      // Infer from accuracy/confidence if present
+      const acc = asNumber(pickField(row, ["accuracy","accuracy_rate","accuracy_pct"]));
+      const conf = asNumber(pickField(row, ["confidence","confidence_score","confidence_pct"]));
 
-      // If no metrics yet, neutral
-      if (acc === null && conf === null) return "neutral";
+      const acc01 = (acc !== null && acc > 1) ? (acc/100) : acc;
+      const conf01 = (conf !== null && conf > 1) ? (conf/100) : conf;
 
-      // Support if either metric is low
-      if ((acc !== null && acc < 0.6) || (conf !== null && conf < 0.55)) return "support";
-
-      // Doing well if both are strong
-      if ((acc !== null && acc >= 0.8) && (conf !== null && conf >= 0.75)) return "good";
-
-      return "neutral";
+      if (acc01 === null && conf01 === null) return "nodata";
+      if ((acc01 !== null && acc01 < 0.6) || (conf01 !== null && conf01 < 0.55)) return "support";
+      if ((acc01 !== null && acc01 >= 0.8) && (conf01 !== null && conf01 >= 0.75)) return "good";
+      return "track";
     }
 
     function statusPill(row){
       const s = normaliseStatus(row);
-      if (s === "support") return pillHtml("warn", "Support");
+      if (s === "support") return pillHtml("warn", "Needs support");
       if (s === "good") return pillHtml("ok", "Doing well");
       if (s === "risk") return pillHtml("bad", "Needs attention");
-      return pillHtml("gray", "Building");
+      if (s === "nodata") return pillHtml("gray", "No data yet");
+      return pillHtml("gray", "On track");
     }
 
     function getSelectedChild(){
@@ -413,22 +420,27 @@
         return;
       }
 
-      const skillsTracked = skills.length;
-
-      // weighted accuracy by attempts (fallback to simple avg)
       let totalAttempts = 0;
       let weightedAccSum = 0;
+      let haveAnyAcc = false;
 
       let lastTs = null;
 
       skills.forEach(r => {
-        const attempts = asNumber(r.attempts) ?? 0;
-        const acc = asNumber(r.accuracy);
+        const attempts = asNumber(pickField(r, ["attempts","attempt_count","attempts_total","total_attempts"])) ?? 0;
+        const accRaw = pickField(r, ["accuracy","accuracy_rate","accuracy_pct"]);
+        const accPct = formatPctSmart(accRaw); // string or null
+
         totalAttempts += attempts;
 
-        if (acc !== null) weightedAccSum += (acc * attempts);
+        const accN = asNumber(accRaw);
+        const acc01 = (accN !== null && accN > 1) ? (accN/100) : accN;
+        if (acc01 !== null) {
+          haveAnyAcc = true;
+          weightedAccSum += (acc01 * Math.max(1, attempts));
+        }
 
-        const t = r.last_seen_at || r.updated_at || null;
+        const t = pickField(r, ["last_seen_at","updated_at","last_activity_at"]);
         if (t) {
           const dt = new Date(t);
           if (!isNaN(dt.getTime())) {
@@ -437,19 +449,14 @@
         }
       });
 
-      const overallAcc =
-        totalAttempts > 0
-          ? (weightedAccSum / totalAttempts)
-          : (() => {
-              const vals = skills.map(r => asNumber(r.accuracy)).filter(v => v !== null);
-              if (!vals.length) return null;
-              return vals.reduce((a,b) => a+b, 0) / vals.length;
-            })();
+      const overallAcc01 = haveAnyAcc
+        ? (weightedAccSum / Math.max(1, totalAttempts))
+        : null;
 
       derivedSummary = {
-        skills_tracked: skillsTracked,
+        skills_tracked: skills.length,
         total_attempts: totalAttempts,
-        overall_accuracy: overallAcc,
+        overall_accuracy: overallAcc01,
         last_activity_at: lastTs ? lastTs.toISOString() : null
       };
 
@@ -457,7 +464,7 @@
       const rows = [
         { k: "Skills tracked", v: safe(derivedSummary.skills_tracked) },
         { k: "Total attempts", v: safe(derivedSummary.total_attempts) },
-        { k: "Overall accuracy", v: derivedSummary.overall_accuracy === null ? "—" : formatPct(derivedSummary.overall_accuracy) },
+        { k: "Overall accuracy", v: derivedSummary.overall_accuracy === null ? "Not enough data yet" : `${Math.round(derivedSummary.overall_accuracy*100)}%` },
         { k: "Last activity", v: derivedSummary.last_activity_at ? formatDateTime(derivedSummary.last_activity_at) : "—" }
       ];
       rows.forEach(r => {
@@ -482,44 +489,55 @@
         return;
       }
 
-      // Rank support: low confidence/accuracy first
       const scored = skills.map(r => {
-        const acc = asNumber(r.accuracy);
-        const conf = asNumber(r.confidence);
-        const attempts = asNumber(r.attempts) ?? 0;
+        const accN = asNumber(pickField(r, ["accuracy","accuracy_rate","accuracy_pct"]));
+        const confN = asNumber(pickField(r, ["confidence","confidence_score","confidence_pct"]));
+        const acc01 = (accN !== null && accN > 1) ? (accN/100) : accN;
+        const conf01 = (confN !== null && confN > 1) ? (confN/100) : confN;
 
-        // “need score” higher means needs more support
+        const attempts = asNumber(pickField(r, ["attempts","attempt_count","attempts_total","total_attempts"])) ?? 0;
+
         let need = 0;
-        if (acc !== null) need += (1 - acc);
-        if (conf !== null) need += (1 - conf);
-        // prefer skills with some attempts (more evidence)
+        if (acc01 !== null) need += (1 - acc01);
+        if (conf01 !== null) need += (1 - conf01);
         need += attempts > 0 ? 0.15 : 0;
 
         return { ...r, __status: normaliseStatus(r), __need: need };
       });
 
-      const support = scored
+      const needsSupport = scored
         .filter(r => r.__status === "support" || r.__status === "risk")
         .sort((a,b) => (b.__need - a.__need))
         .slice(0, 3);
 
       const doingWell = scored
         .filter(r => r.__status === "good")
-        .sort((a,b) => (b.__need - a.__need)) // not critical
+        .sort((a,b) => (a.__need - b.__need))
         .slice(0, 2);
 
-      // Fallbacks if not enough
-      const supportFinal = support.length ? support : scored.sort((a,b) => (b.__need - a.__need)).slice(0, 3);
-      const doingFinal = doingWell.length ? doingWell : scored.sort((a,b) => (a.__need - b.__need)).slice(0, 2);
+      const supportFinal = needsSupport.length ? needsSupport : scored.sort((a,b)=> (b.__need-a.__need)).slice(0,3);
+      const doingFinal = doingWell.length ? doingWell : scored.sort((a,b)=> (a.__need-b.__need)).slice(0,2);
 
       derivedNext = { support: supportFinal, doingWell: doingFinal };
 
-      const makeLine = (x) => {
-        const subj = safe(x.subject);
-        const area = safe(x.area);
-        const lvl = (x.level !== null && x.level !== undefined) ? `Level ${x.level}` : "Level —";
-        const acc = formatPct(x.accuracy);
-        const conf = formatPct(x.confidence);
+      function metricLine(x){
+        const lvl = pickField(x, ["level","skill_level","difficulty_level"]);
+        const attempts = pickField(x, ["attempts","attempt_count","attempts_total","total_attempts"]);
+        const acc = formatPctSmart(pickField(x, ["accuracy","accuracy_rate","accuracy_pct"]));
+        const conf = formatPctSmart(pickField(x, ["confidence","confidence_score","confidence_pct"]));
+
+        const bits = [];
+        if (lvl !== null) bits.push(`Level ${lvl}`);
+        if (attempts !== null) bits.push(`${attempts} attempts`);
+        if (acc !== null) bits.push(`Accuracy ${acc}`);
+        if (conf !== null) bits.push(`Confidence ${conf}`);
+
+        return bits.length ? bits.join(" • ") : "Not enough data yet (do a few more questions)";
+      }
+
+      const makeItem = (x) => {
+        const subj = safe(pickField(x, ["subject"]) || "—");
+        const area = safe(pickField(x, ["area","skill_area"]) || "—");
         return `
           <li>
             <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;">
@@ -527,7 +545,7 @@
               <div>${statusPill(x)}</div>
             </div>
             <div class="small" style="margin-top:4px;">
-              ${lvl} • Accuracy ${acc} • Confidence ${conf}
+              ${metricLine(x)}
             </div>
           </li>
         `;
@@ -535,21 +553,19 @@
 
       nextBox.innerHTML = `
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <span class="pill warn">Support</span>
-          <span class="pill ok">Doing well</span>
+          <span class="pill warn">Focus next (needs support)</span>
+          <span class="pill ok">Finish with confidence (doing well)</span>
         </div>
 
         <div style="margin-top:10px;">
-          <div style="font-weight:900; margin-bottom:6px;">Focus first (5–10 mins)</div>
           <ul class="list">
-            ${supportFinal.map(makeLine).join("")}
+            ${supportFinal.map(makeItem).join("")}
           </ul>
         </div>
 
         <div style="margin-top:12px;">
-          <div style="font-weight:900; margin-bottom:6px;">Finish on confidence (2–5 mins)</div>
           <ul class="list">
-            ${doingFinal.map(makeLine).join("")}
+            ${doingFinal.map(makeItem).join("")}
           </ul>
         </div>
       `;
@@ -562,14 +578,14 @@
       }
 
       const tr = rows.map(r => {
-        const subj = safe(r.subject);
-        const area = safe(r.area);
+        const subj = safe(pickField(r, ["subject"]));
+        const area = safe(pickField(r, ["area","skill_area"]));
 
-        const level = (r.level !== null && r.level !== undefined) ? r.level : "—";
-        const attempts = (r.attempts !== null && r.attempts !== undefined) ? r.attempts : "—";
-        const accuracy = formatPct(r.accuracy);
-        const confidence = formatPct(r.confidence);
-        const last = formatDateTime(r.last_seen_at || r.updated_at);
+        const level = pickField(r, ["level","skill_level","difficulty_level"]);
+        const attempts = pickField(r, ["attempts","attempt_count","attempts_total","total_attempts"]);
+        const accuracy = formatPctSmart(pickField(r, ["accuracy","accuracy_rate","accuracy_pct"]));
+        const confidence = formatPctSmart(pickField(r, ["confidence","confidence_score","confidence_pct"]));
+        const last = formatDateTime(pickField(r, ["last_seen_at","updated_at","last_activity_at"]));
 
         return `
           <tr>
@@ -577,10 +593,10 @@
               <div style="font-weight:900;">${subj}</div>
               <div class="small">${area}</div>
             </td>
-            <td class="right">${level}</td>
-            <td class="right">${attempts}</td>
-            <td class="right">${accuracy}</td>
-            <td class="right">${confidence}</td>
+            <td class="right">${level === null ? "—" : safe(level)}</td>
+            <td class="right">${attempts === null ? "—" : safe(attempts)}</td>
+            <td class="right">${accuracy === null ? "—" : accuracy}</td>
+            <td class="right">${confidence === null ? "—" : confidence}</td>
             <td class="right">${statusPill(r)}</td>
             <td class="right"><span class="small">${last}</span></td>
           </tr>
@@ -621,7 +637,6 @@
       derivedSummary = null;
       derivedNext = null;
 
-      // IMPORTANT: this page is now powered by your skills view only
       const { data: skills, error: skillsErr } = await sb
         .from("v_child_report_overview")
         .select("*")
@@ -632,24 +647,18 @@
 
       if (skillsErr) {
         console.error("v_child_report_overview error:", skillsErr);
-        showError("Could not load skills overview. Check RLS/view permissions.");
-        summaryBox.innerHTML = `<div class="muted">—</div>`;
-        nextBox.innerHTML = `<div class="muted">—</div>`;
-        skillsBox.innerHTML = `<div class="muted">—</div>`;
+        showError("Could not load skills overview. (Likely RLS/view permissions or the view name/columns changed.)");
         noDataBox.style.display = "block";
         return;
       }
 
       lastSkills = Array.isArray(skills) ? skills : [];
 
-      // derive everything from skills
       renderSkillsTable(lastSkills);
       renderSummaryFromSkills(lastSkills);
       renderNextFromSkills(lastSkills);
 
-      const hasAnyData = lastSkills.length > 0;
-      noDataBox.style.display = hasAnyData ? "none" : "block";
-
+      noDataBox.style.display = lastSkills.length ? "none" : "block";
       showOk("Reports refreshed");
     }
 
@@ -683,36 +692,24 @@
         } else {
           y = pdfWriteLine(doc, `Skills tracked: ${safe(derivedSummary.skills_tracked)}`, 14, y, 180); y += 2;
           y = pdfWriteLine(doc, `Total attempts: ${safe(derivedSummary.total_attempts)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Overall accuracy: ${derivedSummary.overall_accuracy === null ? "—" : formatPct(derivedSummary.overall_accuracy)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Last activity: ${derivedSummary.last_activity_at ? formatDateTime(derivedSummary.last_activity_at) : "—"}`, 14, y, 180); y += 6;
-        }
-
-        doc.setFontSize(14);
-        doc.text("What to do next", 14, y); y += 8;
-        doc.setFontSize(12);
-
-        if (!derivedNext) {
-          y = pdfWriteLine(doc, "No next steps yet.", 14, y, 180); y += 6;
-        } else {
-          const top = [...(derivedNext.support || []), ...(derivedNext.doingWell || [])].slice(0, 6);
-          top.forEach((x, idx) => {
-            const line = `${idx+1}) ${safe(x.subject)} • ${safe(x.area)} — Level ${safe(x.level)} — Accuracy ${formatPct(x.accuracy)} — Confidence ${formatPct(x.confidence)}`;
-            y = pdfWriteLine(doc, line, 14, y, 180);
-            y += 2;
-            if (y > 270) { doc.addPage(); y = 14; }
-          });
-          y += 6;
+          y = pdfWriteLine(doc, `Overall accuracy: ${derivedSummary.overall_accuracy === null ? "Not enough data yet" : `${Math.round(derivedSummary.overall_accuracy*100)}%`}`, 14, y, 180); y += 6;
         }
 
         doc.setFontSize(14);
         doc.text("Skills", 14, y); y += 8;
         doc.setFontSize(12);
 
-        if (!lastSkills || !lastSkills.length) {
+        if (!lastSkills.length) {
           y = pdfWriteLine(doc, "No skills tracked yet.", 14, y, 180); y += 6;
         } else {
-          lastSkills.slice(0, 40).forEach((r) => {
-            const line = `${safe(r.subject)} • ${safe(r.area)} — Level ${safe(r.level)} — Attempts ${safe(r.attempts)} — Acc ${formatPct(r.accuracy)} — Conf ${formatPct(r.confidence)}`;
+          lastSkills.slice(0, 45).forEach((r, idx) => {
+            const subj = safe(pickField(r, ["subject"]));
+            const area = safe(pickField(r, ["area","skill_area"]));
+            const level = pickField(r, ["level","skill_level","difficulty_level"]);
+            const attempts = pickField(r, ["attempts","attempt_count","attempts_total","total_attempts"]);
+            const acc = formatPctSmart(pickField(r, ["accuracy","accuracy_rate","accuracy_pct"]));
+            const conf = formatPctSmart(pickField(r, ["confidence","confidence_score","confidence_pct"]));
+            const line = `${idx+1}) ${subj} • ${area} — Level ${level ?? "—"} — Attempts ${attempts ?? "—"} — Acc ${acc ?? "—"} — Conf ${conf ?? "—"}`;
             y = pdfWriteLine(doc, line, 14, y, 180);
             y += 2;
             if (y > 270) { doc.addPage(); y = 14; }
@@ -741,7 +738,6 @@
       downloadPDF();
     });
 
-    // ---------- init ----------
     (async () => {
       if (!sb) { showError("Supabase did not load."); return; }
 
@@ -749,6 +745,12 @@
       if (!ok) return;
 
       await loadChildSwitcher();
+
+      const selected = getSelectedChild();
+      if (!selected?.id){
+        showError("No child selected. Please go to Dashboard and select a child.");
+        return;
+      }
 
       const childOk = await loadChildProfile();
       if (!childOk) return;
@@ -759,5 +761,4 @@
   </script>
 </body>
 </html>
-
 
