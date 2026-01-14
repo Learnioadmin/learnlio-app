@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Learnlio — Reports</title>
 
+  <!-- App CSS -->
   <link rel="stylesheet" href="/assets/css/app.css" />
 
+  <!-- Minimal fallback styles -->
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
     .container { max-width: 980px; margin: 0 auto; padding: 18px; }
@@ -18,27 +20,24 @@
     .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
     .links a.active { background:#eef2ff; }
-    .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:800; }
+    .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; }
     .btn.light { background:#e5e7eb; color:#111; }
     .btn.ghost { background:transparent; border:1px solid #d1d5db; color:#111; }
+    .btn:disabled { opacity:.6; cursor:not-allowed; }
     .muted { color:#6b7280; font-size: 14px; }
-    .status { margin-top:10px; font-size:14px; white-space:pre-wrap; }
+    .status { margin-top:10px; font-size:14px; line-height:1.5; }
     .status.bad { color:#dc2626; }
     .status.good { color:#16a34a; }
+    .status.warn { color:#b45309; }
 
     .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
     @media(min-width: 900px){ .grid { grid-template-columns: 1fr 1fr; } }
 
-    .pill { display:inline-block; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:900; }
-    .pill.gray { background:#f3f4f6; color:#111; }
-    .pill.ok { background:#ecfdf5; color:#065f46; }
-    .pill.warn { background:#fff7ed; color:#9a3412; }
-    .pill.bad { background:#fef2f2; color:#991b1b; }
-
+    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; font-weight:650; }
     .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid #f1f1f6; }
     .row:last-child { border-bottom:none; }
     .k { color:#6b7280; font-size:13px; }
-    .v { font-weight:800; text-align:right; }
+    .v { font-weight:650; text-align:right; }
 
     .top-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
     .select {
@@ -48,57 +47,32 @@
     .select-wrap { display:none; gap:8px; align-items:center; }
     .label { font-size:13px; color:#6b7280; }
 
-    /* ✅ Skills table alignment fix */
-    .table-wrap { overflow-x:auto; }
-    .table {
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      table-layout:fixed;                 /* forces consistent column geometry */
-      border:1px solid #ececf4;
-      border-radius:14px;
-      overflow:hidden;
-      background:#fff;
-    }
-    .table col.skill   { width: 36%; }
-    .table col.level   { width: 10%; }
-    .table col.attempt { width: 12%; }
-    .table col.acc     { width: 12%; }
-    .table col.conf    { width: 12%; }
-    .table col.status  { width: 10%; }
-    .table col.last    { width: 18%; }
-
-    .table th, .table td {
-      padding:10px 12px;
-      font-size:14px;
-      border-bottom:1px solid #f1f1f6;
-      vertical-align:top;
-      white-space:nowrap;               /* keeps numbers under headings */
-    }
-    .table th { text-align:left; background:#fafafa; color:#374151; font-size:12px; letter-spacing:.2px; text-transform:uppercase; }
-    .table tr:last-child td { border-bottom:none; }
-
-    /* Make numeric columns actually align under their headers */
-    .table th.num, .table td.num {
-      text-align:center;                 /* ✅ this is the key visual fix */
-      font-variant-numeric: tabular-nums; /* nice even digit width */
-    }
-    .table th.right, .table td.right { text-align:right; }
-
-    .small { font-size:12px; color:#6b7280; }
     .hr { height:1px; background:#ececf4; margin:14px 0; }
 
-    .callout {
-      border:1px solid #e5e7eb;
-      border-radius:16px;
-      padding:14px;
-      background:linear-gradient(135deg, rgba(11,92,255,.06), rgba(16,185,129,.05));
+    /* Toggle */
+    .toggle-wrap{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .toggle{
+      width:46px; height:28px; border-radius:999px; background:#e5e7eb; position:relative; cursor:pointer;
+      border:1px solid #d1d5db;
     }
-    .callout h3{ margin:0 0 6px; font-size:14px; }
-    .callout p{ margin:0; color:#6b7280; line-height:1.6; font-size:14px; }
+    .toggle::after{
+      content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:999px; background:#fff;
+      box-shadow:0 3px 10px rgba(0,0,0,.12);
+      transition: transform .18s ease;
+    }
+    .toggle.on{ background:#0b5cff; border-color:#0b5cff; }
+    .toggle.on::after{ transform: translateX(18px); }
 
-    .list { margin:10px 0 0; padding-left:18px; color:#111; }
-    .list li { margin:8px 0; line-height:1.5; }
+    /* Weekly report list */
+    .weekly-list{ display:grid; gap:10px; margin-top:10px; }
+    .weekly-item{
+      border:1px solid #eef2f7; border-radius:14px; padding:12px; background:#fff;
+    }
+    .weekly-item h3{ margin:0 0 6px; font-size:14px; }
+    .weekly-item .meta{ color:#6b7280; font-size:13px; }
+    .weekly-item .bullets{ margin:8px 0 0; padding-left:18px; color:#111; }
+    .weekly-item .bullets li{ margin:4px 0; }
+    code.small{ font-size:12px; background:#f3f4f6; padding:2px 6px; border-radius:8px; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -117,7 +91,6 @@
         <a href="/chat.html">Learnlio Tutor</a>
         <a href="/screener.html">Dyslexia Screener</a>
         <a class="active" href="/reports.html">Reports</a>
-        <a href="/billing.html">Billing</a>
         <button id="logoutBtn" class="btn light" type="button">Log out</button>
       </nav>
     </div>
@@ -129,10 +102,10 @@
         <div>
           <h1 style="margin:0 0 6px;">Reports</h1>
           <div id="childHeader" class="muted">Loading child…</div>
-          <div id="lastSeen" class="small" style="margin-top:6px; display:none;"></div>
         </div>
 
         <div class="top-actions">
+          <!-- Change child (only shows if 2+ children) -->
           <div id="childSwitcher" class="select-wrap">
             <span class="label">Child:</span>
             <select id="childSelect" class="select" aria-label="Select child"></select>
@@ -146,64 +119,70 @@
       <div id="pageError" class="status bad" style="display:none;"></div>
       <div id="pageOk" class="status good" style="display:none;"></div>
 
+      <!-- NEW: Weekly reports (opt-in + stored weekly reports) -->
+      <section class="card" style="margin-top:14px; box-shadow:none; border:1px solid #ececf4;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+          <div>
+            <h2 style="margin:0; font-size:16px;">Weekly reports (email)</h2>
+            <div class="muted" style="margin-top:6px; line-height:1.6;">
+              If you turn this on, Learnlio will send a short weekly progress report to your login email.
+              <br><span class="muted">On the Free plan, we store weekly reports here first. Email sending is added later without rebuilding anything.</span>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;">
+            <div class="toggle-wrap" aria-label="Weekly report toggle">
+              <span class="muted" id="weeklyToggleLabel">Off</span>
+              <div id="weeklyToggle" class="toggle" role="switch" aria-checked="false" tabindex="0"></div>
+            </div>
+
+            <button id="generateWeeklyBtn" class="btn ghost" type="button" style="display:none;">
+              Generate weekly report now
+            </button>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+          <span class="pill" id="weeklyStatusPill">Loading…</span>
+          <span class="muted" id="weeklyStatusText"></span>
+        </div>
+
+        <div id="weeklyList" class="weekly-list" style="margin-top:12px;">
+          <div class="muted">Loading weekly reports…</div>
+        </div>
+
+        <div id="weeklyMsg" class="status" aria-live="polite"></div>
+      </section>
+
       <div class="grid" style="margin-top:14px;">
         <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-            <h2 style="margin:0; font-size:16px;">What to do next</h2>
-            <span class="pill gray">simple plan</span>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="margin:0; font-size:16px;">Overall progress</h2>
+            <span class="pill">progress</span>
           </div>
-
-          <div id="nextBox" style="margin-top:12px;">
+          <div id="overallBox" style="margin-top:10px;">
             <div class="muted">Loading…</div>
-          </div>
-
-          <div class="hr"></div>
-
-          <div class="callout">
-            <h3>Best way to use this</h3>
-            <p>
-              Pick one “Needs support” skill and practise it for 5–10 minutes.
-              Then do one “Doing well” skill to finish on confidence.
-            </p>
-          </div>
-
-          <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-            <a class="btn" href="/chat.html" style="text-decoration:none;">Go to Tutor</a>
-            <a class="btn ghost" href="/dash.html" style="text-decoration:none;">Change child</a>
           </div>
         </section>
 
         <section class="card" style="box-shadow:none; border:1px solid #ececf4;">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-            <h2 style="margin:0; font-size:16px;">Summary</h2>
-            <span class="pill gray">overview</span>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="margin:0; font-size:16px;">Tutor signals</h2>
+            <span class="pill">child_progress</span>
           </div>
-
-          <div id="summaryBox" style="margin-top:12px;">
+          <div id="signalsBox" style="margin-top:10px;">
             <div class="muted">Loading…</div>
           </div>
         </section>
       </div>
 
-      <section class="card" style="margin-top:14px; box-shadow:none; border:1px solid #ececf4;">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-          <div>
-            <h2 style="margin:0; font-size:16px;">Skills</h2>
-            <div class="muted" style="margin-top:6px;">Progress is tracked per subject and area (e.g. Maths → Multiplication).</div>
-          </div>
-          <span class="pill gray">skills overview</span>
-        </div>
-
-        <div id="skillsBox" style="margin-top:12px;">
-          <div class="muted">Loading…</div>
-        </div>
-      </section>
-
       <section id="noDataBox" class="card" style="margin-top:14px; box-shadow:none; border:1px dashed #cbd5e1; display:none;">
-        <h2 style="margin:0 0 8px; font-size:16px;">No learning data yet</h2>
+        <h2 style="margin:0 0 8px; font-size:16px;">No progress data yet</h2>
         <div class="muted" style="line-height:1.6;">
-          I can’t see any saved learning data for this child yet.<br>
-          Do a short Tutor session, then come back and press <b>Refresh</b>.
+          I can’t see any saved progress for this child yet.<br>
+          Do a short Tutor session (Maths or English), then come back and press <b>Refresh</b>.
         </div>
         <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
           <a class="btn" href="/chat.html" style="text-decoration:none; display:inline-block;">Go to Tutor</a>
@@ -215,8 +194,12 @@
 
   <script>
   (() => {
+    // =========================
+    // CONFIG
+    // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+    // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -227,22 +210,39 @@
     const pageError = document.getElementById("pageError");
     const pageOk = document.getElementById("pageOk");
     const childHeader = document.getElementById("childHeader");
-    const lastSeenEl = document.getElementById("lastSeen");
 
-    const summaryBox = document.getElementById("summaryBox");
-    const skillsBox = document.getElementById("skillsBox");
-    const nextBox = document.getElementById("nextBox");
+    const overallBox = document.getElementById("overallBox");
+    const signalsBox = document.getElementById("signalsBox");
     const noDataBox = document.getElementById("noDataBox");
 
+    // Child switcher
     const childSwitcher = document.getElementById("childSwitcher");
     const childSelect = document.getElementById("childSelect");
+
+    // Weekly reports UI
+    const weeklyToggle = document.getElementById("weeklyToggle");
+    const weeklyToggleLabel = document.getElementById("weeklyToggleLabel");
+    const weeklyStatusPill = document.getElementById("weeklyStatusPill");
+    const weeklyStatusText = document.getElementById("weeklyStatusText");
+    const weeklyList = document.getElementById("weeklyList");
+    const weeklyMsg = document.getElementById("weeklyMsg");
+    const generateWeeklyBtn = document.getElementById("generateWeeklyBtn");
+
+    // debug switch: reports.html?debug=1 to show "Generate weekly report now"
+    const u = new URL(window.location.href);
+    const DEBUG = u.searchParams.get("debug") === "1";
+    if (DEBUG) generateWeeklyBtn.style.display = "inline-block";
 
     let currentUser = null;
     let child = null;
 
-    let lastSkills = [];
-    let derivedSummary = null;
-    let derivedNext = null;
+    // cache latest data for PDF
+    let lastOverall = null;
+    let lastSignals = null;
+
+    // weekly caches
+    let weeklySettings = null; // row from weekly_report_settings
+    let weeklyRows = [];       // rows from weekly_reports
 
     function showError(msg){
       pageError.style.display = "block";
@@ -255,7 +255,25 @@
     function showOk(msg){
       pageOk.style.display = "block";
       pageOk.textContent = msg;
-      setTimeout(() => { pageOk.style.display="none"; }, 1400);
+      setTimeout(() => { pageOk.style.display="none"; }, 1800);
+    }
+
+    function setWeeklyMsg(text, kind=""){
+      weeklyMsg.textContent = text || "";
+      weeklyMsg.className = "status" + (kind ? " " + kind : "");
+    }
+
+    function getSelectedChild(){
+      try {
+        const raw = localStorage.getItem("selectedChild");
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch { return null; }
+    }
+
+    function setSelectedChild(id, name){
+      // keep your existing convention, but ensure "id" exists
+      localStorage.setItem("selectedChild", JSON.stringify({ id, child_name: name }));
     }
 
     function safe(v, fallback="—"){
@@ -263,85 +281,57 @@
       return String(v);
     }
 
-    function pickField(row, keys){
-      for (const k of keys){
-        if (row && row[k] !== undefined && row[k] !== null && row[k] !== "") return row[k];
-      }
-      return null;
-    }
-
-    function asNumber(v){
-      const n = Number(v);
-      return Number.isFinite(n) ? n : null;
-    }
-
-    function formatPctSmart(v){
-      const n = asNumber(v);
-      if (n === null) return null;
-      const pct = (n <= 1) ? (n * 100) : n;
-      return `${Math.round(pct)}%`;
-    }
-
-    function formatDateTime(value){
+    function formatDateOnly(value){
       if (!value) return "—";
       const d = new Date(value);
       if (isNaN(d.getTime())) return "—";
       const dd = String(d.getDate()).padStart(2, "0");
       const mm = String(d.getMonth() + 1).padStart(2, "0");
       const yyyy = d.getFullYear();
-      const hh = String(d.getHours()).padStart(2, "0");
-      const mi = String(d.getMinutes()).padStart(2, "0");
-      return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+      return `${dd}/${mm}/${yyyy}`;
     }
 
-    function pillHtml(kind, text){
-      const cls = kind === "ok" ? "pill ok" : kind === "warn" ? "pill warn" : kind === "bad" ? "pill bad" : "pill gray";
-      return `<span class="${cls}">${safe(text, "—")}</span>`;
+    function formatDateTime(value){
+      if (!value) return "—";
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return "—";
+      return d.toLocaleString("en-GB");
     }
 
-    function normaliseStatus(row){
-      const explicit = String(pickField(row, ["status","skill_status"]) || "").toLowerCase().trim();
-      if (explicit) {
-        if (explicit.includes("support") || explicit.includes("focus") || explicit.includes("struggle")) return "support";
-        if (explicit.includes("strong") || explicit.includes("good") || explicit.includes("excel")) return "good";
-        if (explicit.includes("risk") || explicit.includes("urgent") || explicit.includes("attention")) return "risk";
-      }
-
-      const acc = asNumber(pickField(row, ["accuracy","accuracy_rate","accuracy_pct"]));
-      const conf = asNumber(pickField(row, ["confidence","confidence_score","confidence_pct"]));
-
-      const acc01 = (acc !== null && acc > 1) ? (acc/100) : acc;
-      const conf01 = (conf !== null && conf > 1) ? (conf/100) : conf;
-
-      if (acc01 === null && conf01 === null) return "nodata";
-      if ((acc01 !== null && acc01 < 0.6) || (conf01 !== null && conf01 < 0.55)) return "support";
-      if ((acc01 !== null && acc01 >= 0.8) && (conf01 !== null && conf01 >= 0.75)) return "good";
-      return "track";
+    function renderRows(targetEl, rows){
+      targetEl.innerHTML = "";
+      rows.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "row";
+        div.innerHTML = `<div class="k">${r.k}</div><div class="v">${r.v}</div>`;
+        targetEl.appendChild(div);
+      });
     }
 
-    function statusPill(row){
-      const s = normaliseStatus(row);
-      if (s === "support") return pillHtml("warn", "Needs support");
-      if (s === "good") return pillHtml("ok", "Doing well");
-      if (s === "risk") return pillHtml("bad", "Needs attention");
-      if (s === "nodata") return pillHtml("gray", "No data yet");
-      return pillHtml("gray", "On track");
+    function mondayOfWeek(dateObj){
+      const d = new Date(dateObj);
+      const day = d.getDay(); // 0 Sun ... 1 Mon ... 6 Sat
+      const diff = (day === 0 ? -6 : 1 - day);
+      d.setDate(d.getDate() + diff);
+      d.setHours(0,0,0,0);
+      return d;
     }
 
-    function getSelectedChild(){
-      try {
-        const raw = localStorage.getItem("selectedChild");
-        if (!raw) return null;
-        const obj = JSON.parse(raw);
-        const id = obj?.id || obj?.child_id;
-        const name = obj?.name || obj?.child_name || "Child";
-        const dob = obj?.dob || obj?.child_dob || null;
-        return id ? { id, name, dob } : null;
-      } catch { return null; }
+    function addDays(dateObj, n){
+      const d = new Date(dateObj);
+      d.setDate(d.getDate() + n);
+      return d;
     }
 
-    function setSelectedChild(id, name, dob){
-      localStorage.setItem("selectedChild", JSON.stringify({ id, name, dob }));
+    function setToggleUI(isOn){
+      weeklyToggle.classList.toggle("on", !!isOn);
+      weeklyToggle.setAttribute("aria-checked", !!isOn ? "true" : "false");
+      weeklyToggleLabel.textContent = isOn ? "On" : "Off";
+    }
+
+    function setWeeklyStatus(pill, text){
+      weeklyStatusPill.textContent = pill;
+      weeklyStatusText.textContent = text || "";
     }
 
     async function requireAuth(){
@@ -355,6 +345,7 @@
     }
 
     async function loadChildSwitcher(){
+      // Load all children for this parent
       const { data, error } = await sb
         .from("children")
         .select("id, child_name, child_dob, parent_user_id, created_at")
@@ -389,11 +380,9 @@
       childSelect.addEventListener("change", async () => {
         const id = childSelect.value;
         const name = childSelect.options[childSelect.selectedIndex]?.textContent || "Child";
-        const chosen = children.find(x => x.id === id);
-        const dob = chosen?.child_dob || null;
-        setSelectedChild(id, name, dob);
+        setSelectedChild(id, name);
         await loadChildProfile();
-        await loadReports();
+        await loadEverything();
         showOk("Child changed");
       });
     }
@@ -403,6 +392,10 @@
       if (!selected?.id){
         showError("No child selected. Please go to Dashboard and select a child.");
         childHeader.textContent = "No child selected";
+        overallBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
+        signalsBox.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
+        weeklyList.innerHTML = `<div class="muted">Go to Dashboard and select a child first.</div>`;
+        noDataBox.style.display = "none";
         downloadBtn.disabled = true;
         downloadBtn.style.opacity = "0.6";
         return false;
@@ -429,274 +422,408 @@
       }
 
       child = data;
+      const dob = data.child_dob ? ` • DOB: ${data.child_dob}` : "";
+      childHeader.textContent = `Child: ${data.child_name || "Child"}${dob}`;
       clearError();
-      setSelectedChild(child.id, child.child_name || "Child", child.child_dob || null);
-
-      const dob = child.child_dob ? ` • DOB: ${child.child_dob}` : "";
-      childHeader.textContent = `Child: ${safe(child.child_name)}${dob}`;
 
       downloadBtn.disabled = false;
       downloadBtn.style.opacity = "1";
       return true;
     }
 
-    function renderSummaryFromSkills(skills){
-      if (!skills || !skills.length){
-        summaryBox.innerHTML = `<div class="muted">No summary yet.</div>`;
-        lastSeenEl.style.display = "none";
-        derivedSummary = null;
-        return;
-      }
-
-      let totalAttempts = 0;
-      let weightedAccSum = 0;
-      let haveAnyAcc = false;
-
-      let lastTs = null;
-
-      skills.forEach(r => {
-        const attempts = asNumber(pickField(r, ["attempts","attempt_count","attempts_total","total_attempts"])) ?? 0;
-        const accRaw = pickField(r, ["accuracy","accuracy_rate","accuracy_pct"]);
-        totalAttempts += attempts;
-
-        const accN = asNumber(accRaw);
-        const acc01 = (accN !== null && accN > 1) ? (accN/100) : accN;
-        if (acc01 !== null) {
-          haveAnyAcc = true;
-          weightedAccSum += (acc01 * Math.max(1, attempts));
-        }
-
-        const t = pickField(r, ["last_seen_at","updated_at","last_activity_at"]);
-        if (t) {
-          const dt = new Date(t);
-          if (!isNaN(dt.getTime())) {
-            if (!lastTs || dt.getTime() > lastTs.getTime()) lastTs = dt;
-          }
-        }
-      });
-
-      const overallAcc01 = haveAnyAcc ? (weightedAccSum / Math.max(1, totalAttempts)) : null;
-
-      derivedSummary = {
-        skills_tracked: skills.length,
-        total_attempts: totalAttempts,
-        overall_accuracy: overallAcc01,
-        last_activity_at: lastTs ? lastTs.toISOString() : null
-      };
-
-      summaryBox.innerHTML = "";
-      const rows = [
-        { k: "Skills tracked", v: safe(derivedSummary.skills_tracked) },
-        { k: "Total attempts", v: safe(derivedSummary.total_attempts) },
-        { k: "Overall accuracy", v: derivedSummary.overall_accuracy === null ? "Not enough data yet" : `${Math.round(derivedSummary.overall_accuracy*100)}%` },
-        { k: "Last activity", v: derivedSummary.last_activity_at ? formatDateTime(derivedSummary.last_activity_at) : "—" }
-      ];
-      rows.forEach(r => {
-        const div = document.createElement("div");
-        div.className = "row";
-        div.innerHTML = `<div class="k">${r.k}</div><div class="v">${r.v}</div>`;
-        summaryBox.appendChild(div);
-      });
-
-      if (derivedSummary.last_activity_at) {
-        lastSeenEl.style.display = "block";
-        lastSeenEl.textContent = `Last tutor activity: ${formatDateTime(derivedSummary.last_activity_at)}`;
-      } else {
-        lastSeenEl.style.display = "none";
-      }
-    }
-
-    function renderNextFromSkills(skills){
-      if (!skills || !skills.length){
-        nextBox.innerHTML = `<div class="muted">No next steps yet. Do a short tutor session first.</div>`;
-        derivedNext = null;
-        return;
-      }
-
-      const scored = skills.map(r => {
-        const accN = asNumber(pickField(r, ["accuracy","accuracy_rate","accuracy_pct"]));
-        const confN = asNumber(pickField(r, ["confidence","confidence_score","confidence_pct"]));
-        const acc01 = (accN !== null && accN > 1) ? (accN/100) : accN;
-        const conf01 = (confN !== null && confN > 1) ? (confN/100) : confN;
-
-        const attempts = asNumber(pickField(r, ["attempts","attempt_count","attempts_total","total_attempts"])) ?? 0;
-
-        let need = 0;
-        if (acc01 !== null) need += (1 - acc01);
-        if (conf01 !== null) need += (1 - conf01);
-        need += attempts > 0 ? 0.15 : 0;
-
-        return { ...r, __status: normaliseStatus(r), __need: need };
-      });
-
-      const needsSupport = scored
-        .filter(r => r.__status === "support" || r.__status === "risk")
-        .sort((a,b) => (b.__need - a.__need))
-        .slice(0, 3);
-
-      const doingWell = scored
-        .filter(r => r.__status === "good")
-        .sort((a,b) => (a.__need - b.__need))
-        .slice(0, 2);
-
-      const supportFinal = needsSupport.length ? needsSupport : scored.sort((a,b)=> (b.__need-a.__need)).slice(0,3);
-      const doingFinal = doingWell.length ? doingWell : scored.sort((a,b)=> (a.__need-b.__need)).slice(0,2);
-
-      derivedNext = { support: supportFinal, doingWell: doingFinal };
-
-      function metricLine(x){
-        const lvl = pickField(x, ["level","skill_level","difficulty_level"]);
-        const attempts = pickField(x, ["attempts","attempt_count","attempts_total","total_attempts"]);
-        const acc = formatPctSmart(pickField(x, ["accuracy","accuracy_rate","accuracy_pct"]));
-        const conf = formatPctSmart(pickField(x, ["confidence","confidence_score","confidence_pct"]));
-
-        const bits = [];
-        if (lvl !== null) bits.push(`Level ${lvl}`);
-        if (attempts !== null) bits.push(`${attempts} attempts`);
-        if (acc !== null) bits.push(`Accuracy ${acc}`);
-        if (conf !== null) bits.push(`Confidence ${conf}`);
-
-        return bits.length ? bits.join(" • ") : "Not enough data yet (do a few more questions)";
-      }
-
-      const makeItem = (x) => {
-        const subj = safe(pickField(x, ["subject"]) || "—");
-        const area = safe(pickField(x, ["area","skill_area"]) || "—");
-        return `
-          <li>
-            <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;">
-              <div style="font-weight:900;">${subj} • ${area}</div>
-              <div>${statusPill(x)}</div>
-            </div>
-            <div class="small" style="margin-top:4px;">
-              ${metricLine(x)}
-            </div>
-          </li>
-        `;
-      };
-
-      nextBox.innerHTML = `
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <span class="pill warn">Focus next (needs support)</span>
-          <span class="pill ok">Finish with confidence (doing well)</span>
-        </div>
-
-        <div style="margin-top:10px;">
-          <ul class="list">
-            ${supportFinal.map(makeItem).join("")}
-          </ul>
-        </div>
-
-        <div style="margin-top:12px;">
-          <ul class="list">
-            ${doingFinal.map(makeItem).join("")}
-          </ul>
-        </div>
-      `;
-    }
-
-    function renderSkillsTable(rows){
-      if (!rows || !rows.length){
-        skillsBox.innerHTML = `<div class="muted">No skills tracked yet.</div>`;
-        return;
-      }
-
-      const tr = rows.map(r => {
-        const subj = safe(pickField(r, ["subject"]));
-        const area = safe(pickField(r, ["area","skill_area"]));
-
-        const level = pickField(r, ["level","skill_level","difficulty_level"]);
-        const attempts = pickField(r, ["attempts","attempt_count","attempts_total","total_attempts"]);
-        const accuracy = formatPctSmart(pickField(r, ["accuracy","accuracy_rate","accuracy_pct"]));
-        const confidence = formatPctSmart(pickField(r, ["confidence","confidence_score","confidence_pct"]));
-        const last = formatDateTime(pickField(r, ["last_seen_at","updated_at","last_activity_at"]));
-
-        return `
-          <tr>
-            <td>
-              <div style="font-weight:900;">${subj}</div>
-              <div class="small">${area}</div>
-            </td>
-            <td class="num">${level === null ? "—" : safe(level)}</td>
-            <td class="num">${attempts === null ? "—" : safe(attempts)}</td>
-            <td class="num">${accuracy === null ? "—" : accuracy}</td>
-            <td class="num">${confidence === null ? "—" : confidence}</td>
-            <td class="num">${statusPill(r)}</td>
-            <td class="right"><span class="small">${last}</span></td>
-          </tr>
-        `;
-      }).join("");
-
-      skillsBox.innerHTML = `
-        <div class="table-wrap">
-          <table class="table" aria-label="Skills progress table">
-            <colgroup>
-              <col class="skill">
-              <col class="level">
-              <col class="attempt">
-              <col class="acc">
-              <col class="conf">
-              <col class="status">
-              <col class="last">
-            </colgroup>
-            <thead>
-              <tr>
-                <th>Skill</th>
-                <th class="num">Level</th>
-                <th class="num">Attempts</th>
-                <th class="num">Accuracy</th>
-                <th class="num">Confidence</th>
-                <th class="num">Status</th>
-                <th class="right">Last seen</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tr}
-            </tbody>
-          </table>
-        </div>
-      `;
-    }
-
+    // -----------------------------
+    // Load existing report data
+    // -----------------------------
     async function loadReports(){
       if (!child?.id) return;
 
-      clearError();
+      overallBox.innerHTML = `<div class="muted">Loading…</div>`;
+      signalsBox.innerHTML = `<div class="muted">Loading…</div>`;
       noDataBox.style.display = "none";
 
-      summaryBox.innerHTML = `<div class="muted">Loading…</div>`;
-      nextBox.innerHTML = `<div class="muted">Loading…</div>`;
-      skillsBox.innerHTML = `<div class="muted">Loading…</div>`;
+      lastOverall = null;
+      lastSignals = null;
 
-      lastSkills = [];
-      derivedSummary = null;
-      derivedNext = null;
-
-      const { data: skills, error: skillsErr } = await sb
-        .from("v_child_report_overview")
-        .select("*")
-        .eq("owner_id", currentUser.id)
+      const { data: overall, error: overallErr } = await sb
+        .from("progress")
+        .select("id, parent_user_id, child_id, maths_level, english_level, streak, updated_at")
         .eq("child_id", child.id)
-        .order("subject", { ascending: true })
-        .order("area", { ascending: true });
+        .maybeSingle();
 
-      if (skillsErr) {
-        console.error("v_child_report_overview error:", skillsErr);
-        showError("Could not load skills overview. (Likely RLS/view permissions or the view name/columns changed.)");
-        noDataBox.style.display = "block";
+      if (overallErr) console.error("progress read error", overallErr);
+
+      const { data: signals, error: signalsErr } = await sb
+        .from("child_progress")
+        .select("id, child_id, owner_id, subject, area, difficulty, streak_correct, streak_wrong, last_session_id, last_seen_at")
+        .eq("child_id", child.id)
+        .eq("owner_id", currentUser.id)
+        .maybeSingle();
+
+      if (signalsErr) console.error("child_progress read error", signalsErr);
+
+      lastOverall = overall || null;
+      lastSignals = signals || null;
+
+      const hasAnyData = !!overall || !!signals;
+
+      if (!overall) {
+        overallBox.innerHTML = `<div class="muted">No overall progress row yet.</div>`;
+      } else {
+        renderRows(overallBox, [
+          { k: "Maths level",   v: safe(overall.maths_level) },
+          { k: "English level", v: safe(overall.english_level) },
+          { k: "Streak",        v: safe(overall.streak) },
+          { k: "Last updated",  v: formatDateOnly(overall.updated_at) }
+        ]);
+      }
+
+      if (!signals) {
+        signalsBox.innerHTML = `<div class="muted">No tutor signals row yet.</div>`;
+      } else {
+        renderRows(signalsBox, [
+          { k: "Last subject",   v: safe(signals.subject) },
+          { k: "Last focus area",v: safe(signals.area) },
+          { k: "Current difficulty", v: safe(signals.difficulty) },
+          { k: "Correct streak", v: safe(signals.streak_correct) },
+          { k: "Wrong streak",   v: safe(signals.streak_wrong) },
+          { k: "Last session id",v: `<code class="small">${safe(signals.last_session_id)}</code>` },
+          { k: "Last seen",      v: formatDateOnly(signals.last_seen_at) }
+        ]);
+      }
+
+      noDataBox.style.display = hasAnyData ? "none" : "block";
+    }
+
+    // -----------------------------
+    // Weekly report settings + list
+    // -----------------------------
+    async function loadWeeklySettings(){
+      if (!child?.id) return;
+
+      setWeeklyMsg("");
+      setWeeklyStatus("Loading…", "");
+
+      const { data, error } = await sb
+        .from("weekly_report_settings")
+        .select("id, parent_user_id, child_id, enabled, frequency, last_sent_at, created_at, updated_at")
+        .eq("parent_user_id", currentUser.id)
+        .eq("child_id", child.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("weekly_report_settings read error", error);
+        // still show UI
+        weeklySettings = null;
+        setToggleUI(false);
+        setWeeklyStatus("Not enabled", "Turn on weekly reports to store them here (email later).");
         return;
       }
 
-      lastSkills = Array.isArray(skills) ? skills : [];
+      weeklySettings = data || null;
 
-      renderSkillsTable(lastSkills);
-      renderSummaryFromSkills(lastSkills);
-      renderNextFromSkills(lastSkills);
+      const enabled = !!weeklySettings?.enabled;
+      setToggleUI(enabled);
 
-      noDataBox.style.display = lastSkills.length ? "none" : "block";
-      showOk("Reports refreshed");
+      if (enabled) {
+        const last = weeklySettings?.last_sent_at ? `Last email: ${formatDateTime(weeklySettings.last_sent_at)}` : "No emails sent yet.";
+        setWeeklyStatus("Enabled", last);
+      } else {
+        setWeeklyStatus("Not enabled", "You can turn this on any time.");
+      }
     }
 
+    async function upsertWeeklySettings(enabled){
+      if (!child?.id) return;
+
+      setWeeklyMsg("");
+
+      // If row exists -> update. Else -> insert.
+      if (weeklySettings?.id) {
+        const { error } = await sb
+          .from("weekly_report_settings")
+          .update({ enabled: !!enabled, updated_at: new Date().toISOString() })
+          .eq("id", weeklySettings.id);
+
+        if (error) throw error;
+      } else {
+        const payload = {
+          parent_user_id: currentUser.id,
+          child_id: child.id,
+          enabled: !!enabled,
+          frequency: "weekly",
+          updated_at: new Date().toISOString()
+        };
+        const { data, error } = await sb
+          .from("weekly_report_settings")
+          .insert(payload)
+          .select("id, parent_user_id, child_id, enabled, frequency, last_sent_at, created_at, updated_at")
+          .single();
+
+        if (error) throw error;
+        weeklySettings = data;
+      }
+    }
+
+    function renderWeeklyList(rows){
+      weeklyList.innerHTML = "";
+      if (!rows || !rows.length) {
+        weeklyList.innerHTML = `<div class="muted">No weekly reports stored yet. (You can generate one with <b>?debug=1</b>.)</div>`;
+        return;
+      }
+
+      rows.forEach(r => {
+        const sum = r.summary || {};
+        const recs = Array.isArray(sum.recommendations) ? sum.recommendations : [];
+
+        const maths = sum.maths || {};
+        const english = sum.english || {};
+
+        const item = document.createElement("div");
+        item.className = "weekly-item";
+
+        const weekStart = r.week_start ? formatDateOnly(r.week_start) : "—";
+        const created = r.created_at ? formatDateTime(r.created_at) : "—";
+
+        item.innerHTML = `
+          <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start;">
+            <div>
+              <h3>Week starting ${weekStart}</h3>
+              <div class="meta">Stored: ${created}</div>
+            </div>
+            <span class="pill">weekly report</span>
+          </div>
+
+          <div style="margin-top:10px; display:grid; gap:8px;">
+            <div><b>Maths</b>: Level ${safe(maths.level, "—")} • Doing well: ${safe((maths.strengths||[]).join(", "), "—")} • Needs support: ${safe((maths.needs_support||[]).join(", "), "—")}</div>
+            <div><b>English</b>: Level ${safe(english.level, "—")} • Doing well: ${safe((english.strengths||[]).join(", "), "—")} • Needs support: ${safe((english.needs_support||[]).join(", "), "—")}</div>
+          </div>
+
+          ${recs.length ? `
+            <ul class="bullets">
+              ${recs.slice(0,6).map(x => `<li>${String(x)}</li>`).join("")}
+            </ul>
+          ` : `<div class="muted" style="margin-top:10px;">No next steps saved in this report yet.</div>`}
+        `;
+
+        weeklyList.appendChild(item);
+      });
+    }
+
+    async function loadWeeklyReports(){
+      if (!child?.id) return;
+
+      weeklyList.innerHTML = `<div class="muted">Loading weekly reports…</div>`;
+
+      const { data, error } = await sb
+        .from("weekly_reports")
+        .select("id, parent_user_id, child_id, week_start, summary, created_at")
+        .eq("parent_user_id", currentUser.id)
+        .eq("child_id", child.id)
+        .order("week_start", { ascending: false })
+        .limit(12);
+
+      if (error) {
+        console.error("weekly_reports read error", error);
+        weeklyList.innerHTML = `<div class="status bad">Couldn’t load weekly reports.</div>`;
+        return;
+      }
+
+      weeklyRows = data || [];
+      renderWeeklyList(weeklyRows);
+    }
+
+    // -----------------------------
+    // Weekly report generation (Free-safe)
+    // Stored in weekly_reports
+    // -----------------------------
+    function confidenceLabelFromAccuracy(acc){
+      if (acc === null || acc === undefined) return "—";
+      if (acc >= 0.85) return "High";
+      if (acc >= 0.65) return "Good";
+      if (acc >= 0.45) return "Growing";
+      return "Needs support";
+    }
+
+    function nextStepsForNeeds(subject, needs){
+      const steps = [];
+      const s = String(subject || "").toLowerCase();
+
+      (needs || []).forEach(n => {
+        const area = String(n || "").toLowerCase();
+
+        if (s === "maths") {
+          if (area.includes("division")) steps.push("Do 5 minutes of division using objects (coins, counters). Keep it slow.");
+          else if (area.includes("multiplication")) steps.push("Practise one times table per day (short bursts).");
+          else if (area.includes("subtraction")) steps.push("Use number lines for subtraction. Count back slowly.");
+          else if (area.includes("addition")) steps.push("Practise number bonds for 5 minutes (calm pace).");
+          else steps.push(`Do 5 minutes of gentle practice on ${n}.`);
+        } else {
+          if (area.includes("spelling")) steps.push("Practise 5 spellings using: look → cover → write → check.");
+          else if (area.includes("reading")) steps.push("Read together for 10 minutes. Short lines. Ask 1 simple question.");
+          else if (area.includes("sentence")) steps.push("Write 3 short sentences using a word of the day.");
+          else steps.push(`Do 10 minutes of calm practice on ${n}.`);
+        }
+      });
+
+      // de-dupe
+      return Array.from(new Set(steps)).slice(0,6);
+    }
+
+    async function generateWeeklyReportNow(){
+      if (!child?.id) return;
+
+      setWeeklyMsg("", "");
+      generateWeeklyBtn.disabled = true;
+
+      try {
+        // Week window: current week Monday -> Monday+7
+        const weekStart = mondayOfWeek(new Date());
+        const weekEnd = addDays(weekStart, 7);
+
+        // Pull sessions in this window
+        const { data: sessions, error } = await sb
+          .from("sessions")
+          .select("id, parent_user_id, child_id, subject, area, questions_done, correct_count, created_at")
+          .eq("parent_user_id", currentUser.id)
+          .eq("child_id", child.id)
+          .gte("created_at", weekStart.toISOString())
+          .lt("created_at", weekEnd.toISOString())
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+
+        const rows = sessions || [];
+
+        // Aggregate per subject+area
+        const agg = {
+          Maths: { totalQ:0, totalC:0, areas:{} },
+          English:{ totalQ:0, totalC:0, areas:{} }
+        };
+
+        for (const s of rows) {
+          const subj = (s.subject || "").toLowerCase().includes("english") ? "English" : "Maths";
+          const area = s.area || "General";
+          const q = Number(s.questions_done || 0);
+          const c = Number(s.correct_count || 0);
+
+          agg[subj].totalQ += q;
+          agg[subj].totalC += c;
+
+          if (!agg[subj].areas[area]) agg[subj].areas[area] = { q:0, c:0 };
+          agg[subj].areas[area].q += q;
+          agg[subj].areas[area].c += c;
+        }
+
+        function computeStrengthsNeeds(subjectKey){
+          const areas = agg[subjectKey].areas;
+          const list = Object.entries(areas).map(([area, v]) => {
+            const q = v.q || 0;
+            const c = v.c || 0;
+            const acc = q ? (c/q) : 0;
+            return { area, q, c, acc };
+          }).filter(x => x.q > 0);
+
+          list.sort((a,b) => b.acc - a.acc);
+
+          const strengths = list.filter(x => x.acc >= 0.75).slice(0,2).map(x => x.area);
+          const needs = list.filter(x => x.acc < 0.55).slice(0,2).map(x => x.area);
+
+          // fallback if not enough data
+          return {
+            strengths: strengths.length ? strengths : (list.slice(0,1).map(x => x.area)),
+            needs: needs.length ? needs : (list.length ? [] : [])
+          };
+        }
+
+        // Levels: prefer overall progress if available, else use child_progress difficulty, else 1.
+        const levelMaths = lastOverall?.maths_level ?? (lastSignals?.subject === "Maths" ? lastSignals?.difficulty : null) ?? 1;
+        const levelEnglish = lastOverall?.english_level ?? (lastSignals?.subject === "English" ? lastSignals?.difficulty : null) ?? 1;
+
+        const mathsSN = computeStrengthsNeeds("Maths");
+        const englishSN = computeStrengthsNeeds("English");
+
+        const mathsAcc = agg.Maths.totalQ ? (agg.Maths.totalC / agg.Maths.totalQ) : null;
+        const englishAcc = agg.English.totalQ ? (agg.English.totalC / agg.English.totalQ) : null;
+
+        const recs = [
+          ...nextStepsForNeeds("Maths", mathsSN.needs),
+          ...nextStepsForNeeds("English", englishSN.needs),
+        ].slice(0,6);
+
+        const summary = {
+          week_start: weekStart.toISOString().slice(0,10),
+          week_end: weekEnd.toISOString().slice(0,10),
+          maths: {
+            level: Number(levelMaths || 1),
+            attempts: agg.Maths.totalQ,
+            accuracy: mathsAcc === null ? null : Math.round(mathsAcc * 100) / 100,
+            confidence: confidenceLabelFromAccuracy(mathsAcc),
+            strengths: mathsSN.strengths || [],
+            needs_support: mathsSN.needs || []
+          },
+          english: {
+            level: Number(levelEnglish || 1),
+            attempts: agg.English.totalQ,
+            accuracy: englishAcc === null ? null : Math.round(englishAcc * 100) / 100,
+            confidence: confidenceLabelFromAccuracy(englishAcc),
+            strengths: englishSN.strengths || [],
+            needs_support: englishSN.needs || []
+          },
+          recommendations: recs,
+          notes: rows.length
+            ? "This summary is based on Tutor sessions completed this week."
+            : "No Tutor sessions were found this week. Do a short session, then generate again."
+        };
+
+        // Upsert behaviour without requiring a unique constraint:
+        // If a row exists for this child+week_start, update it; else insert.
+        const weekStartDate = weekStart.toISOString().slice(0,10);
+
+        const { data: existing, error: selErr } = await sb
+          .from("weekly_reports")
+          .select("id")
+          .eq("parent_user_id", currentUser.id)
+          .eq("child_id", child.id)
+          .eq("week_start", weekStartDate)
+          .maybeSingle();
+
+        if (selErr) console.warn("weekly_reports select error:", selErr);
+
+        if (existing?.id) {
+          const { error: upErr } = await sb
+            .from("weekly_reports")
+            .update({ summary, created_at: new Date().toISOString() })
+            .eq("id", existing.id);
+
+          if (upErr) throw upErr;
+        } else {
+          const payload = {
+            parent_user_id: currentUser.id,
+            child_id: child.id,
+            week_start: weekStartDate,
+            summary
+          };
+          const { error: inErr } = await sb
+            .from("weekly_reports")
+            .insert(payload);
+
+          if (inErr) throw inErr;
+        }
+
+        setWeeklyMsg("Weekly report generated ✅", "good");
+        await loadWeeklyReports();
+      } catch (e) {
+        console.error(e);
+        setWeeklyMsg(`Couldn’t generate weekly report: ${String(e.message || e)}`, "bad");
+      } finally {
+        generateWeeklyBtn.disabled = false;
+      }
+    }
+
+    // -----------------------------
+    // PDF export (keeps your existing output)
+    // + includes last weekly report if present
+    // -----------------------------
     function pdfWriteLine(doc, text, x, y, maxWidth){
       const lines = doc.splitTextToSize(String(text), maxWidth);
       lines.forEach((ln, i) => doc.text(ln, x, y + (i * 6)));
@@ -715,39 +842,60 @@
         doc.setFontSize(12);
         y = pdfWriteLine(doc, `Child: ${safe(child?.child_name)}`, 14, y, 180); y += 2;
         y = pdfWriteLine(doc, `DOB: ${safe(child?.child_dob)}`, 14, y, 180); y += 2;
-        y = pdfWriteLine(doc, `Generated: ${formatDateTime(new Date())}`, 14, y, 180); y += 6;
+        y = pdfWriteLine(doc, `Generated: ${formatDateOnly(new Date())}`, 14, y, 180); y += 6;
 
         doc.setFontSize(14);
-        doc.text("Summary", 14, y); y += 8;
+        doc.text("Overall progress", 14, y); y += 8;
         doc.setFontSize(12);
 
-        if (!derivedSummary) {
-          y = pdfWriteLine(doc, "No summary data yet.", 14, y, 180); y += 6;
+        if (!lastOverall) {
+          y = pdfWriteLine(doc, "No overall progress data yet.", 14, y, 180); y += 6;
         } else {
-          y = pdfWriteLine(doc, `Skills tracked: ${safe(derivedSummary.skills_tracked)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Total attempts: ${safe(derivedSummary.total_attempts)}`, 14, y, 180); y += 2;
-          y = pdfWriteLine(doc, `Overall accuracy: ${derivedSummary.overall_accuracy === null ? "Not enough data yet" : `${Math.round(derivedSummary.overall_accuracy*100)}%`}`, 14, y, 180); y += 6;
+          y = pdfWriteLine(doc, `Maths level: ${safe(lastOverall.maths_level)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `English level: ${safe(lastOverall.english_level)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Streak: ${safe(lastOverall.streak)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Last updated: ${formatDateOnly(lastOverall.updated_at)}`, 14, y, 180); y += 6;
         }
 
         doc.setFontSize(14);
-        doc.text("Skills", 14, y); y += 8;
+        doc.text("Tutor signals", 14, y); y += 8;
         doc.setFontSize(12);
 
-        if (!lastSkills.length) {
-          y = pdfWriteLine(doc, "No skills tracked yet.", 14, y, 180); y += 6;
+        if (!lastSignals) {
+          y = pdfWriteLine(doc, "No tutor signals data yet.", 14, y, 180); y += 6;
         } else {
-          lastSkills.slice(0, 45).forEach((r, idx) => {
-            const subj = safe(pickField(r, ["subject"]));
-            const area = safe(pickField(r, ["area","skill_area"]));
-            const level = pickField(r, ["level","skill_level","difficulty_level"]);
-            const attempts = pickField(r, ["attempts","attempt_count","attempts_total","total_attempts"]);
-            const acc = formatPctSmart(pickField(r, ["accuracy","accuracy_rate","accuracy_pct"]));
-            const conf = formatPctSmart(pickField(r, ["confidence","confidence_score","confidence_pct"]));
-            const line = `${idx+1}) ${subj} • ${area} — Level ${level ?? "—"} — Attempts ${attempts ?? "—"} — Acc ${acc ?? "—"} — Conf ${conf ?? "—"}`;
-            y = pdfWriteLine(doc, line, 14, y, 180);
-            y += 2;
-            if (y > 270) { doc.addPage(); y = 14; }
-          });
+          y = pdfWriteLine(doc, `Last subject: ${safe(lastSignals.subject)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Last focus area: ${safe(lastSignals.area)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Current difficulty: ${safe(lastSignals.difficulty)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Correct streak: ${safe(lastSignals.streak_correct)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Wrong streak: ${safe(lastSignals.streak_wrong)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `Last session id: ${safe(lastSignals.last_session_id)}`, 14, y, 180); y += 6;
+        }
+
+        // Add last weekly report if available
+        if (weeklyRows?.length) {
+          const w = weeklyRows[0];
+          const sum = w.summary || {};
+          y += 4;
+          doc.setFontSize(14);
+          doc.text("Latest weekly summary", 14, y); y += 8;
+          doc.setFontSize(12);
+
+          y = pdfWriteLine(doc, `Week starting: ${formatDateOnly(w.week_start)}`, 14, y, 180); y += 2;
+
+          const m = sum.maths || {};
+          const e = sum.english || {};
+          y = pdfWriteLine(doc, `Maths — Level ${safe(m.level)} • Attempts ${safe(m.attempts)} • Accuracy ${m.accuracy!=null ? Math.round(m.accuracy*100) + "%" : "—"} • Confidence ${safe(m.confidence)}`, 14, y, 180); y += 2;
+          y = pdfWriteLine(doc, `English — Level ${safe(e.level)} • Attempts ${safe(e.attempts)} • Accuracy ${e.accuracy!=null ? Math.round(e.accuracy*100) + "%" : "—"} • Confidence ${safe(e.confidence)}`, 14, y, 180); y += 4;
+
+          const recs = Array.isArray(sum.recommendations) ? sum.recommendations : [];
+          if (recs.length) {
+            y = pdfWriteLine(doc, "Next steps:", 14, y, 180); y += 2;
+            recs.slice(0,6).forEach((r) => {
+              y = pdfWriteLine(doc, `• ${String(r)}`, 14, y, 180); y += 1;
+              if (y > 270) { doc.addPage(); y = 14; }
+            });
+          }
         }
 
         doc.save(`Learnlio-Report-${safe(child?.child_name,"Child")}.pdf`);
@@ -757,6 +905,19 @@
       }
     }
 
+    // -----------------------------
+    // Load all page data in one go
+    // -----------------------------
+    async function loadEverything(){
+      await loadReports();
+      await loadWeeklySettings();
+      await loadWeeklyReports();
+      showOk("Reports refreshed");
+    }
+
+    // -----------------------------
+    // Events
+    // -----------------------------
     logoutBtn.addEventListener("click", async () => {
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
@@ -764,39 +925,71 @@
     });
 
     refreshBtn.addEventListener("click", async () => {
-      await loadReports();
+      clearError();
+      await loadEverything();
     });
 
     downloadBtn.addEventListener("click", () => {
+      clearError();
       downloadPDF();
     });
 
+    async function toggleWeekly(){
+      if (!child?.id) return;
+
+      const currentlyOn = weeklyToggle.classList.contains("on");
+      const next = !currentlyOn;
+
+      setToggleUI(next);
+      setWeeklyMsg("");
+
+      try {
+        weeklyToggle.style.pointerEvents = "none";
+        await upsertWeeklySettings(next);
+        await loadWeeklySettings();
+        showOk(next ? "Weekly reports enabled" : "Weekly reports disabled");
+      } catch (e) {
+        console.error(e);
+        // revert UI if save fails
+        setToggleUI(currentlyOn);
+        setWeeklyMsg(`Couldn’t save setting: ${String(e.message || e)}`, "bad");
+      } finally {
+        weeklyToggle.style.pointerEvents = "auto";
+      }
+    }
+
+    weeklyToggle.addEventListener("click", toggleWeekly);
+    weeklyToggle.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleWeekly();
+      }
+    });
+
+    generateWeeklyBtn.addEventListener("click", async () => {
+      clearError();
+      await generateWeeklyReportNow();
+    });
+
+    // -----------------------------
+    // Init
+    // -----------------------------
     (async () => {
       if (!sb) { showError("Supabase did not load."); return; }
 
-      const { data, error } = await sb.auth.getUser();
-      if (error || !data?.user){
-        window.location.href = "/login.html";
-        return;
-      }
-      currentUser = data.user;
+      const okAuth = await requireAuth();
+      if (!okAuth) return;
 
+      // Show switcher only if 2+ children
       await loadChildSwitcher();
-
-      const selected = getSelectedChild();
-      if (!selected?.id){
-        showError("No child selected. Please go to Dashboard and select a child.");
-        return;
-      }
 
       const childOk = await loadChildProfile();
       if (!childOk) return;
 
-      await loadReports();
+      await loadEverything();
     })();
   })();
   </script>
 </body>
 </html>
-
 
