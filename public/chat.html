@@ -23,10 +23,9 @@
     .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; }
     .btn.light { background:#e5e7eb; color:#111; }
     .muted { color:#6b7280; font-size: 14px; }
-    .status { margin-top:10px; font-size:14px; white-space:pre-wrap; }
+    .status { margin-top:10px; font-size:14px; }
     .status.bad { color:#dc2626; }
     .status.good { color:#16a34a; }
-    .status.warn { color:#b45309; }
 
     .msg { padding:14px 16px; margin-bottom:14px; border-radius:16px; max-width:85%;
       font-size:18px; line-height:1.85; white-space:pre-wrap;
@@ -43,8 +42,6 @@
     .speak-btn:hover{ background:#094bd1; }
     .hint-btn:hover{ background:#059669; }
     .next-btn:hover{ background:#6d28d9; }
-
-    .calcBtn{ padding:14px; font-size:18px; border-radius:10px; border:none; background:#fff; cursor:pointer; }
   </style>
 
   <!-- Dependencies -->
@@ -68,7 +65,6 @@
         <a class="active" href="/chat.html">Learnlio Tutor</a>
         <a href="/screener.html">Dyslexia Screener</a>
         <a href="/reports.html">Reports</a>
-        <a href="/billing.html">Billing</a>
         <button id="logoutBtn" class="btn light" type="button">Log out</button>
       </nav>
     </div>
@@ -77,9 +73,6 @@
   <main class="container">
     <div class="card">
       <div id="pageError" class="status bad" style="display:none;"></div>
-
-      <!-- ✅ NEW: DB debug panel (shows real Supabase errors) -->
-      <div id="dbDebug" class="status warn" style="display:none; margin-top:10px;"></div>
 
       <!-- Progress header -->
       <div id="progress-header" style="display:none; margin-bottom:10px;">
@@ -167,7 +160,6 @@
 
     // Elements
     const pageError = document.getElementById("pageError");
-    const dbDebug = document.getElementById("dbDebug");
     const logoutBtn = document.getElementById("logoutBtn");
 
     const progressHeader = document.getElementById("progress-header");
@@ -196,26 +188,29 @@
     let subject = null; // "Maths" | "English"
     let area = null;
 
-    // Session + progress in-memory
-    let sessionDbId = null;             // UUID from sessions table
+    // Session state (DB-backed)
+    let sessionRowId = null;         // sessions.id (uuid string)
+    let sessionStarted = false;
+
+    // Local session counters
+    let sessionId = null;            // same as sessionRowId
+    let maxQuestions = 10;
     let questionsAnswered = 0;
     let correctCount = 0;
     let badges = [];
     let sessionLog = [];
+    let lastBotPromptText = "";      // used for session_items
 
-    // Simple adaptive difficulty
-    let difficultyLevel = 1;            // 1..3
+    // Adaptive difficulty (lightweight)
+    let difficultyLevel = 1;         // 1..3
     let streakCorrect = 0;
     let streakWrong = 0;
 
     // Maths question + guided mode
-    let currentQuestion = null;         // { displayText, correctAnswer }
+    let currentQuestion = null;      // { displayText, correctAnswer }
     let hintUsedForCurrent = false;
     let waitingForNextButton = false;
     let guided = { active:false, steps:[], idx:0 };
-
-    // Limits by age
-    let maxQuestions = 10;
 
     // ---------- UI helpers ----------
     function showError(msg) {
@@ -226,29 +221,15 @@
       pageError.style.display = "none";
       pageError.textContent = "";
     }
-
-    function showDbDebug(msg) {
-      if (!dbDebug) return;
-      dbDebug.style.display = "block";
-      dbDebug.textContent = String(msg || "");
-    }
-    function clearDbDebug() {
-      if (!dbDebug) return;
-      dbDebug.style.display = "none";
-      dbDebug.textContent = "";
-    }
-
     function disableInput(disabled) {
       input.disabled = disabled;
       sendBtn.disabled = disabled;
       sendBtn.style.opacity = disabled ? "0.6" : "1";
       input.style.opacity = disabled ? "0.6" : "1";
     }
-
     function cleanBotText(t) {
       return String(t || "").replace(/\*\*/g, "");
     }
-
     function addUserMessage(text) {
       const div = document.createElement("div");
       div.className = "msg user";
@@ -261,13 +242,9 @@
       const voices = window.speechSynthesis.getVoices() || [];
       if (!voices.length) return null;
       const preferredNames = [
-        "Google UK English Female",
-        "Google UK English Male",
-        "Microsoft Sonia Online",
-        "Microsoft Ryan Online",
-        "Microsoft Libby Online",
-        "Samantha",
-        "Daniel"
+        "Google UK English Female","Google UK English Male",
+        "Microsoft Sonia Online","Microsoft Ryan Online","Microsoft Libby Online",
+        "Samantha","Daniel"
       ];
       for (const name of preferredNames) {
         const v = voices.find(x => x.name === name);
@@ -293,8 +270,10 @@
       window.speechSynthesis.speak(u);
     }
 
-    function addBotMessage(text, opts={showHint:false, showNext:false}) {
+    // ✅ IMPORTANT: all bot messages update lastBotPromptText, and are also saved as session_items
+    async function addBotMessage(text, opts={showHint:false, showNext:false}) {
       const safeText = cleanBotText(text);
+      lastBotPromptText = safeText;
 
       const div = document.createElement("div");
       div.className = "msg bot";
@@ -334,6 +313,15 @@
       div.appendChild(controls);
       messagesDiv.appendChild(div);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      // Write bot message into session_items (non-blocking)
+      await writeSessionItem({
+        item_type: "bot",
+        prompt_text: safeText,
+        child_text: null,
+        is_correct: null,
+        meta: { subject, area, difficulty: difficultyLevel }
+      });
     }
 
     function showActionButtons(buttons) {
@@ -351,7 +339,6 @@
       areaSelection.style.display = "block";
     }
 
-    function nowIso() { return new Date().toISOString(); }
     function nowTs() { return new Date().toLocaleString("en-GB"); }
 
     // ---------- Backend (AI) ----------
@@ -403,8 +390,16 @@
       progressBar.style.width = pct + "%";
     }
 
-    function resetSessionMemory() {
-      sessionDbId = null;
+    function newUuid() {
+      return (crypto?.randomUUID ? crypto.randomUUID() : (String(Date.now()) + "-" + Math.random().toString(16).slice(2)));
+    }
+
+    function resetSessionProgress() {
+      sessionRowId = null;
+      sessionId = null;
+      sessionStarted = false;
+
+      maxQuestions = computeMaxQuestions();
       questionsAnswered = 0;
       correctCount = 0;
       badges = [];
@@ -412,11 +407,18 @@
       difficultyLevel = 1;
       streakCorrect = 0;
       streakWrong = 0;
-      maxQuestions = computeMaxQuestions();
+
+      currentQuestion = null;
+      hintUsedForCurrent = false;
+      waitingForNextButton = false;
+      guided = { active:false, steps:[], idx:0 };
+
       updateProgressUI();
     }
 
-    function sessionComplete() { return questionsAnswered >= maxQuestions; }
+    function sessionComplete() {
+      return questionsAnswered >= maxQuestions;
+    }
 
     function maybeAwardBadge() {
       if (correctCount === 3 && !badges.includes("⭐")) badges.push("⭐");
@@ -432,120 +434,112 @@
       if (correctCount === 10 && badges.includes("🏆")) addBotMessage("🏆 Badge unlocked: Learning Champion!");
     }
 
-    // ---------- DB: sessions / session_items / child_progress / progress ----------
-    async function ensureSessionRow() {
-      if (sessionDbId) return sessionDbId;
-      if (!currentUser?.id || !child?.id) throw new Error("Missing user/child for session.");
+    // ---------- DB: sessions + items ----------
+    async function ensureSessionStarted() {
+      if (!child?.id || !currentUser?.id || !subject || !area) return;
+      if (sessionStarted && sessionRowId) return;
 
-      // Create a new sessions row and keep its UUID
+      sessionRowId = newUuid();
+      sessionId = sessionRowId;
+
       const payload = {
+        id: sessionRowId,
         parent_user_id: currentUser.id,
-        owner_id: currentUser.id,
         child_id: child.id,
-        subject: subject || null,
-        area: area || null,
+        subject,
+        area,
         questions_done: 0,
         correct_count: 0,
-        badges: badges,                 // expects json/jsonb
+        badges: [],
         summary: null,
-        raw_log: null,                  // expects json/jsonb (nullable)
-        created_at: nowIso()
+        raw_log: [],
+        owner_id: currentUser.id
       };
 
-      const { data, error } = await sb
-        .from("sessions")
-        .insert(payload)
-        .select("id")
-        .single();
-
+      const { error } = await sb.from("sessions").insert(payload);
       if (error) {
-        showDbDebug("Supabase error in ensureSessionRow:\n" + JSON.stringify(error, null, 2));
-        throw error;
-      }
-
-      sessionDbId = data?.id || null;
-      if (!sessionDbId) throw new Error("Session row created but no id returned.");
-      return sessionDbId;
-    }
-
-    async function insertSessionItem({ item_type, prompt_text, child_text, is_correct, meta }) {
-      const sid = await ensureSessionRow();
-      const payload = {
-        session_id: sid,
-        child_id: child.id,
-        owner_id: currentUser.id,
-        item_type: item_type || "turn",
-        prompt_text: prompt_text || null,
-        child_text: child_text || null,
-        is_correct: (typeof is_correct === "boolean") ? is_correct : null,
-        meta: meta || null,             // expects json/jsonb
-        created_at: nowIso()
-      };
-
-      const { error } = await sb
-        .from("session_items")
-        .insert(payload);
-
-      if (error) {
-        showDbDebug("Supabase error in insertSessionItem:\n" + JSON.stringify(error, null, 2));
-        throw error;
+        console.error("sessions insert failed:", error);
+        // Don’t hard-stop tutoring; show a clear message
+        showError("Progress sync issue: could not start session (sessions). Please refresh and try again.");
+      } else {
+        sessionStarted = true;
       }
     }
 
-    async function updateSessionAggregates() {
-      if (!sessionDbId) return;
+    async function writeSessionItem({ item_type, prompt_text, child_text, is_correct, meta }) {
+      try {
+        if (!sessionRowId || !child?.id || !currentUser?.id) return;
 
-      const { error } = await sb
-        .from("sessions")
-        .update({
-          subject: subject || null,
-          area: area || null,
+        const row = {
+          id: newUuid(),
+          session_id: sessionRowId,
+          child_id: child.id,
+          owner_id: currentUser.id,
+          item_type: item_type || "event",
+          prompt_text: prompt_text || null,
+          child_text: child_text || null,
+          is_correct: (typeof is_correct === "boolean") ? is_correct : null,
+          meta: meta || null
+        };
+
+        const { error } = await sb.from("session_items").insert(row);
+        if (error) console.error("session_items insert failed:", error);
+      } catch (e) {
+        console.error("session_items insert exception:", e);
+      }
+    }
+
+    async function updateSessionRow({ summaryText=null } = {}) {
+      try {
+        if (!sessionRowId) return;
+
+        const patch = {
           questions_done: questionsAnswered,
           correct_count: correctCount,
-          badges: badges,
-          raw_log: sessionLog,          // expects json/jsonb
-        })
-        .eq("id", sessionDbId);
+          badges,
+          raw_log: sessionLog,
+          summary: summaryText
+        };
 
-      if (error) {
-        showDbDebug("Supabase error in updateSessionAggregates:\n" + JSON.stringify(error, null, 2));
-        throw error;
+        const { error } = await sb
+          .from("sessions")
+          .update(patch)
+          .eq("id", sessionRowId)
+          .eq("owner_id", currentUser.id);
+
+        if (error) console.error("sessions update failed:", error);
+      } catch (e) {
+        console.error("sessions update exception:", e);
       }
     }
 
-    async function upsertChildProgress() {
-      // child_progress columns you gave:
-      // id, child_id, owner_id, subject, area, difficulty, streak_correct, streak_wrong, last_session_id, last_seen_at
-      if (!currentUser?.id || !child?.id) return;
-      if (!subject || !area) return; // we store per subject+area+difficulty
+    // ---------- Storage: child_progress + progress (summary table) ----------
+    // ✅ FUTURE-PROOF: one row per (owner_id, child_id, subject, area)
+    async function saveChildProgressRow() {
+      if (!child?.id || !currentUser?.id || !subject || !area) return;
 
       const payload = {
         child_id: child.id,
         owner_id: currentUser.id,
-        subject: subject,
-        area: area,
+        subject,
+        area,
         difficulty: difficultyLevel,
         streak_correct: streakCorrect,
         streak_wrong: streakWrong,
-        last_session_id: sessionDbId,
-        last_seen_at: nowIso()
+        last_session_id: sessionRowId,
+        last_seen_at: new Date().toISOString()
       };
 
-      // IMPORTANT: this requires a unique index on (child_id, subject, area, difficulty)
       const { error } = await sb
         .from("child_progress")
-        .upsert(payload, { onConflict: "child_id,subject,area,difficulty" });
+        .upsert(payload, { onConflict: "owner_id,child_id,subject,area" });
 
-      if (error) {
-        showDbDebug("Supabase error in upsertChildProgress:\n" + JSON.stringify(error, null, 2));
-        throw error;
-      }
+      if (error) console.error("child_progress upsert failed:", error);
     }
 
+    // ✅ FUTURE-PROOF: one row per (parent_user_id, child_id)
     async function saveSummaryProgress() {
-      // Your existing "progress" table (used by progress tab / streaks)
-      // Assumes columns: parent_user_id, child_id, maths_level, english_level, streak, updated_at
-      if (!currentUser?.id || !child?.id) return;
+      if (!child?.id || !currentUser?.id) return;
 
       const payload = {
         parent_user_id: currentUser.id,
@@ -553,42 +547,30 @@
         maths_level: null,
         english_level: null,
         streak: null,
-        updated_at: nowIso()
+        updated_at: new Date().toISOString()
       };
 
+      const safeDifficulty = (typeof difficultyLevel === "number") ? difficultyLevel : 1;
+
       if (subject === "Maths") {
-        payload.maths_level = difficultyLevel;
+        payload.maths_level = safeDifficulty;
         payload.streak = streakCorrect;
       } else if (subject === "English") {
-        payload.english_level = difficultyLevel;
+        payload.english_level = safeDifficulty;
         payload.streak = questionsAnswered;
       }
 
       const { error } = await sb
         .from("progress")
-        .upsert(payload, { onConflict: "child_id" });
+        .upsert(payload, { onConflict: "parent_user_id,child_id" });
 
-      if (error) {
-        showDbDebug("Supabase error in saveSummaryProgress:\n" + JSON.stringify(error, null, 2));
-        throw error;
-      }
+      if (error) console.error("progress upsert failed:", error);
     }
 
-    async function syncAllProgress(args) {
-      try {
-        clearDbDebug();
-        await insertSessionItem(args);
-        await updateSessionAggregates();
-        await upsertChildProgress();
-        await saveSummaryProgress();
-      } catch (e) {
-        showDbDebug(
-          "Progress sync failed.\n\n" +
-          (e?.message || String(e)) +
-          "\n\nIf this mentions RLS / policy, we must add policies for sessions, session_items, child_progress, progress."
-        );
-        console.error(e);
-      }
+    async function saveAllProgress() {
+      await saveChildProgressRow();
+      await saveSummaryProgress();
+      await updateSessionRow();
     }
 
     // ---------- Adaptive difficulty ----------
@@ -689,15 +671,6 @@
         : `✏️ Question:\n\n${q.displayText}\n\nTake your time.\nWhat do you think the answer is?`;
 
       addBotMessage(intro, { showHint:true, showNext:false });
-
-      // record prompt shown
-      syncAllProgress({
-        item_type: "prompt",
-        prompt_text: q.displayText,
-        child_text: null,
-        is_correct: null,
-        meta: { subject, area, difficulty: difficultyLevel, kind: "maths_question" }
-      });
     }
 
     function shortLineBreaks(text) {
@@ -751,14 +724,6 @@ Dyslexia-friendly spacing.
 `;
       const hintReply = await callBackend(hintPrompt);
       addBotMessage(hintReply);
-
-      await syncAllProgress({
-        item_type: "hint",
-        prompt_text: currentQuestion.displayText,
-        child_text: null,
-        is_correct: null,
-        meta: { subject, area, difficulty: difficultyLevel, hintUsed:true }
-      });
     }
 
     async function giveMathFeedback_AI(q, childAnswerText) {
@@ -815,14 +780,9 @@ Dyslexia-friendly.
             areaSelection.style.display = "none";
             disableInput(true);
 
-            // Final save
-            await syncAllProgress({
-              item_type: "end",
-              prompt_text: null,
-              child_text: null,
-              is_correct: null,
-              meta: { subject, area, difficulty: difficultyLevel, finished:true }
-            });
+            // Save one last time, and stamp a simple summary
+            await updateSessionRow({ summaryText: `Completed ${questionsAnswered}/${maxQuestions}. Difficulty ${difficultyLevel}. Badges: ${badges.join(" ") || "none"}.` });
+            await saveAllProgress();
 
             showFinishOptions();
           }
@@ -849,7 +809,7 @@ Dyslexia-friendly.
           onClick: () => {
             addUserMessage("Start a new session");
             areaSelection.style.display = "none";
-            resetSessionMemory();
+            resetSessionProgress();
             progressHeader.style.display = "none";
             subject = null; area = null;
             disableInput(false);
@@ -959,17 +919,14 @@ Dyslexia-friendly.
 
           area = opt.area;
 
-          resetSessionMemory();
+          // New session for each subject+area start
+          resetSessionProgress();
+          subjectSelection.style.display = "none";
           disableInput(false);
 
-          // Record selection as a session item (creates session row too)
-          await syncAllProgress({
-            item_type: "select_area",
-            prompt_text: null,
-            child_text: null,
-            is_correct: null,
-            meta: { subject, area, difficulty: difficultyLevel }
-          });
+          // ✅ start DB session now that we have subject+area
+          await ensureSessionStarted();
+          await saveAllProgress(); // creates/updates progress rows early
 
           if (subject === "Maths") {
             calculator.style.display = "block";
@@ -993,13 +950,8 @@ Short sentences.
             const reply = await callBackend(prompt);
             addBotMessage(reply);
 
-            await syncAllProgress({
-              item_type: "prompt",
-              prompt_text: `English start: ${area}`,
-              child_text: null,
-              is_correct: null,
-              meta: { subject, area, difficulty: difficultyLevel, kind:"english_start" }
-            });
+            // For English, count the first turn as “started”, but we only increment after child replies.
+            await saveAllProgress();
           }
         });
         areaSelection.appendChild(btn);
@@ -1017,17 +969,16 @@ Short sentences.
       currentQuestion = null;
       waitingForNextButton = false;
       hintUsedForCurrent = false;
-      guided.active = false; guided.steps = []; guided.idx = 0;
+      guided = { active:false, steps:[], idx:0 };
 
       progressHeader.style.display = "none";
       calculator.style.display = "none";
 
-      addBotMessage(selected === "Maths"
-        ? "✏️ Great!\n\nWhich Maths area would you like to try first?"
-        : "📚 Great!\n\nWhich English area would you like to practise?"
-      );
+      // reset any previous session
+      resetSessionProgress();
 
       if (selected === "Maths") {
+        addBotMessage("✏️ Great!\n\nWhich Maths area would you like to try first?");
         showAreaSelection([
           { label: "Addition ➕", area: "Addition" },
           { label: "Subtraction ➖", area: "Subtraction" },
@@ -1035,6 +986,7 @@ Short sentences.
           { label: "Division ➗", area: "Division" }
         ]);
       } else {
+        addBotMessage("📚 Great!\n\nWhich English area would you like to practise?");
         showAreaSelection([
           { label: "Reading aloud 📖", area: "Reading" },
           { label: "Spelling 📝", area: "Spelling" },
@@ -1053,12 +1005,32 @@ Short sentences.
       addUserMessage(text);
       input.value = "";
 
+      // Log the user's message into session_items
+      await writeSessionItem({
+        item_type: "child",
+        prompt_text: lastBotPromptText || null,
+        child_text: text,
+        is_correct: null,
+        meta: { subject, area, difficulty: difficultyLevel }
+      });
+
+      // if subject not chosen
       if (!subject) {
         addBotMessage("Please choose Maths or English using the buttons below.");
         subjectSelection.style.display = "block";
         return;
       }
 
+      // If area not chosen yet
+      if (!area) {
+        addBotMessage("Please choose an area first using the buttons.");
+        return;
+      }
+
+      // Ensure DB session exists (belt + braces)
+      await ensureSessionStarted();
+
+      // Limit check
       if (sessionComplete()) {
         endSessionUI();
         return;
@@ -1068,7 +1040,7 @@ Short sentences.
       // Maths
       // -------------------------
       if (subject === "Maths") {
-        if (!area || !currentQuestion) {
+        if (!currentQuestion) {
           addBotMessage("Please choose a Maths area first using the buttons.");
           return;
         }
@@ -1081,13 +1053,13 @@ Short sentences.
 
           sessionLog.push({ ts: nowTs(), subject, area, question: `[Guided step ${guided.idx+1}/${guided.steps.length}]`, childAnswer: text, correct: ok });
 
-          // log session item
-          await syncAllProgress({
-            item_type: "answer",
-            prompt_text: `[Guided step ${guided.idx+1}/${guided.steps.length}]`,
+          // also store the correctness for this child message
+          await writeSessionItem({
+            item_type: "mark",
+            prompt_text: `Guided step ${guided.idx+1}/${guided.steps.length}`,
             child_text: text,
             is_correct: ok,
-            meta: { subject, area, difficulty: difficultyLevel, guided:true, step: guided.idx+1 }
+            meta: { subject, area, difficulty: difficultyLevel, expected: step.expected }
           });
 
           if (ok) {
@@ -1095,6 +1067,8 @@ Short sentences.
 
             if (guided.idx < guided.steps.length) {
               addBotMessage(`✅ Nice work!\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${guided.steps[guided.idx].prompt}`);
+              await updateSessionRow();
+              await saveAllProgress();
               return;
             }
 
@@ -1112,14 +1086,9 @@ Short sentences.
             updateProgressUI();
             maybeRewardMessage();
 
-            // update aggregates + child_progress
-            await syncAllProgress({
-              item_type: "complete_question",
-              prompt_text: currentQuestion.displayText,
-              child_text: "(completed via guided steps)",
-              is_correct: true,
-              meta: { subject, area, difficulty: difficultyLevel, via:"guided" }
-            });
+            sessionLog.push({ ts: nowTs(), subject, area, question: currentQuestion.displayText, childAnswer: "(completed via guided steps)", correct: true });
+
+            await saveAllProgress();
 
             if (sessionComplete()) { endSessionUI(); return; }
 
@@ -1127,9 +1096,13 @@ Short sentences.
             addBotMessage(`Brilliant, ${childName}!\n\nThat is correct.\n\nReady for the next one?`, { showNext:true });
             return;
           } else {
+            // wrong in guided step
             streakWrong += 1;
             streakCorrect = 0;
+
             adjustDifficultyAfterAnswer(false);
+
+            await saveAllProgress();
 
             addBotMessage(`Good try, ${childName}.\n\nLet’s do the same step again.\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${step.prompt}`);
             return;
@@ -1142,13 +1115,13 @@ Short sentences.
 
         sessionLog.push({ ts: nowTs(), subject, area, question: currentQuestion.displayText, childAnswer: text, correct });
 
-        // log session item
-        await syncAllProgress({
-          item_type: "answer",
+        // mark the message in DB
+        await writeSessionItem({
+          item_type: "mark",
           prompt_text: currentQuestion.displayText,
           child_text: text,
           is_correct: correct,
-          meta: { subject, area, difficulty: difficultyLevel, guided:false }
+          meta: { subject, area, difficulty: difficultyLevel, answer: n, expected: currentQuestion.correctAnswer }
         });
 
         if (correct) {
@@ -1163,16 +1136,9 @@ Short sentences.
           updateProgressUI();
           maybeRewardMessage();
 
-          const reply = await giveMathFeedback_AI(currentQuestion, text);
+          await saveAllProgress();
 
-          // persist aggregates and progress (again) after completion
-          await syncAllProgress({
-            item_type: "complete_question",
-            prompt_text: currentQuestion.displayText,
-            child_text: text,
-            is_correct: true,
-            meta: { subject, area, difficulty: difficultyLevel }
-          });
+          const reply = await giveMathFeedback_AI(currentQuestion, text);
 
           if (sessionComplete()) {
             addBotMessage(reply);
@@ -1190,6 +1156,7 @@ Short sentences.
         streakCorrect = 0;
 
         adjustDifficultyAfterAnswer(false);
+        await saveAllProgress();
 
         const steps = buildGuidedSteps(currentQuestion);
         if (steps.length) {
@@ -1209,23 +1176,12 @@ Short sentences.
       // English
       // -------------------------
       if (subject === "English") {
-        if (!area) {
-          addBotMessage("Please choose an English area first using the buttons.");
-          return;
-        }
-
         questionsAnswered += 1;
         updateProgressUI();
 
         sessionLog.push({ ts: nowTs(), subject, area, question: "(English turn)", childAnswer: text, correct: null });
 
-        await syncAllProgress({
-          item_type: "turn",
-          prompt_text: `English: ${area}`,
-          child_text: text,
-          is_correct: null,
-          meta: { subject, area, difficulty: difficultyLevel }
-        });
+        await saveAllProgress();
 
         const prompt = `
 You are Learnlio AI, a child-safe UK tutor.
@@ -1252,7 +1208,7 @@ British English.
     function setupCalculator() {
       const btns = Array.from(document.querySelectorAll(".calcBtn"));
       btns.forEach(b => {
-        b.classList.add("calcBtn");
+        b.style.cssText = "padding:14px; font-size:18px; border-radius:10px; border:none; background:#fff; cursor:pointer;";
         b.addEventListener("click", () => {
           const val = b.textContent;
           if (val === "C") return;
@@ -1289,7 +1245,7 @@ British English.
       const selected = getSelectedChildFromLocalStorage();
       if (!selected?.id) {
         showError("No child selected. Please go to Dashboard and click Select on a child.");
-        addBotMessage("I can’t find a child profile yet.\n\nPlease go back to the Dashboard and select a child.");
+        await addBotMessage("I can’t find a child profile yet.\n\nPlease go back to the Dashboard and select a child.");
         showActionButtons([{ label: "Go to Dashboard", onClick: () => window.location.href = "/dash.html" }]);
         disableInput(true);
         subjectSelection.style.display = "none";
@@ -1317,15 +1273,12 @@ British English.
       child = data;
       childName = child.child_name || "Child";
       childAge = computeAgeFromDob(child.child_dob);
-      maxQuestions = computeMaxQuestions();
 
       clearError();
       disableInput(false);
 
-      // Welcome
-      addBotMessage(`👋 Hi ${childName}!\n\nI’ll help you in a calm, step-by-step way.\n\nWhat are we working on today?`);
+      await addBotMessage(`👋 Hi ${childName}!\n\nI’ll help you in a calm, step-by-step way.\n\nWhat are we working on today?`);
       subjectSelection.style.display = "block";
-
       return true;
     }
 
@@ -1346,6 +1299,7 @@ British English.
     // ---------- Init ----------
     (async () => {
       if (!sb) { showError("Supabase did not load. Check the supabase script tag."); return; }
+
       setupCalculator();
       disableInput(false);
 
@@ -1358,3 +1312,4 @@ British English.
   </script>
 </body>
 </html>
+
