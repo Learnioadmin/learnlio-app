@@ -50,6 +50,9 @@
     .child-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
 
     .disabled-link { pointer-events:none; opacity:.55; }
+
+    /* Small inline edit block (keeps your look) */
+    .edit-wrap { margin-top:10px; padding:12px; border-radius:12px; background:#fafafa; border:1px solid #ececf4; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -143,15 +146,15 @@
         <div class="hr"></div>
 
         <div id="nextStepBox">
-          <div class="pill" style="margin-bottom:10px;">Starter plan</div>
-          <div style="font-weight:900; margin-bottom:6px;">Try a short warm-up</div>
-          <div class="muted">
+          <div id="nextStepTag" class="pill" style="margin-bottom:10px;">Starter plan</div>
+          <div id="nextStepTitle" style="font-weight:900; margin-bottom:6px;">Try a short warm-up</div>
+          <div id="nextStepBody" class="muted">
             Start with a 5–7 minute Tutor session. If your child struggles, use hints and go slowly.
             Progress and reports appear after a couple of sessions.
           </div>
 
           <div class="row" style="margin-top:14px;">
-            <a class="btn" href="/chat.html" style="text-decoration:none;">Start Tutor</a>
+            <a id="nextStepPrimaryBtn" class="btn" href="/chat.html" style="text-decoration:none;">Start Tutor</a>
             <a class="btn light" href="/screener.html" style="text-decoration:none;">Run screener</a>
           </div>
         </div>
@@ -214,6 +217,12 @@
     const listEl = document.getElementById("childrenList");
     const msgEl = document.getElementById("formMessage");
     const selectedChildLabel = document.getElementById("selectedChildLabel");
+
+    // Next step UI
+    const nextStepTag = document.getElementById("nextStepTag");
+    const nextStepTitle = document.getElementById("nextStepTitle");
+    const nextStepBody = document.getElementById("nextStepBody");
+    const nextStepPrimaryBtn = document.getElementById("nextStepPrimaryBtn");
 
     let currentUser = null;
     let accessStatus = "checking"; // checking | ok | locked | unknown
@@ -296,10 +305,7 @@
       const token = await getAccessTokenOrThrow();
       const res = await fetch(`${BILLING_API_BASE}/me`, {
         method: "GET",
-        headers: {
-          "Accept": "application/json",
-          "Authorization": `Bearer ${token}`,
-        }
+        headers: { "Accept": "application/json", "Authorization": `Bearer ${token}` }
       });
 
       const text = await res.text();
@@ -370,6 +376,152 @@
       setSelectedChildUI();
     }
 
+    function clearSelectedChildIfMatches(childId) {
+      const selectedId = getSelectedChildId();
+      if (selectedId && selectedId === childId) {
+        localStorage.removeItem("selectedChild");
+      }
+    }
+
+    async function updateSelectedChildLocalStorageIfMatches(ch) {
+      const selectedId = getSelectedChildId();
+      if (selectedId && selectedId === ch.id) {
+        setSelectedChild(ch);
+      }
+    }
+
+    // ---------------------------
+    // NEXT STEP (dynamic)
+    // ---------------------------
+    function setNextStep(tag, title, body) {
+      nextStepTag.textContent = tag;
+      nextStepTitle.textContent = title;
+      nextStepBody.textContent = body;
+    }
+
+    function sentence(s){ return String(s || "").trim(); }
+
+    function niceArea(area){
+      if (!area) return null;
+      const a = String(area).trim();
+      if (!a) return null;
+      // Normalise a little (keeps it parent-friendly)
+      if (a.toLowerCase() === "sentence building") return "Building sentences";
+      return a;
+    }
+
+    async function loadNextStep() {
+      const selectedId = getSelectedChildId();
+
+      // Default (no child selected)
+      if (!selectedId) {
+        setNextStep(
+          "Starter plan",
+          "Try a short warm-up",
+          "Start with a 5–7 minute Tutor session. If your child struggles, use hints and go slowly. Progress and reports appear after a couple of sessions."
+        );
+        nextStepPrimaryBtn.textContent = "Start Tutor";
+        nextStepPrimaryBtn.href = "/chat.html";
+        return;
+      }
+
+      // Pull latest signals for that child
+      const { data: signals, error: sigErr } = await sb
+        .from("child_progress")
+        .select("subject, area, difficulty, streak_correct, streak_wrong, last_seen_at")
+        .eq("child_id", selectedId)
+        .eq("owner_id", currentUser.id)
+        .maybeSingle();
+
+      if (sigErr) console.error("child_progress loadNextStep error", sigErr);
+
+      const { data: overall, error: progErr } = await sb
+        .from("progress")
+        .select("maths_level, english_level, streak, updated_at")
+        .eq("child_id", selectedId)
+        .maybeSingle();
+
+      if (progErr) console.error("progress loadNextStep error", progErr);
+
+      // If no signals yet
+      if (!signals) {
+        setNextStep(
+          "Starter plan",
+          "Do one short Tutor session",
+          "Do a quick Maths or English session. After a couple of sessions, Learnlio will start showing specific strengths and what to work on next."
+        );
+        nextStepPrimaryBtn.textContent = "Start Tutor";
+        nextStepPrimaryBtn.href = "/chat.html";
+        return;
+      }
+
+      const subj = signals.subject ? String(signals.subject) : null;
+      const area = niceArea(signals.area);
+      const wrong = Number(signals.streak_wrong || 0);
+      const correct = Number(signals.streak_correct || 0);
+      const diff = Number(signals.difficulty || 1);
+
+      // Build parent-friendly next step
+      if (wrong >= 2) {
+        // child has struggled recently in last area
+        setNextStep(
+          "Support focus",
+          `Support with ${area || "the last topic"}`,
+          sentence(
+            `In the last Tutor session, Learnlio noticed this was a bit tricky.` +
+            ` Try a short session in ${area || "that topic"} again, and encourage slow step-by-step working.` +
+            ` Use hints early so confidence stays high.`
+          )
+        );
+        nextStepPrimaryBtn.textContent = "Continue Tutor";
+        nextStepPrimaryBtn.href = "/chat.html";
+        return;
+      }
+
+      if (correct >= 2) {
+        // doing well recently
+        const nextIdea =
+          subj === "Maths"
+            ? "Try a new Maths area for variety (e.g. Multiplication or Division)."
+            : "Try a new English activity (e.g. Reading aloud or Spelling).";
+
+        const levelHint =
+          subj === "Maths"
+            ? (overall?.maths_level ? `Maths level is currently ${overall.maths_level}.` : "")
+            : (overall?.english_level ? `English level is currently ${overall.english_level}.` : "");
+
+        setNextStep(
+          "Doing well",
+          `Build confidence in ${area || "today’s work"}`,
+          sentence(
+            `Your child is doing well here.` +
+            ` Keep sessions short (5–10 minutes) and finish on a win.` +
+            (levelHint ? ` ${levelHint}` : "") +
+            ` ${nextIdea}`
+          )
+        );
+        nextStepPrimaryBtn.textContent = "Continue Tutor";
+        nextStepPrimaryBtn.href = "/chat.html";
+        return;
+      }
+
+      // Neutral / early learning signals
+      setNextStep(
+        "Next step",
+        `Continue ${subj || "Tutor"} practice`,
+        sentence(
+          `Keep it light and regular. Aim for a short session, 3–4 times a week.` +
+          (area ? ` Stay on ${area} until it feels easy.` : "") +
+          (diff ? ` Learnlio will gently adjust difficulty as confidence grows.` : "")
+        )
+      );
+      nextStepPrimaryBtn.textContent = "Continue Tutor";
+      nextStepPrimaryBtn.href = "/chat.html";
+    }
+
+    // ---------------------------
+    // CHILD LIST + EDIT DETAILS
+    // ---------------------------
     async function loadChildren() {
       setFormMsg("");
       listEl.innerHTML = `<div class="muted">Loading…</div>`;
@@ -418,31 +570,133 @@
         const name = ch.child_name ?? "(No name)";
         const dob = ch.child_dob ?? "";
         const age = computeAge(dob);
-
         const isSelected = (getSelectedChildId() === ch.id);
 
+        // IMPORTANT: we keep your layout; we only add an "Edit" button + an inline edit panel.
         card.innerHTML = `
           <div class="child-top">
             <div>
-              <div style="font-weight:900;">${escapeHtml(name)} ${isSelected ? `<span class="pill" style="margin-left:6px;">Selected</span>` : ""}</div>
+              <div style="font-weight:900;">
+                ${escapeHtml(name)}
+                ${isSelected ? `<span class="pill" style="margin-left:6px;">Selected</span>` : ""}
+              </div>
               <div class="muted child-meta">
                 DOB: ${escapeHtml(dob || "—")}${age !== null ? ` • Age: ${age}` : ""}
               </div>
             </div>
+
             <div class="child-actions">
-              <button class="btn ${isSelected ? "light" : ""}" type="button" data-id="${ch.id}">
+              <button class="btn ${isSelected ? "light" : ""}" type="button" data-action="select" data-id="${ch.id}">
                 ${isSelected ? "Selected" : "Select"}
+              </button>
+              <button class="btn ghost" type="button" data-action="edit" data-id="${ch.id}">
+                Edit details
               </button>
             </div>
           </div>
+
+          <div class="edit-wrap" data-editwrap="${ch.id}" style="display:none;">
+            <div class="muted" style="margin:0 0 10px;">
+              Update your child’s details. Changes save immediately.
+            </div>
+
+            <label class="label" for="editName_${ch.id}">Child name</label>
+            <input id="editName_${ch.id}" class="input" value="${escapeHtml(name)}" />
+
+            <label class="label" for="editDob_${ch.id}">Date of birth</label>
+            <input id="editDob_${ch.id}" class="input" type="date" value="${escapeHtml(dob || "")}" />
+
+            <div class="row" style="margin-top:12px;">
+              <button class="btn" type="button" data-action="save" data-id="${ch.id}">Save</button>
+              <button class="btn light" type="button" data-action="cancel" data-id="${ch.id}">Cancel</button>
+            </div>
+
+            <div class="status" data-editmsg="${ch.id}" aria-live="polite"></div>
+          </div>
         `;
 
-        const btn = card.querySelector("button[data-id]");
-        btn.addEventListener("click", () => {
+        // Wire up buttons
+        const selectBtn = card.querySelector(`button[data-action="select"][data-id="${ch.id}"]`);
+        const editBtn   = card.querySelector(`button[data-action="edit"][data-id="${ch.id}"]`);
+        const wrap      = card.querySelector(`[data-editwrap="${ch.id}"]`);
+        const saveBtn   = card.querySelector(`button[data-action="save"][data-id="${ch.id}"]`);
+        const cancelBtn = card.querySelector(`button[data-action="cancel"][data-id="${ch.id}"]`);
+        const msgBox    = card.querySelector(`[data-editmsg="${ch.id}"]`);
+        const editName  = card.querySelector(`#editName_${ch.id}`);
+        const editDob   = card.querySelector(`#editDob_${ch.id}`);
+
+        function setEditMsg(text, kind="") {
+          msgBox.textContent = text || "";
+          msgBox.className = "status" + (kind ? " " + kind : "");
+        }
+
+        selectBtn.addEventListener("click", async () => {
           setSelectedChild(ch);
           setFormMsg(`Selected child: ${name}`, "good");
-          // Re-render so the "Selected" pill updates cleanly
-          loadChildren();
+          await loadChildren();      // refresh pills
+          await loadNextStep();      // refresh next step for selected child
+        });
+
+        editBtn.addEventListener("click", () => {
+          // toggle
+          const open = wrap.style.display !== "none";
+          wrap.style.display = open ? "none" : "block";
+          setEditMsg("");
+        });
+
+        cancelBtn.addEventListener("click", () => {
+          // reset inputs to current values and close
+          editName.value = ch.child_name ?? "";
+          editDob.value = ch.child_dob ?? "";
+          wrap.style.display = "none";
+          setEditMsg("");
+        });
+
+        saveBtn.addEventListener("click", async () => {
+          setEditMsg("");
+          saveBtn.disabled = true;
+          cancelBtn.disabled = true;
+
+          const newName = (editName.value || "").trim();
+          const newDob = editDob.value;
+
+          if (!newName || !newDob) {
+            setEditMsg("Please enter a child name and date of birth.", "bad");
+            saveBtn.disabled = false;
+            cancelBtn.disabled = false;
+            return;
+          }
+
+          try {
+            const { data: updated, error: upErr } = await sb
+              .from("children")
+              .update({ child_name: newName, child_dob: newDob })
+              .eq("id", ch.id)
+              .eq("parent_user_id", currentUser.id)
+              .select("id, child_name, child_dob")
+              .single();
+
+            if (upErr) throw upErr;
+
+            // Update local copy + selected child storage if needed
+            ch.child_name = updated.child_name;
+            ch.child_dob = updated.child_dob;
+            await updateSelectedChildLocalStorageIfMatches(ch);
+
+            setEditMsg("Saved ✅", "good");
+
+            // Close, refresh UI
+            wrap.style.display = "none";
+            setFormMsg("Child details updated ✅", "good");
+            await loadChildren();
+            await loadNextStep();
+          } catch (e) {
+            console.error("child update error", e);
+            setEditMsg("Couldn’t save changes: " + (e?.message || String(e)), "bad");
+          } finally {
+            saveBtn.disabled = false;
+            cancelBtn.disabled = false;
+          }
         });
 
         listEl.appendChild(card);
@@ -482,6 +736,7 @@
       setFormMsg("Child added ✅", "good");
 
       await loadChildren();
+      await loadNextStep();
     }
 
     async function refreshAccess() {
@@ -554,7 +809,15 @@
     });
 
     addBtn.addEventListener("click", addChild);
-    refreshBtn.addEventListener("click", loadChildren);
+    refreshBtn.addEventListener("click", async () => {
+      await loadChildren();
+      await loadNextStep();
+    });
+
+    // Also refresh Next Step if user returns and selection changed elsewhere
+    window.addEventListener("focus", async () => {
+      await loadNextStep();
+    });
 
     (async () => {
       const okAuth = await requireAuth();
@@ -563,9 +826,11 @@
       setSelectedChildUI();
       await refreshAccess();
       await loadChildren();
+      await loadNextStep();
     })();
   })();
   </script>
 </body>
 </html>
+
 
