@@ -87,6 +87,7 @@
     .subtitle{ color:var(--muted); font-size: 12.5px; line-height:1.4; margin-top:2px; }
     .status{ margin-top:6px; font-size:12.5px; }
     .status.bad{ color:var(--bad); font-weight:800; }
+    .status.warn{ color:var(--warn); font-weight:850; }
 
     .stage{
       padding:12px;
@@ -154,6 +155,16 @@
       font-weight:950;
     }
     .mcq-text{ line-height:1.45; }
+
+    .notice{
+      border:1px solid rgba(15,23,42,.10);
+      background:#fff;
+      border-radius: 16px;
+      padding:12px 12px;
+      color:var(--muted);
+      line-height:1.7;
+      font-size:14px;
+    }
 
     .controls{
       display:flex;
@@ -223,247 +234,191 @@
     .tiny{ color:var(--muted); font-size:13px; line-height:1.6; margin-top:10px; }
     .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 
-    /* ===== Interactive widgets ===== */
-    .widget{
+    /* ===== Interactive components ===== */
+
+    .ibox{
       background:#fff;
       border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 12px;
       box-shadow: 0 10px 18px rgba(2,6,23,.06);
-    }
-    .widget h4{
-      margin:0 0 8px;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing:.25px;
-      color: var(--muted);
-      font-weight: 950;
-    }
-    .widget .prompt{
-      font-family:'OpenDyslexic', Arial, sans-serif;
-      font-size: 16px;
-      line-height: 1.7;
-      white-space: pre-wrap;
-    }
-    .inputRow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:10px; }
-    .textInput{
-      flex: 1 1 180px;
-      border:1px solid rgba(15,23,42,.14);
-      border-radius: 14px;
-      padding: 10px 12px;
-      font-size: 15px;
-      outline:none;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
     }
 
-    /* Number line */
-    .numline{
-      margin-top:12px;
-      background: rgba(248,250,252,.95);
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding: 12px;
+    /* Fill blank */
+    .blankLine{
+      font-family:'OpenDyslexic', Arial, sans-serif;
+      font-size: clamp(15px, 1.2vw, 17px);
+      line-height: 1.75;
     }
-    .ticks{
-      display:flex;
-      justify-content:space-between;
-      gap:8px;
-      margin-top:8px;
-      font-weight:950;
-      color: var(--muted);
-      font-size: 12.5px;
-      user-select:none;
+    .blankInput{
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(15,23,42,.14);
+      font-size: 15px;
+      outline: none;
     }
-    .lineRow{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      margin-top:10px;
-    }
-    .lineBtn{
-      width:44px; height:44px;
-      border-radius: 16px;
-      border:1px solid rgba(15,23,42,.12);
-      background:#fff;
-      box-shadow: 0 10px 14px rgba(2,6,23,.06);
-      cursor:pointer;
-      font-weight:950;
-      font-size: 18px;
-    }
-    .lineBtn:disabled{ opacity:.45; cursor:not-allowed; }
-    .lineTrack{
-      flex:1 1 auto;
-      height: 12px;
-      border-radius: 999px;
-      background: rgba(15,23,42,.10);
-      position:relative;
-      overflow:hidden;
-    }
-    .lineFill{
-      height:12px;
-      width:0%;
-      background: linear-gradient(90deg, rgba(47,123,255,.65), rgba(11,92,255,.85));
-      border-radius:999px;
-    }
-    .lineBubble{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius: 16px;
-      border:1px solid rgba(15,23,42,.10);
-      background:#fff;
-      font-weight:950;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
+    .blankInput:focus{
+      border-color: rgba(11,92,255,.35);
+      box-shadow: 0 0 0 4px rgba(11,92,255,.10);
     }
 
     /* Match pairs */
-    .pairs{
-      margin-top:12px;
+    .pairsGrid{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap:12px;
+      gap:10px;
     }
     @media (max-width: 520px){
-      .pairs{ grid-template-columns: 1fr; }
+      .pairsGrid{ grid-template-columns: 1fr; }
     }
     .pairCol{
-      background: rgba(248,250,252,.95);
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
     }
-    .pairCol h5{
-      margin:0 0 10px;
-      font-size:12.5px;
-      color: var(--muted);
-      font-weight: 950;
-      text-transform: uppercase;
-      letter-spacing:.2px;
-    }
-    .pairItem{
-      width:100%;
+    .pairBtn{
       text-align:left;
+      padding:12px 12px;
       border-radius: 16px;
       border:1px solid rgba(15,23,42,.12);
       background:#fff;
-      padding: 12px 12px;
+      box-shadow: 0 8px 14px rgba(2,6,23,.06);
       cursor:pointer;
-      box-shadow: 0 10px 14px rgba(2,6,23,.06);
-      font-weight:950;
-      margin-bottom:10px;
-      display:flex;
-      gap:10px;
-      align-items:center;
+      font-weight:900;
     }
-    .pairItem:last-child{ margin-bottom:0; }
-    .pairDot{
-      width:28px; height:28px;
-      border-radius: 12px;
-      background: var(--soft);
+    .pairBtn.selected{
+      border-color: rgba(11,92,255,.35);
+      box-shadow: 0 0 0 4px rgba(11,92,255,.10);
+      background: rgba(11,92,255,.06);
+    }
+    .pairBtn.matched{
+      border-color: rgba(16,185,129,.35);
+      background: rgba(16,185,129,.08);
+      cursor: default;
+      opacity:.95;
+    }
+    .matchLine{
+      font-size: 13px;
+      color: var(--muted);
+      line-height:1.5;
+    }
+
+    /* Number line */
+    .lineWrap{
+      padding: 8px 6px 4px;
+    }
+    .numLine{
+      position: relative;
+      height: 64px;
+      border-radius: 16px;
+      background: rgba(238,242,255,.65);
       border:1px solid rgba(15,23,42,.10);
+      overflow:hidden;
+    }
+    .numTrack{
+      position:absolute;
+      left: 14px; right: 14px;
+      top: 34px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(15,23,42,.10);
+    }
+    .numMarker{
+      position:absolute;
+      top: 18px;
+      width: 34px;
+      height: 34px;
+      border-radius: 14px;
+      background: #fff;
+      border:1px solid rgba(15,23,42,.14);
+      box-shadow: 0 10px 16px rgba(2,6,23,.10);
       display:flex;
       align-items:center;
       justify-content:center;
       font-weight:950;
-      flex:0 0 auto;
+      cursor: grab;
+      user-select:none;
+      touch-action:none;
     }
-    .pairItem.selected{
-      border-color: rgba(11,92,255,.30);
-      box-shadow: 0 16px 26px rgba(2,6,23,.10);
-      transform: translateY(-1px);
-    }
-    .pairItem.done{
-      opacity:.65;
-      cursor:default;
-    }
-    .pairSummary{
-      margin-top:10px;
-      color: var(--muted);
+    .numLabels{
+      display:flex;
+      justify-content:space-between;
       font-size: 13px;
-      line-height:1.6;
+      color: var(--muted);
+      margin-top:8px;
+      padding: 0 4px;
+      font-weight:850;
+    }
+    .sliderRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .slider{
+      width: 100%;
+      accent-color: var(--brand);
     }
 
-    /* Drag & drop */
-    .dragWrap{
-      margin-top:12px;
+    /* Drag drop */
+    .dragGrid{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap:12px;
-      align-items:start;
+      gap:10px;
     }
     @media (max-width: 720px){
-      .dragWrap{ grid-template-columns: 1fr; }
+      .dragGrid{ grid-template-columns: 1fr; }
     }
-    .dragBank, .dropZones{
-      background: rgba(248,250,252,.95);
+    .dragBank, .dropZoneWrap{
       border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding: 12px;
-    }
-    .dragBank h5, .dropZones h5{
-      margin:0 0 10px;
-      font-size:12.5px;
-      color: var(--muted);
-      font-weight: 950;
-      text-transform: uppercase;
-      letter-spacing:.2px;
+      border-radius: 18px;
+      background: rgba(248,250,252,.95);
+      padding: 10px;
     }
     .dragItem{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:10px 12px;
-      border-radius: 999px;
+      padding: 10px 12px;
+      border-radius: 14px;
       border:1px solid rgba(15,23,42,.12);
       background:#fff;
-      box-shadow: 0 10px 14px rgba(2,6,23,.06);
-      cursor:grab;
-      font-weight:950;
-      margin: 0 10px 10px 0;
-      user-select:none;
+      box-shadow: 0 8px 14px rgba(2,6,23,.06);
+      cursor: grab;
+      font-weight: 950;
+      margin-bottom: 8px;
     }
     .dropZone{
-      border:2px dashed rgba(15,23,42,.18);
-      border-radius: 16px;
-      padding: 12px;
-      background:#fff;
-      margin-bottom:10px;
-      min-height: 60px;
-      box-shadow: 0 10px 14px rgba(2,6,23,.05);
-    }
-    .dropZone:last-child{ margin-bottom:0; }
-    .dropTitle{
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 950;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing:.2px;
-    }
-    .droppedPill{
-      display:inline-flex;
+      min-height: 46px;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border: 2px dashed rgba(15,23,42,.18);
+      background: rgba(255,255,255,.9);
+      margin-bottom: 10px;
+      display:flex;
       align-items:center;
-      gap:8px;
-      padding:10px 12px;
-      border-radius: 999px;
-      border:1px solid rgba(15,23,42,.12);
-      background: rgba(11,92,255,.08);
-      box-shadow: 0 10px 14px rgba(2,6,23,.06);
-      font-weight:950;
-      user-select:none;
-      margin-right:10px;
-      margin-bottom:10px;
+      justify-content:space-between;
+      gap:10px;
     }
-    .zoneOver{
-      border-color: rgba(11,92,255,.45);
-      background: rgba(11,92,255,.05);
+    .dropZone.over{
+      border-color: rgba(11,92,255,.35);
+      background: rgba(11,92,255,.06);
+    }
+    .dzLabel{
+      font-weight: 950;
+      color: var(--ink);
+      font-size: 14px;
+    }
+    .dzValue{
+      font-weight: 950;
+      color: var(--muted);
+      font-size: 14px;
     }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
   <header class="nav">
     <div class="nav-inner">
@@ -489,6 +444,7 @@
             <div class="title">📘 Lesson</div>
             <div id="contextLine" class="subtitle">Loading your lesson…</div>
             <div id="pageError" class="status bad" style="display:none;"></div>
+            <div id="pageWarn" class="status warn" style="display:none;"></div>
           </div>
           <div class="row">
             <button id="speakBtn" class="btn ghost" type="button">🔊 Read aloud</button>
@@ -499,7 +455,9 @@
         <div class="stage">
           <div id="cardbox" class="cardbox">
             <div id="lessonText" class="lessonText"></div>
+
             <div id="mcq" class="mcq" style="display:none;"></div>
+
             <div id="interactiveMount" style="display:none;"></div>
           </div>
 
@@ -561,7 +519,7 @@
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
 
-    // Lesson generation Worker
+    // IMPORTANT: worker says routes are /health and /generate (POST)
     const LESSON_GEN_URL = "https://learnlio-lessons.falling-grass-34ab.workers.dev/generate";
 
     // Google TTS Worker
@@ -572,6 +530,7 @@
 
     // UI
     const pageError = document.getElementById("pageError");
+    const pageWarn = document.getElementById("pageWarn");
     const contextLine = document.getElementById("contextLine");
     const lessonTextEl = document.getElementById("lessonText");
     const mcqEl = document.getElementById("mcq");
@@ -592,6 +551,8 @@
 
     function showError(msg){ pageError.style.display="block"; pageError.textContent = msg; }
     function clearError(){ pageError.style.display="none"; pageError.textContent = ""; }
+    function showWarn(msg){ pageWarn.style.display="block"; pageWarn.textContent = msg; }
+    function clearWarn(){ pageWarn.style.display="none"; pageWarn.textContent = ""; }
 
     // Auth/child
     let currentUser = null;
@@ -604,17 +565,19 @@
     let AREA = null;
 
     // Lesson runtime
-    let lesson = null;         // { title, steps }
+    let lesson = null;         // returned by worker
     let steps = [];
     let idx = 0;
-    let stepAnswers = {};      // stepIndex -> {type, ...}
+    let stepAnswers = {};      // stepIndex -> { kind, isCorrect, data }
     let xp = 0;
-
-    // Per-step “done” flag for interactive types
-    let stepReadyForNext = false;
 
     // Audio
     let currentAudio = null;
+
+    // Per-step gate: must be true to allow Next
+    function stepIsAnswered(stepIndex){
+      return !!stepAnswers[stepIndex];
+    }
 
     function computeAgeFromDob(dobStr){
       const d = new Date(dobStr);
@@ -712,7 +675,6 @@
     function clearInteractive(){
       interactiveMount.style.display = "none";
       interactiveMount.innerHTML = "";
-      stepReadyForNext = false;
     }
 
     // -------------------------
@@ -736,534 +698,593 @@
         body: JSON.stringify(payload)
       });
 
-      const text = await r.text().catch(()=> "");
+      const raw = await r.text().catch(()=> "");
       let json = null;
-      try{ json = text ? JSON.parse(text) : null; }catch{}
+      try{ json = raw ? JSON.parse(raw) : null; }catch{}
 
       if (!r.ok){
-        const msg = json?.error || text || `Lesson generation failed (${r.status})`;
+        const msg = json?.error || raw || `Lesson generation failed (${r.status})`;
         throw new Error(msg);
       }
 
-      if (!json?.steps || !Array.isArray(json.steps) || !json.steps.length){
+      // accept either {steps:[...]} or {lesson:{steps:[...]}}
+      const out = json?.steps ? json : (json?.lesson ? json.lesson : json);
+
+      if (!out?.steps || !Array.isArray(out.steps) || !out.steps.length){
         throw new Error("Lesson worker returned no steps.");
       }
 
-      return json;
+      return out;
     }
 
     // -------------------------
-    // Helpers
+    // Helpers for correctness
     // -------------------------
-    function norm(s){
-      return String(s ?? "").trim().toLowerCase();
-    }
-    function letters(i){
-      return String.fromCharCode("A".charCodeAt(0) + i);
-    }
-    function markStepDone(answerObj, isCorrect = null){
-      stepAnswers[idx] = { ...answerObj, isCorrect };
-      stepReadyForNext = true;
-      // gentle XP: reward completion more than correctness
-      if (isCorrect === true) xp += 10;
-      else if (isCorrect === false) xp += 6;
-      else xp += 8;
-      setProgressUI();
+    function norm(s){ return String(s ?? "").trim().toLowerCase(); }
+    function safeNum(v, fallback){
+      const n = Number(v);
+      return Number.isFinite(n) ? n : fallback;
     }
 
     // -------------------------
-    // INTERACTIVE WIDGETS
+    // Renderers
     // -------------------------
-    function renderFillBlank(step){
-      // Expected step shape:
-      // { type:"fill_blank", prompt:"2 + __ = 7", answer:"5", accept:["5","five"], caseSensitive:false }
-      const corrects = new Set(
-        (Array.isArray(step.accept) ? step.accept : [step.answer])
-          .filter(Boolean)
-          .map(v => step.caseSensitive ? String(v).trim() : norm(v))
-      );
+    function renderTextStep(step){
+      lessonTextEl.textContent = step.text || "";
+      nextBtn.textContent = (step.type === "finish") ? "✅ Complete" : "➡️ Next";
+      if (step.type === "finish") hintLine.textContent = "Tap complete to finish this lesson.";
+    }
 
-      interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = `
-        <div class="widget">
-          <h4>Fill the blank</h4>
-          <div class="prompt">${escapeHtml(step.prompt || "Type your answer.")}</div>
-          <div class="inputRow">
-            <input id="fbInput" class="textInput" inputmode="text" autocomplete="off" placeholder="Type here…" />
-            <button id="fbCheck" class="pill primary" type="button">✅ Check</button>
-          </div>
-          <div id="fbMsg" class="tiny"></div>
-        </div>
-      `;
+    function renderMCQ(step){
+      lessonTextEl.textContent = step.prompt || "";
+      mcqEl.style.display = "grid";
 
-      const input = document.getElementById("fbInput");
-      const btn = document.getElementById("fbCheck");
-      const msg = document.getElementById("fbMsg");
+      const letters = ["A","B","C","D","E","F"];
+      const choices = Array.isArray(step.choices) ? step.choices : [];
 
-      const prev = stepAnswers[idx];
-      if (prev?.type === "fill_blank"){
-        input.value = prev.value || "";
-        if (typeof prev.isCorrect === "boolean"){
-          msg.textContent = prev.isCorrect ? "Nice — that works ✅" : "Good try 💛 Have another go, or press Next if you want to move on.";
-          stepReadyForNext = true;
-        }
+      if (!choices.length){
+        mcqEl.innerHTML = `<div class="notice">This question has no choices.</div>`;
+        return;
       }
 
-      function check(){
-        const raw = input.value ?? "";
-        const v = step.caseSensitive ? String(raw).trim() : norm(raw);
+      choices.forEach((choice, i) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "mcq-opt";
+        btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${choice}</span>`;
+        btn.addEventListener("click", () => {
+          const correctIndex = safeNum(step.correctIndex, -1);
+          const isCorrect = i === correctIndex;
 
-        if (!String(raw).trim()){
-          msg.textContent = "Type something first 💛";
-          return;
-        }
+          xp += isCorrect ? 10 : 6;
+          stepAnswers[idx] = { kind:"mcq", isCorrect, data:{ pickedIndex:i } };
 
-        const ok = corrects.size ? corrects.has(v) : false;
-        msg.textContent = ok ? "Nice — that works ✅" : "Good try 💛";
-        markStepDone({ type:"fill_blank", value:String(raw).trim() }, ok);
-        hintLine.textContent = ok ? "Nice work ✅" : "Good try 💛";
-      }
-
-      btn.addEventListener("click", check);
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") check();
+          hintLine.textContent = isCorrect ? "Nice work ✅" : "Good try 💛";
+          setProgressUI();
+        });
+        mcqEl.appendChild(btn);
       });
     }
 
-    function renderNumberLine(step){
-      // Expected step shape:
-      // { type:"number_line", prompt:"Move to 15", min:10, max:20, start:12, target:15, step:1 }
-      const min = Number.isFinite(+step.min) ? +step.min : 0;
-      const max = Number.isFinite(+step.max) ? +step.max : (min + 10);
-      const inc = Number.isFinite(+step.step) ? +step.step : 1;
-      const target = Number.isFinite(+step.target) ? +step.target : min;
-      let pos = Number.isFinite(+step.start) ? +step.start : min;
+    function renderFillBlank(step){
+      // Supported shapes:
+      // A) { type:"fill_blank", prompt:"...", answer:"15" }
+      // B) { type:"fill_blank", text:"12 + 3 = ____", answers:["15"] }
+      const prompt = step.prompt || step.text || "Fill in the blank:";
+      const expected = (step.answer != null) ? [String(step.answer)]
+                     : (Array.isArray(step.answers) ? step.answers.map(String) : []);
 
-      pos = Math.max(min, Math.min(max, pos));
+      lessonTextEl.textContent = prompt;
 
       interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = `
-        <div class="widget">
-          <h4>Number line</h4>
-          <div class="prompt">${escapeHtml(step.prompt || `Move to ${target}.`)}</div>
+      interactiveMount.innerHTML = "";
 
-          <div class="numline">
-            <div class="ticks">
-              <span>${min}</span><span>${Math.round((min+max)/2)}</span><span>${max}</span>
-            </div>
+      const box = document.createElement("div");
+      box.className = "ibox";
 
-            <div class="lineRow">
-              <button id="nlMinus" class="lineBtn" type="button">−</button>
-              <div class="lineTrack"><div id="nlFill" class="lineFill"></div></div>
-              <button id="nlPlus" class="lineBtn" type="button">+</button>
-            </div>
+      const line = document.createElement("div");
+      line.className = "blankLine";
+      line.textContent = step.sentence || step.line || step.example || "";
 
-            <div class="lineBubble">
-              <span>You're on:</span>
-              <span id="nlPos">${pos}</span>
-              <span style="color:var(--muted); font-weight:950;">•</span>
-              <span>Target:</span>
-              <span>${target}</span>
-              <button id="nlCheck" class="pill primary" type="button" style="margin-left:auto;">✅ Check</button>
-            </div>
+      const input = document.createElement("input");
+      input.className = "blankInput";
+      input.type = "text";
+      input.inputMode = "text";
+      input.placeholder = "Type your answer…";
 
-            <div id="nlMsg" class="tiny"></div>
-          </div>
-        </div>
-      `;
+      const tip = document.createElement("div");
+      tip.className = "matchLine";
+      tip.textContent = "Tip: it’s okay to try. You can change your answer.";
 
-      const minus = document.getElementById("nlMinus");
-      const plus = document.getElementById("nlPlus");
-      const fill = document.getElementById("nlFill");
-      const posEl = document.getElementById("nlPos");
-      const checkBtn = document.getElementById("nlCheck");
-      const msg = document.getElementById("nlMsg");
+      const checkBtn = document.createElement("button");
+      checkBtn.className = "pill primary";
+      checkBtn.type = "button";
+      checkBtn.textContent = "✅ Check";
 
-      const prev = stepAnswers[idx];
-      if (prev?.type === "number_line" && Number.isFinite(+prev.pos)){
-        pos = Math.max(min, Math.min(max, +prev.pos));
-      }
+      checkBtn.addEventListener("click", () => {
+        const val = String(input.value || "").trim();
+        if (!val){
+          hintLine.textContent = "Type an answer first 💛";
+          return;
+        }
 
-      function update(){
-        posEl.textContent = String(pos);
-        const pct = (max === min) ? 0 : ((pos - min) / (max - min)) * 100;
-        fill.style.width = Math.max(0, Math.min(100, pct)) + "%";
-        minus.disabled = (pos <= min);
-        plus.disabled = (pos >= max);
-      }
+        let isCorrect = null;
+        if (expected.length){
+          isCorrect = expected.some(a => norm(a) === norm(val));
+        } else if (step.correct != null) {
+          isCorrect = !!step.correct; // not ideal but supports weird payloads
+        } else {
+          // If worker didn’t supply answers, accept any and score as effort
+          isCorrect = true;
+          showWarn("This step didn’t include an answer key, so we’re treating it as practice.");
+        }
 
-      function check(){
-        const ok = pos === target;
-        msg.textContent = ok ? "Nice — you landed on the target ✅" : "Not quite — try moving a little more 💛";
-        markStepDone({ type:"number_line", pos }, ok);
-        hintLine.textContent = ok ? "Nice work ✅" : "Good try 💛";
-      }
+        xp += isCorrect ? 10 : 6;
+        stepAnswers[idx] = { kind:"fill_blank", isCorrect, data:{ value: val, expected } };
 
-      minus.addEventListener("click", () => { pos = Math.max(min, pos - inc); update(); });
-      plus.addEventListener("click", () => { pos = Math.min(max, pos + inc); update(); });
-      checkBtn.addEventListener("click", check);
+        hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
+        setProgressUI();
+      });
 
-      update();
+      box.appendChild(line);
+      box.appendChild(input);
+      box.appendChild(checkBtn);
+      box.appendChild(tip);
+
+      interactiveMount.appendChild(box);
     }
 
     function renderMatchPairs(step){
-      // Expected step shape:
-      // { type:"match_pairs", prompt:"Match the pairs", pairs:[{left:"7+2", right:"9"}, ...] }
-      const pairs = Array.isArray(step.pairs) ? step.pairs : [];
-      const leftItems = pairs.map((p, i) => ({ i, text: String(p.left ?? "") }));
-      const rightItems = pairs.map((p, i) => ({ i, text: String(p.right ?? "") }));
+      // Supported shapes:
+      // A) { type:"match_pairs", prompt:"Match…", pairs:[{left:"12+3", right:"15"}, ...] }
+      // B) { type:"match_pairs", pairs:[["12+3","15"], ...] }
+      const prompt = step.prompt || "Match the pairs:";
+      lessonTextEl.textContent = prompt;
 
-      // shuffle rights for game feel
-      shuffleInPlace(rightItems);
+      let pairs = [];
+      if (Array.isArray(step.pairs)){
+        pairs = step.pairs.map(p => {
+          if (Array.isArray(p) && p.length >= 2) return { left:String(p[0]), right:String(p[1]) };
+          if (p && typeof p === "object") return { left:String(p.left), right:String(p.right) };
+          return null;
+        }).filter(Boolean);
+      }
 
-      let selectedLeft = null;
-      let selectedRight = null;
+      if (!pairs.length){
+        interactiveMount.style.display = "block";
+        interactiveMount.innerHTML = `<div class="notice">This match step has no pairs.</div>`;
+        return;
+      }
 
-      // track matches by left index -> right index
-      const matches = new Map();
-
-      const prev = stepAnswers[idx];
-      if (prev?.type === "match_pairs" && prev.matches && typeof prev.matches === "object"){
-        try{
-          Object.entries(prev.matches).forEach(([k, v]) => {
-            const li = Number(k);
-            const ri = Number(v);
-            if (Number.isFinite(li) && Number.isFinite(ri)) matches.set(li, ri);
-          });
-        }catch{}
+      // shuffle rights
+      const rights = pairs.map(p => p.right);
+      for (let i = rights.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [rights[i], rights[j]] = [rights[j], rights[i]];
       }
 
       interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = `
-        <div class="widget">
-          <h4>Match pairs</h4>
-          <div class="prompt">${escapeHtml(step.prompt || "Tap one from the left, then one from the right.")}</div>
+      interactiveMount.innerHTML = "";
 
-          <div class="pairs">
-            <div class="pairCol">
-              <h5>Left</h5>
-              <div id="leftList"></div>
-            </div>
+      const box = document.createElement("div");
+      box.className = "ibox";
 
-            <div class="pairCol">
-              <h5>Right</h5>
-              <div id="rightList"></div>
-            </div>
-          </div>
+      const grid = document.createElement("div");
+      grid.className = "pairsGrid";
 
-          <div id="mpMsg" class="pairSummary"></div>
-          <div class="inputRow" style="margin-top:10px;">
-            <button id="mpCheck" class="pill primary" type="button">✅ Check</button>
-            <button id="mpReset" class="pill" type="button">↩ Reset</button>
-          </div>
-        </div>
-      `;
+      const leftCol = document.createElement("div");
+      leftCol.className = "pairCol";
+      const rightCol = document.createElement("div");
+      rightCol.className = "pairCol";
 
-      const leftList = document.getElementById("leftList");
-      const rightList = document.getElementById("rightList");
-      const msg = document.getElementById("mpMsg");
-      const checkBtn = document.getElementById("mpCheck");
-      const resetBtn = document.getElementById("mpReset");
+      const usedLeft = new Set();
+      const usedRight = new Set();
+      let selectedLeft = null;
 
-      function renderLists(){
-        leftList.innerHTML = "";
-        rightList.innerHTML = "";
+      const matches = {}; // left -> right
+      function updateState(){
+        const done = Object.keys(matches).length === pairs.length;
+        if (done){
+          // check correctness
+          const map = new Map(pairs.map(p => [p.left, p.right]));
+          let correct = 0;
+          for (const l of Object.keys(matches)){
+            if (map.get(l) === matches[l]) correct++;
+          }
+          const isCorrect = correct === pairs.length;
+          xp += isCorrect ? 12 : 8;
+          stepAnswers[idx] = { kind:"match_pairs", isCorrect, data:{ matches, correct, total:pairs.length } };
+          hintLine.textContent = isCorrect ? "Perfect matching ✅" : "Nice effort 💛";
+          setProgressUI();
+        }
+      }
 
-        leftItems.forEach((it, idxL) => {
-          const isDone = matches.has(it.i);
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "pairItem" + (selectedLeft === it.i ? " selected" : "") + (isDone ? " done" : "");
-          btn.innerHTML = `<span class="pairDot">${idxL+1}</span><span>${escapeHtml(it.text)}</span>`;
-          btn.disabled = isDone;
-          btn.addEventListener("click", () => {
-            selectedLeft = it.i;
-            renderLists();
-          });
-          leftList.appendChild(btn);
+      // left buttons
+      pairs.forEach(p => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "pairBtn";
+        b.textContent = p.left;
+        b.addEventListener("click", () => {
+          if (usedLeft.has(p.left)) return;
+          // select this left
+          selectedLeft = p.left;
+          // re-render selection highlight
+          [...leftCol.querySelectorAll(".pairBtn")].forEach(x => x.classList.remove("selected"));
+          b.classList.add("selected");
+          hintLine.textContent = "Now tap the matching answer on the right.";
         });
+        leftCol.appendChild(b);
+      });
 
-        rightItems.forEach((it, idxR) => {
-          const isUsed = [...matches.values()].includes(it.i);
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "pairItem" + (selectedRight === it.i ? " selected" : "") + (isUsed ? " done" : "");
-          btn.innerHTML = `<span class="pairDot">${letters(idxR)}</span><span>${escapeHtml(it.text)}</span>`;
-          btn.disabled = isUsed;
-          btn.addEventListener("click", () => {
-            selectedRight = it.i;
-            renderLists();
+      // right buttons
+      rights.forEach(r => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "pairBtn";
+        b.textContent = r;
+        b.addEventListener("click", () => {
+          if (usedRight.has(r)) return;
+          if (!selectedLeft){
+            hintLine.textContent = "Tap something on the left first 💛";
+            return;
+          }
+          matches[selectedLeft] = r;
+          usedLeft.add(selectedLeft);
+          usedRight.add(r);
+
+          // mark left matched
+          [...leftCol.querySelectorAll(".pairBtn")].forEach(x => {
+            if (x.textContent === selectedLeft){
+              x.classList.remove("selected");
+              x.classList.add("matched");
+              x.textContent = `${selectedLeft}  →  ${r}`;
+            }
           });
-          rightList.appendChild(btn);
-        });
+          // mark right matched
+          b.classList.add("matched");
 
-        // if both selected, commit match
-        if (selectedLeft !== null && selectedRight !== null){
-          matches.set(selectedLeft, selectedRight);
           selectedLeft = null;
-          selectedRight = null;
-          renderLists();
-        }
-
-        const total = pairs.length;
-        const done = matches.size;
-        msg.textContent = total ? `Matched ${done} of ${total}.` : "No pairs provided.";
-      }
-
-      function check(){
-        const total = pairs.length;
-        if (!total){
-          msg.textContent = "No pairs to match.";
-          markStepDone({ type:"match_pairs", matches: {} }, null);
-          return;
-        }
-        if (matches.size < total){
-          msg.textContent = "Match them all first 💛";
-          hintLine.textContent = "Match them all first 💛";
-          return;
-        }
-
-        // score: correct if the matched right index equals the same pair index
-        let correct = 0;
-        pairs.forEach((p, i) => {
-          const ri = matches.get(i);
-          if (ri === i) correct += 1;
+          hintLine.textContent = "Nice. Keep going.";
+          updateState();
         });
+        rightCol.appendChild(b);
+      });
 
-        const score = correct / total;
-        const ok = score >= 0.75; // gentle threshold
-        msg.textContent = ok
-          ? "Nice — those matches look good ✅"
-          : "Good try 💛 Some pairs might be swapped.";
+      const tip = document.createElement("div");
+      tip.className = "matchLine";
+      tip.textContent = "Tap one on the left, then tap the matching one on the right.";
 
-        const out = {};
-        matches.forEach((v,k)=> out[String(k)] = v);
-        markStepDone({ type:"match_pairs", matches: out, correct, total }, ok);
-        hintLine.textContent = ok ? "Nice work ✅" : "Good try 💛";
+      grid.appendChild(leftCol);
+      grid.appendChild(rightCol);
+
+      box.appendChild(grid);
+      box.appendChild(tip);
+
+      interactiveMount.appendChild(box);
+    }
+
+    function renderNumberLine(step){
+      // Supported shapes:
+      // { type:"number_line", prompt:"Put the marker on 7", min:0, max:10, target:7 }
+      // If target missing, accept any as practice.
+      const prompt = step.prompt || "Move the marker on the number line:";
+      lessonTextEl.textContent = prompt;
+
+      const min = safeNum(step.min, 0);
+      const max = safeNum(step.max, 10);
+      const target = (step.target != null) ? safeNum(step.target, null) : null;
+
+      let value = safeNum(step.start, min);
+
+      interactiveMount.style.display = "block";
+      interactiveMount.innerHTML = "";
+
+      const box = document.createElement("div");
+      box.className = "ibox";
+
+      const lineWrap = document.createElement("div");
+      lineWrap.className = "lineWrap";
+
+      const nl = document.createElement("div");
+      nl.className = "numLine";
+
+      const track = document.createElement("div");
+      track.className = "numTrack";
+
+      const marker = document.createElement("div");
+      marker.className = "numMarker";
+      marker.textContent = value;
+
+      nl.appendChild(track);
+      nl.appendChild(marker);
+      lineWrap.appendChild(nl);
+
+      const labels = document.createElement("div");
+      labels.className = "numLabels";
+      labels.innerHTML = `<span>${min}</span><span>${max}</span>`;
+
+      const sliderRow = document.createElement("div");
+      sliderRow.className = "sliderRow";
+
+      const slider = document.createElement("input");
+      slider.className = "slider";
+      slider.type = "range";
+      slider.min = String(min);
+      slider.max = String(max);
+      slider.step = "1";
+      slider.value = String(value);
+
+      function setMarkerFromValue(v){
+        value = v;
+        marker.textContent = v;
+        slider.value = String(v);
+
+        // position marker
+        const leftPad = 14;
+        const rightPad = 14;
+        const w = nl.clientWidth - leftPad - rightPad;
+        const pct = (max === min) ? 0 : (v - min) / (max - min);
+        const x = leftPad + (w * pct);
+        marker.style.left = (x - (marker.offsetWidth/2)) + "px";
       }
 
-      function reset(){
-        matches.clear();
-        selectedLeft = null;
-        selectedRight = null;
-        renderLists();
-        msg.textContent = "Reset. Start again when you’re ready.";
-        stepReadyForNext = false;
+      // drag marker (touch + mouse)
+      let dragging = false;
+
+      function pointerToValue(clientX){
+        const rect = nl.getBoundingClientRect();
+        const leftPad = 14;
+        const rightPad = 14;
+        const x = Math.max(rect.left + leftPad, Math.min(clientX, rect.right - rightPad));
+        const pct = (x - (rect.left + leftPad)) / (rect.width - leftPad - rightPad);
+        const raw = min + pct * (max - min);
+        return Math.round(raw);
       }
 
-      checkBtn.addEventListener("click", check);
-      resetBtn.addEventListener("click", reset);
+      marker.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        marker.setPointerCapture(e.pointerId);
+        marker.style.cursor = "grabbing";
+      });
 
-      renderLists();
-      // If already answered, allow next
-      if (prev?.type === "match_pairs" && prev.matches){
-        stepReadyForNext = true;
-      }
+      marker.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        const v = pointerToValue(e.clientX);
+        setMarkerFromValue(v);
+      });
+
+      marker.addEventListener("pointerup", () => {
+        dragging = false;
+        marker.style.cursor = "grab";
+      });
+
+      slider.addEventListener("input", () => {
+        setMarkerFromValue(Number(slider.value));
+      });
+
+      const checkBtn = document.createElement("button");
+      checkBtn.className = "pill primary";
+      checkBtn.type = "button";
+      checkBtn.textContent = "✅ Check";
+
+      checkBtn.addEventListener("click", () => {
+        let isCorrect = true;
+        if (target != null) isCorrect = (value === target);
+
+        xp += isCorrect ? 10 : 6;
+        stepAnswers[idx] = { kind:"number_line", isCorrect, data:{ value, target, min, max } };
+
+        hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
+        setProgressUI();
+      });
+
+      const tip = document.createElement("div");
+      tip.className = "matchLine";
+      tip.textContent = "Drag the marker or use the slider.";
+
+      box.appendChild(lineWrap);
+      box.appendChild(labels);
+      box.appendChild(sliderRow);
+      box.appendChild(slider);
+      box.appendChild(checkBtn);
+      box.appendChild(tip);
+
+      interactiveMount.appendChild(box);
+
+      // ensure positioned after layout
+      setTimeout(() => setMarkerFromValue(value), 0);
+      window.addEventListener("resize", () => setMarkerFromValue(value));
     }
 
     function renderInteractiveDrag(step){
-      // Expected step shape:
-      // {
-      //   type:"interactive_drag",
-      //   prompt:"Drag each answer into the right box",
-      //   items:[{id:"a", text:"5"}, ...],
-      //   zones:[{id:"z1", label:"7+?=12", accept:["a"]}, ...]
-      // }
-      const items = Array.isArray(step.items) ? step.items.map(x => ({ id:String(x.id), text:String(x.text ?? "") })) : [];
-      const zones = Array.isArray(step.zones) ? step.zones.map(z => ({
-        id:String(z.id),
-        label:String(z.label ?? "Drop here"),
-        accept: Array.isArray(z.accept) ? z.accept.map(String) : []
-      })) : [];
+      // Supported shapes:
+      // { type:"interactive_drag", prompt:"Put each number in the right box", items:["2","7"], targets:[{label:"Even", accept:["2"]},{label:"Odd", accept:["7"]}] }
+      const prompt = step.prompt || "Drag the items into the boxes:";
+      lessonTextEl.textContent = prompt;
 
-      const prev = stepAnswers[idx];
-      // placements: zoneId -> itemId
-      const placements = new Map();
-      if (prev?.type === "interactive_drag" && prev.placements && typeof prev.placements === "object"){
-        try{
-          Object.entries(prev.placements).forEach(([z, it]) => placements.set(String(z), String(it)));
-        }catch{}
+      const items = Array.isArray(step.items) ? step.items.map(String) : [];
+      const targets = Array.isArray(step.targets) ? step.targets : [];
+
+      if (!items.length || !targets.length){
+        interactiveMount.style.display = "block";
+        interactiveMount.innerHTML = `<div class="notice">This drag step is missing items or targets.</div>`;
+        return;
+      }
+
+      // Map of targetLabel -> droppedItem
+      const placed = {};
+      const remaining = new Set(items);
+
+      function isAllPlaced(){
+        return Object.keys(placed).length === targets.length;
+      }
+
+      function computeCorrect(){
+        // If no accept rules, treat as practice
+        let hasRules = false;
+        let correct = 0;
+
+        targets.forEach(t => {
+          const label = String(t.label ?? "Box");
+          const accept = Array.isArray(t.accept) ? t.accept.map(String) : null;
+          if (accept && accept.length) hasRules = true;
+
+          const v = placed[label];
+          if (!v) return;
+          if (!accept || !accept.length) correct++;
+          else if (accept.includes(v)) correct++;
+        });
+
+        if (!hasRules) return { isCorrect:true, hasRules:false, correct, total: targets.length };
+        return { isCorrect: correct === targets.length, hasRules:true, correct, total: targets.length };
       }
 
       interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = `
-        <div class="widget">
-          <h4>Drag and drop</h4>
-          <div class="prompt">${escapeHtml(step.prompt || "Drag items into the boxes.")}</div>
+      interactiveMount.innerHTML = "";
 
-          <div class="dragWrap">
-            <div class="dragBank">
-              <h5>Drag these</h5>
-              <div id="dragItems"></div>
-              <div class="tiny">Tip: On mobile, you can tap an item, then tap a box.</div>
-            </div>
+      const box = document.createElement("div");
+      box.className = "ibox";
 
-            <div class="dropZones">
-              <h5>Drop into</h5>
-              <div id="zones"></div>
-            </div>
-          </div>
+      const grid = document.createElement("div");
+      grid.className = "dragGrid";
 
-          <div class="inputRow" style="margin-top:10px;">
-            <button id="dragCheck" class="pill primary" type="button">✅ Check</button>
-            <button id="dragReset" class="pill" type="button">↩ Reset</button>
-          </div>
+      const bank = document.createElement("div");
+      bank.className = "dragBank";
 
-          <div id="dragMsg" class="tiny"></div>
-        </div>
-      `;
+      const bankTitle = document.createElement("div");
+      bankTitle.className = "matchLine";
+      bankTitle.textContent = "Drag from here:";
+      bank.appendChild(bankTitle);
 
-      const dragItemsEl = document.getElementById("dragItems");
-      const zonesEl = document.getElementById("zones");
-      const checkBtn = document.getElementById("dragCheck");
-      const resetBtn = document.getElementById("dragReset");
-      const msg = document.getElementById("dragMsg");
+      const zonesWrap = document.createElement("div");
+      zonesWrap.className = "dropZoneWrap";
 
-      // Mobile-friendly fallback: tap item then tap zone
-      let tapSelectedItemId = null;
+      const zonesTitle = document.createElement("div");
+      zonesTitle.className = "matchLine";
+      zonesTitle.textContent = "Drop into the right box:";
+      zonesWrap.appendChild(zonesTitle);
 
-      function placedItemIds(){
-        return new Set([...placements.values()]);
+      function renderBank(){
+        // clear existing items except title
+        bank.querySelectorAll(".dragItem").forEach(n => n.remove());
+        items.forEach(it => {
+          if (!remaining.has(it)) return;
+          const d = document.createElement("div");
+          d.className = "dragItem";
+          d.textContent = it;
+          d.draggable = true;
+          d.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("text/plain", it);
+          });
+          bank.appendChild(d);
+        });
       }
 
-      function render(){
-        dragItemsEl.innerHTML = "";
-        zonesEl.innerHTML = "";
+      function createZone(t){
+        const label = String(t.label ?? "Box");
+        const z = document.createElement("div");
+        z.className = "dropZone";
+        z.dataset.label = label;
 
-        const used = placedItemIds();
+        const left = document.createElement("div");
+        left.className = "dzLabel";
+        left.textContent = label;
 
-        items.forEach(it => {
-          if (used.has(it.id)) return; // already placed
-          const pill = document.createElement("div");
-          pill.className = "dragItem";
-          pill.textContent = it.text;
-          pill.draggable = true;
+        const right = document.createElement("div");
+        right.className = "dzValue";
+        right.textContent = "Drop here";
 
-          pill.addEventListener("dragstart", (e) => {
-            e.dataTransfer.setData("text/plain", it.id);
-          });
+        z.appendChild(left);
+        z.appendChild(right);
 
-          pill.addEventListener("click", () => {
-            tapSelectedItemId = it.id;
-            msg.textContent = `Selected: ${it.text}. Now tap a box.`;
-          });
-
-          dragItemsEl.appendChild(pill);
+        z.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          z.classList.add("over");
         });
+        z.addEventListener("dragleave", () => z.classList.remove("over"));
+        z.addEventListener("drop", (e) => {
+          e.preventDefault();
+          z.classList.remove("over");
+          const it = e.dataTransfer.getData("text/plain");
+          if (!it || !remaining.has(it)) return;
 
-        zones.forEach(z => {
-          const zone = document.createElement("div");
-          zone.className = "dropZone";
-          zone.dataset.zone = z.id;
-
-          zone.innerHTML = `
-            <div class="dropTitle">${escapeHtml(z.label)}</div>
-            <div class="zoneBody"></div>
-          `;
-
-          const body = zone.querySelector(".zoneBody");
-          const placed = placements.get(z.id);
-          if (placed){
-            const it = items.find(x => x.id === placed);
-            const chip = document.createElement("div");
-            chip.className = "droppedPill";
-            chip.textContent = it ? it.text : placed;
-            chip.title = "Click to remove";
-            chip.addEventListener("click", () => {
-              placements.delete(z.id);
-              render();
-              msg.textContent = "Removed. You can try a different one.";
-              stepReadyForNext = false;
-            });
-            body.appendChild(chip);
-          } else {
-            body.innerHTML = `<span class="tiny" style="display:inline-block; margin-top:4px;">Drop here</span>`;
+          // if zone already had something, put it back
+          const current = placed[label];
+          if (current){
+            remaining.add(current);
           }
 
-          // Drag-over behavior
-          zone.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            zone.classList.add("zoneOver");
-          });
-          zone.addEventListener("dragleave", () => zone.classList.remove("zoneOver"));
-          zone.addEventListener("drop", (e) => {
-            e.preventDefault();
-            zone.classList.remove("zoneOver");
-            const itemId = e.dataTransfer.getData("text/plain");
-            if (!itemId) return;
-            placements.set(z.id, itemId);
-            render();
-            stepReadyForNext = false;
-          });
+          placed[label] = it;
+          remaining.delete(it);
+          right.textContent = it;
+          renderBank();
 
-          // Tap-to-place behavior
-          zone.addEventListener("click", () => {
-            if (!tapSelectedItemId) return;
-            placements.set(z.id, tapSelectedItemId);
-            tapSelectedItemId = null;
-            render();
-            msg.textContent = "Placed. You can select another item.";
-            stepReadyForNext = false;
-          });
-
-          zonesEl.appendChild(zone);
+          if (isAllPlaced()){
+            const res = computeCorrect();
+            xp += res.isCorrect ? 12 : 8;
+            stepAnswers[idx] = { kind:"interactive_drag", isCorrect: res.isCorrect, data:{ placed, ...res } };
+            hintLine.textContent = res.isCorrect ? "Nice sorting ✅" : "Good try 💛";
+            setProgressUI();
+          } else {
+            hintLine.textContent = "Nice. Keep going.";
+          }
         });
 
-        const total = zones.length;
-        const done = placements.size;
-        msg.textContent = msg.textContent || `Placed ${done} of ${total}.`;
+        return z;
       }
 
-      function check(){
-        if (!zones.length){
-          markStepDone({ type:"interactive_drag", placements: {} }, null);
-          msg.textContent = "No boxes were provided.";
+      targets.forEach(t => zonesWrap.appendChild(createZone(t)));
+
+      const tip = document.createElement("div");
+      tip.className = "matchLine";
+      tip.textContent = "If you want to change one, just drop a different item into the box.";
+
+      const checkBtn = document.createElement("button");
+      checkBtn.className = "pill primary";
+      checkBtn.type = "button";
+      checkBtn.textContent = "✅ Check";
+      checkBtn.addEventListener("click", () => {
+        if (!isAllPlaced()){
+          hintLine.textContent = "Fill all boxes first 💛";
           return;
         }
-        if (placements.size < zones.length){
-          msg.textContent = "Fill every box first 💛";
-          hintLine.textContent = "Fill every box first 💛";
-          return;
-        }
+        const res = computeCorrect();
+        xp += res.isCorrect ? 10 : 6;
+        stepAnswers[idx] = { kind:"interactive_drag", isCorrect: res.isCorrect, data:{ placed, ...res } };
+        hintLine.textContent = res.isCorrect ? "Nice ✅" : "Good try 💛";
+        setProgressUI();
+      });
 
-        let correct = 0;
-        zones.forEach(z => {
-          const placed = placements.get(z.id);
-          if (z.accept.includes(placed)) correct += 1;
-        });
+      renderBank();
 
-        const score = correct / zones.length;
-        const ok = score >= 0.75;
-        msg.textContent = ok ? "Nice — those look right ✅" : "Good try 💛 Some items might be in the wrong box.";
+      grid.appendChild(bank);
+      grid.appendChild(zonesWrap);
 
-        const out = {};
-        placements.forEach((v,k)=> out[k] = v);
-        markStepDone({ type:"interactive_drag", placements: out, correct, total: zones.length }, ok);
-        hintLine.textContent = ok ? "Nice work ✅" : "Good try 💛";
-      }
+      box.appendChild(grid);
+      box.appendChild(checkBtn);
+      box.appendChild(tip);
 
-      function reset(){
-        placements.clear();
-        tapSelectedItemId = null;
-        msg.textContent = "Reset. Start again when you’re ready.";
-        stepReadyForNext = false;
-        render();
-      }
-
-      checkBtn.addEventListener("click", check);
-      resetBtn.addEventListener("click", reset);
-
-      render();
-      if (prev?.type === "interactive_drag" && prev.placements){
-        stepReadyForNext = true;
-      }
+      interactiveMount.appendChild(box);
     }
 
-    // -------------------------
-    // RENDER
-    // -------------------------
+    function renderUnknown(step){
+      lessonTextEl.textContent = step.prompt || step.text || "This step type is not supported yet.";
+      interactiveMount.style.display = "block";
+      interactiveMount.innerHTML = `
+        <div class="notice">
+          <b>Unsupported step type:</b> ${String(step.type)}<br><br>
+          Ask the generator to only use types:
+          intro, teach, mcq, fill_blank, match_pairs, number_line, interactive_drag, finish
+        </div>
+      `;
+      // Treat as “seen” so they can move on
+      stepAnswers[idx] = { kind:"unknown", isCorrect:true, data:{} };
+    }
+
     function renderStep(){
       clearError();
+      clearWarn();
       hintLine.textContent = "";
       mcqEl.innerHTML = "";
       mcqEl.style.display = "none";
@@ -1282,85 +1303,51 @@
         return;
       }
 
-      // default: allow next for text steps
-      stepReadyForNext = (step.type === "intro" || step.type === "teach" || step.type === "finish");
+      // Always clear any pre-answer unless user already answered
+      if (stepAnswers[idx]){
+        // keep hint
+        hintLine.textContent = stepAnswers[idx].isCorrect ? "Nice ✅" : "Good try 💛";
+      }
 
-      // Text
-      if (step.type === "intro" || step.type === "teach" || step.type === "finish"){
-        lessonTextEl.textContent = step.text || "";
-        nextBtn.textContent = (step.type === "finish") ? "✅ Complete" : "➡️ Next";
-        if (step.type === "finish") hintLine.textContent = "Tap complete to finish this lesson.";
+      const type = String(step.type || "").trim();
+
+      if (type === "intro" || type === "teach" || type === "finish"){
+        renderTextStep(step);
         return;
       }
 
-      // MCQ
-      if (step.type === "mcq"){
-        lessonTextEl.textContent = step.prompt || "";
-        mcqEl.style.display = "grid";
-        const lettersArr = ["A","B","C","D","E","F"];
-        (step.choices || []).forEach((choice, i) => {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "mcq-opt";
-          btn.innerHTML = `<span class="mcq-letter">${lettersArr[i] || ""}</span><span class="mcq-text">${escapeHtml(choice)}</span>`;
-          btn.addEventListener("click", () => chooseMCQ(i));
-          mcqEl.appendChild(btn);
-        });
-
-        const saved = stepAnswers[idx];
-        if (saved && saved.type === "mcq"){
-          hintLine.textContent = saved.isCorrect ? "Nice — that was correct ✅" : "That one was tricky — keep going 💛";
-          stepReadyForNext = true;
-        } else {
-          stepReadyForNext = false;
-        }
+      if (type === "mcq"){
+        renderMCQ(step);
         nextBtn.textContent = "➡️ Next";
         return;
       }
 
-      // Interactive step types
-      lessonTextEl.textContent = step.prompt || "";
-
-      if (step.type === "fill_blank"){
+      if (type === "fill_blank"){
         renderFillBlank(step);
         nextBtn.textContent = "➡️ Next";
         return;
       }
 
-      if (step.type === "number_line"){
-        renderNumberLine(step);
-        nextBtn.textContent = "➡️ Next";
-        return;
-      }
-
-      if (step.type === "match_pairs"){
+      if (type === "match_pairs"){
         renderMatchPairs(step);
         nextBtn.textContent = "➡️ Next";
         return;
       }
 
-      if (step.type === "interactive_drag"){
+      if (type === "number_line"){
+        renderNumberLine(step);
+        nextBtn.textContent = "➡️ Next";
+        return;
+      }
+
+      if (type === "interactive_drag"){
         renderInteractiveDrag(step);
         nextBtn.textContent = "➡️ Next";
         return;
       }
 
-      lessonTextEl.textContent = "Unknown step type.";
-    }
-
-    function chooseMCQ(pickedIndex){
-      const step = steps[idx];
-      if (!step || step.type !== "mcq") return;
-
-      const correctIndex = Number(step.correctIndex);
-      const isCorrect = pickedIndex === correctIndex;
-
-      xp += isCorrect ? 10 : 6;
-      stepAnswers[idx] = { type:"mcq", pickedIndex, isCorrect };
-      stepReadyForNext = true;
-
-      hintLine.textContent = isCorrect ? "Nice work ✅" : "Good try 💛";
-      setProgressUI();
+      renderUnknown(step);
+      nextBtn.textContent = "➡️ Next";
     }
 
     async function completeLesson(){
@@ -1369,7 +1356,6 @@
         `Nice work, ${childName}.\n\nThat lesson is finished.\n\nNext time, you can do another short lesson.`;
       mcqEl.style.display = "none";
       clearInteractive();
-
       nextBtn.disabled = true;
       backBtn.disabled = true;
       hintLine.textContent = "You can go back to Lessons or Dashboard.";
@@ -1453,20 +1439,24 @@
 
     // Controls
     backBtn.addEventListener("click", () => {
-      if (idx > 0){ idx -= 1; renderStep(); }
+      if (idx > 0){
+        idx -= 1;
+        renderStep();
+      }
     });
 
     nextBtn.addEventListener("click", async () => {
       const step = steps[idx];
+      const type = String(step?.type || "");
 
-      // Require completion for MCQ + interactive types
-      const needsAnswer = ["mcq","fill_blank","match_pairs","number_line","interactive_drag"].includes(step?.type);
-      if (needsAnswer && !stepReadyForNext){
+      // gate interactive and mcq
+      const needsAnswer = ["mcq","fill_blank","match_pairs","number_line","interactive_drag"].includes(type);
+      if (needsAnswer && !stepIsAnswered(idx)){
         hintLine.textContent = "Do this step first 💛";
         return;
       }
 
-      if (step?.type === "finish"){
+      if (type === "finish"){
         await completeLesson();
         return;
       }
@@ -1485,7 +1475,7 @@
       alert(
         "How lessons work:\n\n" +
         "• Read the step\n" +
-        "• Do the activity (if shown)\n" +
+        "• Do the activity\n" +
         "• Press Next\n\n" +
         "No pressure. You can finish any time.\n\n" +
         "Tip: Read aloud plays only when you press the button."
@@ -1499,23 +1489,6 @@
       localStorage.removeItem("selectedChild");
       window.location.href = "/login.html";
     });
-
-    function escapeHtml(s){
-      return String(s ?? "")
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;")
-        .replace(/'/g,"&#039;");
-    }
-
-    function shuffleInPlace(arr){
-      for (let i = arr.length - 1; i > 0; i--){
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
-    }
 
     async function boot(){
       if (!sb){ showError("Supabase did not load."); return; }
@@ -1540,17 +1513,19 @@
       }
 
       clearError();
+      clearWarn();
       contextLine.textContent = `Loading a lesson for ${childName}…`;
 
+      // fetch generated lesson
       try{
         lesson = await fetchGeneratedLesson();
       }catch(e){
         console.error(e);
-        showError("Could not load a lesson right now.");
+        showError("Could not load a lesson: " + (e?.message || e));
         lessonTextEl.textContent =
           "We couldn’t load a lesson.\n\n" +
-          "Please try again in a moment.\n\n" +
-          "If this keeps happening, the lesson generator worker may be offline.";
+          "Try again in a moment.\n\n" +
+          "If it keeps failing, the generator worker may be rejecting the request.";
         nextBtn.disabled = true;
         backBtn.disabled = true;
         return;
@@ -1564,10 +1539,10 @@
         return;
       }
 
+      // reset runtime
       idx = 0;
       xp = 0;
       stepAnswers = {};
-      stepReadyForNext = false;
 
       const title = lesson.title ? ` — ${lesson.title}` : "";
       contextLine.textContent = `${SUBJECT} • ${AREA}${title}`;
@@ -1578,9 +1553,10 @@
 
     boot().catch(err => {
       console.error(err);
-      showError("Something went wrong loading the lesson.");
+      showError("Something went wrong: " + (err?.message || err));
     });
   })();
   </script>
 </body>
 </html>
+
