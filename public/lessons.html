@@ -176,6 +176,10 @@
       font-size: 13px;
       box-shadow: 0 10px 14px rgba(2,6,23,.06);
     }
+    .pill.primary{
+      background: var(--soft);
+      border-color: rgba(11,92,255,.18);
+    }
 
     /* Side panel */
     .side{ padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
@@ -213,6 +217,12 @@
     }
 
     .tiny{ color:var(--muted); font-size:13px; line-height:1.6; margin-top:10px; }
+
+    /* Mobile tweaks */
+    @media (max-width: 520px){
+      .controls{ gap:8px; }
+      .pill{ width:auto; }
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -253,7 +263,11 @@
 
           <div class="controls">
             <button id="backBtn" class="pill" type="button">⬅️ Back</button>
-            <button id="nextBtn" class="pill" type="button">➡️ Next</button>
+            <button id="nextBtn" class="pill primary" type="button">➡️ Next</button>
+
+            <!-- Helper-ready (not fully implemented yet) -->
+            <button id="hintBtn" class="pill" type="button" title="Gentle hint">💡 Hint</button>
+
             <span id="hintLine" class="tiny" style="margin-left:auto;"></span>
           </div>
         </div>
@@ -307,9 +321,11 @@
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Hardcode v1 subject/area so we can ship first lesson quickly
-    const SUBJECT = "Maths";
-    const AREA = "Addition";
+    // Allow subject/area to be driven by URL (future proof)
+    // Example: /lesson.html?subject=Maths&area=Addition
+    const qs = new URLSearchParams(location.search);
+    const SUBJECT = (qs.get("subject") || "Maths").trim();
+    const AREA = (qs.get("area") || "Addition").trim();
 
     // UI
     const pageError = document.getElementById("pageError");
@@ -317,8 +333,10 @@
     const lessonTextEl = document.getElementById("lessonText");
     const mcqEl = document.getElementById("mcq");
     const hintLine = document.getElementById("hintLine");
+
     const backBtn = document.getElementById("backBtn");
     const nextBtn = document.getElementById("nextBtn");
+    const hintBtn = document.getElementById("hintBtn");
     const finishBtn = document.getElementById("finishBtn");
     const helpBtn = document.getElementById("helpBtn");
     const logoutBtn = document.getElementById("logoutBtn");
@@ -343,12 +361,18 @@
     let targetDifficulty = 1;
 
     // Lesson runtime
-    let lesson = null;         // row from lessons_catalog
-    let steps = [];            // lesson.steps_json.steps
-    let idx = 0;
-    let attemptId = null;
-    let stepAnswers = {};      // stepIndex -> {pickedIndex,isCorrect}
+    let lesson = null;           // row from lessons_catalog
+    let steps = [];              // parsed steps list
+    let idx = 0;                 // current step index
     let xp = 0;
+
+    // lesson_progress
+    let progressRow = null;      // row in lesson_progress for this child+lesson
+    let completedIds = new Set(); // completed_step_ids
+    let attemptsByStep = {};     // json object
+
+    // For MCQ answers in current UI session (we also persist into attemptsByStep)
+    let localAnswers = {};       // stepId -> {pickedIndex,isCorrect}
 
     function computeAgeFromDob(dobStr){
       const d = new Date(dobStr);
@@ -408,8 +432,7 @@
     }
 
     async function loadOrCreateSkillRow(){
-      // Use your existing table: child_skill_progress
-      // subject/area must match
+      // Uses your existing table: child_skill_progress
       const { data: existing, error } = await sb
         .from("child_skill_progress")
         .select("*")
@@ -420,16 +443,13 @@
         .maybeSingle();
 
       if (error){
-        console.error(error);
-        // If table missing, lesson still can run, but adaptation won't.
+        console.warn("child_skill_progress load error", error);
       }
-
       if (existing?.id){
         skillRow = existing;
         return skillRow;
       }
 
-      // create baseline
       const payload = {
         owner_id: currentUser.id,
         child_id: child.id,
@@ -453,7 +473,7 @@
         .single();
 
       if (upErr){
-        console.error(upErr);
+        console.warn("child_skill_progress upsert error", upErr);
         return null;
       }
       skillRow = up;
@@ -461,70 +481,102 @@
     }
 
     function computeTargetDifficulty(){
-      // Uses level + confidence (calm & predictable)
       const level = Number(skillRow?.level || 1);
       const conf = (typeof skillRow?.confidence === "number") ? skillRow.confidence : 0.5;
 
+      // calm + predictable
       if (conf < 0.45) return Math.max(1, level - 1);
       if (conf > 0.70) return Math.min(10, level + 1);
       return level;
     }
 
+    function parseStepsFromLessonRow(row){
+      // Prefer new jsonb column "steps"
+      if (row?.steps && typeof row.steps === "object") return row.steps;
+
+      // Fall back to text column "steps_json" (stored as string in your DB)
+      if (row?.steps_json){
+        try {
+          if (typeof row.steps_json === "string") return JSON.parse(row.steps_json);
+          if (typeof row.steps_json === "object") return row.steps_json; // just in case
+        } catch {}
+      }
+      return null;
+    }
+
+    function ensureStepIds(stepsList){
+      // Future-proof: if any steps are missing an id, we generate stable-ish ones.
+      // (But best practice: always store step.id in the DB like we did.)
+      return (stepsList || []).map((s, i) => {
+        const id = (s && s.id) ? String(s.id) : `step_${i+1}`;
+        return { ...s, id };
+      });
+    }
+
     async function pickNextLesson(){
-      // 1) get all active lessons matching subject/area & age
-      const { data: lessons, error } = await sb
+      // Pull all active lessons that match subject/area and age band.
+      // Then skip anything completed in lesson_progress.
+      const { data: lessonRows, error } = await sb
         .from("lessons_catalog")
-        .select("id, subject, area, title, age_min, age_max, difficulty, steps_json")
+        .select("id, lesson_key, version, subject, area, title, age_min, age_max, difficulty, steps, steps_json, is_active")
         .eq("subject", SUBJECT)
         .eq("area", AREA)
         .eq("is_active", true);
 
       if (error) throw error;
-      if (!lessons?.length) return null;
+      if (!lessonRows?.length) return null;
 
-      // 2) filter by age band in JS (easier than complex SQL)
-      const ageFit = lessons.filter(l => childAge >= l.age_min && childAge <= l.age_max);
+      const ageFit = lessonRows.filter(l => Number(childAge) >= Number(l.age_min) && Number(childAge) <= Number(l.age_max));
       if (!ageFit.length) return null;
 
-      // 3) find lessons already attempted by this child
-      const { data: attempts, error: aErr } = await sb
-        .from("lesson_attempts")
-        .select("lesson_id")
+      const { data: prog, error: pErr } = await sb
+        .from("lesson_progress")
+        .select("lesson_id, is_complete")
         .eq("owner_id", currentUser.id)
         .eq("child_id", child.id);
 
-      if (aErr) throw aErr;
-      const doneSet = new Set((attempts || []).map(a => a.lesson_id));
+      if (pErr) throw pErr;
+      const doneSet = new Set((prog || []).filter(r => r.is_complete).map(r => r.lesson_id));
 
-      // 4) remove repeats
       const available = ageFit.filter(l => !doneSet.has(l.id));
       if (!available.length) return null;
 
-      // 5) pick closest to target difficulty
-      const target = targetDifficulty;
-      available.sort((a,b) => Math.abs(a.difficulty - target) - Math.abs(b.difficulty - target));
+      const target = targetDifficulty || 1;
+      available.sort((a,b) => Math.abs(Number(a.difficulty) - target) - Math.abs(Number(b.difficulty) - target));
 
       return available[0];
     }
 
-    async function startAttempt(lessonId){
-      // Insert attempt now so it can’t repeat
-      const { data, error } = await sb
-        .from("lesson_attempts")
-        .insert({
-          owner_id: currentUser.id,
-          child_id: child.id,
-          lesson_id: lessonId,
-          meta: { subject: SUBJECT, area: AREA, childAge, startedFrom: "lesson.html" }
-        })
-        .select("id")
+    async function loadOrCreateProgressRow(lessonId, firstStepId){
+      const { data: existing, error } = await sb
+        .from("lesson_progress")
+        .select("*")
+        .eq("owner_id", currentUser.id)
+        .eq("child_id", child.id)
+        .eq("lesson_id", lessonId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (existing?.id) return existing;
+
+      const payload = {
+        owner_id: currentUser.id,
+        child_id: child.id,
+        lesson_id: lessonId,
+        current_step_id: firstStepId || null,
+        is_complete: false,
+        completed_step_ids: [],
+        attempts_by_step: {}
+      };
+
+      const { data: created, error: cErr } = await sb
+        .from("lesson_progress")
+        .insert(payload)
+        .select("*")
         .single();
 
-      if (error){
-        // If it fails due to unique constraint, you tried to repeat - handled by re-pick
-        throw error;
-      }
-      return data.id;
+      if (cErr) throw cErr;
+      return created;
     }
 
     function setProgressUI(){
@@ -532,115 +584,216 @@
       stepKpi.textContent = `${Math.min(idx+1,total)} / ${total}`;
       topicKpi.textContent = `${SUBJECT} • ${AREA}`;
       practiceLine.textContent = `${SUBJECT} practice: ${AREA}`;
+
       const pct = total ? Math.round(((idx) / total) * 100) : 0;
       barFill.style.width = Math.min(100, Math.max(0, pct)) + "%";
+
       xpLine.textContent = `XP: ${xp}`;
+    }
+
+    function currentStep(){
+      return steps[idx] || null;
+    }
+
+    function findIndexByStepId(stepId){
+      if (!stepId) return 0;
+      const i = steps.findIndex(s => String(s.id) === String(stepId));
+      return i >= 0 ? i : 0;
     }
 
     function renderStep(){
       if (!steps.length){
         lessonTextEl.textContent = "No lesson steps found.";
         mcqEl.style.display = "none";
+        nextBtn.disabled = true;
+        backBtn.disabled = true;
         return;
       }
 
-      const step = steps[idx];
+      const step = currentStep();
       setProgressUI();
       hintLine.textContent = "";
-
-      // reset
       mcqEl.innerHTML = "";
       mcqEl.style.display = "none";
 
+      // Buttons default
+      nextBtn.disabled = false;
+      backBtn.disabled = (idx <= 0);
+
       if (!step){
         lessonTextEl.textContent = "Finished.";
+        nextBtn.disabled = true;
         return;
       }
 
+      // Intro/teach/finish
       if (step.type === "intro" || step.type === "teach" || step.type === "finish"){
         lessonTextEl.textContent = step.text || "";
-        if (step.type === "finish"){
-          nextBtn.textContent = "✅ Complete";
-          hintLine.textContent = "Tap complete to save your progress.";
+        nextBtn.textContent = (step.type === "finish") ? "✅ Complete" : "➡️ Next";
+
+        // Gentle note if step already completed
+        if (completedIds.has(step.id)){
+          hintLine.textContent = "Saved ✅";
         } else {
-          nextBtn.textContent = "➡️ Next";
+          hintLine.textContent = "";
         }
         return;
       }
 
+      // MCQ
       if (step.type === "mcq"){
         lessonTextEl.textContent = step.prompt || "";
         mcqEl.style.display = "grid";
+        nextBtn.textContent = "➡️ Next";
 
         const letters = ["A","B","C","D"];
         (step.choices || []).forEach((choice, i) => {
           const btn = document.createElement("button");
           btn.type = "button";
           btn.className = "mcq-opt";
-          btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${choice}</span>`;
+          btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${escapeHtml(choice)}</span>`;
           btn.addEventListener("click", async () => chooseMCQ(i));
           mcqEl.appendChild(btn);
         });
 
-        // If already answered, show it (optional)
-        const saved = stepAnswers[idx];
+        // If already answered, show status
+        const saved = localAnswers[step.id] || getSavedAnswerForStep(step.id);
         if (saved){
           hintLine.textContent = saved.isCorrect ? "Nice — that was correct ✅" : "That one was tricky — keep going 💛";
+        } else {
+          hintLine.textContent = "Tap an answer when you’re ready.";
         }
-
-        nextBtn.textContent = "➡️ Next";
         return;
       }
 
       lessonTextEl.textContent = "Unknown step type.";
     }
 
+    function escapeHtml(s){
+      return String(s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    }
+
+    function getSavedAnswerForStep(stepId){
+      const s = attemptsByStep?.[stepId];
+      if (!s) return null;
+      if (typeof s === "object" && s !== null && ("pickedIndex" in s)){
+        return { pickedIndex: s.pickedIndex, isCorrect: !!s.isCorrect };
+      }
+      return null;
+    }
+
+    async function persistProgressPatch(patch){
+      if (!progressRow?.id) return;
+
+      const { data, error } = await sb
+        .from("lesson_progress")
+        .update(patch)
+        .eq("id", progressRow.id)
+        .select("*")
+        .single();
+
+      if (error) throw error;
+      progressRow = data;
+
+      // refresh local mirrors
+      completedIds = new Set(Array.isArray(progressRow.completed_step_ids) ? progressRow.completed_step_ids : []);
+      attemptsByStep = (progressRow.attempts_by_step && typeof progressRow.attempts_by_step === "object") ? progressRow.attempts_by_step : {};
+    }
+
+    function computeLessonScore(){
+      const mcqSteps = steps.filter(s => s.type === "mcq");
+      if (!mcqSteps.length) return null;
+
+      let correct = 0;
+      let graded = 0;
+
+      mcqSteps.forEach(s => {
+        const ans = localAnswers[s.id] || getSavedAnswerForStep(s.id);
+        if (!ans) return;
+        graded += 1;
+        if (ans.isCorrect) correct += 1;
+      });
+
+      if (!graded) return null;
+      return correct / graded;
+    }
+
     async function chooseMCQ(pickedIndex){
-      const step = steps[idx];
+      const step = currentStep();
       if (!step || step.type !== "mcq") return;
 
       const correctIndex = Number(step.correctIndex);
       const isCorrect = pickedIndex === correctIndex;
 
-      // Award gentle XP
-      // (No big gamification; just a soft “effort” meter)
+      // Gentle XP (effort-first, not “points hunting”)
       xp += isCorrect ? 10 : 6;
 
-      stepAnswers[idx] = { pickedIndex, isCorrect };
+      localAnswers[step.id] = { pickedIndex, isCorrect };
+
+      // Save in attempts_by_step
+      attemptsByStep = attemptsByStep || {};
+      attemptsByStep[step.id] = {
+        pickedIndex,
+        isCorrect,
+        at: new Date().toISOString()
+      };
 
       hintLine.textContent = isCorrect ? "Nice work ✅" : "Good try 💛";
+      setProgressUI();
 
-      // Save step result (optional but useful)
+      // Persist immediately so they can resume later
       try{
-        await sb.from("lesson_step_results").insert({
-          attempt_id: attemptId,
-          step_index: idx,
-          is_correct: isCorrect,
-          response: { pickedIndex }
+        await persistProgressPatch({
+          attempts_by_step: attemptsByStep
         });
       }catch(e){
-        console.warn("step result insert failed", e);
+        console.warn("progress save failed", e);
+      }
+    }
+
+    async function markStepCompleted(stepId){
+      if (!stepId) return;
+
+      if (!completedIds.has(stepId)){
+        completedIds.add(stepId);
       }
 
-      setProgressUI();
+      const arr = Array.from(completedIds);
+
+      // Save current step pointer too (resume)
+      const nextStep = steps[idx+1] || null;
+      const nextId = nextStep ? nextStep.id : null;
+
+      await persistProgressPatch({
+        completed_step_ids: arr,
+        current_step_id: nextId
+      });
     }
 
     async function completeLesson(){
-      // Score = % correct on MCQ steps (ignore teach/intro/finish)
-      const mcqIndexes = steps.map((s,i) => s.type === "mcq" ? i : null).filter(v => v !== null);
-      const graded = mcqIndexes.length || 0;
-      let correct = 0;
-      mcqIndexes.forEach(i => { if (stepAnswers[i]?.isCorrect) correct += 1; });
+      // Mark as complete in lesson_progress and store a small summary in attempts_by_step._summary
+      const score = computeLessonScore();
+      attemptsByStep = attemptsByStep || {};
+      attemptsByStep._summary = {
+        completedAt: new Date().toISOString(),
+        score,
+        xp,
+        subject: SUBJECT,
+        area: AREA,
+        lessonId: lesson?.id,
+        lessonKey: lesson?.lesson_key || null,
+        version: lesson?.version || 1
+      };
 
-      const score = graded ? (correct / graded) : null;
+      await persistProgressPatch({
+        is_complete: true,
+        completed_at: new Date().toISOString(),
+        current_step_id: null,
+        attempts_by_step: attemptsByStep,
+        completed_step_ids: Array.from(completedIds)
+      });
 
-      // Mark attempt complete
-      await sb.from("lesson_attempts")
-        .update({ completed_at: new Date().toISOString(), score, meta: { ...((lesson?.meta)||{}), xp, correct, graded } })
-        .eq("id", attemptId);
-
-      // Update skill progress (confidence grows gently)
-      // We’ll treat the whole lesson as 1 attempt.
+      // Also update child_skill_progress (slow, calm movement)
       if (skillRow?.id && typeof score === "number"){
         const total_attempts = (skillRow.total_attempts || 0) + 1;
         const correct_attempts = (skillRow.correct_attempts || 0) + (score >= 0.7 ? 1 : 0);
@@ -648,7 +801,6 @@
 
         const oldConf = (typeof skillRow.confidence === "number") ? skillRow.confidence : 0.5;
 
-        // Calm confidence update (small steps only)
         let confDelta = 0;
         if (score >= 0.85) confDelta = +0.06;
         else if (score >= 0.70) confDelta = +0.04;
@@ -657,12 +809,11 @@
 
         const confidence = Math.max(0, Math.min(1, oldConf + confDelta));
 
-        // Level moves slowly
         let level = Number(skillRow.level || 1);
         if (total_attempts >= 6 && confidence > 0.70) level = Math.min(10, level + 1);
         if (total_attempts >= 6 && confidence < 0.35) level = Math.max(1, level - 1);
 
-        const { data: updated } = await sb
+        const { data: updated, error } = await sb
           .from("child_skill_progress")
           .update({
             total_attempts,
@@ -676,55 +827,122 @@
           .select("*")
           .single();
 
-        if (updated) skillRow = updated;
+        if (!error && updated) skillRow = updated;
       }
 
+      // Final UI
       contextLine.textContent = `Saved ✅ ${childName} finished "${lesson.title}".`;
       lessonTextEl.textContent =
-        `Nice work, ${childName}.\n\nThat lesson is saved.\n\nYou can do another lesson next time.`;
+        `Nice work, ${childName}.\n\nThat lesson is saved.\n\nNext time, Learnlio will choose a new lesson that fits you.`;
       mcqEl.style.display = "none";
       nextBtn.disabled = true;
       backBtn.disabled = true;
       hintLine.textContent = "You can go back to the dashboard.";
     }
 
-    // Navigation
-    backBtn.addEventListener("click", () => {
-      if (idx > 0){ idx -= 1; renderStep(); }
-    });
-
-    nextBtn.addEventListener("click", async () => {
-      const step = steps[idx];
-
-      // If MCQ step, require an answer before moving on
-      if (step?.type === "mcq" && !stepAnswers[idx]){
-        hintLine.textContent = "Tap an answer first 💛";
+    function showHint(){
+      const step = currentStep();
+      if (!step){
+        hintLine.textContent = "";
         return;
       }
 
-      // If finish step, complete
-      if (step?.type === "finish"){
+      // Helper-ready behaviour:
+      // - If MCQ: show one hint from step.hints
+      // - If teach/intro: show step.say if present (later we can read it out loud)
+      if (step.type === "mcq"){
+        const hints = Array.isArray(step.hints) ? step.hints : [];
+        if (!hints.length){
+          hintLine.textContent = "Try it one step at a time 💛";
+          return;
+        }
+
+        // rotate through hints per step
+        const key = `hintCount_${step.id}`;
+        const prev = Number(attemptsByStep?.[key] || 0);
+        const next = prev + 1;
+        attemptsByStep[key] = next;
+
+        const hint = hints[(next - 1) % hints.length];
+        hintLine.textContent = hint;
+        // Save hint usage (cheap + helpful for reports later)
+        persistProgressPatch({ attempts_by_step: attemptsByStep }).catch(()=>{});
+        return;
+      }
+
+      if (step.say){
+        hintLine.textContent = String(step.say);
+        return;
+      }
+
+      hintLine.textContent = "Take it slowly. You’re doing fine.";
+    }
+
+    // Navigation
+    backBtn.addEventListener("click", () => {
+      if (idx > 0){
+        idx -= 1;
+        renderStep();
+      }
+    });
+
+    nextBtn.addEventListener("click", async () => {
+      const step = currentStep();
+      if (!step) return;
+
+      // If MCQ step, require answer before moving on
+      if (step.type === "mcq"){
+        const ans = localAnswers[step.id] || getSavedAnswerForStep(step.id);
+        if (!ans){
+          hintLine.textContent = "Tap an answer first 💛";
+          return;
+        }
+      }
+
+      // Mark this step completed
+      try{
+        await markStepCompleted(step.id);
+      }catch(e){
+        console.warn("markStepCompleted failed", e);
+      }
+
+      // If finish step, complete lesson
+      if (step.type === "finish"){
         await completeLesson();
         return;
       }
 
+      // Move forward
       if (idx < steps.length - 1){
         idx += 1;
         renderStep();
       }
     });
 
-    finishBtn.addEventListener("click", async () => {
-      // Soft finish (if they end early, still save attempt but no score)
-      await sb.from("lesson_attempts")
-        .update({ completed_at: new Date().toISOString(), meta: { endedEarly: true, xp } })
-        .eq("id", attemptId);
+    hintBtn.addEventListener("click", () => showHint());
 
+    finishBtn.addEventListener("click", async () => {
+      // Soft finish: save current position and go back.
+      // (Do NOT mark complete)
+      try{
+        const step = currentStep();
+        await persistProgressPatch({
+          current_step_id: step?.id || null
+        });
+      }catch(e){
+        console.warn("save position failed", e);
+      }
       window.location.href = "/dash.html";
     });
 
     helpBtn.addEventListener("click", () => {
-      alert("How lessons work:\n\n• Read the step\n• Tap an answer (if shown)\n• Press Next\n\nNo pressure. You can finish any time.");
+      alert(
+        "How lessons work:\n\n" +
+        "• Read one step\n" +
+        "• Tap an answer when you see choices\n" +
+        "• Press Next\n\n" +
+        "No pressure.\nYou can stop any time and come back later."
+      );
     });
 
     logoutBtn.addEventListener("click", async () => {
@@ -748,37 +966,39 @@
       await loadOrCreateSkillRow();
       targetDifficulty = computeTargetDifficulty();
 
-      // Pick lesson
+      // Pick lesson (skip completed)
       lesson = await pickNextLesson();
       if (!lesson){
         contextLine.textContent = "No new lessons available.";
         lessonTextEl.textContent =
-          "You’ve done all the available lessons in this area for now.\n\nTry another area later.";
+          "You’ve done the available lessons in this area for now.\n\nTry another area later.";
         mcqEl.style.display = "none";
         nextBtn.disabled = true;
         backBtn.disabled = true;
+        hintBtn.disabled = true;
         return;
       }
 
-      // Start attempt (prevents repeats)
-      try{
-        attemptId = await startAttempt(lesson.id);
-      }catch(e){
-        console.warn("attempt insert failed", e);
-        // If already attempted, try to pick again once
-        lesson = await pickNextLesson();
-        if (!lesson){
-          showError("Could not start a new lesson. Try again.");
-          return;
-        }
-        attemptId = await startAttempt(lesson.id);
+      // Parse steps (steps jsonb preferred, fallback to steps_json string)
+      const obj = parseStepsFromLessonRow(lesson);
+      const list = Array.isArray(obj?.steps) ? obj.steps : [];
+      steps = ensureStepIds(list);
+
+      if (!steps.length){
+        showError("This lesson has no steps yet.");
+        return;
       }
 
-      // Load steps
-      steps = (lesson.steps_json && lesson.steps_json.steps) ? lesson.steps_json.steps : [];
-      idx = 0;
-      xp = 0;
-      stepAnswers = {};
+      // Load/create lesson_progress row so we can resume + prevent repeats
+      progressRow = await loadOrCreateProgressRow(lesson.id, steps[0]?.id || null);
+      completedIds = new Set(Array.isArray(progressRow.completed_step_ids) ? progressRow.completed_step_ids : []);
+      attemptsByStep = (progressRow.attempts_by_step && typeof progressRow.attempts_by_step === "object") ? progressRow.attempts_by_step : {};
+
+      // Resume from current_step_id if present
+      idx = findIndexByStepId(progressRow.current_step_id || steps[0]?.id);
+
+      // Restore XP if present in summary
+      xp = Number(attemptsByStep?._summary?.xp || 0);
 
       contextLine.textContent = `${SUBJECT} • ${AREA} — ${lesson.title}`;
       renderStep();
@@ -792,3 +1012,4 @@
   </script>
 </body>
 </html>
+
