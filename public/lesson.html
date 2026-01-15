@@ -336,10 +336,9 @@
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
 
-    // Lesson generation Worker (you provided)
-    const LESSON_GEN_URL = "https://learnlio-lessons.falling-grass-34ab.workers.dev/";
+    // ✅ FIXED: no trailing slash (so /generate works)
+    const LESSON_GEN_URL = "https://learnlio-lessons.falling-grass-34ab.workers.dev";
 
-    // Google TTS Worker (already working)
     const TTS_URL = "https://learnlio-tts.falling-grass-34ab.workers.dev/speak";
     // =========================
 
@@ -380,11 +379,10 @@
     let RESUME_ATTEMPT_ID = null;
 
     // Lesson runtime
-    let lesson = null;         // object returned by worker: { title, steps, ... }
+    let lesson = null;   // { title, steps, cached?, lesson_id? ... }
     let steps = [];
     let idx = 0;
-    let attemptId = null;      // optional
-    let stepAnswers = {};      // stepIndex -> {pickedIndex,isCorrect}
+    let stepAnswers = {};
     let xp = 0;
 
     // Audio
@@ -424,7 +422,7 @@
       const u = new URL(window.location.href);
       SUBJECT = u.searchParams.get("subject");
       AREA = u.searchParams.get("area");
-      RESUME_ATTEMPT_ID = u.searchParams.get("attempt");
+      RESUME_ATTEMPT_ID = u.searchParams.get("attempt"); // reserved for later
     }
 
     async function requireAuth(){
@@ -493,10 +491,6 @@
     // LESSON GEN (Worker)
     // -------------------------
     async function fetchGeneratedLesson(){
-      // We pass identity + child context so the worker can:
-      // - check generated_lessons cache
-      // - generate via OpenAI when needed
-      // - store lesson for reuse (and avoid repeats via fingerprint)
       const payload = {
         ownerId: currentUser.id,
         childId: child.id,
@@ -504,32 +498,42 @@
         age: childAge,
         subject: SUBJECT,
         area: AREA,
-        // Optional future: skill/confidence from child_skill_progress
-        // Optional: allow interactive step types
         wantInteractive: true,
         allowedTypes: ["intro","teach","mcq","fill_blank","match_pairs","number_line","interactive_drag","finish"]
       };
 
-      const r = await fetch(LESSON_GEN_URL, {
+      const r = await fetch(`${LESSON_GEN_URL}/generate`, {
         method: "POST",
         headers: { "Content-Type":"application/json" },
         body: JSON.stringify(payload)
       });
 
-      const text = await r.text().catch(()=> "");
-      let json = null;
-      try{ json = text ? JSON.parse(text) : null; }catch{}
+      const raw = await r.text().catch(()=> "");
+      let j = null;
+      try{ j = raw ? JSON.parse(raw) : null; }catch{}
 
       if (!r.ok){
-        const msg = json?.error || text || `Lesson generation failed (${r.status})`;
-        throw new Error(msg);
+        throw new Error(j?.error || raw || `Lesson generation failed (${r.status})`);
       }
 
-      if (!json?.steps || !Array.isArray(json.steps) || !json.steps.length){
+      // Worker might return {ok:true, lesson:{...}} OR {title,steps}
+      const lessonObj = j?.lesson || j;
+
+      const gotSteps = Array.isArray(lessonObj?.steps) ? lessonObj.steps
+                     : Array.isArray(lessonObj?.steps_json?.steps) ? lessonObj.steps_json.steps
+                     : null;
+
+      if (!gotSteps || !gotSteps.length){
         throw new Error("Lesson worker returned no steps.");
       }
 
-      return json; // expected: { title, steps, lesson_id?, cached? ... }
+      // Normalise output
+      return {
+        title: lessonObj.title || lessonObj.name || "Lesson",
+        steps: gotSteps,
+        cached: Boolean(j?.cached || lessonObj?.cached),
+        lesson_id: lessonObj.lesson_id || j?.lesson_id || null
+      };
     }
 
     // -------------------------
@@ -589,7 +593,7 @@
         return;
       }
 
-      // Interactive placeholders (UI components come next)
+      // Interactive placeholders (we’ll build these next)
       if (["fill_blank","match_pairs","number_line","interactive_drag"].includes(step.type)){
         lessonTextEl.textContent = step.prompt || "Interactive step.";
 
@@ -609,7 +613,7 @@
       lessonTextEl.textContent = "Unknown step type.";
     }
 
-    async function chooseMCQ(pickedIndex){
+    function chooseMCQ(pickedIndex){
       const step = steps[idx];
       if (!step || step.type !== "mcq") return;
 
@@ -785,7 +789,7 @@
       clearError();
       contextLine.textContent = `Loading a lesson for ${childName}…`;
 
-      // ✅ NEW: fetch generated lesson from Worker (cached or fresh)
+      // Fetch generated lesson from Worker (cached or fresh)
       try{
         lesson = await fetchGeneratedLesson();
       }catch(e){
@@ -814,6 +818,7 @@
 
       const title = lesson.title ? ` — ${lesson.title}` : "";
       contextLine.textContent = `${SUBJECT} • ${AREA}${title}`;
+
       nextBtn.disabled = false;
       backBtn.disabled = false;
       renderStep();
@@ -827,3 +832,4 @@
   </script>
 </body>
 </html>
+
