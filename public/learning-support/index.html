@@ -4,31 +4,33 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Learning Support — Learnlio</title>
-  <meta name="description" content="Parent-friendly learning support articles from Learnlio. Practical, calm, UK-focused guidance to help children build confidence in Maths and English." />
+  <meta name="description" content="Helpful, calm, parent-friendly guides for supporting children who struggle with learning — confidence, anxiety, and dyslexia-aware support." />
 
   <link rel="stylesheet" href="/assets/css/app.css" />
 
-  <!-- Minimal fallback styles (if app.css path breaks) -->
+  <!-- Minimal fallback styles (kept exactly the same formatting) -->
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
     .container { max-width: 980px; margin: 0 auto; padding: 18px; }
     .card { background:#fff; border-radius:16px; padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
-    .nav { background:#fff; border-bottom:1px solid #ececf4; position:sticky; top:0; z-index:50; }
+    .nav { background:#fff; border-bottom:1px solid #ececf4; position:sticky; top:0; z-index:10; }
     .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:800; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:700; }
     .brand img { height:34px; width:auto; display:block; }
     .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; font-weight:650; }
-    .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:750; text-decoration:none; display:inline-block; }
+    .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
+    .btn { background:#0b5cff; border:none; color:#fff; padding:12px 14px; border-radius:12px; cursor:pointer; font-size:15px; font-weight:700; text-decoration:none; display:inline-block; }
     .btn.light { background:#eef2ff; color:#0b5cff; }
-    .muted { color:#6b7280; font-size: 14px; line-height:1.6; }
-    .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
-    @media (min-width: 860px){ .grid { grid-template-columns: 1fr 1fr; } }
-    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; color:#0b5cff; font-weight:700; }
-    .article-link { display:block; padding:14px; border-radius:14px; border:1px solid #ececf4; text-decoration:none; color:#111; background:#fff; }
-    .article-link:hover { border-color:#dbe3ff; box-shadow:0 6px 18px rgba(11,92,255,.08); }
-    .title { font-weight:900; margin:0 0 6px; }
+    .muted { color:#6b7280; font-size: 14px; line-height:1.55; }
     .hr { height:1px; background:#ececf4; margin:14px 0; }
+
+    .grid { display:grid; grid-template-columns:1fr; gap:14px; }
+    @media (min-width: 860px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+    .article { border:1px solid #ececf4; border-radius:16px; padding:14px; background:#fff; }
+    .article a { text-decoration:none; color:#111; }
+    .article h2 { margin:0 0 6px; font-size:16px; }
+    .article p { margin:0; }
   </style>
 </head>
 
@@ -39,9 +41,7 @@
         <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
         <span>Learnlio</span>
       </a>
-
-      <!-- Standard public nav -->
-      <nav class="links" aria-label="Primary navigation">
+      <nav class="links">
         <a href="/">Home</a>
         <a href="/why-learnlio">Why Learnlio</a>
         <a href="/pricing">Pricing</a>
@@ -53,55 +53,59 @@
 
   <main class="container">
     <section class="card">
-      <div class="pill">Learning Support</div>
-      <h1 style="margin:10px 0 6px; font-size:26px;">Practical help for worried parents</h1>
-      <p class="muted" style="margin:0 0 14px;">
-        Calm, clear guidance for the moments school and learning feel hard. Written for UK parents. No judgement. Just useful next steps.
+      <h1 style="margin:0 0 6px; font-size:22px;">Learning Support</h1>
+      <p class="muted" style="margin:0;">
+        Calm, practical guides for parents — especially when learning feels hard, emotional, or stressful.
       </p>
 
       <div class="hr"></div>
 
-      <div class="grid" style="margin-top:14px;">
-        <!-- ✅ ONLY CHANGE: this slug -->
-        <a class="article-link" href="/learning-support/my-child-shuts-down-when-learning">
-          <div class="title">My child shuts down when learning — what helps?</div>
-          <div class="muted">What “shutting down” can look like, why it happens, and calm ways to help without pressure.</div>
-        </a>
+      <div class="grid">
+        <div class="article">
+          <a href="/learning-support/my-child-shuts-down-when-learning">
+            <h2>My child shuts down when learning — what helps?</h2>
+            <p class="muted">Why this happens, what to do in the moment, and how to rebuild confidence calmly.</p>
+          </a>
+        </div>
 
-        <a class="article-link" href="/learning-support/bright-child-but-struggling-at-school">
-          <div class="title">Bright child but struggling at school</div>
-          <div class="muted">How a child can be clever but still find learning hard — and what support usually helps.</div>
-        </a>
+        <div class="article">
+          <a href="/learning-support/bright-child-but-struggling-at-school">
+            <h2>Bright child but struggling at school</h2>
+            <p class="muted">Common reasons bright children struggle — and how to support them without pressure.</p>
+          </a>
+        </div>
 
-        <a class="article-link" href="/learning-support/is-tutoring-making-my-child-more-anxious">
-          <div class="title">Is tutoring making my child more anxious?</div>
-          <div class="muted">Signs tutoring is adding pressure, and how to reset it so confidence grows instead.</div>
-        </a>
+        <div class="article">
+          <a href="/learning-support/is-tutoring-making-my-child-more-anxious">
+            <h2>Is tutoring making my child more anxious?</h2>
+            <p class="muted">How to tell if tutoring is helping or harming — and what to change fast.</p>
+          </a>
+        </div>
 
-        <a class="article-link" href="/learning-support/how-to-help-a-child-learn-without-pressure">
-          <div class="title">How to help a child learn without pressure</div>
-          <div class="muted">Small changes at home that reduce stress and make progress more likely.</div>
-        </a>
+        <div class="article">
+          <a href="/learning-support/how-to-help-a-child-learn-without-pressure">
+            <h2>How to help a child learn without pressure</h2>
+            <p class="muted">Simple routines that reduce stress and improve learning outcomes over time.</p>
+          </a>
+        </div>
 
-        <a class="article-link" href="/learning-support/signs-a-child-has-lost-confidence-in-learning">
-          <div class="title">Signs a child has lost confidence in learning</div>
-          <div class="muted">What to look for, what to say, and how to rebuild confidence step by step.</div>
-        </a>
+        <div class="article">
+          <a href="/learning-support/signs-a-child-has-lost-confidence-in-learning">
+            <h2>Signs a child has lost confidence in learning</h2>
+            <p class="muted">Early warning signs, what not to say, and how to rebuild belief in small steps.</p>
+          </a>
+        </div>
       </div>
 
       <div class="hr"></div>
 
-      <!-- Bottom CTA only -->
-      <section style="padding:14px; border-radius:16px; background:#eef2ff; border:1px solid #dbe3ff;">
-        <h2 style="margin:0 0 6px; font-size:18px;">Want calmer learning at home?</h2>
+      <div style="background:#eef2ff; padding:16px; border-radius:16px;">
+        <h2 style="margin:0 0 6px; font-size:16px;">Want support that builds confidence first?</h2>
         <p class="muted" style="margin:0 0 12px;">
-          Start a free trial of Learnlio. Short, dyslexia-aware tutoring sessions that build confidence without pressure.
+          Learnlio gives calm, dyslexia-aware tutoring and clear parent reports — without pressure.
         </p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <a class="btn" href="/billing.html">Start free trial</a>
-          <a class="btn light" href="/why-learnlio">See how it works</a>
-        </div>
-      </section>
+        <a class="btn" href="/billing.html">Start free trial</a>
+      </div>
     </section>
   </main>
 </body>
