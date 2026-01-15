@@ -3,20 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Learnlio — Lesson</title>
+  <title>Learnlio — Lessons</title>
 
   <link rel="stylesheet" href="/assets/css/app.css" />
   <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
 
   <style>
     :root{
-      --bg1:#f6f7ff; --bg2:#f9fafb; --card:#fff; --ink:#0f172a; --muted:#64748b;
+      --bg1:#f6f7ff;
+      --bg2:#f9fafb;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
       --border:rgba(15, 23, 42, .10);
       --shadow: 0 20px 45px rgba(2, 6, 23, .10);
       --shadow2: 0 10px 25px rgba(2, 6, 23, .08);
-      --brand:#0b5cff; --brand2:#2f7bff;
-      --soft:#eef2ff; --ok:#10b981; --bad:#ef4444;
-      --radius:20px; --radius2:16px;
+      --brand:#0b5cff;
+      --brand2:#2f7bff;
+      --soft:#eef2ff;
+      --ok:#10b981;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --radius:20px;
+      --radius2:16px;
       --vh: 1vh;
     }
     *{ box-sizing:border-box; }
@@ -30,14 +39,20 @@
         linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-    @media (min-width: 981px){ body{ overflow:hidden; } }
 
+    /* Prevent whole-page scrolling on desktop – internal areas handle scroll */
+    @media (min-width: 981px){
+      body{ overflow:hidden; }
+    }
+
+    /* Logged-in nav (same as Tutor) */
     .nav{ background:#fff; border-bottom:1px solid rgba(15,23,42,.08); position:sticky; top:0; z-index:50; }
     .nav-inner{ max-width:1140px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-weight:900; letter-spacing:.2px; }
     .brand img{ height:34px; width:auto; display:block; }
     .links{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
     .links a{ text-decoration:none; color:var(--ink); padding:9px 10px; border-radius:12px; font-size:14px; }
+    .links a.active{ background:var(--soft); }
     .btn{ background:linear-gradient(180deg, var(--brand2), var(--brand)); border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:800; box-shadow: 0 10px 18px rgba(11,92,255,.22); }
     .btn.light{ background:#e5e7eb; color:#111; box-shadow:none; }
     .btn.ghost{ background:transparent; border:1px solid rgba(15,23,42,.12); color:var(--ink); box-shadow:none; }
@@ -50,7 +65,7 @@
       gap:14px;
       align-items:stretch;
       height: calc((var(--vh) * 100) - 78px - 36px);
-      min-height:0;
+      min-height: 0;
     }
     @media (max-width: 980px){
       body{ overflow:auto; }
@@ -81,90 +96,105 @@
       top: 0;
       z-index: 10;
     }
-    .title{ font-weight:950; letter-spacing:-.2px; font-size: 16px; display:flex; gap:8px; align-items:center; }
-    .subtitle{ color:var(--muted); font-size: 12.5px; line-height:1.4; margin-top:2px; }
+    .title-wrap{ display:flex; flex-direction:column; gap:2px; }
+    .title{
+      font-weight:950;
+      letter-spacing:-.2px;
+      font-size: 16px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .subtitle{
+      color:var(--muted);
+      font-size: 12.5px;
+      line-height:1.4;
+    }
     .status{ margin-top:6px; font-size:12.5px; }
     .status.bad{ color:var(--bad); font-weight:800; }
 
     .stage{
       padding:12px;
       flex: 1 1 auto;
+      min-height: 0;
       display:flex;
       flex-direction:column;
-      gap:10px;
-      min-height:0;
+      gap:12px;
       overflow:hidden;
     }
 
-    .cardbox{
-      flex:1 1 auto;
-      min-height:0;
+    .stack{
+      flex: 1 1 auto;
+      min-height: 0;
       overflow:auto;
       -webkit-overflow-scrolling: touch;
-      background: rgba(248,250,252,.88);
-      border: 1px solid rgba(15,23,42,.10);
-      border-radius: var(--radius2);
-      padding: 12px;
-      box-shadow: var(--shadow2);
       display:flex;
       flex-direction:column;
-      gap:10px;
+      gap:12px;
+      padding: 2px;
     }
 
-    .lessonText{
-      font-family:'OpenDyslexic', Arial, sans-serif;
-      font-size: clamp(15px, 1.2vw, 17px);
-      line-height: 1.75;
-      white-space: pre-wrap;
+    .card{
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(15,23,42,.10);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      padding: 14px;
     }
 
-    .mcq{
-      margin-top:10px;
+    .bigTileRow{
       display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
     }
-    .mcq-opt{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.12);
-      border-radius: 16px;
-      padding: 12px 12px;
+    @media (max-width: 720px){
+      .bigTileRow{ grid-template-columns: 1fr; }
+    }
+
+    .tile{
+      border-radius: var(--radius);
+      border:1px solid rgba(15,23,42,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.96));
+      box-shadow: 0 14px 26px rgba(2,6,23,.08);
+      padding: 16px;
       cursor:pointer;
       text-align:left;
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
       transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-      font-weight:900;
     }
-    .mcq-opt:hover{
+    .tile:hover{
       transform: translateY(-1px);
-      box-shadow: 0 14px 24px rgba(2,6,23,.10);
+      box-shadow: 0 18px 30px rgba(2,6,23,.10);
       border-color: rgba(11,92,255,.22);
     }
-    .mcq-letter{
-      width:28px; height:28px; border-radius: 10px;
-      background: var(--soft);
-      display:flex; align-items:center; justify-content:center;
-      border:1px solid rgba(15,23,42,.10);
-      flex:0 0 auto;
-    }
-    .mcq-text{ line-height:1.45; }
-
-    .controls{
+    .tileTop{
       display:flex;
-      gap:10px;
-      flex-wrap:wrap;
       align-items:center;
-      padding:12px;
-      border-top:1px solid rgba(15,23,42,.08);
-      background: rgba(255,255,255,.92);
-      position: sticky;
-      bottom: 0;
-      z-index: 10;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .tileIcon{
+      width:44px; height:44px;
+      border-radius: 16px;
+      background: var(--soft);
+      border:1px solid rgba(15,23,42,.10);
+      display:flex; align-items:center; justify-content:center;
+      font-size: 22px;
+      flex: 0 0 auto;
+    }
+    .tile h3{
+      margin:10px 0 6px;
+      font-size: 16px;
+      font-weight: 950;
+      letter-spacing:-.2px;
+    }
+    .tile p{
+      margin:0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
     }
 
+    .pillbar{ display:flex; gap:8px; flex-wrap:wrap; }
     .pill{
       padding: 10px 12px;
       border-radius: 999px;
@@ -181,25 +211,26 @@
       border-color: rgba(11,92,255,.18);
     }
 
+    .rowBetween{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .muted{ color: var(--muted); }
+
     /* Side panel */
     .side{ padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
-    .sideCard{
-      background: rgba(255,255,255,.92);
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow2);
-      padding: 12px;
+    .kpi{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      margin-top:8px;
     }
-    .sideCard h3{
-      margin:0 0 6px;
-      font-size: 13px;
-      letter-spacing:.2px;
-      color: var(--muted);
-      font-weight:950;
-      text-transform: uppercase;
-    }
-    .kpi{ display:flex; justify-content:space-between; gap:10px; align-items:baseline; margin-top:8px; }
-    .kpi strong{ font-size: 16px; font-weight:950; }
+    .kpi strong{ font-size: 16px; font-weight:950; color:var(--ink); }
     .kpi span{ font-size: 13px; color:var(--muted); font-weight:850; }
 
     .bar{
@@ -216,17 +247,25 @@
       border-radius: 999px;
     }
 
-    .tiny{ color:var(--muted); font-size:13px; line-height:1.6; margin-top:10px; }
-
-    /* Mobile tweaks */
-    @media (max-width: 520px){
-      .controls{ gap:8px; }
-      .pill{ width:auto; }
+    .miniInfo{
+      margin-top:8px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--muted);
     }
+
+    .divider{
+      height:1px;
+      background: rgba(15,23,42,.08);
+      margin: 10px 0;
+    }
+
+    .hide{ display:none !important; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
   <header class="nav">
     <div class="nav-inner">
@@ -236,143 +275,195 @@
       </a>
       <nav class="links">
         <a href="/dash.html">Dashboard</a>
-        <a href="/chat.html">Tutor</a>
-        <a class="btn light" id="logoutBtn" href="javascript:void(0)">Log out</a>
+        <a href="/chat.html">Learnlio Tutor</a>
+        <a href="/screener.html">Dyslexia Screener</a>
+        <a href="/reports.html">Reports</a>
+        <a href="/billing.html">Billing</a>
+        <button id="logoutBtn" class="btn light" type="button">Log out</button>
       </nav>
     </div>
   </header>
 
   <main class="container">
     <div class="shell">
-      <!-- Lesson -->
-      <section class="panel" aria-label="Learnlio Lesson">
+
+      <!-- Main -->
+      <section class="panel" aria-label="Lessons landing">
         <div class="panel-head">
-          <div>
-            <div class="title">📘 Lesson</div>
-            <div id="contextLine" class="subtitle">Loading your lesson…</div>
+          <div class="title-wrap">
+            <div class="title">📘 Lessons</div>
+            <div id="contextLine" class="subtitle">Loading…</div>
             <div id="pageError" class="status bad" style="display:none;"></div>
           </div>
           <button id="helpBtn" class="btn ghost" type="button">Help</button>
         </div>
 
         <div class="stage">
-          <div id="cardbox" class="cardbox">
-            <div id="lessonText" class="lessonText"></div>
-            <div id="mcq" class="mcq" style="display:none;"></div>
-          </div>
+          <div class="stack">
 
-          <div class="controls">
-            <button id="backBtn" class="pill" type="button">⬅️ Back</button>
-            <button id="nextBtn" class="pill primary" type="button">➡️ Next</button>
+            <!-- Continue card -->
+            <div id="continueCard" class="card hide">
+              <div class="rowBetween">
+                <div>
+                  <div style="font-weight:950; font-size:15px;">Continue last lesson</div>
+                  <div id="continueMeta" class="miniInfo">—</div>
+                </div>
+                <div class="pillbar">
+                  <button id="continueBtn" class="pill primary" type="button">▶ Continue</button>
+                </div>
+              </div>
+            </div>
 
-            <!-- Helper-ready (not fully implemented yet) -->
-            <button id="hintBtn" class="pill" type="button" title="Gentle hint">💡 Hint</button>
+            <!-- Choose subject -->
+            <div id="subjectCard" class="card">
+              <div style="font-weight:950; font-size:15px;">Choose a subject</div>
+              <div class="miniInfo">Short, calm lessons. One step at a time.</div>
 
-            <span id="hintLine" class="tiny" style="margin-left:auto;"></span>
+              <div class="bigTileRow" style="margin-top:12px;">
+                <button id="mathsTile" class="tile" type="button" aria-label="Maths lessons">
+                  <div class="tileTop">
+                    <div class="tileIcon">➕</div>
+                    <span class="muted" style="font-size:13px; font-weight:850;">Age-paced</span>
+                  </div>
+                  <h3>Maths</h3>
+                  <p>Addition, subtraction, multiplication and division — taught in small, calm steps.</p>
+                </button>
+
+                <button id="englishTile" class="tile" type="button" aria-label="English lessons">
+                  <div class="tileTop">
+                    <div class="tileIcon">📚</div>
+                    <span class="muted" style="font-size:13px; font-weight:850;">Confidence-first</span>
+                  </div>
+                  <h3>English</h3>
+                  <p>Reading, spelling, sentence building and word meaning — kept simple and supportive.</p>
+                </button>
+              </div>
+            </div>
+
+            <!-- Choose area -->
+            <div id="areaCard" class="card hide">
+              <div class="rowBetween">
+                <div>
+                  <div id="areaTitle" style="font-weight:950; font-size:15px;">Choose an area</div>
+                  <div id="areaHint" class="miniInfo">—</div>
+                </div>
+                <div class="pillbar">
+                  <button id="changeSubjectBtn" class="pill" type="button">↩ Change subject</button>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div id="areaButtons" class="pillbar" aria-label="Areas"></div>
+
+              <div class="miniInfo" style="margin-top:12px;">
+                Tip: Lessons won’t repeat — we’ll pick the next suitable one for your child.
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      <!-- Progress -->
-      <aside class="panel" aria-label="Lesson progress">
+      <!-- Side -->
+      <aside class="panel" aria-label="Selected child summary">
         <div class="panel-head">
-          <div>
-            <div class="title">✨ Your progress</div>
-            <div class="subtitle">Just steady effort. No pressure.</div>
+          <div class="title-wrap">
+            <div class="title">✨ Ready to learn</div>
+            <div class="subtitle">Calm sessions, paced by age.</div>
           </div>
         </div>
 
         <div class="side">
-          <div class="sideCard">
-            <h3>Lesson</h3>
+          <div class="card">
+            <div style="font-weight:950; font-size:15px;">Child</div>
             <div class="kpi">
-              <strong id="stepKpi">0 / 0</strong>
-              <span id="topicKpi">—</span>
+              <strong id="childNameKpi">—</strong>
+              <span id="childAgeKpi">—</span>
             </div>
-            <div class="bar"><div id="barFill"></div></div>
-            <div class="tiny" id="xpLine">XP: 0</div>
+            <div class="bar"><div id="readyBar"></div></div>
+            <div class="miniInfo">
+              We keep lessons short and manageable — especially for children who feel pressured or stuck.
+            </div>
           </div>
 
-          <div class="sideCard">
-            <h3>What we’re practising</h3>
-            <div class="tiny" id="practiceLine">—</div>
+          <div class="card">
+            <div style="font-weight:950; font-size:15px;">What happens next</div>
+            <div class="miniInfo">
+              1) Pick a subject<br>
+              2) Pick an area<br>
+              3) Start a short lesson
+            </div>
           </div>
 
-          <div class="sideCard">
-            <h3>Quick actions</h3>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button id="finishBtn" class="pill" type="button">✅ Finish</button>
-              <a class="pill" href="/dash.html" style="display:inline-flex; align-items:center;">🏠 Back to Dashboard</a>
+          <div class="card">
+            <div style="font-weight:950; font-size:15px;">Quick actions</div>
+            <div class="pillbar" style="margin-top:10px;">
+              <a class="pill" href="/dash.html" style="display:inline-flex; align-items:center;">🏠 Dashboard</a>
+              <a class="pill" href="/chat.html" style="display:inline-flex; align-items:center;">🎓 Tutor</a>
             </div>
           </div>
         </div>
       </aside>
+
     </div>
   </main>
 
   <script>
   (() => {
-    // iOS vh fix
-    function setVh(){ document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
-    setVh(); window.addEventListener('resize', setVh);
+    // --- Mobile viewport fix (iOS address bar) ---
+    function setVh(){
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    setVh();
+    window.addEventListener('resize', setVh);
 
-    // CONFIG (match your chat)
+    // =========================
+    // CONFIG
+    // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-    const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // =========================
 
-    // Allow subject/area to be driven by URL (future proof)
-    // Example: /lesson.html?subject=Maths&area=Addition
-    const qs = new URLSearchParams(location.search);
-    const SUBJECT = (qs.get("subject") || "Maths").trim();
-    const AREA = (qs.get("area") || "Addition").trim();
+    const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // UI
     const pageError = document.getElementById("pageError");
     const contextLine = document.getElementById("contextLine");
-    const lessonTextEl = document.getElementById("lessonText");
-    const mcqEl = document.getElementById("mcq");
-    const hintLine = document.getElementById("hintLine");
 
-    const backBtn = document.getElementById("backBtn");
-    const nextBtn = document.getElementById("nextBtn");
-    const hintBtn = document.getElementById("hintBtn");
-    const finishBtn = document.getElementById("finishBtn");
-    const helpBtn = document.getElementById("helpBtn");
+    const continueCard = document.getElementById("continueCard");
+    const continueMeta = document.getElementById("continueMeta");
+    const continueBtn = document.getElementById("continueBtn");
+
+    const subjectCard = document.getElementById("subjectCard");
+    const areaCard = document.getElementById("areaCard");
+    const areaTitle = document.getElementById("areaTitle");
+    const areaHint = document.getElementById("areaHint");
+    const areaButtons = document.getElementById("areaButtons");
+    const changeSubjectBtn = document.getElementById("changeSubjectBtn");
+
+    const mathsTile = document.getElementById("mathsTile");
+    const englishTile = document.getElementById("englishTile");
+
+    const childNameKpi = document.getElementById("childNameKpi");
+    const childAgeKpi = document.getElementById("childAgeKpi");
+    const readyBar = document.getElementById("readyBar");
+
     const logoutBtn = document.getElementById("logoutBtn");
+    const helpBtn = document.getElementById("helpBtn");
 
-    const stepKpi = document.getElementById("stepKpi");
-    const topicKpi = document.getElementById("topicKpi");
-    const barFill = document.getElementById("barFill");
-    const xpLine = document.getElementById("xpLine");
-    const practiceLine = document.getElementById("practiceLine");
+    function showError(msg){ pageError.style.display = "block"; pageError.textContent = msg; }
+    function clearError(){ pageError.style.display = "none"; pageError.textContent = ""; }
 
-    function showError(msg){ pageError.style.display="block"; pageError.textContent = msg; }
-    function clearError(){ pageError.style.display="none"; pageError.textContent = ""; }
-
-    // Child + auth
+    // Auth + child
     let currentUser = null;
     let child = null;
     let childName = "Child";
     let childAge = 10;
 
-    // Skill row (reuse your chat table)
-    let skillRow = null;
-    let targetDifficulty = 1;
-
-    // Lesson runtime
-    let lesson = null;           // row from lessons_catalog
-    let steps = [];              // parsed steps list
-    let idx = 0;                 // current step index
-    let xp = 0;
-
-    // lesson_progress
-    let progressRow = null;      // row in lesson_progress for this child+lesson
-    let completedIds = new Set(); // completed_step_ids
-    let attemptsByStep = {};     // json object
-
-    // For MCQ answers in current UI session (we also persist into attemptsByStep)
-    let localAnswers = {};       // stepId -> {pickedIndex,isCorrect}
+    // Selection
+    let selectedSubject = null;
 
     function computeAgeFromDob(dobStr){
       const d = new Date(dobStr);
@@ -382,6 +473,44 @@
       const m = now.getMonth() - d.getMonth();
       if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
       return Math.max(4, Math.min(18, age));
+    }
+
+    function getSelectedChildFromLocalStorage(){
+      try {
+        const raw = localStorage.getItem("selectedChild");
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch { return null; }
+    }
+
+    function lessonCtxKey(){
+      return child?.id ? `learnlio_lesson_ctx_${child.id}` : `learnlio_lesson_ctx`;
+    }
+
+    function saveLessonContext(subject, area){
+      try{
+        localStorage.setItem(lessonCtxKey(), JSON.stringify({
+          subject, area, at: new Date().toISOString()
+        }));
+      }catch{}
+    }
+
+    function goToLesson(subject, area, resumeAttemptId=null){
+      // Store context so lesson.html can also read it if needed
+      if (subject && area) saveLessonContext(subject, area);
+
+      const params = new URLSearchParams();
+      if (subject) params.set("subject", subject);
+      if (area) params.set("area", area);
+      if (resumeAttemptId) params.set("attempt", resumeAttemptId);
+
+      window.location.href = `/lesson.html?${params.toString()}`;
+    }
+
+    function setReadyBar(){
+      // purely cosmetic (calm “ready” bar)
+      const pct = Math.max(20, Math.min(90, Math.round((childAge / 14) * 100)));
+      readyBar.style.width = pct + "%";
     }
 
     async function requireAuth(){
@@ -394,18 +523,11 @@
       return true;
     }
 
-    function getSelectedChildFromLocalStorage(){
-      try {
-        const raw = localStorage.getItem("selectedChild");
-        if (!raw) return null;
-        return JSON.parse(raw);
-      } catch { return null; }
-    }
-
     async function loadChildProfile(){
       const selected = getSelectedChildFromLocalStorage();
       if (!selected?.id){
         showError("No child selected. Go to Dashboard and click Select on a child.");
+        contextLine.textContent = "Select a child on the Dashboard to begin.";
         return false;
       }
 
@@ -419,6 +541,7 @@
         showError("Could not load child profile. Please re-select the child on Dashboard.");
         return false;
       }
+
       if (data.parent_user_id !== currentUser.id){
         showError("This child profile does not belong to this account.");
         return false;
@@ -428,520 +551,109 @@
       childName = child.child_name || "Child";
       childAge = computeAgeFromDob(child.child_dob);
 
+      childNameKpi.textContent = childName;
+      childAgeKpi.textContent = `Age ${childAge}`;
+      setReadyBar();
+
+      contextLine.textContent = `Lessons for ${childName}. Choose a subject to start.`;
       return true;
     }
 
-    async function loadOrCreateSkillRow(){
-      // Uses your existing table: child_skill_progress
-      const { data: existing, error } = await sb
-        .from("child_skill_progress")
-        .select("*")
+    async function loadUnfinishedAttempt(){
+      // This assumes you have:
+      // lesson_attempts: id, owner_id, child_id, lesson_id, completed_at
+      // and lessons_catalog: id, subject, area, title
+      // If your schema differs, tell me your columns and I’ll adjust.
+
+      const { data: attempts, error } = await sb
+        .from("lesson_attempts")
+        .select("id, lesson_id, created_at, completed_at")
         .eq("owner_id", currentUser.id)
         .eq("child_id", child.id)
-        .eq("subject", SUBJECT)
-        .eq("area", AREA)
-        .maybeSingle();
+        .is("completed_at", null)
+        .order("created_at", { ascending:false })
+        .limit(1);
 
       if (error){
-        console.warn("child_skill_progress load error", error);
-      }
-      if (existing?.id){
-        skillRow = existing;
-        return skillRow;
-      }
-
-      const payload = {
-        owner_id: currentUser.id,
-        child_id: child.id,
-        subject: SUBJECT,
-        area: AREA,
-        level: 1,
-        confidence: 0.5,
-        accuracy: 0.0,
-        total_attempts: 0,
-        correct_attempts: 0,
-        streak_correct: 0,
-        streak_wrong: 0,
-        last_session_id: null,
-        last_seen_at: new Date().toISOString()
-      };
-
-      const { data: up, error: upErr } = await sb
-        .from("child_skill_progress")
-        .upsert(payload, { onConflict: "owner_id,child_id,subject,area" })
-        .select("*")
-        .single();
-
-      if (upErr){
-        console.warn("child_skill_progress upsert error", upErr);
+        console.warn("unfinished attempt load failed", error);
         return null;
       }
-      skillRow = up;
-      return skillRow;
-    }
+      const attempt = (attempts || [])[0];
+      if (!attempt) return null;
 
-    function computeTargetDifficulty(){
-      const level = Number(skillRow?.level || 1);
-      const conf = (typeof skillRow?.confidence === "number") ? skillRow.confidence : 0.5;
-
-      // calm + predictable
-      if (conf < 0.45) return Math.max(1, level - 1);
-      if (conf > 0.70) return Math.min(10, level + 1);
-      return level;
-    }
-
-    function parseStepsFromLessonRow(row){
-      // Prefer new jsonb column "steps"
-      if (row?.steps && typeof row.steps === "object") return row.steps;
-
-      // Fall back to text column "steps_json" (stored as string in your DB)
-      if (row?.steps_json){
-        try {
-          if (typeof row.steps_json === "string") return JSON.parse(row.steps_json);
-          if (typeof row.steps_json === "object") return row.steps_json; // just in case
-        } catch {}
-      }
-      return null;
-    }
-
-    function ensureStepIds(stepsList){
-      // Future-proof: if any steps are missing an id, we generate stable-ish ones.
-      // (But best practice: always store step.id in the DB like we did.)
-      return (stepsList || []).map((s, i) => {
-        const id = (s && s.id) ? String(s.id) : `step_${i+1}`;
-        return { ...s, id };
-      });
-    }
-
-    async function pickNextLesson(){
-      // Pull all active lessons that match subject/area and age band.
-      // Then skip anything completed in lesson_progress.
-      const { data: lessonRows, error } = await sb
+      const { data: lessonRow, error: lErr } = await sb
         .from("lessons_catalog")
-        .select("id, lesson_key, version, subject, area, title, age_min, age_max, difficulty, steps, steps_json, is_active")
-        .eq("subject", SUBJECT)
-        .eq("area", AREA)
-        .eq("is_active", true);
-
-      if (error) throw error;
-      if (!lessonRows?.length) return null;
-
-      const ageFit = lessonRows.filter(l => Number(childAge) >= Number(l.age_min) && Number(childAge) <= Number(l.age_max));
-      if (!ageFit.length) return null;
-
-      const { data: prog, error: pErr } = await sb
-        .from("lesson_progress")
-        .select("lesson_id, is_complete")
-        .eq("owner_id", currentUser.id)
-        .eq("child_id", child.id);
-
-      if (pErr) throw pErr;
-      const doneSet = new Set((prog || []).filter(r => r.is_complete).map(r => r.lesson_id));
-
-      const available = ageFit.filter(l => !doneSet.has(l.id));
-      if (!available.length) return null;
-
-      const target = targetDifficulty || 1;
-      available.sort((a,b) => Math.abs(Number(a.difficulty) - target) - Math.abs(Number(b.difficulty) - target));
-
-      return available[0];
-    }
-
-    async function loadOrCreateProgressRow(lessonId, firstStepId){
-      const { data: existing, error } = await sb
-        .from("lesson_progress")
-        .select("*")
-        .eq("owner_id", currentUser.id)
-        .eq("child_id", child.id)
-        .eq("lesson_id", lessonId)
+        .select("id, subject, area, title")
+        .eq("id", attempt.lesson_id)
         .maybeSingle();
 
-      if (error) throw error;
-      if (existing?.id) return existing;
-
-      const payload = {
-        owner_id: currentUser.id,
-        child_id: child.id,
-        lesson_id: lessonId,
-        current_step_id: firstStepId || null,
-        is_complete: false,
-        completed_step_ids: [],
-        attempts_by_step: {}
-      };
-
-      const { data: created, error: cErr } = await sb
-        .from("lesson_progress")
-        .insert(payload)
-        .select("*")
-        .single();
-
-      if (cErr) throw cErr;
-      return created;
-    }
-
-    function setProgressUI(){
-      const total = steps.length || 0;
-      stepKpi.textContent = `${Math.min(idx+1,total)} / ${total}`;
-      topicKpi.textContent = `${SUBJECT} • ${AREA}`;
-      practiceLine.textContent = `${SUBJECT} practice: ${AREA}`;
-
-      const pct = total ? Math.round(((idx) / total) * 100) : 0;
-      barFill.style.width = Math.min(100, Math.max(0, pct)) + "%";
-
-      xpLine.textContent = `XP: ${xp}`;
-    }
-
-    function currentStep(){
-      return steps[idx] || null;
-    }
-
-    function findIndexByStepId(stepId){
-      if (!stepId) return 0;
-      const i = steps.findIndex(s => String(s.id) === String(stepId));
-      return i >= 0 ? i : 0;
-    }
-
-    function renderStep(){
-      if (!steps.length){
-        lessonTextEl.textContent = "No lesson steps found.";
-        mcqEl.style.display = "none";
-        nextBtn.disabled = true;
-        backBtn.disabled = true;
-        return;
+      if (lErr){
+        console.warn("lesson load failed", lErr);
+        return null;
       }
+      if (!lessonRow?.id) return null;
 
-      const step = currentStep();
-      setProgressUI();
-      hintLine.textContent = "";
-      mcqEl.innerHTML = "";
-      mcqEl.style.display = "none";
+      return { attemptId: attempt.id, lesson: lessonRow };
+    }
 
-      // Buttons default
-      nextBtn.disabled = false;
-      backBtn.disabled = (idx <= 0);
+    function showAreas(subject){
+      selectedSubject = subject;
 
-      if (!step){
-        lessonTextEl.textContent = "Finished.";
-        nextBtn.disabled = true;
-        return;
-      }
+      subjectCard.classList.add("hide");
+      areaCard.classList.remove("hide");
 
-      // Intro/teach/finish
-      if (step.type === "intro" || step.type === "teach" || step.type === "finish"){
-        lessonTextEl.textContent = step.text || "";
-        nextBtn.textContent = (step.type === "finish") ? "✅ Complete" : "➡️ Next";
+      areaTitle.textContent = subject === "Maths" ? "Choose a Maths area" : "Choose an English area";
+      areaHint.textContent = `We’ll pick a suitable lesson for ${childName} and avoid repeats.`;
 
-        // Gentle note if step already completed
-        if (completedIds.has(step.id)){
-          hintLine.textContent = "Saved ✅";
-        } else {
-          hintLine.textContent = "";
-        }
-        return;
-      }
+      areaButtons.innerHTML = "";
 
-      // MCQ
-      if (step.type === "mcq"){
-        lessonTextEl.textContent = step.prompt || "";
-        mcqEl.style.display = "grid";
-        nextBtn.textContent = "➡️ Next";
+      const areas = (subject === "Maths")
+        ? [
+            { label:"Addition ➕", value:"Addition" },
+            { label:"Subtraction ➖", value:"Subtraction" },
+            { label:"Multiplication ✖️", value:"Multiplication" },
+            { label:"Division ➗", value:"Division" },
+          ]
+        : [
+            { label:"Reading 📖", value:"Reading" },
+            { label:"Spelling 📝", value:"Spelling" },
+            { label:"Sentence building ✍️", value:"Sentence building" },
+            { label:"Word games 🎲", value:"Word games" },
+          ];
 
-        const letters = ["A","B","C","D"];
-        (step.choices || []).forEach((choice, i) => {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "mcq-opt";
-          btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${escapeHtml(choice)}</span>`;
-          btn.addEventListener("click", async () => chooseMCQ(i));
-          mcqEl.appendChild(btn);
+      areas.forEach(a => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "pill primary";
+        btn.textContent = a.label;
+        btn.addEventListener("click", () => {
+          goToLesson(subject, a.value);
         });
-
-        // If already answered, show status
-        const saved = localAnswers[step.id] || getSavedAnswerForStep(step.id);
-        if (saved){
-          hintLine.textContent = saved.isCorrect ? "Nice — that was correct ✅" : "That one was tricky — keep going 💛";
-        } else {
-          hintLine.textContent = "Tap an answer when you’re ready.";
-        }
-        return;
-      }
-
-      lessonTextEl.textContent = "Unknown step type.";
-    }
-
-    function escapeHtml(s){
-      return String(s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-    }
-
-    function getSavedAnswerForStep(stepId){
-      const s = attemptsByStep?.[stepId];
-      if (!s) return null;
-      if (typeof s === "object" && s !== null && ("pickedIndex" in s)){
-        return { pickedIndex: s.pickedIndex, isCorrect: !!s.isCorrect };
-      }
-      return null;
-    }
-
-    async function persistProgressPatch(patch){
-      if (!progressRow?.id) return;
-
-      const { data, error } = await sb
-        .from("lesson_progress")
-        .update(patch)
-        .eq("id", progressRow.id)
-        .select("*")
-        .single();
-
-      if (error) throw error;
-      progressRow = data;
-
-      // refresh local mirrors
-      completedIds = new Set(Array.isArray(progressRow.completed_step_ids) ? progressRow.completed_step_ids : []);
-      attemptsByStep = (progressRow.attempts_by_step && typeof progressRow.attempts_by_step === "object") ? progressRow.attempts_by_step : {};
-    }
-
-    function computeLessonScore(){
-      const mcqSteps = steps.filter(s => s.type === "mcq");
-      if (!mcqSteps.length) return null;
-
-      let correct = 0;
-      let graded = 0;
-
-      mcqSteps.forEach(s => {
-        const ans = localAnswers[s.id] || getSavedAnswerForStep(s.id);
-        if (!ans) return;
-        graded += 1;
-        if (ans.isCorrect) correct += 1;
+        areaButtons.appendChild(btn);
       });
 
-      if (!graded) return null;
-      return correct / graded;
+      contextLine.textContent = `Great — choose an area for ${subject}.`;
     }
 
-    async function chooseMCQ(pickedIndex){
-      const step = currentStep();
-      if (!step || step.type !== "mcq") return;
-
-      const correctIndex = Number(step.correctIndex);
-      const isCorrect = pickedIndex === correctIndex;
-
-      // Gentle XP (effort-first, not “points hunting”)
-      xp += isCorrect ? 10 : 6;
-
-      localAnswers[step.id] = { pickedIndex, isCorrect };
-
-      // Save in attempts_by_step
-      attemptsByStep = attemptsByStep || {};
-      attemptsByStep[step.id] = {
-        pickedIndex,
-        isCorrect,
-        at: new Date().toISOString()
-      };
-
-      hintLine.textContent = isCorrect ? "Nice work ✅" : "Good try 💛";
-      setProgressUI();
-
-      // Persist immediately so they can resume later
-      try{
-        await persistProgressPatch({
-          attempts_by_step: attemptsByStep
-        });
-      }catch(e){
-        console.warn("progress save failed", e);
-      }
+    function backToSubjects(){
+      selectedSubject = null;
+      areaCard.classList.add("hide");
+      subjectCard.classList.remove("hide");
+      contextLine.textContent = `Lessons for ${childName}. Choose a subject to start.`;
     }
 
-    async function markStepCompleted(stepId){
-      if (!stepId) return;
-
-      if (!completedIds.has(stepId)){
-        completedIds.add(stepId);
-      }
-
-      const arr = Array.from(completedIds);
-
-      // Save current step pointer too (resume)
-      const nextStep = steps[idx+1] || null;
-      const nextId = nextStep ? nextStep.id : null;
-
-      await persistProgressPatch({
-        completed_step_ids: arr,
-        current_step_id: nextId
-      });
-    }
-
-    async function completeLesson(){
-      // Mark as complete in lesson_progress and store a small summary in attempts_by_step._summary
-      const score = computeLessonScore();
-      attemptsByStep = attemptsByStep || {};
-      attemptsByStep._summary = {
-        completedAt: new Date().toISOString(),
-        score,
-        xp,
-        subject: SUBJECT,
-        area: AREA,
-        lessonId: lesson?.id,
-        lessonKey: lesson?.lesson_key || null,
-        version: lesson?.version || 1
-      };
-
-      await persistProgressPatch({
-        is_complete: true,
-        completed_at: new Date().toISOString(),
-        current_step_id: null,
-        attempts_by_step: attemptsByStep,
-        completed_step_ids: Array.from(completedIds)
-      });
-
-      // Also update child_skill_progress (slow, calm movement)
-      if (skillRow?.id && typeof score === "number"){
-        const total_attempts = (skillRow.total_attempts || 0) + 1;
-        const correct_attempts = (skillRow.correct_attempts || 0) + (score >= 0.7 ? 1 : 0);
-        const accuracy = total_attempts ? (correct_attempts / total_attempts) : 0.0;
-
-        const oldConf = (typeof skillRow.confidence === "number") ? skillRow.confidence : 0.5;
-
-        let confDelta = 0;
-        if (score >= 0.85) confDelta = +0.06;
-        else if (score >= 0.70) confDelta = +0.04;
-        else if (score >= 0.50) confDelta = +0.02;
-        else confDelta = -0.02;
-
-        const confidence = Math.max(0, Math.min(1, oldConf + confDelta));
-
-        let level = Number(skillRow.level || 1);
-        if (total_attempts >= 6 && confidence > 0.70) level = Math.min(10, level + 1);
-        if (total_attempts >= 6 && confidence < 0.35) level = Math.max(1, level - 1);
-
-        const { data: updated, error } = await sb
-          .from("child_skill_progress")
-          .update({
-            total_attempts,
-            correct_attempts,
-            accuracy,
-            confidence,
-            level,
-            last_seen_at: new Date().toISOString()
-          })
-          .eq("id", skillRow.id)
-          .select("*")
-          .single();
-
-        if (!error && updated) skillRow = updated;
-      }
-
-      // Final UI
-      contextLine.textContent = `Saved ✅ ${childName} finished "${lesson.title}".`;
-      lessonTextEl.textContent =
-        `Nice work, ${childName}.\n\nThat lesson is saved.\n\nNext time, Learnlio will choose a new lesson that fits you.`;
-      mcqEl.style.display = "none";
-      nextBtn.disabled = true;
-      backBtn.disabled = true;
-      hintLine.textContent = "You can go back to the dashboard.";
-    }
-
-    function showHint(){
-      const step = currentStep();
-      if (!step){
-        hintLine.textContent = "";
-        return;
-      }
-
-      // Helper-ready behaviour:
-      // - If MCQ: show one hint from step.hints
-      // - If teach/intro: show step.say if present (later we can read it out loud)
-      if (step.type === "mcq"){
-        const hints = Array.isArray(step.hints) ? step.hints : [];
-        if (!hints.length){
-          hintLine.textContent = "Try it one step at a time 💛";
-          return;
-        }
-
-        // rotate through hints per step
-        const key = `hintCount_${step.id}`;
-        const prev = Number(attemptsByStep?.[key] || 0);
-        const next = prev + 1;
-        attemptsByStep[key] = next;
-
-        const hint = hints[(next - 1) % hints.length];
-        hintLine.textContent = hint;
-        // Save hint usage (cheap + helpful for reports later)
-        persistProgressPatch({ attempts_by_step: attemptsByStep }).catch(()=>{});
-        return;
-      }
-
-      if (step.say){
-        hintLine.textContent = String(step.say);
-        return;
-      }
-
-      hintLine.textContent = "Take it slowly. You’re doing fine.";
-    }
-
-    // Navigation
-    backBtn.addEventListener("click", () => {
-      if (idx > 0){
-        idx -= 1;
-        renderStep();
-      }
-    });
-
-    nextBtn.addEventListener("click", async () => {
-      const step = currentStep();
-      if (!step) return;
-
-      // If MCQ step, require answer before moving on
-      if (step.type === "mcq"){
-        const ans = localAnswers[step.id] || getSavedAnswerForStep(step.id);
-        if (!ans){
-          hintLine.textContent = "Tap an answer first 💛";
-          return;
-        }
-      }
-
-      // Mark this step completed
-      try{
-        await markStepCompleted(step.id);
-      }catch(e){
-        console.warn("markStepCompleted failed", e);
-      }
-
-      // If finish step, complete lesson
-      if (step.type === "finish"){
-        await completeLesson();
-        return;
-      }
-
-      // Move forward
-      if (idx < steps.length - 1){
-        idx += 1;
-        renderStep();
-      }
-    });
-
-    hintBtn.addEventListener("click", () => showHint());
-
-    finishBtn.addEventListener("click", async () => {
-      // Soft finish: save current position and go back.
-      // (Do NOT mark complete)
-      try{
-        const step = currentStep();
-        await persistProgressPatch({
-          current_step_id: step?.id || null
-        });
-      }catch(e){
-        console.warn("save position failed", e);
-      }
-      window.location.href = "/dash.html";
-    });
+    // Events
+    mathsTile.addEventListener("click", () => showAreas("Maths"));
+    englishTile.addEventListener("click", () => showAreas("English"));
+    changeSubjectBtn.addEventListener("click", backToSubjects);
 
     helpBtn.addEventListener("click", () => {
       alert(
-        "How lessons work:\n\n" +
-        "• Read one step\n" +
-        "• Tap an answer when you see choices\n" +
-        "• Press Next\n\n" +
-        "No pressure.\nYou can stop any time and come back later."
+        "How Lessons work:\n\n" +
+        "1) Choose Maths or English\n" +
+        "2) Choose an area\n" +
+        "3) Start a short lesson\n\n" +
+        "Tip: If you left a lesson unfinished, you can continue it from the top card."
       );
     });
 
@@ -951,7 +663,8 @@
       window.location.href = "/login.html";
     });
 
-    async function boot(){
+    // Boot
+    (async () => {
       if (!sb){ showError("Supabase did not load."); return; }
 
       const ok = await requireAuth();
@@ -961,55 +674,29 @@
       if (!childOk) return;
 
       clearError();
-      contextLine.textContent = `Loading a lesson for ${childName}…`;
 
-      await loadOrCreateSkillRow();
-      targetDifficulty = computeTargetDifficulty();
+      // Continue last lesson if present
+      const unfinished = await loadUnfinishedAttempt();
+      if (unfinished){
+        continueCard.classList.remove("hide");
 
-      // Pick lesson (skip completed)
-      lesson = await pickNextLesson();
-      if (!lesson){
-        contextLine.textContent = "No new lessons available.";
-        lessonTextEl.textContent =
-          "You’ve done the available lessons in this area for now.\n\nTry another area later.";
-        mcqEl.style.display = "none";
-        nextBtn.disabled = true;
-        backBtn.disabled = true;
-        hintBtn.disabled = true;
-        return;
+        const { attemptId, lesson } = unfinished;
+        continueMeta.textContent = `${lesson.subject} • ${lesson.area} — ${lesson.title || "Lesson"}`;
+
+        continueBtn.onclick = () => {
+          // Resume attempt (lesson.html can read attempt id)
+          goToLesson(lesson.subject, lesson.area, attemptId);
+        };
+      } else {
+        continueCard.classList.add("hide");
       }
-
-      // Parse steps (steps jsonb preferred, fallback to steps_json string)
-      const obj = parseStepsFromLessonRow(lesson);
-      const list = Array.isArray(obj?.steps) ? obj.steps : [];
-      steps = ensureStepIds(list);
-
-      if (!steps.length){
-        showError("This lesson has no steps yet.");
-        return;
-      }
-
-      // Load/create lesson_progress row so we can resume + prevent repeats
-      progressRow = await loadOrCreateProgressRow(lesson.id, steps[0]?.id || null);
-      completedIds = new Set(Array.isArray(progressRow.completed_step_ids) ? progressRow.completed_step_ids : []);
-      attemptsByStep = (progressRow.attempts_by_step && typeof progressRow.attempts_by_step === "object") ? progressRow.attempts_by_step : {};
-
-      // Resume from current_step_id if present
-      idx = findIndexByStepId(progressRow.current_step_id || steps[0]?.id);
-
-      // Restore XP if present in summary
-      xp = Number(attemptsByStep?._summary?.xp || 0);
-
-      contextLine.textContent = `${SUBJECT} • ${AREA} — ${lesson.title}`;
-      renderStep();
-    }
-
-    boot().catch(err => {
+    })().catch(err => {
       console.error(err);
-      showError("Something went wrong loading the lesson.");
+      showError("Something went wrong loading Lessons.");
     });
   })();
   </script>
 </body>
 </html>
+
 
