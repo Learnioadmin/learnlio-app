@@ -390,7 +390,7 @@
       display:grid;
       grid-template-columns: 1fr;
       gap:8px;
-      margin-top:8px;
+      margin-top:10px;
     }
     .meta-row{
       display:flex;
@@ -411,6 +411,10 @@
       border-radius: 999px;
       font-weight:950;
       font-size: 13px;
+    }
+    .trophy{
+      background: rgba(245,158,11,.12);
+      border:1px solid rgba(245,158,11,.22);
     }
 
     /* Calculator */
@@ -525,14 +529,15 @@
       <aside class="panel" aria-label="Session progress">
         <div class="panel-head">
           <div class="title-wrap">
-            <div class="title">📈 Progress</div>
-            <div class="subtitle">Clear, simple progress while you work.</div>
+            <div class="title">✨ Your progress</div>
+            <div class="subtitle">Fun progress — no targets, no pressure.</div>
           </div>
         </div>
 
         <div class="side">
           <div class="card">
-            <h3>Session</h3>
+            <h3>Today</h3>
+
             <div class="kpi">
               <strong id="progressKpi">0 / 0</strong>
               <span id="badgeKpi">Badges: —</span>
@@ -540,11 +545,14 @@
             <div class="bar"><div id="progressBar"></div></div>
 
             <div class="meta">
-              <div class="meta-row"><span>Skill</span><b id="skillKpi">—</b></div>
-              <div class="meta-row"><span>Level</span><b id="levelKpi">—</b></div>
-              <div class="meta-row"><span>Accuracy</span><b id="accKpi">—</b></div>
+              <div class="meta-row"><span>We’re practising</span><b id="practiceKpi">—</b></div>
+              <div class="meta-row"><span>Your XP</span><b id="xpKpi">0 XP</b></div>
+              <div class="meta-row"><span>Next reward</span><b id="nextRewardKpi">—</b></div>
             </div>
 
+            <div class="bar" style="margin-top:12px;"><div id="xpBar"></div></div>
+
+            <div class="reward" id="rewardChips" style="display:none;"></div>
             <div class="reward" id="badgeChips" style="display:none;"></div>
           </div>
 
@@ -555,7 +563,7 @@
               <button id="finishBtn" class="pill" type="button">✅ Finish</button>
             </div>
             <div class="subtitle" style="margin-top:8px;">
-              Tip: choices are designed to feel easy and calm — no pressure.
+              Tip: You can tap choices. You can take your time. You’re doing great.
             </div>
           </div>
         </div>
@@ -610,11 +618,14 @@
     // Side KPIs
     const progressKpi = document.getElementById("progressKpi");
     const badgeKpi = document.getElementById("badgeKpi");
-    const skillKpi = document.getElementById("skillKpi");
-    const levelKpi = document.getElementById("levelKpi");
-    const accKpi = document.getElementById("accKpi");
+    const practiceKpi = document.getElementById("practiceKpi");
+    const xpKpi = document.getElementById("xpKpi");
+    const nextRewardKpi = document.getElementById("nextRewardKpi");
     const progressBar = document.getElementById("progressBar");
+    const xpBar = document.getElementById("xpBar");
+
     const badgeChips = document.getElementById("badgeChips");
+    const rewardChips = document.getElementById("rewardChips");
 
     const newSessionBtn = document.getElementById("newSessionBtn");
     const finishBtn = document.getElementById("finishBtn");
@@ -637,11 +648,25 @@
     let correctCount = 0;
     let badges = [];
 
-    // Skill progress
+    // Skill progress (kept for internal difficulty, but NOT shown to child)
     let skillRow = null;
     let difficultyLevel = 1;
     let streakCorrect = 0;
     let streakWrong = 0;
+
+    // XP (child-friendly progress)
+    let totalXp = 0;     // lifetime-ish (per child)
+    let sessionXp = 0;   // this session only
+    let unlockedRewards = []; // stored per child
+
+    // Reward tiers (easy to tweak later)
+    const REWARD_TIERS = [
+      { xp: 50,  icon: "🧩", label: "Puzzle piece" },
+      { xp: 120, icon: "🎨", label: "Colour badge" },
+      { xp: 220, icon: "🚀", label: "Rocket boost" },
+      { xp: 350, icon: "🏰", label: "Castle builder" },
+      { xp: 520, icon: "🐉", label: "Dragon friend" }
+    ];
 
     // Current task
     let currentQuestion = null;
@@ -676,6 +701,12 @@
     function cleanBotText(t){ return String(t || "").replace(/\*\*/g, ""); }
     function escapeHtml(s){
       return String(s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    }
+
+    function showRewardToast(title, body){
+      rewardToast.innerHTML = `<strong>${escapeHtml(title)}</strong>${escapeHtml(body || "")}`;
+      rewardToast.style.display = "block";
+      setTimeout(() => { rewardToast.style.display = "none"; }, 2600);
     }
 
     // Keep emojis in UI, but strip for speech
@@ -805,10 +836,91 @@
       updateJumpButton();
     }
 
-    function showRewardToast(title, body){
-      rewardToast.innerHTML = `<strong>${escapeHtml(title)}</strong>${escapeHtml(body || "")}`;
-      rewardToast.style.display = "block";
-      setTimeout(() => { rewardToast.style.display = "none"; }, 2600);
+    // ---------- XP helpers ----------
+    function xpKey(){ return child?.id ? `learnlio_xp_${child.id}` : "learnlio_xp"; }
+    function rewardsKey(){ return child?.id ? `learnlio_rewards_${child.id}` : "learnlio_rewards"; }
+
+    function loadXpAndRewards(){
+      try {
+        const raw = localStorage.getItem(xpKey());
+        totalXp = raw ? Number(raw) : 0;
+        if (!Number.isFinite(totalXp) || totalXp < 0) totalXp = 0;
+      } catch { totalXp = 0; }
+
+      try {
+        const rawR = localStorage.getItem(rewardsKey());
+        unlockedRewards = rawR ? JSON.parse(rawR) : [];
+        if (!Array.isArray(unlockedRewards)) unlockedRewards = [];
+      } catch { unlockedRewards = []; }
+    }
+
+    function saveXpAndRewards(){
+      try { localStorage.setItem(xpKey(), String(totalXp)); } catch {}
+      try { localStorage.setItem(rewardsKey(), JSON.stringify(unlockedRewards)); } catch {}
+    }
+
+    function nextRewardInfo(){
+      const next = REWARD_TIERS.find(t => t.xp > totalXp) || null;
+      if (!next) return { done:true, text:"All rewards unlocked 🎉", goalXp: totalXp, pct: 100 };
+      const remaining = next.xp - totalXp;
+      // progress within current tier segment
+      const prev = [...REWARD_TIERS].reverse().find(t => t.xp <= totalXp) || { xp: 0 };
+      const span = Math.max(1, next.xp - prev.xp);
+      const into = totalXp - prev.xp;
+      const pct = Math.max(0, Math.min(100, Math.round((into / span) * 100)));
+      return { done:false, text:`${next.icon} in ${remaining} XP`, goalXp: next.xp, pct };
+    }
+
+    function checkRewardUnlocks(){
+      const newlyUnlocked = [];
+      for (const tier of REWARD_TIERS){
+        const id = String(tier.xp);
+        const already = unlockedRewards.includes(id);
+        if (!already && totalXp >= tier.xp){
+          unlockedRewards.push(id);
+          newlyUnlocked.push(tier);
+        }
+      }
+      if (newlyUnlocked.length){
+        // show toast for the last unlocked tier (feels tidy)
+        const last = newlyUnlocked[newlyUnlocked.length - 1];
+        showRewardToast(`${last.icon} New reward!`, `You unlocked ${last.label}.`);
+        saveXpAndRewards();
+      }
+    }
+
+    function addXp(points, reasonText){
+      const p = Math.max(0, Number(points) || 0);
+      if (!p) return;
+      sessionXp += p;
+      totalXp += p;
+      saveXpAndRewards();
+      checkRewardUnlocks();
+      if (reasonText) showRewardToast(`+${p} XP`, reasonText);
+      updateProgressUI();
+    }
+
+    function friendlyPracticeLabel(){
+      if (!subject && !area) return "—";
+      if (subject && !area) return subject;
+      // child-friendly naming
+      if (subject === "Maths"){
+        const map = {
+          "Addition":"Adding",
+          "Subtraction":"Taking away",
+          "Multiplication":"Times tables",
+          "Division":"Sharing"
+        };
+        return map[area] ? `Maths • ${map[area]}` : `Maths • ${area}`;
+      }
+      // English
+      const mapE = {
+        "Reading":"Reading",
+        "Spelling":"Spelling",
+        "Sentence building":"Sentences",
+        "Word games":"Word games"
+      };
+      return mapE[area] ? `English • ${mapE[area]}` : `English • ${area}`;
     }
 
     function maybeAwardBadge(){
@@ -820,18 +932,37 @@
     function updateProgressUI(){
       progressKpi.textContent = `${questionsAnswered} / ${maxQuestions}`;
 
-      const lvl = skillRow?.level || difficultyLevel || 1;
-      const acc = (typeof skillRow?.accuracy === "number") ? Math.round(skillRow.accuracy * 100) : null;
-
-      skillKpi.textContent = subject && area ? `${subject} • ${area}` : "—";
-      levelKpi.textContent = subject && area ? `Level ${lvl}` : "—";
-      accKpi.textContent = (acc !== null) ? `${acc}%` : "—";
-
       badgeKpi.textContent = `Badges: ${badges.length ? badges.join(" ") : "—"}`;
 
       const pct = maxQuestions ? Math.min(100, Math.round((questionsAnswered / maxQuestions) * 100)) : 0;
       progressBar.style.width = pct + "%";
 
+      // child-friendly practice label
+      const practice = friendlyPracticeLabel();
+      practiceKpi.textContent = practice;
+
+      // XP
+      xpKpi.textContent = `${totalXp} XP`;
+      const next = nextRewardInfo();
+      nextRewardKpi.textContent = next.text;
+      xpBar.style.width = (next.done ? "100%" : `${next.pct}%`);
+
+      // Rewards chips (unlocked)
+      rewardChips.innerHTML = "";
+      const unlockedTierObjs = REWARD_TIERS.filter(t => unlockedRewards.includes(String(t.xp)));
+      if (unlockedTierObjs.length){
+        rewardChips.style.display = "flex";
+        unlockedTierObjs.slice(-6).forEach(t => {
+          const chip = document.createElement("div");
+          chip.className = "badge trophy";
+          chip.textContent = `${t.icon} ${t.label}`;
+          rewardChips.appendChild(chip);
+        });
+      } else {
+        rewardChips.style.display = "none";
+      }
+
+      // Session badges chips
       badgeChips.innerHTML = "";
       if (badges.length){
         badgeChips.style.display = "flex";
@@ -845,9 +976,10 @@
         badgeChips.style.display = "none";
       }
 
+      // Context line (friendly)
       if (!subject) contextLine.textContent = "Pick a subject to start.";
-      else if (!area) contextLine.textContent = `Great — choose an area for ${subject}.`;
-      else contextLine.textContent = `Working on ${subject} • ${area}. Calm, steady progress.`;
+      else if (!area) contextLine.textContent = `Nice! Choose what you want to practise in ${subject}.`;
+      else contextLine.textContent = `We’re practising ${friendlyPracticeLabel()}. Nice and steady.`;
     }
 
     function computeAgeFromDob(dobStr){
@@ -874,6 +1006,7 @@
       questionsAnswered = 0;
       correctCount = 0;
       badges = [];
+      sessionXp = 0; // session XP resets, lifetime stays
       updateProgressUI();
     }
 
@@ -954,6 +1087,7 @@
     }
 
     async function loadOrCreateSkillRow(){
+      // We keep this so difficulty can adapt, but we do not show it on the child UI.
       if (!currentUser?.id || !child?.id || !subject || !area) return null;
 
       const { data: existing } = await sb
@@ -1327,6 +1461,9 @@ Short lines.
         streakCorrect = 0;
       }
 
+      // XP: always reward effort; extra for correct
+      addXp(isCorrect ? 10 : 4, isCorrect ? "Nice one!" : "Good effort — keep going!");
+
       maybeAwardBadge();
       updateProgressUI();
 
@@ -1479,6 +1616,7 @@ Short lines.
         return;
       }
 
+      // Maths
       if (!currentQuestion || currentQuestion.kind !== "math"){
         currentQuestion = generateMathQuestion();
         showMathQuestion(currentQuestion);
@@ -1507,6 +1645,9 @@ Short lines.
         streakWrong += 1;
         streakCorrect = 0;
       }
+
+      // XP: reward effort; extra for correct
+      addXp(correct ? 10 : 4, correct ? "Brilliant!" : "Good try — keep going!");
 
       maybeAwardBadge();
       updateProgressUI();
@@ -1598,6 +1739,9 @@ Short lines.
       childName = child.child_name || "Child";
       childAge = computeAgeFromDob(child.child_dob);
 
+      // Load XP + rewards for this child
+      loadXpAndRewards();
+
       clearError();
       disableInput(false);
 
@@ -1624,7 +1768,7 @@ Short lines.
     });
 
     helpBtn.addEventListener("click", () => {
-      addBotMessage("Quick help:\n\n• Pick a subject\n• Pick an area\n• Tap a choice (English) or type an answer (Maths)\n• Use Listen if you want it read out loud");
+      addBotMessage("Quick help:\n\n• Pick a subject\n• Pick an area\n• Tap a choice (English) or type an answer (Maths)\n• Use Listen if you want it read out loud\n\nYou earn XP for effort — just keep trying.");
     });
 
     mathsBtn.addEventListener("click", () => { addUserMessage("Maths"); selectSubject("Maths"); saveLastContext(); });
