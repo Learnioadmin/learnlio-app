@@ -11,193 +11,819 @@
   <style>
     :root{
       --bg1:#f6f7ff; --bg2:#f9fafb; --card:#fff; --ink:#0f172a; --muted:#64748b;
-      --border:rgba(15,23,42,.10); --shadow:0 20px 45px rgba(2,6,23,.10);
-      --shadow2:0 10px 25px rgba(2,6,23,.08);
-      --brand:#0b5cff; --soft:#eef2ff;
-      --radius:20px; --radius2:16px; --vh:1vh;
+      --border:rgba(15, 23, 42, .10);
+      --shadow: 0 20px 45px rgba(2, 6, 23, .10);
+      --shadow2: 0 10px 25px rgba(2, 6, 23, .08);
+      --brand:#0b5cff; --brand2:#2f7bff;
+      --soft:#eef2ff; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+      --radius:20px; --radius2:16px;
+      --vh: 1vh;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; }
     body{
       margin:0;
+      color:var(--ink);
       background:
         radial-gradient(1100px 650px at 10% 0%, rgba(47,123,255,.18), transparent 55%),
         radial-gradient(900px 600px at 90% 10%, rgba(16,185,129,.12), transparent 55%),
-        linear-gradient(180deg,var(--bg1),var(--bg2));
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--ink);
+        linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-    @media(min-width:981px){body{overflow:hidden}}
+    @media (min-width: 981px){ body{ overflow:hidden; } }
 
-    .nav{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
-    .nav-inner{max-width:1140px;margin:0 auto;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
-    .brand{display:flex;gap:10px;font-weight:900;text-decoration:none;color:inherit}
-    .brand img{height:34px}
-    .links a{padding:9px 10px;border-radius:12px;text-decoration:none;color:inherit}
-    .links a.active{background:var(--soft)}
-    .btn{padding:10px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:800}
-    .btn.ghost{background:transparent;border:1px solid var(--border)}
-    .btn.light{background:#e5e7eb}
+    /* Logged-in nav (same as Tutor) */
+    .nav{ background:#fff; border-bottom:1px solid rgba(15,23,42,.08); position:sticky; top:0; z-index:50; }
+    .nav-inner{ max-width:1140px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-weight:900; letter-spacing:.2px; }
+    .brand img{ height:34px; width:auto; display:block; }
+    .links{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+    .links a{ text-decoration:none; color:var(--ink); padding:9px 10px; border-radius:12px; font-size:14px; }
+    .links a.active{ background:var(--soft); }
+    .btn{ background:linear-gradient(180deg, var(--brand2), var(--brand)); border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:800; box-shadow: 0 10px 18px rgba(11,92,255,.22); }
+    .btn.light{ background:#e5e7eb; color:#111; box-shadow:none; }
+    .btn.ghost{ background:transparent; border:1px solid rgba(15,23,42,.12); color:var(--ink); box-shadow:none; }
 
-    .container{max-width:1140px;margin:0 auto;padding:16px}
-    .shell{display:grid;grid-template-columns:1fr 360px;gap:14px;height:calc(var(--vh)*100 - 78px - 36px)}
-    @media(max-width:980px){.shell{grid-template-columns:1fr;height:auto}}
+    .container{ max-width:1140px; margin:0 auto; padding:16px 16px 20px; }
 
-    .panel{background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:0}
-    .panel-head{padding:14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-    .stage{padding:12px;flex:1;display:flex;flex-direction:column;min-height:0}
-    .cardbox{flex:1;overflow:auto;background:#f8fafc;border-radius:var(--radius2);padding:12px}
+    .shell{
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:14px;
+      align-items:stretch;
+      height: calc((var(--vh) * 100) - 78px - 36px);
+      min-height:0;
+    }
+    @media (max-width: 980px){
+      body{ overflow:auto; }
+      .shell{ grid-template-columns: 1fr; height:auto; min-height: unset; }
+    }
 
-    .lessonText{font-family:'OpenDyslexic',Arial,sans-serif;font-size:16px;line-height:1.75;white-space:pre-wrap}
-    .mcq{display:grid;gap:10px;margin-top:12px}
-    .mcq button{padding:12px;border-radius:16px;border:1px solid var(--border);background:#fff;font-weight:800;text-align:left}
+    .panel{
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(15,23,42,.10);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
 
-    .controls{display:flex;gap:10px;align-items:center;padding:12px;border-top:1px solid var(--border)}
-    .pill{padding:10px 12px;border-radius:999px;border:1px solid var(--border);background:#fff;font-weight:800;cursor:pointer}
+    .panel-head{
+      padding:14px 14px 10px;
+      border-bottom:1px solid rgba(15,23,42,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.82));
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .title{ font-weight:950; letter-spacing:-.2px; font-size: 16px; display:flex; gap:8px; align-items:center; }
+    .subtitle{ color:var(--muted); font-size: 12.5px; line-height:1.4; margin-top:2px; }
+    .status{ margin-top:6px; font-size:12.5px; }
+    .status.bad{ color:var(--bad); font-weight:800; }
 
-    .side{padding:14px;display:flex;flex-direction:column;gap:12px}
-    .sideCard{background:#fff;border-radius:var(--radius);padding:12px;border:1px solid var(--border);box-shadow:var(--shadow2)}
+    .stage{
+      padding:12px;
+      flex: 1 1 auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:0;
+      overflow:hidden;
+    }
+
+    .cardbox{
+      flex:1 1 auto;
+      min-height:0;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      background: rgba(248,250,252,.88);
+      border: 1px solid rgba(15,23,42,.10);
+      border-radius: var(--radius2);
+      padding: 12px;
+      box-shadow: var(--shadow2);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .lessonText{
+      font-family:'OpenDyslexic', Arial, sans-serif;
+      font-size: clamp(15px, 1.2vw, 17px);
+      line-height: 1.75;
+      white-space: pre-wrap;
+    }
+
+    .mcq{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:4px;
+    }
+    .mcq-opt{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.12);
+      border-radius: 16px;
+      padding: 12px 12px;
+      cursor:pointer;
+      text-align:left;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      font-weight:900;
+    }
+    .mcq-opt:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 14px 24px rgba(2,6,23,.10);
+      border-color: rgba(11,92,255,.22);
+    }
+    .mcq-letter{
+      width:28px; height:28px; border-radius: 10px;
+      background: var(--soft);
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid rgba(15,23,42,.10);
+      flex:0 0 auto;
+      font-weight:950;
+    }
+    .mcq-text{ line-height:1.45; }
+
+    .notice{
+      border:1px solid rgba(15,23,42,.10);
+      background:#fff;
+      border-radius: 16px;
+      padding:12px 12px;
+      color:var(--muted);
+      line-height:1.7;
+      font-size:14px;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      padding:12px;
+      border-top:1px solid rgba(15,23,42,.08);
+      background: rgba(255,255,255,.92);
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+    }
+
+    .pill{
+      padding: 10px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(15,23,42,.12);
+      background:#fff;
+      color:var(--ink);
+      cursor:pointer;
+      font-weight:950;
+      font-size: 13px;
+      box-shadow: 0 10px 14px rgba(2,6,23,.06);
+    }
+    .pill.primary{
+      background: var(--soft);
+      border-color: rgba(11,92,255,.18);
+    }
+    .pill:disabled{ opacity:.55; cursor:not-allowed; }
+
+    /* Side panel */
+    .side{ padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
+    .sideCard{
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(15,23,42,.10);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      padding: 12px;
+    }
+    .sideCard h3{
+      margin:0 0 6px;
+      font-size: 13px;
+      letter-spacing:.2px;
+      color: var(--muted);
+      font-weight:950;
+      text-transform: uppercase;
+    }
+    .kpi{ display:flex; justify-content:space-between; gap:10px; align-items:baseline; margin-top:8px; }
+    .kpi strong{ font-size: 16px; font-weight:950; }
+    .kpi span{ font-size: 13px; color:var(--muted); font-weight:850; }
+
+    .bar{
+      height: 10px;
+      background: rgba(15,23,42,.08);
+      border-radius: 999px;
+      overflow:hidden;
+      margin-top:10px;
+    }
+    .bar > div{
+      height: 10px;
+      width: 0%;
+      background: linear-gradient(90deg, #10b981, #22c55e);
+      border-radius: 999px;
+    }
+
+    .tiny{ color:var(--muted); font-size:13px; line-height:1.6; margin-top:10px; }
+    .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="/dash.html" aria-label="Learnlio home">
+        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <span>Learnlio</span>
+      </a>
+      <nav class="links">
+        <a href="/dash.html">Dashboard</a>
+        <a href="/chat.html">Tutor</a>
+        <a class="active" href="/lessons.html">Lessons</a>
+        <a class="btn light" id="logoutBtn" href="javascript:void(0)">Log out</a>
+      </nav>
+    </div>
+  </header>
 
-<header class="nav">
-  <div class="nav-inner">
-    <a class="brand" href="/dash.html">
-      <img src="/assets/img/logo.webp" alt="">
-      <span>Learnlio</span>
-    </a>
-    <nav class="links">
-      <a href="/dash.html">Dashboard</a>
-      <a href="/chat.html">Tutor</a>
-      <a class="active" href="/lessons.html">Lessons</a>
-      <button id="logoutBtn" class="btn light">Log out</button>
-    </nav>
-  </div>
-</header>
-
-<main class="container">
-  <div class="shell">
-
-    <section class="panel">
-      <div class="panel-head">
-        <div>
-          <strong id="contextLine">Loading lesson…</strong>
-        </div>
-        <button id="speakBtn" class="btn ghost">🔊 Read aloud</button>
-      </div>
-
-      <div class="stage">
-        <div id="cardbox" class="cardbox">
-          <div id="lessonText" class="lessonText"></div>
-          <div id="mcq" class="mcq"></div>
+  <main class="container">
+    <div class="shell">
+      <!-- Lesson -->
+      <section class="panel" aria-label="Learnlio Lesson">
+        <div class="panel-head">
+          <div>
+            <div class="title">📘 Lesson</div>
+            <div id="contextLine" class="subtitle">Loading your lesson…</div>
+            <div id="pageError" class="status bad" style="display:none;"></div>
+          </div>
+          <div class="row">
+            <button id="speakBtn" class="btn ghost" type="button">🔊 Read aloud</button>
+            <button id="helpBtn" class="btn ghost" type="button">Help</button>
+          </div>
         </div>
 
-        <div class="controls">
-          <button id="backBtn" class="pill">⬅ Back</button>
-          <button id="nextBtn" class="pill">Next ➡</button>
+        <div class="stage">
+          <div id="cardbox" class="cardbox">
+            <div id="lessonText" class="lessonText"></div>
+
+            <div id="mcq" class="mcq" style="display:none;"></div>
+
+            <!-- Mount for interactive step types -->
+            <div id="interactiveMount" style="display:none;"></div>
+          </div>
+
+          <div class="controls">
+            <button id="backBtn" class="pill" type="button">⬅️ Back</button>
+            <button id="nextBtn" class="pill primary" type="button">➡️ Next</button>
+            <span id="hintLine" class="tiny" style="margin-left:auto;"></span>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <aside class="panel">
-      <div class="panel-head">
-        <strong>✨ Progress</strong>
-      </div>
-      <div class="side">
-        <div class="sideCard">
-          <div id="stepKpi">Step 1</div>
-          <div id="xpLine">XP: 0</div>
+      <!-- Progress -->
+      <aside class="panel" aria-label="Lesson progress">
+        <div class="panel-head">
+          <div>
+            <div class="title">✨ Your progress</div>
+            <div class="subtitle">Just steady effort. No pressure.</div>
+          </div>
         </div>
-        <div class="sideCard">
-          Calm progress. No pressure.
+
+        <div class="side">
+          <div class="sideCard">
+            <h3>Lesson</h3>
+            <div class="kpi">
+              <strong id="stepKpi">0 / 0</strong>
+              <span id="topicKpi">—</span>
+            </div>
+            <div class="bar"><div id="barFill"></div></div>
+            <div class="tiny" id="xpLine">XP: 0</div>
+          </div>
+
+          <div class="sideCard">
+            <h3>What we’re practising</h3>
+            <div class="tiny" id="practiceLine">—</div>
+          </div>
+
+          <div class="sideCard">
+            <h3>Quick actions</h3>
+            <div class="row" style="margin-top:10px;">
+              <button id="finishBtn" class="pill" type="button">✅ Finish</button>
+              <a class="pill" href="/lessons.html" style="display:inline-flex; align-items:center;">📘 Lessons</a>
+              <a class="pill" href="/dash.html" style="display:inline-flex; align-items:center;">🏠 Dashboard</a>
+            </div>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </div>
+  </main>
 
-  </div>
-</main>
+  <script>
+  (() => {
+    // iOS vh fix
+    function setVh(){ document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
+    setVh(); window.addEventListener('resize', setVh);
 
-<script>
-(() => {
+    // =========================
+    // CONFIG
+    // =========================
+    const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
 
-  const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-  const LESSON_GEN_URL = "https://learnlio-lessons.falling-grass-34ab.workers.dev/";
-  const TTS_URL = "https://learnlio-tts.falling-grass-34ab.workers.dev/speak";
+    // Lesson generation Worker (you provided)
+    const LESSON_GEN_URL = "https://learnlio-lessons.falling-grass-34ab.workers.dev/";
 
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Google TTS Worker (already working)
+    const TTS_URL = "https://learnlio-tts.falling-grass-34ab.workers.dev/speak";
+    // =========================
 
-  const lessonText = document.getElementById("lessonText");
-  const mcq = document.getElementById("mcq");
-  const nextBtn = document.getElementById("nextBtn");
-  const backBtn = document.getElementById("backBtn");
-  const speakBtn = document.getElementById("speakBtn");
-  const stepKpi = document.getElementById("stepKpi");
-  const xpLine = document.getElementById("xpLine");
-  const contextLine = document.getElementById("contextLine");
+    const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  let steps = [];
-  let idx = 0;
-  let xp = 0;
+    // UI
+    const pageError = document.getElementById("pageError");
+    const contextLine = document.getElementById("contextLine");
+    const lessonTextEl = document.getElementById("lessonText");
+    const mcqEl = document.getElementById("mcq");
+    const interactiveMount = document.getElementById("interactiveMount");
+    const hintLine = document.getElementById("hintLine");
+    const backBtn = document.getElementById("backBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const finishBtn = document.getElementById("finishBtn");
+    const helpBtn = document.getElementById("helpBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const speakBtn = document.getElementById("speakBtn");
 
-  function render(){
-    const step = steps[idx];
-    stepKpi.textContent = `Step ${idx+1} of ${steps.length}`;
-    lessonText.textContent = step.text || step.prompt || "";
-    mcq.innerHTML = "";
+    const stepKpi = document.getElementById("stepKpi");
+    const topicKpi = document.getElementById("topicKpi");
+    const barFill = document.getElementById("barFill");
+    const xpLine = document.getElementById("xpLine");
+    const practiceLine = document.getElementById("practiceLine");
 
-    if(step.type === "mcq"){
-      step.choices.forEach((c,i)=>{
-        const b=document.createElement("button");
-        b.textContent = c;
-        b.onclick=()=>{
-          xp+=8;
-          xpLine.textContent=`XP: ${xp}`;
-          nextBtn.disabled=false;
-        };
-        mcq.appendChild(b);
-      });
-      nextBtn.disabled=true;
-    }else{
-      nextBtn.disabled=false;
+    function showError(msg){ pageError.style.display="block"; pageError.textContent = msg; }
+    function clearError(){ pageError.style.display="none"; pageError.textContent = ""; }
+
+    // Auth/child
+    let currentUser = null;
+    let child = null;
+    let childName = "Child";
+    let childAge = 10;
+
+    // Context
+    let SUBJECT = null;
+    let AREA = null;
+    let RESUME_ATTEMPT_ID = null;
+
+    // Lesson runtime
+    let lesson = null;         // object returned by worker: { title, steps, ... }
+    let steps = [];
+    let idx = 0;
+    let attemptId = null;      // optional
+    let stepAnswers = {};      // stepIndex -> {pickedIndex,isCorrect}
+    let xp = 0;
+
+    // Audio
+    let currentAudio = null;
+
+    function computeAgeFromDob(dobStr){
+      const d = new Date(dobStr);
+      if (isNaN(d.getTime())) return 10;
+      const now = new Date();
+      let age = now.getFullYear() - d.getFullYear();
+      const m = now.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+      return Math.max(4, Math.min(18, age));
     }
-  }
 
-  async function loadLesson(){
-    const params = new URLSearchParams(location.search);
-    const subject = params.get("subject");
-    const area = params.get("area");
+    function getSelectedChildFromLocalStorage(){
+      try {
+        const raw = localStorage.getItem("selectedChild");
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch { return null; }
+    }
 
-    contextLine.textContent = `${subject} • ${area}`;
+    function lessonCtxKey(childId){
+      return childId ? `learnlio_lesson_ctx_${childId}` : `learnlio_lesson_ctx`;
+    }
 
-    const res = await fetch(LESSON_GEN_URL,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ subject, area })
+    function loadCtxFromLocalStorage(childId){
+      try{
+        const raw = localStorage.getItem(lessonCtxKey(childId));
+        if (!raw) return null;
+        return JSON.parse(raw);
+      }catch{ return null; }
+    }
+
+    function parseUrlContext(){
+      const u = new URL(window.location.href);
+      SUBJECT = u.searchParams.get("subject");
+      AREA = u.searchParams.get("area");
+      RESUME_ATTEMPT_ID = u.searchParams.get("attempt");
+    }
+
+    async function requireAuth(){
+      const { data, error } = await sb.auth.getUser();
+      if (error || !data?.user){
+        window.location.href = "/login.html";
+        return false;
+      }
+      currentUser = data.user;
+      return true;
+    }
+
+    async function loadChildProfile(){
+      const selected = getSelectedChildFromLocalStorage();
+      if (!selected?.id){
+        showError("No child selected. Go to Dashboard and click Select on a child.");
+        return false;
+      }
+
+      const { data, error } = await sb
+        .from("children")
+        .select("id, parent_user_id, child_name, child_dob")
+        .eq("id", selected.id)
+        .single();
+
+      if (error || !data){
+        showError("Could not load child profile. Please re-select the child on Dashboard.");
+        return false;
+      }
+      if (data.parent_user_id !== currentUser.id){
+        showError("This child profile does not belong to this account.");
+        return false;
+      }
+
+      child = data;
+      childName = child.child_name || "Child";
+      childAge = computeAgeFromDob(child.child_dob);
+      return true;
+    }
+
+    function ensureSubjectAreaFromStorageIfMissing(){
+      if (SUBJECT && AREA) return;
+      const ctx = loadCtxFromLocalStorage(child?.id);
+      if (ctx?.subject && ctx?.area){
+        SUBJECT = SUBJECT || ctx.subject;
+        AREA = AREA || ctx.area;
+      }
+    }
+
+    function setProgressUI(){
+      const total = steps.length || 0;
+      stepKpi.textContent = `${Math.min(idx+1,total)} / ${total}`;
+      topicKpi.textContent = `${SUBJECT} • ${AREA}`;
+      practiceLine.textContent = `${SUBJECT} practice: ${AREA}`;
+      const pct = total ? Math.round(((idx) / total) * 100) : 0;
+      barFill.style.width = Math.min(100, Math.max(0, pct)) + "%";
+      xpLine.textContent = `XP: ${xp}`;
+    }
+
+    function clearInteractive(){
+      interactiveMount.style.display = "none";
+      interactiveMount.innerHTML = "";
+    }
+
+    // -------------------------
+    // LESSON GEN (Worker)
+    // -------------------------
+    async function fetchGeneratedLesson(){
+      // We pass identity + child context so the worker can:
+      // - check generated_lessons cache
+      // - generate via OpenAI when needed
+      // - store lesson for reuse (and avoid repeats via fingerprint)
+      const payload = {
+        ownerId: currentUser.id,
+        childId: child.id,
+        childName,
+        age: childAge,
+        subject: SUBJECT,
+        area: AREA,
+        // Optional future: skill/confidence from child_skill_progress
+        // Optional: allow interactive step types
+        wantInteractive: true,
+        allowedTypes: ["intro","teach","mcq","fill_blank","match_pairs","number_line","interactive_drag","finish"]
+      };
+
+      const r = await fetch(LESSON_GEN_URL, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const text = await r.text().catch(()=> "");
+      let json = null;
+      try{ json = text ? JSON.parse(text) : null; }catch{}
+
+      if (!r.ok){
+        const msg = json?.error || text || `Lesson generation failed (${r.status})`;
+        throw new Error(msg);
+      }
+
+      if (!json?.steps || !Array.isArray(json.steps) || !json.steps.length){
+        throw new Error("Lesson worker returned no steps.");
+      }
+
+      return json; // expected: { title, steps, lesson_id?, cached? ... }
+    }
+
+    // -------------------------
+    // RENDER
+    // -------------------------
+    function renderStep(){
+      clearError();
+      hintLine.textContent = "";
+      mcqEl.innerHTML = "";
+      mcqEl.style.display = "none";
+      clearInteractive();
+
+      if (!steps.length){
+        lessonTextEl.textContent = "No lesson steps found.";
+        return;
+      }
+
+      const step = steps[idx];
+      setProgressUI();
+
+      if (!step){
+        lessonTextEl.textContent = "Finished.";
+        return;
+      }
+
+      // Text
+      if (step.type === "intro" || step.type === "teach" || step.type === "finish"){
+        lessonTextEl.textContent = step.text || "";
+        nextBtn.textContent = (step.type === "finish") ? "✅ Complete" : "➡️ Next";
+        if (step.type === "finish"){
+          hintLine.textContent = "Tap complete to finish this lesson.";
+        }
+        return;
+      }
+
+      // MCQ
+      if (step.type === "mcq"){
+        lessonTextEl.textContent = step.prompt || "";
+        mcqEl.style.display = "grid";
+
+        const letters = ["A","B","C","D","E","F"];
+        (step.choices || []).forEach((choice, i) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "mcq-opt";
+          btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${choice}</span>`;
+          btn.addEventListener("click", () => chooseMCQ(i));
+          mcqEl.appendChild(btn);
+        });
+
+        const saved = stepAnswers[idx];
+        if (saved){
+          hintLine.textContent = saved.isCorrect ? "Nice — that was correct ✅" : "That one was tricky — keep going 💛";
+        }
+
+        nextBtn.textContent = "➡️ Next";
+        return;
+      }
+
+      // Interactive placeholders (UI components come next)
+      if (["fill_blank","match_pairs","number_line","interactive_drag"].includes(step.type)){
+        lessonTextEl.textContent = step.prompt || "Interactive step.";
+
+        interactiveMount.style.display = "block";
+        interactiveMount.innerHTML = `
+          <div class="notice">
+            <b>Interactive step (next build):</b><br><br>
+            Type: <b>${step.type}</b><br>
+            This lesson already supports this step format. We will now build the on-screen component.
+          </div>
+        `;
+
+        nextBtn.textContent = "➡️ Next";
+        return;
+      }
+
+      lessonTextEl.textContent = "Unknown step type.";
+    }
+
+    async function chooseMCQ(pickedIndex){
+      const step = steps[idx];
+      if (!step || step.type !== "mcq") return;
+
+      const correctIndex = Number(step.correctIndex);
+      const isCorrect = pickedIndex === correctIndex;
+
+      xp += isCorrect ? 10 : 6;
+
+      stepAnswers[idx] = { pickedIndex, isCorrect };
+      hintLine.textContent = isCorrect ? "Nice work ✅" : "Good try 💛";
+
+      setProgressUI();
+    }
+
+    async function completeLesson(){
+      contextLine.textContent = `Saved ✅ ${childName} finished "${lesson?.title || "Lesson"}".`;
+      lessonTextEl.textContent =
+        `Nice work, ${childName}.\n\nThat lesson is finished.\n\nNext time, you can do another short lesson.`;
+
+      mcqEl.style.display = "none";
+      clearInteractive();
+
+      nextBtn.disabled = true;
+      backBtn.disabled = true;
+      hintLine.textContent = "You can go back to Lessons or Dashboard.";
+    }
+
+    // ----- Read aloud -----
+    function stripEmojis(text){
+      return String(text || "")
+        .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
+        .replace(/[\u{2600}-\u{26FF}]/gu, "")
+        .replace(/[\u{2700}-\u{27BF}]/gu, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+    }
+
+    async function speakCurrent(){
+      try{
+        const step = steps[idx];
+        if (!step) return;
+
+        let text = "";
+        if (step.type === "mcq") text = step.prompt || "";
+        else if (step.text) text = step.text;
+        else if (step.prompt) text = step.prompt;
+        else text = lessonTextEl.textContent || "";
+
+        text = stripEmojis(text);
+        if (!text) return;
+
+        if (currentAudio){
+          try{ currentAudio.pause(); }catch{}
+          currentAudio = null;
+        }
+
+        speakBtn.disabled = true;
+        speakBtn.textContent = "🔊 Speaking…";
+
+        const r = await fetch(TTS_URL, {
+          method: "POST",
+          headers: { "Content-Type":"application/json" },
+          body: JSON.stringify({ text, languageCode: "en-GB" })
+        });
+
+        if (!r.ok){
+          const t = await r.text().catch(()=> "");
+          console.warn("TTS failed", r.status, t);
+          hintLine.textContent = "Read aloud isn’t available right now.";
+          return;
+        }
+
+        const buf = await r.arrayBuffer();
+        const blob = new Blob([buf], { type: "audio/mpeg" });
+        const url = URL.createObjectURL(blob);
+
+        const audio = new Audio(url);
+        currentAudio = audio;
+
+        audio.onended = () => {
+          try{ URL.revokeObjectURL(url); }catch{}
+          speakBtn.disabled = false;
+          speakBtn.textContent = "🔊 Read aloud";
+        };
+
+        audio.onerror = () => {
+          try{ URL.revokeObjectURL(url); }catch{}
+          speakBtn.disabled = false;
+          speakBtn.textContent = "🔊 Read aloud";
+          hintLine.textContent = "Read aloud isn’t available right now.";
+        };
+
+        await audio.play();
+      } finally {
+        setTimeout(() => {
+          if (speakBtn.disabled && (!currentAudio || currentAudio.paused)){
+            speakBtn.disabled = false;
+            speakBtn.textContent = "🔊 Read aloud";
+          }
+        }, 600);
+      }
+    }
+
+    // Controls
+    backBtn.addEventListener("click", () => {
+      if (idx > 0){ idx -= 1; renderStep(); }
     });
 
-    const data = await res.json();
-    steps = data.steps || [];
-    render();
-  }
+    nextBtn.addEventListener("click", async () => {
+      const step = steps[idx];
 
-  nextBtn.onclick=()=>{ if(idx<steps.length-1){idx++;render()} };
-  backBtn.onclick=()=>{ if(idx>0){idx--;render()} };
+      if (step?.type === "mcq" && !stepAnswers[idx]){
+        hintLine.textContent = "Tap an answer first 💛";
+        return;
+      }
 
-  speakBtn.onclick=async()=>{
-    const text = lessonText.textContent.replace(/[\u{1F300}-\u{1FAFF}]/gu,"");
-    const r = await fetch(TTS_URL,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
-    const b = await r.arrayBuffer();
-    new Audio(URL.createObjectURL(new Blob([b],{type:"audio/mpeg"}))).play();
-  };
+      if (step?.type === "finish"){
+        await completeLesson();
+        return;
+      }
 
-  loadLesson();
+      if (idx < steps.length - 1){
+        idx += 1;
+        renderStep();
+      }
+    });
 
-})();
-</script>
+    finishBtn.addEventListener("click", () => {
+      window.location.href = "/lessons.html";
+    });
+
+    helpBtn.addEventListener("click", () => {
+      alert(
+        "How lessons work:\n\n" +
+        "• Read the step\n" +
+        "• Tap an answer (if shown)\n" +
+        "• Press Next\n\n" +
+        "No pressure. You can finish any time.\n\n" +
+        "Tip: Read aloud plays only when you press the button."
+      );
+    });
+
+    speakBtn.addEventListener("click", speakCurrent);
+
+    logoutBtn.addEventListener("click", async () => {
+      await sb.auth.signOut();
+      localStorage.removeItem("selectedChild");
+      window.location.href = "/login.html";
+    });
+
+    async function boot(){
+      if (!sb){ showError("Supabase did not load."); return; }
+
+      parseUrlContext();
+
+      const ok = await requireAuth();
+      if (!ok) return;
+
+      const childOk = await loadChildProfile();
+      if (!childOk) return;
+
+      ensureSubjectAreaFromStorageIfMissing();
+
+      if (!SUBJECT || !AREA){
+        showError("Missing lesson context. Please go to Lessons and choose a subject + area.");
+        contextLine.textContent = "Go back to Lessons to choose what to practise.";
+        lessonTextEl.textContent = "We couldn’t see which subject/area you chose.";
+        nextBtn.disabled = true;
+        backBtn.disabled = true;
+        return;
+      }
+
+      clearError();
+      contextLine.textContent = `Loading a lesson for ${childName}…`;
+
+      // ✅ NEW: fetch generated lesson from Worker (cached or fresh)
+      try{
+        lesson = await fetchGeneratedLesson();
+      }catch(e){
+        console.error(e);
+        showError("Could not load a lesson right now.");
+        lessonTextEl.textContent =
+          "We couldn’t load a lesson.\n\n" +
+          "Please try again in a moment.\n\n" +
+          "If this keeps happening, the lesson generator worker may be offline.";
+        nextBtn.disabled = true;
+        backBtn.disabled = true;
+        return;
+      }
+
+      steps = lesson.steps || [];
+      if (!steps.length){
+        showError("Lesson returned no steps.");
+        nextBtn.disabled = true;
+        backBtn.disabled = true;
+        return;
+      }
+
+      idx = 0;
+      xp = 0;
+      stepAnswers = {};
+
+      const title = lesson.title ? ` — ${lesson.title}` : "";
+      contextLine.textContent = `${SUBJECT} • ${AREA}${title}`;
+      nextBtn.disabled = false;
+      backBtn.disabled = false;
+      renderStep();
+    }
+
+    boot().catch(err => {
+      console.error(err);
+      showError("Something went wrong loading the lesson.");
+    });
+  })();
+  </script>
 </body>
 </html>
-
