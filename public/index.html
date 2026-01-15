@@ -286,6 +286,52 @@
     .step h3{ margin:10px 0 6px; font-size: 16px; font-weight: 950; }
     .step p{ margin:0; color: var(--muted); font-size: 14.5px; line-height: 1.65; }
 
+    /* Parent support hub section */
+    .support{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:12px;
+      align-items:stretch;
+    }
+    @media (max-width: 900px){
+      .support{ grid-template-columns: 1fr; }
+    }
+    .support-card{
+      padding:18px;
+      border-radius: var(--radius);
+      border:1px solid rgba(15,23,42,.10);
+      background:#fff;
+      box-shadow: 0 12px 22px rgba(2,6,23,.06);
+    }
+    .support-links{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    .support-link{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding:12px 12px;
+      border-radius: 16px;
+      border:1px solid rgba(15,23,42,.10);
+      background: rgba(248,250,252,.95);
+    }
+    .support-link:hover{ background: rgba(248,250,252,1); }
+    .support-ico{
+      width:34px; height:34px;
+      border-radius: 12px;
+      display:flex; align-items:center; justify-content:center;
+      background: rgba(11,92,255,.10);
+      border:1px solid rgba(11,92,255,.16);
+      font-weight:950;
+      flex: 0 0 auto;
+    }
+    .support-link b{ display:block; margin-bottom:2px; font-weight:950; }
+    .support-link span{ color: var(--muted); font-size:14px; line-height:1.55; }
+
     /* Calm FAQ */
     .faq{ margin-top:12px; display:grid; gap:10px; }
     details{
@@ -510,6 +556,67 @@
         Learnlio breaks work into small steps, offers gentle hints, and keeps sessions short and manageable — so children can
         practise without feeling overwhelmed.
       </p>
+    </section>
+
+    <!-- ✅ NEW: PARENT LEARNING-SUPPORT LINKS (added near the bottom) -->
+    <section class="section" aria-label="Parent learning support">
+      <h2>Parent learning support</h2>
+      <p>
+        If you’re not sure what’s going on — or what to do next — these calm, practical guides can help.
+        They’re written for UK parents and designed to be easy to skim.
+      </p>
+
+      <div class="support" role="list" aria-label="Learning support pages">
+        <div class="support-card" role="listitem">
+          <h3 style="margin:0 0 6px; font-size:16px; font-weight:950;">Start here</h3>
+          <p style="margin:0; color:var(--muted); line-height:1.7;">
+            Short, supportive pages you can read in a few minutes — with simple next steps you can try at home.
+          </p>
+
+          <div class="cta-row" style="margin-top:12px;">
+            <a class="btn light" href="/learning-support.html">Browse learning support</a>
+          </div>
+        </div>
+
+        <div class="support-card" role="listitem">
+          <h3 style="margin:0 0 6px; font-size:16px; font-weight:950;">Quick links</h3>
+
+          <div class="support-links">
+            <!-- Replace these hrefs with your exact page filenames if different -->
+            <a class="support-link" href="/learning-support.html">
+              <div class="support-ico">📚</div>
+              <div>
+                <b>Learning support hub</b>
+                <span>All parent guides in one place.</span>
+              </div>
+            </a>
+
+            <a class="support-link" href="/dyslexia-support.html">
+              <div class="support-ico">🧠</div>
+              <div>
+                <b>Dyslexia support</b>
+                <span>What dyslexia can look like, and how to help gently.</span>
+              </div>
+            </a>
+
+            <a class="support-link" href="/maths-anxiety.html">
+              <div class="support-ico">➕</div>
+              <div>
+                <b>Maths anxiety</b>
+                <span>Reduce panic, build confidence, keep it manageable.</span>
+              </div>
+            </a>
+
+            <a class="support-link" href="/reading-confidence.html">
+              <div class="support-ico">📖</div>
+              <div>
+                <b>Reading confidence</b>
+                <span>Simple ways to practise without tears or battles.</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- FAQ (trust-led) -->
