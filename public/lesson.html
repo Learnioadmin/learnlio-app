@@ -274,7 +274,7 @@
 
             <div id="mcq" class="mcq" style="display:none;"></div>
 
-            <!-- Placeholder area for future interactive step types -->
+            <!-- Interactive mount -->
             <div id="interactiveMount" style="display:none;"></div>
           </div>
 
@@ -335,7 +335,13 @@
     // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+
+    // Your existing Google TTS worker
     const TTS_URL = "https://learnlio-tts.falling-grass-34ab.workers.dev/speak";
+
+    // ✅ PUT YOUR LESSON GENERATION WORKER URL HERE
+    // Example: https://learnlio-lessons.<something>.workers.dev/generate
+    const LESSON_GEN_URL = "PASTE_YOUR_LESSON_WORKER_URL_HERE";
     // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -369,17 +375,17 @@
     let childName = "Child";
     let childAge = 10;
 
-    // Context (from URL)
+    // Context
     let SUBJECT = null;
     let AREA = null;
     let RESUME_ATTEMPT_ID = null;
 
-    // Lesson runtime
-    let lessonRow = null;      // row from lessons_catalog
-    let steps = [];            // steps_json.steps
+    // Runtime
+    let generatedLesson = null; // { title, subject, area, steps:[] ... }
+    let steps = [];
     let idx = 0;
     let attemptId = null;
-    let stepAnswers = {};      // stepIndex -> {pickedIndex,isCorrect}
+    let stepAnswers = {};
     let xp = 0;
 
     // Audio
@@ -420,8 +426,6 @@
       SUBJECT = u.searchParams.get("subject");
       AREA = u.searchParams.get("area");
       RESUME_ATTEMPT_ID = u.searchParams.get("attempt");
-
-      // If missing, we can fall back later from localStorage once we know child id
     }
 
     async function requireAuth(){
@@ -464,7 +468,6 @@
 
     function ensureSubjectAreaFromStorageIfMissing(){
       if (SUBJECT && AREA) return;
-
       const ctx = loadCtxFromLocalStorage(child?.id);
       if (ctx?.subject && ctx?.area){
         SUBJECT = SUBJECT || ctx.subject;
@@ -472,90 +475,13 @@
       }
     }
 
-    function normalizeStepsJson(row){
-      // steps_json in DB might be:
-      // - an object {steps:[...]}
-      // - a stringified JSON
-      if (!row?.steps_json) return [];
-      if (typeof row.steps_json === "object" && row.steps_json.steps) return row.steps_json.steps;
-
-      if (typeof row.steps_json === "string"){
-        try{
-          const parsed = JSON.parse(row.steps_json);
-          return parsed?.steps || [];
-        }catch{
-          return [];
-        }
-      }
-      return [];
-    }
-
-    async function pickNextLessonFromCatalog(){
-      // Load all active lessons for this subject/area and filter by age
-      const { data: lessons, error } = await sb
-        .from("lessons_catalog")
-        .select("id, subject, area, title, age_min, age_max, difficulty, steps_json, is_active")
-        .eq("subject", SUBJECT)
-        .eq("area", AREA)
-        .eq("is_active", true);
-
-      if (error) throw error;
-      if (!lessons?.length) return null;
-
-      const ageFit = lessons.filter(l => childAge >= (l.age_min ?? 0) && childAge <= (l.age_max ?? 99));
-      if (!ageFit.length) return null;
-
-      // Try to avoid repeats if lesson_attempts exists (fail-safe)
-      let doneSet = new Set();
-      try{
-        const { data: attempts, error: aErr } = await sb
-          .from("lesson_attempts")
-          .select("lesson_id")
-          .eq("owner_id", currentUser.id)
-          .eq("child_id", child.id);
-
-        if (!aErr && attempts?.length){
-          doneSet = new Set(attempts.map(a => a.lesson_id));
-        }
-      }catch{}
-
-      const available = ageFit.filter(l => !doneSet.has(l.id));
-      if (!available.length) return null;
-
-      // For now: pick lowest difficulty first (simple + predictable)
-      available.sort((a,b) => Number(a.difficulty||1) - Number(b.difficulty||1));
-      return available[0];
-    }
-
-    async function startOrResumeAttempt(lessonId){
-      // If resume attempt id present, use it (but do not crash if it doesn’t exist)
+    async function startOrResumeAttempt(){
+      // optional: if you already have lesson_attempts wired, keep it.
       if (RESUME_ATTEMPT_ID){
         attemptId = RESUME_ATTEMPT_ID;
         return attemptId;
       }
-
-      // Try create an attempt row if table exists & policy allows.
-      try{
-        const { data, error } = await sb
-          .from("lesson_attempts")
-          .insert({
-            owner_id: currentUser.id,
-            child_id: child.id,
-            lesson_id: lessonId,
-            meta: { subject: SUBJECT, area: AREA, childAge, startedFrom: "lesson.html" }
-          })
-          .select("id")
-          .single();
-
-        if (!error && data?.id){
-          attemptId = data.id;
-          return attemptId;
-        }
-      }catch(e){
-        console.warn("lesson_attempts insert not available yet", e);
-      }
-
-      attemptId = null; // still allow lesson to run
+      attemptId = null;
       return null;
     }
 
@@ -594,12 +520,12 @@
         return;
       }
 
-      // Plain text steps
+      // Text steps
       if (step.type === "intro" || step.type === "teach" || step.type === "finish"){
         lessonTextEl.textContent = step.text || "";
         if (step.type === "finish"){
           nextBtn.textContent = "✅ Complete";
-          hintLine.textContent = "Tap complete to save your progress.";
+          hintLine.textContent = "Tap complete to finish.";
         } else {
           nextBtn.textContent = "➡️ Next";
         }
@@ -630,14 +556,14 @@
         return;
       }
 
-      // Future step types (placeholders for now)
+      // Interactive placeholders (your worker can return these types now; UI comes next)
       if (["fill_blank","match_pairs","number_line","interactive_drag"].includes(step.type)){
         lessonTextEl.textContent = step.prompt || "Interactive step (coming next).";
         interactiveMount.style.display = "block";
         interactiveMount.innerHTML = `
           <div class="notice">
-            <b>Interactive content coming next:</b><br>
-            This lesson step type is ready in the data format, but the UI component isn’t switched on yet.<br><br>
+            <b>Interactive content ready in data:</b><br>
+            This step type is present, but the on-screen component is not switched on yet.<br><br>
             Step type: <b>${step.type}</b>
           </div>
         `;
@@ -648,18 +574,6 @@
       lessonTextEl.textContent = "Unknown step type.";
     }
 
-    async function safeInsertStepResult(payload){
-      // Don’t crash if table/schema/policies aren’t ready.
-      try{
-        // Your earlier errors referenced lesson_step_results_attempt_id_fkey / run_id.
-        // Here we insert ONLY attempt_id if we have it.
-        if (!attemptId) return;
-        await sb.from("lesson_step_results").insert(payload);
-      }catch(e){
-        console.warn("lesson_step_results insert failed (safe to ignore for now)", e);
-      }
-    }
-
     async function chooseMCQ(pickedIndex){
       const step = steps[idx];
       if (!step || step.type !== "mcq") return;
@@ -667,47 +581,15 @@
       const correctIndex = Number(step.correctIndex);
       const isCorrect = pickedIndex === correctIndex;
 
-      // Gentle XP
       xp += isCorrect ? 10 : 6;
-
       stepAnswers[idx] = { pickedIndex, isCorrect };
       hintLine.textContent = isCorrect ? "Nice work ✅" : "Good try 💛";
-
-      await safeInsertStepResult({
-        attempt_id: attemptId,
-        step_index: idx,
-        item_type: "mcq",
-        is_correct: isCorrect,
-        response: { pickedIndex }
-      });
 
       setProgressUI();
     }
 
     async function completeLesson(){
-      // Basic scoring on MCQ steps
-      const mcqIndexes = steps.map((s,i) => s.type === "mcq" ? i : null).filter(v => v !== null);
-      const graded = mcqIndexes.length || 0;
-      let correct = 0;
-      mcqIndexes.forEach(i => { if (stepAnswers[i]?.isCorrect) correct += 1; });
-      const score = graded ? (correct / graded) : null;
-
-      // Mark attempt complete (safe)
-      try{
-        if (attemptId){
-          await sb.from("lesson_attempts")
-            .update({
-              completed_at: new Date().toISOString(),
-              score,
-              meta: { xp, correct, graded, subject: SUBJECT, area: AREA }
-            })
-            .eq("id", attemptId);
-        }
-      }catch(e){
-        console.warn("lesson_attempts update failed (safe to ignore for now)", e);
-      }
-
-      contextLine.textContent = `Saved ✅ ${childName} finished "${lessonRow?.title || "Lesson"}".`;
+      contextLine.textContent = `Saved ✅ ${childName} finished "${generatedLesson?.title || "Lesson"}".`;
       lessonTextEl.textContent =
         `Nice work, ${childName}.\n\nThat lesson is saved.\n\nNext time, you can do another short lesson.`;
       mcqEl.style.display = "none";
@@ -718,9 +600,8 @@
       hintLine.textContent = "You can go back to Lessons or Dashboard.";
     }
 
-    // ----- Read aloud (Google TTS Worker) -----
+    // ----- Read aloud -----
     function stripEmojis(text){
-      // Remove most emoji + symbol ranges (keeps normal punctuation/letters).
       return String(text || "")
         .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
         .replace(/[\u{2600}-\u{26FF}]/gu, "")
@@ -743,7 +624,6 @@
         text = stripEmojis(text);
         if (!text) return;
 
-        // stop previous
         if (currentAudio){
           try{ currentAudio.pause(); }catch{}
           currentAudio = null;
@@ -755,11 +635,7 @@
         const r = await fetch(TTS_URL, {
           method: "POST",
           headers: { "Content-Type":"application/json" },
-          body: JSON.stringify({
-            text,
-            languageCode: "en-GB",
-            // Worker chooses defaults; you can override here later if you want.
-          })
+          body: JSON.stringify({ text, languageCode: "en-GB" })
         });
 
         if (!r.ok){
@@ -791,7 +667,6 @@
 
         await audio.play();
       } finally {
-        // If play throws before onended, restore button
         setTimeout(() => {
           if (speakBtn.disabled && (!currentAudio || currentAudio.paused)){
             speakBtn.disabled = false;
@@ -809,13 +684,11 @@
     nextBtn.addEventListener("click", async () => {
       const step = steps[idx];
 
-      // If MCQ, require answer
       if (step?.type === "mcq" && !stepAnswers[idx]){
         hintLine.textContent = "Tap an answer first 💛";
         return;
       }
 
-      // Finish step completes
       if (step?.type === "finish"){
         await completeLesson();
         return;
@@ -828,14 +701,6 @@
     });
 
     finishBtn.addEventListener("click", async () => {
-      // End early (safe)
-      try{
-        if (attemptId){
-          await sb.from("lesson_attempts")
-            .update({ completed_at: new Date().toISOString(), meta: { endedEarly: true, xp, subject: SUBJECT, area: AREA } })
-            .eq("id", attemptId);
-        }
-      }catch{}
       window.location.href = "/lessons.html";
     });
 
@@ -857,6 +722,44 @@
       localStorage.removeItem("selectedChild");
       window.location.href = "/login.html";
     });
+
+    // ✅ Core change: get lesson from generation worker (and it stores into public.generated_lessons)
+    async function fetchGeneratedLesson(){
+      if (!LESSON_GEN_URL || LESSON_GEN_URL.includes("PASTE_YOUR")){
+        throw new Error("LESSON_GEN_URL is not set in lesson.html");
+      }
+
+      const payload = {
+        child_id: child.id,
+        child_age: childAge,
+        subject: SUBJECT,
+        area: AREA,
+        // optional knobs for later:
+        // difficulty_hint: ...
+        // locale: "en-GB"
+      };
+
+      const r = await fetch(LESSON_GEN_URL, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const ct = (r.headers.get("content-type") || "").toLowerCase();
+      const isJson = ct.includes("application/json");
+
+      if (!r.ok){
+        const body = isJson ? await r.json().catch(()=> ({})) : { error: await r.text().catch(()=> "") };
+        const msg = body?.error || `Lesson worker error (${r.status})`;
+        throw new Error(msg);
+      }
+
+      const data = isJson ? await r.json() : null;
+      if (!data?.lesson){
+        throw new Error("Lesson worker did not return { lesson: ... }");
+      }
+      return data.lesson;
+    }
 
     async function boot(){
       if (!sb){ showError("Supabase did not load."); return; }
@@ -881,41 +784,34 @@
       }
 
       clearError();
-      contextLine.textContent = `Loading a lesson for ${childName}…`;
+      contextLine.textContent = `Preparing a lesson for ${childName}…`;
 
-      // 1) Pick a lesson from catalog
-      lessonRow = await pickNextLessonFromCatalog();
+      await startOrResumeAttempt();
 
-      if (!lessonRow){
-        contextLine.textContent = `${SUBJECT} • ${AREA}`;
-        lessonTextEl.textContent =
-          "No suitable lessons found for this area yet.\n\n" +
-          "Add lessons to lessons_catalog (age band + steps_json), then try again.";
-        mcqEl.style.display = "none";
-        nextBtn.disabled = true;
-        backBtn.disabled = true;
-        return;
-      }
+      // ✅ Get lesson from worker (cached/stored in generated_lessons)
+      generatedLesson = await fetchGeneratedLesson();
 
-      // 2) Start attempt (optional)
-      await startOrResumeAttempt(lessonRow.id);
+      // Accept either lesson.steps OR lesson.steps_json.steps
+      steps = Array.isArray(generatedLesson.steps)
+        ? generatedLesson.steps
+        : (generatedLesson.steps_json && generatedLesson.steps_json.steps)
+          ? generatedLesson.steps_json.steps
+          : [];
 
-      // 3) Load steps
-      steps = normalizeStepsJson(lessonRow);
       if (!steps.length){
-        contextLine.textContent = `${SUBJECT} • ${AREA} — ${lessonRow.title || "Lesson"}`;
-        lessonTextEl.textContent = "This lesson has no steps yet.";
+        showError("Lesson has no steps.");
+        contextLine.textContent = `${SUBJECT} • ${AREA}`;
+        lessonTextEl.textContent = "This lesson came back empty. Try again.";
         nextBtn.disabled = true;
         backBtn.disabled = true;
         return;
       }
 
-      // Init runtime
       idx = 0;
       xp = 0;
       stepAnswers = {};
 
-      contextLine.textContent = `${SUBJECT} • ${AREA} — ${lessonRow.title || "Lesson"}`;
+      contextLine.textContent = `${SUBJECT} • ${AREA} — ${generatedLesson.title || "Lesson"}`;
       nextBtn.disabled = false;
       backBtn.disabled = false;
       renderStep();
@@ -923,10 +819,9 @@
 
     boot().catch(err => {
       console.error(err);
-      showError("Something went wrong loading the lesson.");
+      showError(err?.message || "Something went wrong loading the lesson.");
     });
   })();
   </script>
 </body>
 </html>
-
