@@ -2,103 +2,380 @@
 <html lang="en-GB">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Learning Support for Parents | Learnlio</title>
-  <meta name="description" content="Calm, practical learning support articles for parents. Help your child learn with confidence — without pressure." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Learning Support for Parents | Calm, practical help | Learnlio</title>
+  <meta name="description" content="Practical, pressure-free learning support for parents. Read calm, UK-focused advice on confidence, anxiety, shutdown, and helping children learn at home." />
+
+  <link rel="canonical" href="https://learnlio.co.uk/learning-support/" />
 
   <link rel="stylesheet" href="/assets/css/app.css" />
 
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
-    .container { max-width: 980px; margin: 0 auto; padding: 18px; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 0;
+      background: #f7f7fb;
+      color: #111;
+      line-height: 1.65;
+    }
 
-    .nav { position:sticky; top:0; z-index:50; background:#fff; border-bottom:1px solid #ececf4; }
-    .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:800; }
-    .brand img { height:34px; width:auto; display:block; }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px;
+    }
 
-    .links { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
-    .btn { background:#0b5cff; color:#fff; padding:10px 14px; border-radius:12px; font-weight:800; text-decoration:none; }
-    .btn.light { background:#e5e7eb; color:#111; }
+    /* Standard public nav (as requested for all public pages) */
+    .nav {
+      background: #fff;
+      border-bottom: 1px solid #ececf4;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .nav-inner {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #111;
+      font-weight: 800;
+    }
+    .brand img {
+      height: 34px;
+      width: auto;
+      display: block;
+    }
+    .links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .links a {
+      text-decoration: none;
+      color: #111;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .btn {
+      background: #0b5cff;
+      border: none;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .btn.light {
+      background: #e5e7eb;
+      color: #111;
+    }
 
-    .hero { background:#fff; border-radius:16px; padding:18px; border:1px solid #ececf4; box-shadow:0 4px 16px rgba(0,0,0,.06); }
-    .muted { color:#6b7280; font-size:14px; line-height:1.6; }
+    .hero {
+      background: #fff;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 6px 24px rgba(0,0,0,.08);
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 30px;
+      letter-spacing: -0.2px;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 15px;
+      line-height: 1.7;
+    }
 
-    .grid { display:grid; grid-template-columns:1fr; gap:14px; margin-top:14px; }
-    @media (min-width: 900px) { .grid { grid-template-columns:1fr 1fr; } }
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eef2ff;
+      font-size: 12px;
+      color: #111;
+      font-weight: 700;
+    }
 
-    .article { background:#fff; border:1px solid #ececf4; border-radius:16px; padding:14px; box-shadow:0 4px 14px rgba(0,0,0,.05); }
-    .article a { text-decoration:none; color:#111; font-weight:900; font-size:16px; }
-    .article a:hover { text-decoration:underline; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    @media (min-width: 900px) {
+      .grid {
+        grid-template-columns: 1.2fr 0.8fr;
+      }
+    }
 
-    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; font-size:12px; margin-top:8px; }
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 6px 24px rgba(0,0,0,.06);
+    }
 
-    .cta { margin-top:18px; padding:18px; background:#fff; border-radius:16px; border:1px solid #ececf4; text-align:center; }
+    .article-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 12px;
+    }
+
+    .article {
+      border: 1px solid #ececf4;
+      border-radius: 16px;
+      padding: 16px;
+      background: #fff;
+      transition: transform .08s ease, box-shadow .08s ease;
+    }
+    .article:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(0,0,0,.08);
+    }
+
+    .article a {
+      text-decoration: none;
+      color: #111;
+      display: block;
+    }
+    .article h2 {
+      margin: 6px 0 6px;
+      font-size: 18px;
+      letter-spacing: -0.1px;
+    }
+    .article p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .tip {
+      border: 1px solid #ececf4;
+      background: #fafafa;
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .tip h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+    .tip ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #4b5563;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .tip li { margin: 8px 0; }
+
+    .cta {
+      margin-top: 18px;
+      padding: 22px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #0b5cff, #2563eb);
+      color: #fff;
+      text-align: center;
+    }
+    .cta h2 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      letter-spacing: -0.1px;
+    }
+    .cta p {
+      margin: 0;
+      color: #e5edff;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .cta .cta-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .cta .btn {
+      background: #fff;
+      color: #0b5cff;
+    }
+    .cta .btn.light {
+      background: rgba(255,255,255,.18);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.35);
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 12px;
+      color: #6b7280;
+    }
   </style>
 </head>
 
 <body>
-  <!-- Public Nav -->
+  <!-- Standard public nav -->
   <header class="nav">
     <div class="nav-inner">
-      <a class="brand" href="/">
+      <a class="brand" href="/" aria-label="Learnlio home">
         <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
         <span>Learnlio</span>
       </a>
       <nav class="links">
         <a href="/">Home</a>
-        <a href="/why-learnlio">Why Learnlio</a>
-        <a href="/pricing">Pricing</a>
-        <a href="/login.html" class="btn light">Log in</a>
+        <a href="/why-learnlio.html">Why Learnlio</a>
+        <a href="/pricing.html">Pricing</a>
+        <a class="btn light" href="/login.html">Log in</a>
       </nav>
     </div>
   </header>
 
   <main class="container">
+
+    <!-- Hero -->
     <section class="hero">
-      <h1 style="margin:0 0 6px; font-size:28px;">Learning support for parents</h1>
-      <p class="muted">
-        Short, practical articles to help you support learning at home —
-        without pressure, conflict, or overwhelm.
+      <div class="meta-row">
+        <span class="pill">Learning Support</span>
+        <span class="pill">For UK parents</span>
+        <span class="pill">Confidence-first</span>
+      </div>
+
+      <h1>Learning Support for Parents</h1>
+      <p class="muted" style="margin:0;">
+        Calm, practical articles to help when learning gets hard — especially if your child feels anxious, overwhelmed,
+        or has lost confidence. Everything here is written in clear British English with a pressure-free approach.
       </p>
+
+      <div class="grid" style="margin-top:16px;">
+        <!-- Articles -->
+        <div class="card" style="box-shadow:none; border:1px solid #ececf4;">
+          <h2 style="margin:0 0 10px; font-size:16px;">Start here</h2>
+
+          <ul class="article-list">
+            <li class="article">
+              <a href="/learning-support/child-shuts-down-when-learning">
+                <div class="meta-row">
+                  <span class="pill">Confidence</span>
+                  <span class="pill">Anxiety</span>
+                </div>
+                <h2>My child shuts down when learning — what helps?</h2>
+                <p>Why shutdown happens, what to say in the moment, and how to rebuild confidence without pressure.</p>
+              </a>
+            </li>
+
+            <li class="article">
+              <a href="/learning-support/bright-child-struggling-at-school">
+                <div class="meta-row">
+                  <span class="pill">School</span>
+                  <span class="pill">Self-esteem</span>
+                </div>
+                <h2>Bright child but struggling at school</h2>
+                <p>What this can mean, what to ask teachers, and how to support at home without turning into battles.</p>
+              </a>
+            </li>
+
+            <li class="article">
+              <a href="/learning-support/is-tutoring-making-my-child-more-anxious">
+                <div class="meta-row">
+                  <span class="pill">Tutoring</span>
+                  <span class="pill">Stress</span>
+                </div>
+                <h2>Is tutoring making my child more anxious?</h2>
+                <p>Signs to watch for and how to choose support that reduces anxiety (not increases it).</p>
+              </a>
+            </li>
+
+            <li class="article">
+              <a href="/learning-support/how-to-help-child-learn-without-pressure">
+                <div class="meta-row">
+                  <span class="pill">Home learning</span>
+                  <span class="pill">No pressure</span>
+                </div>
+                <h2>How to help a child learn without pressure</h2>
+                <p>Simple changes that make learning feel safer — especially for children who avoid or resist.</p>
+              </a>
+            </li>
+
+            <li class="article">
+              <a href="/learning-support/signs-child-lost-confidence-in-learning">
+                <div class="meta-row">
+                  <span class="pill">Confidence</span>
+                  <span class="pill">Behaviour</span>
+                </div>
+                <h2>Signs a child has lost confidence in learning</h2>
+                <p>Subtle signs, what’s really going on underneath, and how to rebuild belief step by step.</p>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Right column: positioning + guide -->
+        <aside class="card" style="box-shadow:none; border:1px solid #ececf4;">
+          <div class="tip">
+            <h3>Quick guide: what helps most</h3>
+            <ul>
+              <li><strong>Keep it short.</strong> 5–10 minutes beats 45 minutes of stress.</li>
+              <li><strong>Finish on a win.</strong> Confidence grows when sessions end calmly.</li>
+              <li><strong>Reduce pressure.</strong> Wrong answers should feel safe.</li>
+              <li><strong>Use hints early.</strong> Don’t wait for frustration to build.</li>
+              <li><strong>Repeat gently.</strong> Mastery often needs calm repetition.</li>
+            </ul>
+          </div>
+
+          <div class="muted" style="margin-top:14px;">
+            Learnlio is built for children who feel overwhelmed with learning — especially with dyslexia-style struggles.
+            It adapts within safe limits, uses calm step-by-step explanations, and gives parents clear next actions.
+          </div>
+        </aside>
+      </div>
+
+      <!-- Single CTA at the bottom (as requested) -->
+      <div class="cta">
+        <h2>Want calm, confidence-first tutoring at home?</h2>
+        <p>
+          Try Learnlio with your child. Short sessions. No pressure. Dyslexia-aware explanations.
+          Parent reports that make next steps clear.
+        </p>
+        <div class="cta-actions">
+          <a class="btn" href="/pricing.html">Start free trial</a>
+          <a class="btn light" href="/why-learnlio.html">Why Learnlio</a>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Learnlio supports learning confidence but does not replace teachers or medical advice.
+      </div>
+
     </section>
 
-    <section class="grid">
-      <div class="article">
-        <a href="/learning-support/child-shuts-down">My child shuts down when learning — what helps?</a>
-        <div class="pill">Confidence</div>
-      </div>
-
-      <div class="article">
-        <a href="/learning-support/bright-but-struggling">Bright child but struggling at school</a>
-        <div class="pill">School</div>
-      </div>
-
-      <div class="article">
-        <a href="/learning-support/tutoring-anxiety">Is tutoring making my child more anxious?</a>
-        <div class="pill">Anxiety</div>
-      </div>
-
-      <div class="article">
-        <a href="/learning-support/learn-without-pressure">How to help a child learn without pressure</a>
-        <div class="pill">Calm learning</div>
-      </div>
-
-      <div class="article">
-        <a href="/learning-support/lost-confidence-signs">Signs a child has lost confidence in learning</a>
-        <div class="pill">Self-esteem</div>
-      </div>
-    </section>
-
-    <!-- SINGLE CTA -->
-    <section class="cta">
-      <h2 style="margin:0 0 6px;">Want personalised support?</h2>
-      <p class="muted">
-        Learnlio adapts to your child and shows you clear next steps — without pressure.
-      </p>
-      <a href="/billing.html" class="btn">Start free trial</a>
-    </section>
   </main>
 </body>
 </html>
