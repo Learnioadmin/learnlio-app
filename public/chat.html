@@ -6,91 +6,177 @@
   <title>Learnlio — Tutor</title>
 
   <link rel="stylesheet" href="/assets/css/app.css" />
+  <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
 
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
-    .container { max-width: 980px; margin: 0 auto; padding: 18px; }
+    :root{
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --border: #ececf4;
+      --text: #111827;
+      --muted: #6b7280;
+      --brand: #0b5cff;
+      --soft: #eef2ff;
+      --bot: #fff4cc;
+      --shadow: 0 10px 30px rgba(17, 24, 39, .10);
+      --radius: 18px;
+    }
 
-    .nav { background:#fff; border-bottom:1px solid #ececf4; }
-    .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:700; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+
+    /* Nav (kept as your app nav) */
+    .nav { background:#fff; border-bottom:1px solid var(--border); position: sticky; top: 0; z-index: 50; }
+    .nav-inner { max-width: 1040px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); font-weight:800; }
     .brand img { height:34px; width:auto; display:block; }
-    .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .links a { text-decoration:none; color:#111; padding:10px 12px; border-radius:12px; }
-    .links a.active { background:#eef2ff; }
-    .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; }
+    .links { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+    .links a { text-decoration:none; color:var(--text); padding:9px 10px; border-radius:12px; font-size:14px; }
+    .links a.active { background: var(--soft); }
+    .btn { background:var(--brand); border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:700; }
     .btn.light { background:#e5e7eb; color:#111; }
     .btn.ghost { background:transparent; border:1px solid #d1d5db; color:#111; }
-    .muted { color:#6b7280; font-size: 14px; }
-    .status { margin-top:10px; font-size:14px; }
+
+    /* Layout */
+    .container { max-width: 1040px; margin: 0 auto; padding: 14px 16px 18px; }
+
+    /* Make it feel like a real product panel that fits the screen */
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+
+      /* This is the key: height fits viewport without becoming huge */
+      height: calc(100dvh - 78px - 14px - 18px); /* nav + container padding */
+      min-height: 520px;
+    }
+    @media (max-width: 520px){
+      .panel{
+        height: calc(100dvh - 78px - 10px);
+        min-height: 520px;
+      }
+      .container{ padding: 10px 12px 14px; }
+    }
+
+    /* Header inside panel */
+    .panel-top {
+      padding: 12px 12px 10px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
+    }
+
+    .status { margin-top:8px; font-size:13px; }
     .status.bad { color:#dc2626; }
     .status.good { color:#16a34a; }
 
-    /* ---- FULL-HEIGHT CHAT LAYOUT (mobile-friendly) ---- */
-    main.container { padding-bottom: 12px; }
-    .chat-card {
-      background:#fff; border-radius:16px; padding:16px;
-      box-shadow: 0 4px 16px rgba(0,0,0,.08);
-      display:flex; flex-direction:column;
-      /* Use dynamic viewport height so input stays visible on mobile */
-      min-height: calc(100dvh - 72px); /* approx nav height */
-    }
-    @media (min-width: 980px) {
-      .chat-card { min-height: calc(100dvh - 86px); }
+    /* Progress bar area is compact */
+    .ph-wrap { display:none; }
+    .ph-top { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+    .ph-kpi { font-size:13px; color:#374151; }
+    .ph-kpi strong { color:#111827; }
+    .ph-bar { height:8px; background:#e5e7eb; border-radius:999px; overflow:hidden; margin-top:8px; }
+    .ph-bar > div { height:8px; width:0%; background:#10b981; }
+
+    /* Messages area */
+    .panel-mid {
+      padding: 12px;
+      flex: 1 1 auto;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    /* Progress header stays at top */
-    .ph-wrap{ display:none; margin-bottom:10px; }
-    .ph-top{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
-    .ph-kpi{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; font-size:14px; color:#333; }
-    .ph-bar{ height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden; margin-top:8px; }
-    .ph-bar > div{ height:10px; width:0%; background:#10b981; }
-
-    /* Messages scroll area */
     #messages {
-      background:#fafafa; border-radius:14px; padding:12px; border:1px solid #ddd;
-      overflow-y:auto;
-      display:flex; flex-direction:column; align-items:flex-start;
-      flex: 1 1 auto; /* take remaining space */
-      min-height: 180px;
+      flex: 1 1 auto;
+      overflow-y: auto;
+      background:#fafafa;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      scroll-behavior: smooth;
     }
 
-    /* Sticky input area */
-    #inputDock {
-      margin-top:12px;
-      border-top:1px solid #ececf4;
-      padding-top:12px;
-      flex: 0 0 auto;
-    }
-
-    /* Chat bubbles */
+    /* More premium: slightly smaller bubbles + responsive font */
     .msg {
-      padding:14px 16px; margin-bottom:14px; border-radius:16px; max-width:85%;
-      font-size:18px; line-height:1.85; white-space:pre-wrap;
+      padding: 12px 14px;
+      margin: 0 0 10px;
+      border-radius: 16px;
+      max-width: 86%;
       font-family:'OpenDyslexic', Arial, sans-serif;
-      overflow-wrap:break-word; display:inline-block;
+      font-size: clamp(15px, 1.3vw, 17px);
+      line-height: 1.75;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      display:inline-block;
     }
-    .msg.user { background:#0b5cff; color:#fff; margin-left:auto; text-align:right; }
-    .msg.bot  { background:#fef3c7; color:#000; }
+    .msg.user { background: var(--brand); color:#fff; margin-left:auto; text-align:right; }
+    .msg.bot  { background: var(--bot); color:#111; border: 1px solid rgba(0,0,0,.05); }
 
     .bot-controls { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
-    .btn-small { border:none; border-radius:10px; padding:6px 12px; font-size:14px; cursor:pointer; color:#fff; }
-    .speak-btn { background:#0b5cff; }
-    .hint-btn  { background:#10b981; }
-    .next-btn  { background:#7c3aed; }
+    .btn-small {
+      border:none; border-radius:12px; padding:7px 10px;
+      font-size:13px; cursor:pointer; color:#fff; font-weight:800;
+    }
+    .speak-btn { background: var(--brand); }
+    .hint-btn  { background: #10b981; }
+    .next-btn  { background: #7c3aed; }
 
-    /* Multiple-choice buttons */
+    /* Typing */
+    #typing-indicator { display:none; margin-top: 2px; color: var(--muted); font-style: italic; font-size: 13px; }
+
+    /* MCQ */
     .mcq-wrap { margin-top:10px; display:flex; flex-direction:column; gap:8px; }
     .mcq-btn {
       border:1px solid #d1d5db; background:#fff; color:#111;
-      padding:12px; border-radius:12px; cursor:pointer; text-align:left;
-      font-size:16px;
+      padding:12px; border-radius:14px; cursor:pointer; text-align:left;
+      font-size:15px; font-weight:700;
     }
     .mcq-btn:hover { background:#f3f4f6; }
 
-    /* Calculator */
-    #calculator { display:none; margin-bottom:12px; background:#eef2ff; padding:10px; border-radius:14px; }
-    .calcBtn { padding:14px; font-size:18px; border-radius:10px; border:none; background:#fff; cursor:pointer; }
+    /* Bottom dock: selection + input */
+    .panel-bottom {
+      border-top: 1px solid var(--border);
+      padding: 12px;
+      background: #fff;
+    }
+
+    #subject-selection { display:none; }
+    #area-selection { display:none; margin-top:10px; }
+
+    .dock-row { display:flex; gap:10px; align-items:center; }
+    #input {
+      flex:1; padding: 12px 12px;
+      font-size: 15px;
+      border-radius: 14px;
+      border: 1px solid #d1d5db;
+      outline: none;
+    }
+    #input:focus { border-color: rgba(11,92,255,.55); box-shadow: 0 0 0 4px rgba(11,92,255,.10); }
+    #sendBtn {
+      padding: 12px 14px;
+      font-size: 15px;
+      border-radius: 14px;
+      border:none;
+      background: var(--brand);
+      color:#fff;
+      cursor:pointer;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    /* Calculator (kept but tucked away nicely) */
+    #calculator { display:none; margin-top:10px; background: var(--soft); padding:10px; border-radius: 16px; border: 1px solid rgba(11,92,255,.12); }
+    .calcBtn { padding:14px; font-size:18px; border-radius:12px; border:none; background:#fff; cursor:pointer; font-weight:800; }
+    .calcBtn:hover { background:#f3f4f6; }
 
     /* Reward toast */
     #rewardToast {
@@ -102,18 +188,24 @@
       color: #fff;
       padding: 12px 14px;
       border-radius: 14px;
-      box-shadow: 0 10px 24px rgba(0,0,0,.25);
+      box-shadow: 0 12px 26px rgba(0,0,0,.25);
       display: none;
       max-width: min(560px, calc(100vw - 24px));
       font-size: 14px;
       z-index: 9999;
     }
     #rewardToast strong { display:block; font-size: 15px; margin-bottom: 2px; }
+
+    /* Make bottom dock stack nicely on small screens */
+    @media (max-width: 520px){
+      .dock-row { flex-direction: column; align-items: stretch; }
+      #sendBtn { width: 100%; }
+      .links a { padding:8px 9px; }
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
 </head>
 
 <body>
@@ -135,70 +227,66 @@
   </header>
 
   <main class="container">
-    <div class="chat-card">
-      <div id="pageError" class="status bad" style="display:none;"></div>
+    <section class="panel" aria-label="Learnlio Tutor session">
 
-      <!-- Progress header -->
-      <div id="progressHeader" class="ph-wrap">
-        <div class="ph-top">
-          <div id="progressLabel" class="ph-kpi">Progress: 0 / 0</div>
-          <div id="skillLabel" class="ph-kpi">Skill: —</div>
-          <div id="badgeLabel" class="ph-kpi">Badges: —</div>
-        </div>
-        <div class="ph-bar"><div id="progressBar"></div></div>
-      </div>
+      <div class="panel-top">
+        <div id="pageError" class="status bad" style="display:none;"></div>
 
-      <div id="messages"></div>
-
-      <div id="typing-indicator" style="display:none; margin:10px 0 0; font-style:italic; color:#555;">
-        Learnlio is typing…
-      </div>
-
-      <!-- Calculator -->
-      <div id="calculator">
-        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;">
-          <button type="button" class="calcBtn">7</button>
-          <button type="button" class="calcBtn">8</button>
-          <button type="button" class="calcBtn">9</button>
-          <button type="button" class="calcBtn">÷</button>
-
-          <button type="button" class="calcBtn">4</button>
-          <button type="button" class="calcBtn">5</button>
-          <button type="button" class="calcBtn">6</button>
-          <button type="button" class="calcBtn">×</button>
-
-          <button type="button" class="calcBtn">1</button>
-          <button type="button" class="calcBtn">2</button>
-          <button type="button" class="calcBtn">3</button>
-          <button type="button" class="calcBtn">−</button>
-
-          <button type="button" class="calcBtn">0</button>
-          <button type="button" id="calcClearBtn" class="calcBtn">C</button>
-          <button type="button" class="calcBtn">+</button>
-          <button type="button" class="calcBtn">=</button>
+        <div id="progressHeader" class="ph-wrap">
+          <div class="ph-top">
+            <div id="progressLabel" class="ph-kpi"><strong>Progress</strong>: 0 / 0</div>
+            <div id="skillLabel" class="ph-kpi"><strong>Skill</strong>: —</div>
+            <div id="badgeLabel" class="ph-kpi"><strong>Badges</strong>: —</div>
+          </div>
+          <div class="ph-bar"><div id="progressBar"></div></div>
         </div>
       </div>
 
-      <div id="subject-selection" style="display:none; margin-top:10px;">
-        <p class="muted" style="margin:0 0 10px;">Select a subject to start:</p>
-        <button class="btn" id="mathsBtn" type="button">Maths</button>
-        <button class="btn" id="englishBtn" type="button">English</button>
+      <div class="panel-mid">
+        <div id="messages"></div>
+        <div id="typing-indicator">Learnlio is typing…</div>
       </div>
 
-      <div id="area-selection" style="display:none; margin-top:10px;"></div>
+      <div class="panel-bottom">
+        <div id="subject-selection">
+          <p class="muted" style="margin:0 0 10px;">Choose a subject to start:</p>
+          <button class="btn" id="mathsBtn" type="button">➕ Maths</button>
+          <button class="btn" id="englishBtn" type="button">📚 English</button>
+        </div>
 
-      <!-- Sticky input dock -->
-      <div id="inputDock">
-        <div id="input-container" style="display:flex; gap:10px;">
-          <input id="input" placeholder="Type your answer here…"
-            style="flex:1; padding:14px; font-size:16px; border-radius:12px; border:1px solid #ccc;" />
-          <button id="sendBtn" type="button"
-            style="padding:14px 18px; font-size:16px; border-radius:12px; border:none; background:#0b5cff; color:#fff; cursor:pointer;">
-            Send
-          </button>
+        <div id="area-selection"></div>
+
+        <div id="calculator">
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;">
+            <button type="button" class="calcBtn">7</button>
+            <button type="button" class="calcBtn">8</button>
+            <button type="button" class="calcBtn">9</button>
+            <button type="button" class="calcBtn">÷</button>
+
+            <button type="button" class="calcBtn">4</button>
+            <button type="button" class="calcBtn">5</button>
+            <button type="button" class="calcBtn">6</button>
+            <button type="button" class="calcBtn">×</button>
+
+            <button type="button" class="calcBtn">1</button>
+            <button type="button" class="calcBtn">2</button>
+            <button type="button" class="calcBtn">3</button>
+            <button type="button" class="calcBtn">−</button>
+
+            <button type="button" class="calcBtn">0</button>
+            <button type="button" id="calcClearBtn" class="calcBtn">C</button>
+            <button type="button" class="calcBtn">+</button>
+            <button type="button" class="calcBtn">=</button>
+          </div>
+        </div>
+
+        <div class="dock-row" style="margin-top:10px;">
+          <input id="input" placeholder="Type your answer here…" />
+          <button id="sendBtn" type="button">Send</button>
         </div>
       </div>
-    </div>
+
+    </section>
   </main>
 
   <div id="rewardToast" role="status" aria-live="polite"></div>
@@ -248,25 +336,25 @@
     let area = null;
 
     // Session + skill tracking
-    let sessionDbId = null; // UUID from sessions table
+    let sessionDbId = null;
     let maxQuestions = 10;
     let questionsAnswered = 0;
     let correctCount = 0;
     let badges = [];
 
-    // Skill row (child_skill_progress)
-    let skillRow = null; // { id, level, accuracy, ... }
-    let difficultyLevel = 1; // derived from skillRow.level
+    // Skill row
+    let skillRow = null;
+    let difficultyLevel = 1;
     let streakCorrect = 0;
     let streakWrong = 0;
 
-    // Maths question
-    let currentQuestion = null; // { displayText, correctAnswer, choices? }
+    // Current task
+    let currentQuestion = null; // { displayText, correctAnswer, choices?, kind? }
     let hintUsedForCurrent = false;
     let waitingForNextButton = false;
     let guided = { active:false, steps:[], idx:0 };
 
-    // Single audio player for TTS
+    // Single audio player
     const ttsAudio = new Audio();
     ttsAudio.preload = "none";
 
@@ -285,29 +373,23 @@
       sendBtn.style.opacity = disabled ? "0.6" : "1";
       input.style.opacity = disabled ? "0.6" : "1";
     }
-    function cleanBotText(t) { return String(t || "").replace(/\*\*/g, ""); }
-
-    function scrollMessagesToBottom() {
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
+    function scrollBottom(){ messagesDiv.scrollTop = messagesDiv.scrollHeight; }
+    function cleanBotText(t){ return String(t || "").replace(/\*\*/g, ""); }
 
     function addUserMessage(text) {
       const div = document.createElement("div");
       div.className = "msg user";
       div.innerText = String(text || "").trim();
       messagesDiv.appendChild(div);
-      scrollMessagesToBottom();
+      scrollBottom();
     }
 
-    // Remove emojis / symbols that TTS will read awkwardly
+    // Only strip emojis for TTS, NOT for UI
     function stripForTTS(text) {
       let t = String(text || "");
-      // Remove emoji + pictographs broadly
       t = t.replace(/[\u{1F300}-\u{1FAFF}]/gu, "");
       t = t.replace(/[\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
-      // Remove repeated weird punctuation
       t = t.replace(/[•★🏅🏆⭐✅➡️🔊💡📚✏️🎲➕➖✖️➗]/g, "");
-      // Collapse whitespace
       t = t.replace(/\s{2,}/g, " ").trim();
       return t;
     }
@@ -316,18 +398,16 @@
       const clean = stripForTTS(text);
       if (!clean) return;
 
-      // Stop any current audio / speech
       try { ttsAudio.pause(); } catch {}
       ttsAudio.currentTime = 0;
 
       const res = await fetch(`${TTS_WORKER_BASE}/speak`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type":"application/json" },
         body: JSON.stringify({
           text: clean,
           languageCode: "en-GB",
-          // Keep these gentle-but-natural. Your worker can override too.
-          speakingRate: 1.02,
+          speakingRate: 1.03,
           pitch: 0
         })
       });
@@ -355,12 +435,8 @@
     }
 
     async function speak(text) {
-      try {
-        await speakViaWorker(text);
-      } catch (e) {
-        console.warn("Worker TTS failed, falling back:", e);
-        speakFallbackBrowser(text);
-      }
+      try { await speakViaWorker(text); }
+      catch (e) { console.warn("Worker TTS failed; fallback:", e); speakFallbackBrowser(text); }
     }
 
     function addBotMessage(text, opts={showHint:false, showNext:false, choices:null}) {
@@ -372,7 +448,6 @@
       content.innerText = safeText;
       div.appendChild(content);
 
-      // Optional MCQ choices (for younger children)
       if (Array.isArray(opts.choices) && opts.choices.length) {
         const wrap = document.createElement("div");
         wrap.className = "mcq-wrap";
@@ -383,7 +458,6 @@
           const letter = ["A","B","C","D"][idx] || "";
           b.textContent = `${letter}) ${c}`;
           b.addEventListener("click", async () => {
-            // submit choice as if typed
             input.value = String(c);
             await handleSend();
           });
@@ -415,14 +489,14 @@
         const nextBtn = document.createElement("button");
         nextBtn.type = "button";
         nextBtn.className = "btn-small next-btn";
-        nextBtn.innerText = "➡️ Next question";
+        nextBtn.innerText = "➡️ Next";
         nextBtn.onclick = () => handleNextQuestion();
         controls.appendChild(nextBtn);
       }
 
       div.appendChild(controls);
       messagesDiv.appendChild(div);
-      scrollMessagesToBottom();
+      scrollBottom();
     }
 
     function showActionButtons(buttons) {
@@ -461,16 +535,15 @@
     function updateProgressUI() {
       progressHeader.style.display = "block";
       progressLabel.innerText = `Progress: ${questionsAnswered} / ${maxQuestions}`;
-      badgeLabel.innerText = `Badges: ${badges.length ? badges.join(" ") : "—"}`;
 
       const lvl = skillRow?.level || difficultyLevel || 1;
-      const acc = (typeof skillRow?.accuracy === "number")
-        ? Math.round(skillRow.accuracy * 100)
-        : null;
+      const acc = (typeof skillRow?.accuracy === "number") ? Math.round(skillRow.accuracy * 100) : null;
 
       skillLabel.innerText = (subject && area)
-        ? `${subject} • ${area} — Level ${lvl}${acc !== null ? ` • ${acc}%` : ""}`
+        ? `Skill: ${subject} • ${area} — Level ${lvl}${acc !== null ? ` • ${acc}%` : ""}`
         : "Skill: —";
+
+      badgeLabel.innerText = `Badges: ${badges.length ? badges.join(" ") : "—"}`;
 
       const pct = maxQuestions ? Math.min(100, Math.round((questionsAnswered / maxQuestions) * 100)) : 0;
       progressBar.style.width = pct + "%";
@@ -494,40 +567,21 @@
     }
 
     function maybeAwardBadge() {
-      // Keep simple and motivating
-      if (correctCount === 3 && !badges.includes("⭐")) {
-        badges.push("⭐");
-        showRewardToast("New badge ⭐", "Three correct answers — lovely work.");
-      }
-      if (correctCount === 5 && !badges.includes("🏅")) {
-        badges.push("🏅");
-        showRewardToast("New badge 🏅", "Five correct — you’re on a roll.");
-      }
-      if (correctCount === 10 && !badges.includes("🏆")) {
-        badges.push("🏆");
-        showRewardToast("New badge 🏆", "Ten correct — brilliant effort.");
-      }
+      // Keep emojis (premium friendly, rewarding)
+      if (correctCount === 3 && !badges.includes("⭐")) { badges.push("⭐"); showRewardToast("⭐ New badge", "Three correct answers — lovely work."); }
+      if (correctCount === 5 && !badges.includes("🏅")) { badges.push("🏅"); showRewardToast("🏅 New badge", "Five correct — you’re on a roll."); }
+      if (correctCount === 10 && !badges.includes("🏆")) { badges.push("🏆"); showRewardToast("🏆 New badge", "Ten correct — brilliant effort."); }
     }
 
-    // Save last subject/area per child so next visit feels continuous
-    function ctxKey() {
-      return child?.id ? `learnlio_last_ctx_${child.id}` : "learnlio_last_ctx";
-    }
+    // Save last context per child for “carry on” feeling
+    function ctxKey() { return child?.id ? `learnlio_last_ctx_${child.id}` : "learnlio_last_ctx"; }
     function saveLastContext() {
       if (!child?.id) return;
-      localStorage.setItem(ctxKey(), JSON.stringify({
-        subject,
-        area,
-        at: new Date().toISOString()
-      }));
+      localStorage.setItem(ctxKey(), JSON.stringify({ subject, area, at: new Date().toISOString() }));
     }
     function loadLastContext() {
       if (!child?.id) return null;
-      try {
-        const raw = localStorage.getItem(ctxKey());
-        if (!raw) return null;
-        return JSON.parse(raw);
-      } catch { return null; }
+      try { const raw = localStorage.getItem(ctxKey()); return raw ? JSON.parse(raw) : null; } catch { return null; }
     }
 
     // ---------------- Backend (AI) ----------------
@@ -548,7 +602,7 @@
         return response.data.reply;
       } catch (err) {
         typingIndicator.style.display = "none";
-        return "Sorry, I couldn’t connect right now. Please try again.";
+        return "Sorry — I couldn’t connect right now. Please try again. 🙁";
       }
     }
 
@@ -570,17 +624,8 @@
         raw_log: null
       };
 
-      const { data, error } = await sb
-        .from("sessions")
-        .insert(payload)
-        .select("id")
-        .single();
-
-      if (error) {
-        console.error("sessions insert failed:", error);
-        throw error;
-      }
-
+      const { data, error } = await sb.from("sessions").insert(payload).select("id").single();
+      if (error) { console.error("sessions insert failed:", error); throw error; }
       sessionDbId = data.id;
       return sessionDbId;
     }
@@ -589,44 +634,26 @@
       await ensureSessionRow();
       if (!sessionDbId || !currentUser?.id || !child?.id) return;
 
-      const payload = {
-        session_id: sessionDbId,
-        owner_id: currentUser.id,
-        child_id: child.id,
-        item_type,
-        prompt_text,
-        child_text,
-        is_correct,
-        meta: meta || {}
-      };
-
+      const payload = { session_id: sessionDbId, owner_id: currentUser.id, child_id: child.id, item_type, prompt_text, child_text, is_correct, meta: meta || {} };
       const { error } = await sb.from("session_items").insert(payload);
-      if (error) {
-        console.error("session_items insert failed:", error);
-        throw error;
-      }
+      if (error) { console.error("session_items insert failed:", error); throw error; }
     }
 
     async function updateSessionRollups() {
       if (!sessionDbId) return;
-
-      const { error } = await sb
-        .from("sessions")
-        .update({
-          area: area || null,
-          questions_done: questionsAnswered,
-          correct_count: correctCount,
-          badges: badges
-        })
-        .eq("id", sessionDbId);
-
+      const { error } = await sb.from("sessions").update({
+        area: area || null,
+        questions_done: questionsAnswered,
+        correct_count: correctCount,
+        badges: badges
+      }).eq("id", sessionDbId);
       if (error) console.error("sessions update failed:", error);
     }
 
     async function loadOrCreateSkillRow() {
       if (!currentUser?.id || !child?.id || !subject || !area) return null;
 
-      const { data: existing, error: selErr } = await sb
+      const { data: existing } = await sb
         .from("child_skill_progress")
         .select("*")
         .eq("owner_id", currentUser.id)
@@ -634,8 +661,6 @@
         .eq("subject", subject)
         .eq("area", area)
         .maybeSingle();
-
-      if (selErr) console.error("child_skill_progress select failed:", selErr);
 
       if (existing?.id) {
         skillRow = existing;
@@ -668,11 +693,7 @@
         .select("*")
         .single();
 
-      if (upErr) {
-        console.error("child_skill_progress upsert failed:", upErr);
-        throw upErr;
-      }
-
+      if (upErr) { console.error("child_skill_progress upsert failed:", upErr); throw upErr; }
       skillRow = up;
       difficultyLevel = skillRow.level || 1;
       streakCorrect = 0;
@@ -684,13 +705,8 @@
     function computeNewLevel({ level, accuracy, streak_correct, streak_wrong, total_attempts }) {
       let newLevel = level || 1;
       const att = total_attempts || 0;
-
-      if (att >= 6 && streak_correct >= 3 && accuracy >= 0.70) {
-        newLevel = Math.min(10, newLevel + 1);
-      }
-      if (att >= 6 && streak_wrong >= 3 && accuracy < 0.40) {
-        newLevel = Math.max(1, newLevel - 1);
-      }
+      if (att >= 6 && streak_correct >= 3 && accuracy >= 0.70) newLevel = Math.min(10, newLevel + 1);
+      if (att >= 6 && streak_wrong >= 3 && accuracy < 0.40) newLevel = Math.max(1, newLevel - 1);
       return newLevel;
     }
 
@@ -731,76 +747,14 @@
         last_seen_at: new Date().toISOString()
       };
 
-      const { data, error } = await sb
-        .from("child_skill_progress")
-        .update(patch)
-        .eq("id", skillRow.id)
-        .select("*")
-        .single();
-
-      if (error) {
-        console.error("child_skill_progress update failed:", error);
-        throw error;
-      }
+      const { data, error } = await sb.from("child_skill_progress").update(patch).eq("id", skillRow.id).select("*").single();
+      if (error) { console.error("child_skill_progress update failed:", error); throw error; }
 
       skillRow = data;
       updateProgressUI();
     }
 
-    // ---------------- Load previous history (last session for subject+area) ----------------
-    async function loadPreviousHistorySnippet() {
-      if (!currentUser?.id || !child?.id || !subject || !area) return;
-
-      // Find last session for this child/subject/area (not the new one we are about to start)
-      const { data: lastSess, error: sErr } = await sb
-        .from("sessions")
-        .select("id, created_at, questions_done, correct_count")
-        .eq("owner_id", currentUser.id)
-        .eq("child_id", child.id)
-        .eq("subject", subject)
-        .eq("area", area)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (sErr) { console.warn("history session load error", sErr); return; }
-      if (!lastSess?.id) return;
-
-      addBotMessage(`Last time, we worked on ${area}.\n\nWould you like to carry on with that, or switch?`);
-
-      // Pull a handful of session items to provide continuity
-      const { data: items, error: iErr } = await sb
-        .from("session_items")
-        .select("item_type, prompt_text, child_text, is_correct, created_at")
-        .eq("session_id", lastSess.id)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (iErr) { console.warn("history items load error", iErr); return; }
-      if (!items?.length) return;
-
-      // Show oldest->newest for readability
-      const ordered = items.slice().reverse();
-
-      addBotMessage("Here’s a quick reminder of what happened:");
-
-      for (const it of ordered) {
-        if (it.item_type === "question" && it.prompt_text) {
-          addBotMessage(`Question:\n${it.prompt_text}`);
-        } else if ((it.item_type === "answer" || it.item_type === "turn") && it.child_text) {
-          addUserMessage(it.child_text);
-        } else if (it.item_type === "feedback" && it.prompt_text) {
-          // Keep feedback minimal in history
-          if (typeof it.is_correct === "boolean") {
-            addBotMessage(it.is_correct ? "✅ You got one right." : "🙂 We practised a tricky one.");
-          }
-        }
-      }
-
-      addBotMessage("Ready to start today’s session?");
-    }
-
-    // ---------------- Maths generation ----------------
+    // ---------------- Maths MCQ helpers ----------------
     function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
     function boundsForAgeAndDifficulty() {
@@ -832,36 +786,45 @@
       const { min, max } = boundsForAgeAndDifficulty();
 
       if (area === "Addition") {
-        const x = randInt(min, max);
-        const y = randInt(min, max);
-        return { displayText: `${x} + ${y} = ?`, correctAnswer: x + y };
+        const x = randInt(min, max), y = randInt(min, max);
+        return { kind:"math", displayText: `${x} + ${y} = ?`, correctAnswer: x + y };
       }
       if (area === "Subtraction") {
-        let x = randInt(min, max);
-        let y = randInt(min, max);
+        let x = randInt(min, max), y = randInt(min, max);
         if (y > x) [x, y] = [y, x];
-        return { displayText: `${x} - ${y} = ?`, correctAnswer: x - y };
+        return { kind:"math", displayText: `${x} − ${y} = ?`, correctAnswer: x - y };
       }
       if (area === "Multiplication") {
         const base = (childAge <= 7) ? 5 : (childAge <= 9) ? 8 : 12;
         const band = (difficultyLevel <= 3) ? 0 : (difficultyLevel <= 6) ? 1 : 2;
         const tableMax = Math.min(12, base + band * 2);
-        const x = randInt(2, tableMax);
-        let y = randInt(2, tableMax);
-        if (y === x) y = randInt(2, tableMax);
-        return { displayText: `${x} × ${y} = ?`, correctAnswer: x * y };
+        const x = randInt(2, tableMax), y = randInt(2, tableMax);
+        return { kind:"math", displayText: `${x} × ${y} = ?`, correctAnswer: x * y };
       }
       if (area === "Division") {
         const base = (childAge <= 7) ? 5 : (childAge <= 9) ? 8 : 12;
         const band = (difficultyLevel <= 3) ? 0 : (difficultyLevel <= 6) ? 1 : 2;
         const divMax = Math.min(12, base + band * 2);
-
-        const divisor = randInt(2, divMax);
-        const quotient = randInt(2, divMax);
-        const dividend = divisor * quotient;
-        return { displayText: `${dividend} ÷ ${divisor} = ?`, correctAnswer: quotient };
+        const divisor = randInt(2, divMax), quotient = randInt(2, divMax);
+        return { kind:"math", displayText: `${divisor * quotient} ÷ ${divisor} = ?`, correctAnswer: quotient };
       }
       return null;
+    }
+
+    function makeMCQChoices(correct) {
+      const choices = new Set([correct]);
+      while (choices.size < 4) {
+        const delta = randInt(1, 6);
+        const sign = Math.random() < 0.5 ? -1 : 1;
+        const candidate = Math.max(0, correct + sign * delta);
+        choices.add(candidate);
+      }
+      const arr = Array.from(choices).map(n => String(n));
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
     }
 
     function parseChildNumber(text) {
@@ -870,54 +833,116 @@
       return Number(m[0]);
     }
 
-    function makeMCQChoices(correct) {
-      // Generate 3 plausible wrong answers
-      const choices = new Set([correct]);
-      while (choices.size < 4) {
-        const delta = randInt(1, 6);
-        const sign = Math.random() < 0.5 ? -1 : 1;
-        const candidate = Math.max(0, correct + sign * delta);
-        choices.add(candidate);
-      }
-      // Shuffle
-      const arr = Array.from(choices);
-      for (let i = arr.length - 1; i > 0; i--) {
+    // ---------------- English MCQ (young kids) ----------------
+    function shuffle(arr){
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+        [a[i], a[j]] = [a[j], a[i]];
       }
-      return arr.map(n => String(n));
+      return a;
     }
 
-    function showMathQuestion(q) {
-      guided.active = false;
-      guided.steps = [];
-      guided.idx = 0;
+    function generateEnglishMCQ() {
+      // Only for younger children, and only for certain areas
+      if (childAge > 8) return null;
+
+      // Small, safe word bank (UK spelling)
+      const spellingPairs = [
+        ["because", ["becos", "becuase", "because"]],
+        ["beautiful", ["beatiful", "beautiful", "beutiful"]],
+        ["friend", ["freind", "friend", "frend"]],
+        ["school", ["scool", "school", "schol"]],
+        ["their", ["there", "their", "thier"]],
+        ["were", ["where", "were", "wer"]],
+        ["said", ["sed", "said", "saied"]],
+        ["little", ["littel", "little", "litle"]],
+      ];
+
+      const synonyms = [
+        ["happy", ["happy", "sad", "angry", "tired"], "Which word means the same as cheerful? 😊", "happy"],
+        ["quick", ["slow", "quick", "quiet", "late"], "Which word means fast? ⚡", "quick"],
+        ["big", ["tiny", "big", "soft", "kind"], "Which word means large? 🐘", "big"],
+        ["cold", ["hot", "cold", "bright", "loud"], "Which word is the opposite of hot? ❄️", "cold"],
+      ];
+
+      if (area === "Spelling") {
+        const [correct, opts] = spellingPairs[randInt(0, spellingPairs.length - 1)];
+        const choices = shuffle(opts).slice(0,4);
+        return {
+          kind:"english",
+          prompt: `📝 Pick the correct spelling:`,
+          question: `Which one is right?`,
+          choices,
+          correctAnswer: correct
+        };
+      }
+
+      if (area === "Word games") {
+        const s = synonyms[randInt(0, synonyms.length - 1)];
+        const prompt = s[2];
+        const correct = s[3];
+        const choices = shuffle(s[1]).slice(0,4);
+        return {
+          kind:"english",
+          prompt,
+          question: `Choose one:`,
+          choices,
+          correctAnswer: correct
+        };
+      }
+
+      // For Reading / Sentence building: keep as normal tutor chat for now
+      return null;
+    }
+
+    // ---------------- Show questions ----------------
+    function showQuestion(q) {
       hintUsedForCurrent = false;
       waitingForNextButton = false;
 
-      const useMCQ = childAge <= 8; // younger students -> MCQ
-      let choices = null;
-      if (useMCQ) choices = makeMCQChoices(q.correctAnswer);
+      const useMCQ = (childAge <= 8) && (q?.choices && q.choices.length);
 
-      addBotMessage(
-        `Question:\n\n${q.displayText}\n\nTake your time.\nWhat do you think the answer is?`,
-        { showHint: !useMCQ, showNext:false, choices }
-      );
+      if (q.kind === "math") {
+        const emoji = (area === "Addition") ? "➕" :
+                      (area === "Subtraction") ? "➖" :
+                      (area === "Multiplication") ? "✖️" :
+                      (area === "Division") ? "➗" : "✏️";
+        addBotMessage(
+          `${emoji} Question:\n\n${q.displayText}\n\nTake your time.\nWhat do you think the answer is?`,
+          { showHint: !useMCQ, choices: useMCQ ? q.choices : null }
+        );
 
-      insertSessionItem({
-        item_type: "question",
-        prompt_text: q.displayText,
-        child_text: null,
-        is_correct: null,
-        meta: { subject, area, difficultyLevel, mode: useMCQ ? "mcq" : "free" }
-      }).catch(console.error);
+        insertSessionItem({
+          item_type: "question",
+          prompt_text: q.displayText,
+          child_text: null,
+          is_correct: null,
+          meta: { subject, area, difficultyLevel, mode: useMCQ ? "mcq" : "free" }
+        }).catch(console.error);
+      } else {
+        // English MCQ
+        addBotMessage(
+          `${q.prompt}\n\n${q.question}`,
+          { showHint:false, choices: q.choices }
+        );
+
+        insertSessionItem({
+          item_type: "question",
+          prompt_text: `${q.prompt} ${q.question}`,
+          child_text: null,
+          is_correct: null,
+          meta: { subject, area, difficultyLevel, mode: "mcq" }
+        }).catch(console.error);
+      }
     }
 
+    // ---------------- Guided steps (math) ----------------
     function buildGuidedSteps(q) {
       const raw = q.displayText.replace("= ?", "").trim();
       let op = null;
       if (raw.includes("+")) op = "+";
-      else if (raw.includes("-")) op = "-";
+      else if (raw.includes("−") || raw.includes("-")) op = "−";
       else if (raw.includes("×")) op = "×";
       else if (raw.includes("÷")) op = "÷";
       if (!op) return [];
@@ -928,7 +953,7 @@
 
       if (childAge <= 7) {
         if (op === "+") return [{ prompt: `Start at ${a}.\nCount up ${b}.\n\nWhere do you land?`, expected: a+b }];
-        if (op === "-") return [{ prompt: `Start at ${a}.\nCount back ${b}.\n\nWhere do you land?`, expected: a-b }];
+        if (op === "−") return [{ prompt: `Start at ${a}.\nCount back ${b}.\n\nWhere do you land?`, expected: a-b }];
         if (op === "×") return [{ prompt: `${a} × ${b} means add ${a}, ${b} times.\n\nWhat do you get?`, expected: a*b }];
         if (op === "÷") return [{ prompt: `How many groups of ${b} fit into ${a}?\n\nWhat do you get?`, expected: a/b }];
       }
@@ -937,9 +962,9 @@
     }
 
     async function requestHint() {
-      if (!currentQuestion) { addBotMessage("I can give a hint once a question is on the screen. 😊"); return; }
-      if (guided.active) { addBotMessage("We’re already doing it step by step.\n\nTry this step first. 😊"); return; }
-      if (hintUsedForCurrent) { addBotMessage("You’ve already got a hint for this one.\n\nHave another try. 😊"); return; }
+      if (!currentQuestion) { addBotMessage("💡 I can give a hint once a question is on the screen."); return; }
+      if (guided.active) { addBotMessage("💡 We’re already doing it step by step.\n\nTry this step first."); return; }
+      if (hintUsedForCurrent) { addBotMessage("💡 You’ve already got a hint for this one.\n\nHave another try."); return; }
       hintUsedForCurrent = true;
 
       const hintPrompt = `
@@ -971,7 +996,7 @@ Correct answer: ${q.correctAnswer}
 Write a short response:
 - Praise (1 short sentence).
 - One tiny explanation step (1 short sentence).
-- End with: "Ready for the next one?"
+- End with: "Ready for the next one? 😊"
 Do NOT ask a new question.
 British English.
 Short lines.
@@ -989,41 +1014,47 @@ Short lines.
       }
 
       waitingForNextButton = false;
-      currentQuestion = generateMathQuestion();
-      if (!currentQuestion) { addBotMessage("Sorry — I couldn’t make a new question right now."); return; }
-      showMathQuestion(currentQuestion);
+
+      if (subject === "Maths") {
+        currentQuestion = generateMathQuestion();
+        if (!currentQuestion) { addBotMessage("Sorry — I couldn’t make a new question right now."); return; }
+        if (childAge <= 8) currentQuestion.choices = makeMCQChoices(currentQuestion.correctAnswer);
+        showQuestion(currentQuestion);
+        return;
+      }
+
+      // English
+      const mcq = generateEnglishMCQ();
+      if (mcq) {
+        currentQuestion = mcq;
+        showQuestion(currentQuestion);
+        return;
+      }
+
+      // Otherwise continue AI chat for English
+      currentQuestion = null;
+      addBotMessage("✅ Ready.\n\nTell me your next answer, or ask me for help.");
     }
 
     // ---------------- Subject/Area selection ----------------
     function showAreaSelection(options, lastCtx=null) {
       areaSelection.innerHTML = "";
+      areaSelection.style.display = "block";
 
-      // If last ctx matches the subject, show quick “do again” button
       if (lastCtx?.subject === subject && lastCtx?.area) {
         const quick = document.createElement("button");
         quick.className = "btn";
         quick.type = "button";
         quick.style.marginRight = "8px";
         quick.style.marginBottom = "8px";
-        quick.innerText = `Do ${lastCtx.area} again`;
+        quick.innerText = `🔁 Do ${lastCtx.area} again`;
         quick.addEventListener("click", async () => {
           addUserMessage(`Do ${lastCtx.area} again`);
-          areaSelection.style.display = "none";
           area = lastCtx.area;
+          areaSelection.style.display = "none";
           await startAreaSession();
         });
         areaSelection.appendChild(quick);
-
-        const switchBtn = document.createElement("button");
-        switchBtn.className = "btn light";
-        switchBtn.type = "button";
-        switchBtn.style.marginRight = "8px";
-        switchBtn.style.marginBottom = "8px";
-        switchBtn.innerText = "Choose a different area";
-        switchBtn.addEventListener("click", () => {
-          // do nothing, just show all options below
-        });
-        areaSelection.appendChild(switchBtn);
 
         const hr = document.createElement("div");
         hr.style.height = "1px";
@@ -1041,40 +1072,40 @@ Short lines.
         btn.innerText = opt.label;
         btn.addEventListener("click", async () => {
           addUserMessage(opt.label);
-          areaSelection.style.display = "none";
           area = opt.area;
+          areaSelection.style.display = "none";
           await startAreaSession();
         });
         areaSelection.appendChild(btn);
       });
-
-      areaSelection.style.display = "block";
     }
 
     async function startAreaSession() {
-      // new session per subject+area start (keeps reporting clean)
       resetSessionCounters();
-
-      // Before creating a new session row, load some history for continuity
-      // (this uses previous session, not the new one)
-      await loadPreviousHistorySnippet();
-
       await ensureSessionRow();
-      await loadOrCreateSkillRow(); // loads real level for this skill
+      await loadOrCreateSkillRow();
       updateProgressUI();
+      saveLastContext();
 
       guided.active = false; guided.steps = []; guided.idx = 0;
-
-      saveLastContext();
 
       if (subject === "Maths") {
         calculator.style.display = "block";
         currentQuestion = generateMathQuestion();
-        showMathQuestion(currentQuestion);
+        if (childAge <= 8) currentQuestion.choices = makeMCQChoices(currentQuestion.correctAnswer);
+        showQuestion(currentQuestion);
       } else {
         calculator.style.display = "none";
-        currentQuestion = null;
 
+        // If young and area supports MCQ, start MCQ
+        const mcq = generateEnglishMCQ();
+        if (mcq) {
+          currentQuestion = mcq;
+          showQuestion(currentQuestion);
+          return;
+        }
+
+        currentQuestion = null;
         const prompt = `
 You are Learnlio AI, a child-safe UK tutor.
 Child: ${childName}, age ${childAge}
@@ -1083,6 +1114,7 @@ English area: ${area}
 Start ONE simple activity.
 Keep it dyslexia-friendly.
 End with a gentle question.
+Use friendly emojis occasionally.
 British English.
 Short lines.
 `;
@@ -1116,23 +1148,23 @@ Short lines.
       const last = loadLastContext();
 
       addBotMessage(selected === "Maths"
-        ? "Great.\n\nWhich Maths area would you like to work on?"
-        : "Great.\n\nWhich English area would you like to practise?"
+        ? "➕ Great!\n\nWhich Maths area would you like to try first?"
+        : "📚 Great!\n\nWhich English area would you like to practise?"
       );
 
       if (selected === "Maths") {
         showAreaSelection([
-          { label: "Addition", area: "Addition" },
-          { label: "Subtraction", area: "Subtraction" },
-          { label: "Multiplication", area: "Multiplication" },
-          { label: "Division", area: "Division" }
+          { label: "Addition ➕", area: "Addition" },
+          { label: "Subtraction ➖", area: "Subtraction" },
+          { label: "Multiplication ✖️", area: "Multiplication" },
+          { label: "Division ➗", area: "Division" }
         ], last);
       } else {
         showAreaSelection([
-          { label: "Reading aloud", area: "Reading" },
-          { label: "Spelling", area: "Spelling" },
-          { label: "Sentence building", area: "Sentence building" },
-          { label: "Fun word games", area: "Word games" }
+          { label: "Reading aloud 📖", area: "Reading" },
+          { label: "Spelling 📝", area: "Spelling" },
+          { label: "Sentence building ✍️", area: "Sentence building" },
+          { label: "Fun word games 🎲", area: "Word games" }
         ], last);
       }
     }
@@ -1147,7 +1179,7 @@ Short lines.
       guided.steps = [];
       guided.idx = 0;
 
-      addBotMessage(`That’s the end for today, ${childName}.\n\nYou did really well.`);
+      addBotMessage(`✅ That’s the end for today, ${childName}.\n\nYou did really well. ⭐`);
 
       showActionButtons([
         {
@@ -1159,7 +1191,7 @@ Short lines.
             progressHeader.style.display = "none";
             subject = null; area = null; skillRow = null;
             disableInput(false);
-            addBotMessage(`What would you like to work on now, ${childName}?`);
+            addBotMessage(`What would you like to work on now, ${childName}? 😊`);
             subjectSelection.style.display = "block";
           }
         },
@@ -1170,7 +1202,7 @@ Short lines.
             areaSelection.style.display = "none";
             disableInput(true);
             await updateSessionRollups();
-            addBotMessage("All saved.\n\nSee you next time.");
+            addBotMessage("✅ All saved.\n\nSee you next time. 👋");
           }
         }
       ]);
@@ -1186,39 +1218,24 @@ Short lines.
       addUserMessage(text);
       input.value = "";
 
-      // record user response as session_item evidence
+      // evidence
       try {
         await insertSessionItem({
           item_type: "answer",
-          prompt_text: currentQuestion?.displayText || null,
+          prompt_text: currentQuestion?.displayText || currentQuestion?.question || null,
           child_text: text,
           is_correct: null,
           meta: { subject, area, difficultyLevel }
         });
       } catch (e) { console.error(e); }
 
-      if (!subject) {
-        addBotMessage("Please choose Maths or English using the buttons below.");
-        subjectSelection.style.display = "block";
-        return;
-      }
-
-      if (!area) {
-        addBotMessage("Please choose an area first using the buttons.");
-        return;
-      }
-
-      if (sessionComplete()) {
-        endSessionUI();
-        return;
-      }
+      if (!subject) { addBotMessage("Please choose Maths or English using the buttons below. 😊"); subjectSelection.style.display = "block"; return; }
+      if (!area) { addBotMessage("Please choose an area first using the buttons. 🙂"); return; }
+      if (sessionComplete()) { endSessionUI(); return; }
 
       // ---------------- Maths ----------------
       if (subject === "Maths") {
-        if (!currentQuestion) {
-          addBotMessage("Please choose a Maths area first.");
-          return;
-        }
+        if (!currentQuestion) { addBotMessage("Please choose a Maths area first."); return; }
 
         // Guided mode
         if (guided.active) {
@@ -1229,7 +1246,7 @@ Short lines.
           if (ok) {
             guided.idx += 1;
             if (guided.idx < guided.steps.length) {
-              addBotMessage(`Nice work.\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${guided.steps[guided.idx].prompt}`);
+              addBotMessage(`✅ Nice work!\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${guided.steps[guided.idx].prompt}`);
               return;
             }
 
@@ -1257,7 +1274,7 @@ Short lines.
             if (sessionComplete()) { endSessionUI(); return; }
 
             waitingForNextButton = true;
-            addBotMessage(`Brilliant, ${childName}.\n\nThat is correct.\n\nReady for the next one?`, { showNext:true });
+            addBotMessage(`🎉 Brilliant, ${childName}!\n\nThat is correct.\n\nReady for the next one? 😊`, { showNext:true });
             return;
           } else {
             streakWrong += 1;
@@ -1274,12 +1291,11 @@ Short lines.
             await recordAttemptToSkill({ isCorrect: false, meta: { guided: true, step: guided.idx+1 } });
             await updateSessionRollups();
 
-            addBotMessage(`Good try.\n\nLet’s do the same step again.\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${step.prompt}`);
+            addBotMessage(`Good try. 🙂\n\nLet’s do the same step again.\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${step.prompt}`);
             return;
           }
         }
 
-        // Normal marking
         const n = parseChildNumber(text);
         const correct = (n !== null && Math.abs(n - currentQuestion.correctAnswer) < 1e-9);
 
@@ -1305,11 +1321,7 @@ Short lines.
 
           const reply = await giveMathFeedback_AI(currentQuestion, text);
 
-          if (sessionComplete()) {
-            addBotMessage(reply);
-            endSessionUI();
-            return;
-          }
+          if (sessionComplete()) { addBotMessage(reply); endSessionUI(); return; }
 
           waitingForNextButton = true;
           addBotMessage(reply, { showNext:true });
@@ -1336,16 +1348,45 @@ Short lines.
           guided.active = true;
           guided.steps = steps;
           guided.idx = 0;
-          addBotMessage(`Good try, ${childName}.\n\nLet’s go slowly.\n\nStep 1 of ${guided.steps.length}:\n\n${guided.steps[0].prompt}`);
+          addBotMessage(`Good try, ${childName}. 🙂\n\nLet’s go slowly.\n\nStep 1 of ${guided.steps.length}:\n\n${guided.steps[0].prompt}`);
           return;
         }
 
-        addBotMessage("Good try.\n\nLet’s try again.\n\nWhat do you think the answer is?", { showHint:true });
+        addBotMessage("Good try. 🙂\n\nLet’s try again.\n\nWhat do you think the answer is?", { showHint:true });
         return;
       }
 
       // ---------------- English ----------------
       if (subject === "English") {
+        // If we are in English MCQ mode (currentQuestion has correctAnswer + choices)
+        if (currentQuestion?.kind === "english" && currentQuestion?.correctAnswer) {
+          const isCorrect = String(text).trim().toLowerCase() === String(currentQuestion.correctAnswer).trim().toLowerCase();
+
+          questionsAnswered += 1;
+          if (isCorrect) correctCount += 1;
+          maybeAwardBadge();
+          updateProgressUI();
+
+          await insertSessionItem({
+            item_type: "feedback",
+            prompt_text: currentQuestion.question,
+            child_text: text,
+            is_correct: isCorrect,
+            meta: { subject, area, difficultyLevel, mode: "mcq" }
+          });
+
+          // Use the same skill tracking rules for MCQ English attempts
+          await recordAttemptToSkill({ isCorrect, meta: { mode: "mcq" } });
+          await updateSessionRollups();
+
+          if (isCorrect) addBotMessage("✅ Yes! Great choice. 🎉", { showNext: true });
+          else addBotMessage(`🙂 Good try.\n\nThe right answer was: ${currentQuestion.correctAnswer}\n\nReady for the next one?`, { showNext: true });
+
+          if (sessionComplete()) { endSessionUI(); }
+          return;
+        }
+
+        // Normal English tutor chat
         questionsAnswered += 1;
         updateProgressUI();
 
@@ -1365,18 +1406,11 @@ Short lines.
             const oldConf = (typeof skillRow.confidence === "number") ? skillRow.confidence : 0.5;
             const confidence = Math.max(0, Math.min(1, oldConf * 0.90 + 0.10 * 0.55));
 
-            const { data } = await sb
-              .from("child_skill_progress")
-              .update({
-                total_attempts,
-                accuracy,
-                confidence,
-                last_session_id: sessionDbId || null,
-                last_seen_at: new Date().toISOString()
-              })
-              .eq("id", skillRow.id)
-              .select("*")
-              .single();
+            const { data } = await sb.from("child_skill_progress").update({
+              total_attempts, accuracy, confidence,
+              last_session_id: sessionDbId || null,
+              last_seen_at: new Date().toISOString()
+            }).eq("id", skillRow.id).select("*").single();
 
             if (data) skillRow = data;
             updateProgressUI();
@@ -1396,6 +1430,7 @@ Respond with short, clear help.
 Use very simple words.
 Dyslexia-friendly spacing (short lines).
 Give one next step only.
+Use friendly emojis sometimes (not too many).
 End with a gentle question.
 British English.
 `;
@@ -1446,7 +1481,7 @@ British English.
       const selected = getSelectedChildFromLocalStorage();
       if (!selected?.id) {
         showError("No child selected. Go to Dashboard and click Select on a child.");
-        addBotMessage("I can’t find a child profile yet.\n\nPlease go back to the Dashboard and select a child.");
+        addBotMessage("I can’t find a child profile yet.\n\nPlease go back to the Dashboard and select a child. 🙂");
         showActionButtons([{ label: "Go to Dashboard", onClick: () => window.location.href = "/dash.html" }]);
         disableInput(true);
         subjectSelection.style.display = "none";
@@ -1478,17 +1513,14 @@ British English.
       clearError();
       disableInput(false);
 
-      // Welcome + remember last subject/area
       const last = loadLastContext();
-
       if (last?.subject) {
-        addBotMessage(`Hi ${childName}.\n\nLast time you did ${last.subject}${last.area ? ` — ${last.area}` : ""}.\n\nWhat would you like to work on today?`);
-        subjectSelection.style.display = "block";
+        addBotMessage(`👋 Hi ${childName}!\n\nLast time we did ${last.subject}${last.area ? ` • ${last.area}` : ""}.\n\nWhat are we working on today? 😊`);
       } else {
-        addBotMessage(`Hi ${childName}.\n\nI’ll help you in a calm, step-by-step way.\n\nWhat are we working on today?`);
-        subjectSelection.style.display = "block";
+        addBotMessage(`👋 Hi ${childName}!\n\nI’ll help you calmly, step by step.\n\nWhat are we working on today? 😊`);
       }
 
+      subjectSelection.style.display = "block";
       return true;
     }
 
@@ -1520,5 +1552,6 @@ British English.
   </script>
 </body>
 </html>
+
 
 
