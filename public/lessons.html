@@ -276,6 +276,7 @@
       <nav class="links">
         <a href="/dash.html">Dashboard</a>
         <a href="/chat.html">Learnlio Tutor</a>
+        <a class="active" href="/lessons.html">Lessons</a>
         <a href="/screener.html">Dyslexia Screener</a>
         <a href="/reports.html">Reports</a>
         <a href="/billing.html">Billing</a>
@@ -483,6 +484,7 @@
       } catch { return null; }
     }
 
+    // One consistent key the player can use
     function lessonCtxKey(){
       return child?.id ? `learnlio_lesson_ctx_${child.id}` : `learnlio_lesson_ctx`;
     }
@@ -496,7 +498,6 @@
     }
 
     function goToLesson(subject, area, resumeAttemptId=null){
-      // Store context so lesson.html can also read it if needed
       if (subject && area) saveLessonContext(subject, area);
 
       const params = new URLSearchParams();
@@ -504,6 +505,7 @@
       if (area) params.set("area", area);
       if (resumeAttemptId) params.set("attempt", resumeAttemptId);
 
+      // This is the key: this page only routes.
       window.location.href = `/lesson.html?${params.toString()}`;
     }
 
@@ -559,41 +561,37 @@
       return true;
     }
 
-    async function loadUnfinishedAttempt(){
-      // This assumes you have:
-      // lesson_attempts: id, owner_id, child_id, lesson_id, completed_at
-      // and lessons_catalog: id, subject, area, title
-      // If your schema differs, tell me your columns and I’ll adjust.
+    async function safeLoadUnfinishedAttempt(){
+      // Fail-safe: if your DB tables/policies aren’t ready yet,
+      // we just hide the continue card instead of breaking the page.
+      try{
+        const { data: attempts, error } = await sb
+          .from("lesson_attempts")
+          .select("id, lesson_id, created_at, completed_at")
+          .eq("owner_id", currentUser.id)
+          .eq("child_id", child.id)
+          .is("completed_at", null)
+          .order("created_at", { ascending:false })
+          .limit(1);
 
-      const { data: attempts, error } = await sb
-        .from("lesson_attempts")
-        .select("id, lesson_id, created_at, completed_at")
-        .eq("owner_id", currentUser.id)
-        .eq("child_id", child.id)
-        .is("completed_at", null)
-        .order("created_at", { ascending:false })
-        .limit(1);
+        if (error) return null;
 
-      if (error){
-        console.warn("unfinished attempt load failed", error);
+        const attempt = (attempts || [])[0];
+        if (!attempt) return null;
+
+        const { data: lessonRow, error: lErr } = await sb
+          .from("lessons_catalog")
+          .select("id, subject, area, title")
+          .eq("id", attempt.lesson_id)
+          .maybeSingle();
+
+        if (lErr) return null;
+        if (!lessonRow?.id) return null;
+
+        return { attemptId: attempt.id, lesson: lessonRow };
+      } catch {
         return null;
       }
-      const attempt = (attempts || [])[0];
-      if (!attempt) return null;
-
-      const { data: lessonRow, error: lErr } = await sb
-        .from("lessons_catalog")
-        .select("id, subject, area, title")
-        .eq("id", attempt.lesson_id)
-        .maybeSingle();
-
-      if (lErr){
-        console.warn("lesson load failed", lErr);
-        return null;
-      }
-      if (!lessonRow?.id) return null;
-
-      return { attemptId: attempt.id, lesson: lessonRow };
     }
 
     function showAreas(subject){
@@ -675,16 +673,15 @@
 
       clearError();
 
-      // Continue last lesson if present
-      const unfinished = await loadUnfinishedAttempt();
+      // Continue last lesson if present (fail-safe)
+      const unfinished = await safeLoadUnfinishedAttempt();
       if (unfinished){
         continueCard.classList.remove("hide");
-
         const { attemptId, lesson } = unfinished;
+
         continueMeta.textContent = `${lesson.subject} • ${lesson.area} — ${lesson.title || "Lesson"}`;
 
         continueBtn.onclick = () => {
-          // Resume attempt (lesson.html can read attempt id)
           goToLesson(lesson.subject, lesson.area, attemptId);
         };
       } else {
@@ -698,5 +695,3 @@
   </script>
 </body>
 </html>
-
-
