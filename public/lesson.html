@@ -32,7 +32,6 @@
     }
     @media (min-width: 981px){ body{ overflow:hidden; } }
 
-    /* Logged-in nav (same as Tutor) */
     .nav{ background:#fff; border-bottom:1px solid rgba(15,23,42,.08); position:sticky; top:0; z-index:50; }
     .nav-inner{ max-width:1140px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-weight:900; letter-spacing:.2px; }
@@ -108,6 +107,8 @@
       border: 1px solid rgba(15,23,42,.10);
       border-radius: var(--radius2);
       padding: 12px;
+      padding-bottom: 120px;         /* ✅ prevents sticky controls blocking last option */
+      scroll-padding-bottom: 120px;  /* ✅ ensures last items can scroll above controls */
       box-shadow: var(--shadow2);
       display:flex;
       flex-direction:column;
@@ -196,7 +197,6 @@
     }
     .pill:disabled{ opacity:.55; cursor:not-allowed; }
 
-    /* Side panel */
     .side{ padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
     .sideCard{
       background: rgba(255,255,255,.92);
@@ -234,8 +234,7 @@
     .tiny{ color:var(--muted); font-size:13px; line-height:1.6; margin-top:10px; }
     .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 
-    /* ===== Interactive components ===== */
-
+    /* Interactive components */
     .ibox{
       background:#fff;
       border:1px solid rgba(15,23,42,.10);
@@ -248,11 +247,6 @@
     }
 
     /* Fill blank */
-    .blankLine{
-      font-family:'OpenDyslexic', Arial, sans-serif;
-      font-size: clamp(15px, 1.2vw, 17px);
-      line-height: 1.75;
-    }
     .blankInput{
       width: 100%;
       padding: 12px 12px;
@@ -275,11 +269,7 @@
     @media (max-width: 520px){
       .pairsGrid{ grid-template-columns: 1fr; }
     }
-    .pairCol{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
+    .pairCol{ display:flex; flex-direction:column; gap:8px; }
     .pairBtn{
       text-align:left;
       padding:12px 12px;
@@ -301,16 +291,10 @@
       cursor: default;
       opacity:.95;
     }
-    .matchLine{
-      font-size: 13px;
-      color: var(--muted);
-      line-height:1.5;
-    }
+    .matchLine{ font-size: 13px; color: var(--muted); line-height:1.5; }
 
     /* Number line */
-    .lineWrap{
-      padding: 8px 6px 4px;
-    }
+    .lineWrap{ padding: 8px 6px 4px; }
     .numLine{
       position: relative;
       height: 64px;
@@ -353,16 +337,7 @@
       padding: 0 4px;
       font-weight:850;
     }
-    .sliderRow{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .slider{
-      width: 100%;
-      accent-color: var(--brand);
-    }
+    .slider{ width: 100%; accent-color: var(--brand); }
 
     /* Drag drop */
     .dragGrid{
@@ -405,20 +380,21 @@
       border-color: rgba(11,92,255,.35);
       background: rgba(11,92,255,.06);
     }
-    .dzLabel{
-      font-weight: 950;
-      color: var(--ink);
-      font-size: 14px;
-    }
-    .dzValue{
-      font-weight: 950;
-      color: var(--muted);
-      font-size: 14px;
+    .dzLabel{ font-weight: 950; color: var(--ink); font-size: 14px; }
+    .dzValue{ font-weight: 950; color: var(--muted); font-size: 14px; }
+
+    /* End screen buttons */
+    .endBtns{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 10px;
     }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
   <header class="nav">
     <div class="nav-inner">
@@ -437,7 +413,6 @@
 
   <main class="container">
     <div class="shell">
-      <!-- Lesson -->
       <section class="panel" aria-label="Learnlio Lesson">
         <div class="panel-head">
           <div>
@@ -455,9 +430,7 @@
         <div class="stage">
           <div id="cardbox" class="cardbox">
             <div id="lessonText" class="lessonText"></div>
-
             <div id="mcq" class="mcq" style="display:none;"></div>
-
             <div id="interactiveMount" style="display:none;"></div>
           </div>
 
@@ -469,7 +442,6 @@
         </div>
       </section>
 
-      <!-- Progress -->
       <aside class="panel" aria-label="Lesson progress">
         <div class="panel-head">
           <div>
@@ -509,7 +481,6 @@
 
   <script>
   (() => {
-    // iOS vh fix
     function setVh(){ document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
     setVh(); window.addEventListener('resize', setVh);
 
@@ -518,11 +489,7 @@
     // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-
-    // IMPORTANT: worker says routes are /health and /generate (POST)
     const LESSON_GEN_URL = "https://learnlio-lessons.falling-grass-34ab.workers.dev/generate";
-
-    // Google TTS Worker
     const TTS_URL = "https://learnlio-tts.falling-grass-34ab.workers.dev/speak";
     // =========================
 
@@ -565,16 +532,15 @@
     let AREA = null;
 
     // Lesson runtime
-    let lesson = null;         // returned by worker
+    let lesson = null;
     let steps = [];
     let idx = 0;
-    let stepAnswers = {};      // stepIndex -> { kind, isCorrect, data }
+    let stepAnswers = {}; // stepIndex -> { kind, isCorrect, data }
     let xp = 0;
 
     // Audio
     let currentAudio = null;
 
-    // Per-step gate: must be true to allow Next
     function stepIsAnswered(stepIndex){
       return !!stepAnswers[stepIndex];
     }
@@ -677,9 +643,24 @@
       interactiveMount.innerHTML = "";
     }
 
-    // -------------------------
-    // LESSON GEN (Worker)
-    // -------------------------
+    function norm(s){ return String(s ?? "").trim().toLowerCase(); }
+    function safeNum(v, fallback){
+      const n = Number(v);
+      return Number.isFinite(n) ? n : fallback;
+    }
+
+    function autoAdvance(delayMs = 650){
+      // Don’t auto-advance if we’re already at the end
+      if (idx >= steps.length - 1) return;
+      setTimeout(() => {
+        // Only advance if still on same step and it’s answered
+        if (stepIsAnswered(idx)){
+          idx += 1;
+          renderStep();
+        }
+      }, delayMs);
+    }
+
     async function fetchGeneratedLesson(){
       const payload = {
         ownerId: currentUser.id,
@@ -707,7 +688,6 @@
         throw new Error(msg);
       }
 
-      // accept either {steps:[...]} or {lesson:{steps:[...]}}
       const out = json?.steps ? json : (json?.lesson ? json.lesson : json);
 
       if (!out?.steps || !Array.isArray(out.steps) || !out.steps.length){
@@ -717,18 +697,6 @@
       return out;
     }
 
-    // -------------------------
-    // Helpers for correctness
-    // -------------------------
-    function norm(s){ return String(s ?? "").trim().toLowerCase(); }
-    function safeNum(v, fallback){
-      const n = Number(v);
-      return Number.isFinite(n) ? n : fallback;
-    }
-
-    // -------------------------
-    // Renderers
-    // -------------------------
     function renderTextStep(step){
       lessonTextEl.textContent = step.text || "";
       nextBtn.textContent = (step.type === "finish") ? "✅ Complete" : "➡️ Next";
@@ -738,12 +706,14 @@
     function renderMCQ(step){
       lessonTextEl.textContent = step.prompt || "";
       mcqEl.style.display = "grid";
+      mcqEl.innerHTML = "";
 
       const letters = ["A","B","C","D","E","F"];
       const choices = Array.isArray(step.choices) ? step.choices : [];
-
       if (!choices.length){
         mcqEl.innerHTML = `<div class="notice">This question has no choices.</div>`;
+        stepAnswers[idx] = { kind:"mcq", isCorrect:true, data:{ noChoices:true } };
+        autoAdvance(500);
         return;
       }
 
@@ -758,43 +728,91 @@
 
           xp += isCorrect ? 10 : 6;
           stepAnswers[idx] = { kind:"mcq", isCorrect, data:{ pickedIndex:i } };
-
           hintLine.textContent = isCorrect ? "Nice work ✅" : "Good try 💛";
           setProgressUI();
+          autoAdvance();
         });
         mcqEl.appendChild(btn);
       });
     }
 
     function renderFillBlank(step){
-      // Supported shapes:
-      // A) { type:"fill_blank", prompt:"...", answer:"15" }
-      // B) { type:"fill_blank", text:"12 + 3 = ____", answers:["15"] }
-      const prompt = step.prompt || step.text || "Fill in the blank:";
-      const expected = (step.answer != null) ? [String(step.answer)]
-                     : (Array.isArray(step.answers) ? step.answers.map(String) : []);
+      // Accept multiple shapes:
+      const prompt = step.prompt || step.text || "Complete the sentence:";
+      const expected =
+        (step.answer != null) ? [String(step.answer)] :
+        (Array.isArray(step.answers) ? step.answers.map(String) :
+        (step.correctAnswer != null ? [String(step.correctAnswer)] : []));
+
+      const choices =
+        Array.isArray(step.choices) ? step.choices :
+        Array.isArray(step.wordBank) ? step.wordBank :
+        [];
 
       lessonTextEl.textContent = prompt;
 
       interactiveMount.style.display = "block";
       interactiveMount.innerHTML = "";
-
       const box = document.createElement("div");
       box.className = "ibox";
 
-      const line = document.createElement("div");
-      line.className = "blankLine";
-      line.textContent = step.sentence || step.line || step.example || "";
+      // If there is no answer key AND no choices: it's unclear -> show "Next question"
+      const hasAnswerKey = expected.length > 0;
+      const hasChoices = choices.length > 0;
+
+      const note = document.createElement("div");
+      note.className = "matchLine";
+      note.textContent = "Type the missing bit, then press Check.";
 
       const input = document.createElement("input");
       input.className = "blankInput";
       input.type = "text";
-      input.inputMode = "text";
-      input.placeholder = "Type your answer…";
+      input.placeholder = hasChoices ? "Choose or type…" : "Type your answer…";
 
-      const tip = document.createElement("div");
-      tip.className = "matchLine";
-      tip.textContent = "Tip: it’s okay to try. You can change your answer.";
+      // Optional choice chips (makes it clearer)
+      if (hasChoices){
+        const row = document.createElement("div");
+        row.className = "row";
+        choices.slice(0, 8).forEach(c => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "pill";
+          b.textContent = String(c);
+          b.addEventListener("click", () => {
+            input.value = String(c);
+            input.focus();
+          });
+          row.appendChild(b);
+        });
+        box.appendChild(row);
+      }
+
+      if (!hasAnswerKey && !hasChoices){
+        const warn = document.createElement("div");
+        warn.className = "notice";
+        warn.innerHTML = `
+          <b>This one needs a clearer answer.</b><br><br>
+          We’ll skip it and move on (no problem).
+        `;
+
+        const nextQ = document.createElement("button");
+        nextQ.type = "button";
+        nextQ.className = "pill primary";
+        nextQ.textContent = "➡️ Next question";
+
+        nextQ.addEventListener("click", () => {
+          xp += 6; // effort XP
+          stepAnswers[idx] = { kind:"fill_blank", isCorrect:true, data:{ skippedBecauseNoKey:true } };
+          hintLine.textContent = "Okay — moving on 💛";
+          setProgressUI();
+          autoAdvance(350);
+        });
+
+        box.appendChild(warn);
+        box.appendChild(nextQ);
+        interactiveMount.appendChild(box);
+        return;
+      }
 
       const checkBtn = document.createElement("button");
       checkBtn.className = "pill primary";
@@ -808,36 +826,30 @@
           return;
         }
 
-        let isCorrect = null;
-        if (expected.length){
+        let isCorrect = true;
+        if (hasAnswerKey){
           isCorrect = expected.some(a => norm(a) === norm(val));
-        } else if (step.correct != null) {
-          isCorrect = !!step.correct; // not ideal but supports weird payloads
         } else {
-          // If worker didn’t supply answers, accept any and score as effort
+          // If no key but choices exist: accept as effort and move on
+          showWarn("This step didn’t include an answer key — treating as practice.");
           isCorrect = true;
-          showWarn("This step didn’t include an answer key, so we’re treating it as practice.");
         }
 
         xp += isCorrect ? 10 : 6;
         stepAnswers[idx] = { kind:"fill_blank", isCorrect, data:{ value: val, expected } };
-
         hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
         setProgressUI();
+        autoAdvance();
       });
 
-      box.appendChild(line);
       box.appendChild(input);
       box.appendChild(checkBtn);
-      box.appendChild(tip);
+      box.appendChild(note);
 
       interactiveMount.appendChild(box);
     }
 
     function renderMatchPairs(step){
-      // Supported shapes:
-      // A) { type:"match_pairs", prompt:"Match…", pairs:[{left:"12+3", right:"15"}, ...] }
-      // B) { type:"match_pairs", pairs:[["12+3","15"], ...] }
       const prompt = step.prompt || "Match the pairs:";
       lessonTextEl.textContent = prompt;
 
@@ -853,6 +865,8 @@
       if (!pairs.length){
         interactiveMount.style.display = "block";
         interactiveMount.innerHTML = `<div class="notice">This match step has no pairs.</div>`;
+        stepAnswers[idx] = { kind:"match_pairs", isCorrect:true, data:{ empty:true } };
+        autoAdvance(500);
         return;
       }
 
@@ -882,24 +896,25 @@
       let selectedLeft = null;
 
       const matches = {}; // left -> right
-      function updateState(){
+
+      function finishIfDone(){
         const done = Object.keys(matches).length === pairs.length;
-        if (done){
-          // check correctness
-          const map = new Map(pairs.map(p => [p.left, p.right]));
-          let correct = 0;
-          for (const l of Object.keys(matches)){
-            if (map.get(l) === matches[l]) correct++;
-          }
-          const isCorrect = correct === pairs.length;
-          xp += isCorrect ? 12 : 8;
-          stepAnswers[idx] = { kind:"match_pairs", isCorrect, data:{ matches, correct, total:pairs.length } };
-          hintLine.textContent = isCorrect ? "Perfect matching ✅" : "Nice effort 💛";
-          setProgressUI();
+        if (!done) return;
+
+        const map = new Map(pairs.map(p => [p.left, p.right]));
+        let correct = 0;
+        for (const l of Object.keys(matches)){
+          if (map.get(l) === matches[l]) correct++;
         }
+        const isCorrect = correct === pairs.length;
+
+        xp += isCorrect ? 12 : 8;
+        stepAnswers[idx] = { kind:"match_pairs", isCorrect, data:{ matches, correct, total:pairs.length } };
+        hintLine.textContent = isCorrect ? "Perfect matching ✅" : "Nice effort 💛";
+        setProgressUI();
+        autoAdvance();
       }
 
-      // left buttons
       pairs.forEach(p => {
         const b = document.createElement("button");
         b.type = "button";
@@ -907,9 +922,7 @@
         b.textContent = p.left;
         b.addEventListener("click", () => {
           if (usedLeft.has(p.left)) return;
-          // select this left
           selectedLeft = p.left;
-          // re-render selection highlight
           [...leftCol.querySelectorAll(".pairBtn")].forEach(x => x.classList.remove("selected"));
           b.classList.add("selected");
           hintLine.textContent = "Now tap the matching answer on the right.";
@@ -917,7 +930,6 @@
         leftCol.appendChild(b);
       });
 
-      // right buttons
       rights.forEach(r => {
         const b = document.createElement("button");
         b.type = "button";
@@ -929,11 +941,11 @@
             hintLine.textContent = "Tap something on the left first 💛";
             return;
           }
+
           matches[selectedLeft] = r;
           usedLeft.add(selectedLeft);
           usedRight.add(r);
 
-          // mark left matched
           [...leftCol.querySelectorAll(".pairBtn")].forEach(x => {
             if (x.textContent === selectedLeft){
               x.classList.remove("selected");
@@ -941,12 +953,11 @@
               x.textContent = `${selectedLeft}  →  ${r}`;
             }
           });
-          // mark right matched
           b.classList.add("matched");
 
           selectedLeft = null;
           hintLine.textContent = "Nice. Keep going.";
-          updateState();
+          finishIfDone();
         });
         rightCol.appendChild(b);
       });
@@ -965,9 +976,6 @@
     }
 
     function renderNumberLine(step){
-      // Supported shapes:
-      // { type:"number_line", prompt:"Put the marker on 7", min:0, max:10, target:7 }
-      // If target missing, accept any as practice.
       const prompt = step.prompt || "Move the marker on the number line:";
       lessonTextEl.textContent = prompt;
 
@@ -1004,9 +1012,6 @@
       labels.className = "numLabels";
       labels.innerHTML = `<span>${min}</span><span>${max}</span>`;
 
-      const sliderRow = document.createElement("div");
-      sliderRow.className = "sliderRow";
-
       const slider = document.createElement("input");
       slider.className = "slider";
       slider.type = "range";
@@ -1020,7 +1025,6 @@
         marker.textContent = v;
         slider.value = String(v);
 
-        // position marker
         const leftPad = 14;
         const rightPad = 14;
         const w = nl.clientWidth - leftPad - rightPad;
@@ -1029,7 +1033,6 @@
         marker.style.left = (x - (marker.offsetWidth/2)) + "px";
       }
 
-      // drag marker (touch + mouse)
       let dragging = false;
 
       function pointerToValue(clientX){
@@ -1077,6 +1080,7 @@
 
         hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
         setProgressUI();
+        autoAdvance();
       });
 
       const tip = document.createElement("div");
@@ -1085,21 +1089,17 @@
 
       box.appendChild(lineWrap);
       box.appendChild(labels);
-      box.appendChild(sliderRow);
       box.appendChild(slider);
       box.appendChild(checkBtn);
       box.appendChild(tip);
 
       interactiveMount.appendChild(box);
 
-      // ensure positioned after layout
       setTimeout(() => setMarkerFromValue(value), 0);
       window.addEventListener("resize", () => setMarkerFromValue(value));
     }
 
     function renderInteractiveDrag(step){
-      // Supported shapes:
-      // { type:"interactive_drag", prompt:"Put each number in the right box", items:["2","7"], targets:[{label:"Even", accept:["2"]},{label:"Odd", accept:["7"]}] }
       const prompt = step.prompt || "Drag the items into the boxes:";
       lessonTextEl.textContent = prompt;
 
@@ -1109,10 +1109,11 @@
       if (!items.length || !targets.length){
         interactiveMount.style.display = "block";
         interactiveMount.innerHTML = `<div class="notice">This drag step is missing items or targets.</div>`;
+        stepAnswers[idx] = { kind:"interactive_drag", isCorrect:true, data:{ empty:true } };
+        autoAdvance(500);
         return;
       }
 
-      // Map of targetLabel -> droppedItem
       const placed = {};
       const remaining = new Set(items);
 
@@ -1121,7 +1122,6 @@
       }
 
       function computeCorrect(){
-        // If no accept rules, treat as practice
         let hasRules = false;
         let correct = 0;
 
@@ -1166,7 +1166,6 @@
       zonesWrap.appendChild(zonesTitle);
 
       function renderBank(){
-        // clear existing items except title
         bank.querySelectorAll(".dragItem").forEach(n => n.remove());
         items.forEach(it => {
           if (!remaining.has(it)) return;
@@ -1209,7 +1208,6 @@
           const it = e.dataTransfer.getData("text/plain");
           if (!it || !remaining.has(it)) return;
 
-          // if zone already had something, put it back
           const current = placed[label];
           if (current){
             remaining.add(current);
@@ -1226,6 +1224,7 @@
             stepAnswers[idx] = { kind:"interactive_drag", isCorrect: res.isCorrect, data:{ placed, ...res } };
             hintLine.textContent = res.isCorrect ? "Nice sorting ✅" : "Good try 💛";
             setProgressUI();
+            autoAdvance();
           } else {
             hintLine.textContent = "Nice. Keep going.";
           }
@@ -1236,33 +1235,16 @@
 
       targets.forEach(t => zonesWrap.appendChild(createZone(t)));
 
-      const tip = document.createElement("div");
-      tip.className = "matchLine";
-      tip.textContent = "If you want to change one, just drop a different item into the box.";
-
-      const checkBtn = document.createElement("button");
-      checkBtn.className = "pill primary";
-      checkBtn.type = "button";
-      checkBtn.textContent = "✅ Check";
-      checkBtn.addEventListener("click", () => {
-        if (!isAllPlaced()){
-          hintLine.textContent = "Fill all boxes first 💛";
-          return;
-        }
-        const res = computeCorrect();
-        xp += res.isCorrect ? 10 : 6;
-        stepAnswers[idx] = { kind:"interactive_drag", isCorrect: res.isCorrect, data:{ placed, ...res } };
-        hintLine.textContent = res.isCorrect ? "Nice ✅" : "Good try 💛";
-        setProgressUI();
-      });
-
       renderBank();
 
       grid.appendChild(bank);
       grid.appendChild(zonesWrap);
 
+      const tip = document.createElement("div");
+      tip.className = "matchLine";
+      tip.textContent = "If you want to change one, drop a different item into the box.";
+
       box.appendChild(grid);
-      box.appendChild(checkBtn);
       box.appendChild(tip);
 
       interactiveMount.appendChild(box);
@@ -1274,17 +1256,77 @@
       interactiveMount.innerHTML = `
         <div class="notice">
           <b>Unsupported step type:</b> ${String(step.type)}<br><br>
-          Ask the generator to only use types:
-          intro, teach, mcq, fill_blank, match_pairs, number_line, interactive_drag, finish
+          Please update the generator to only use:
+          intro, teach, mcq, fill_blank, match_pairs, number_line, interactive_drag, finish.
         </div>
       `;
-      // Treat as “seen” so they can move on
       stepAnswers[idx] = { kind:"unknown", isCorrect:true, data:{} };
+      autoAdvance(700);
+    }
+
+    function renderEndScreen(){
+      clearError(); clearWarn();
+      mcqEl.style.display = "none";
+      clearInteractive();
+
+      lessonTextEl.textContent =
+        `Nice work, ${childName}.\n\n` +
+        `That lesson is done.\n\n` +
+        `What would you like to do now?`;
+
+      const box = document.createElement("div");
+      box.className = "ibox";
+
+      const btns = document.createElement("div");
+      btns.className = "endBtns";
+
+      const doneBtn = document.createElement("button");
+      doneBtn.type = "button";
+      doneBtn.className = "pill primary";
+      doneBtn.textContent = "✅ Done for today";
+      doneBtn.onclick = () => window.location.href = "/lessons.html";
+
+      const anotherBtn = document.createElement("button");
+      anotherBtn.type = "button";
+      anotherBtn.className = "pill";
+      anotherBtn.textContent = "📘 Try another lesson";
+      anotherBtn.onclick = () => window.location.href = "/lessons.html";
+
+      const tutorBtn = document.createElement("button");
+      tutorBtn.type = "button";
+      tutorBtn.className = "pill";
+      tutorBtn.textContent = "🎓 Go to Tutor";
+      tutorBtn.onclick = () => window.location.href = "/chat.html";
+
+      const repeatBtn = document.createElement("button");
+      repeatBtn.type = "button";
+      repeatBtn.className = "pill";
+      repeatBtn.textContent = "🔁 Repeat this lesson";
+      repeatBtn.onclick = () => window.location.reload();
+
+      btns.appendChild(doneBtn);
+      btns.appendChild(anotherBtn);
+      btns.appendChild(tutorBtn);
+      btns.appendChild(repeatBtn);
+
+      const small = document.createElement("div");
+      small.className = "matchLine";
+      small.textContent = "No pressure — short lessons work best.";
+
+      box.appendChild(btns);
+      box.appendChild(small);
+
+      interactiveMount.style.display = "block";
+      interactiveMount.innerHTML = "";
+      interactiveMount.appendChild(box);
+
+      nextBtn.disabled = true;
+      backBtn.disabled = true;
+      hintLine.textContent = "All done 💛";
     }
 
     function renderStep(){
-      clearError();
-      clearWarn();
+      clearError(); clearWarn();
       hintLine.textContent = "";
       mcqEl.innerHTML = "";
       mcqEl.style.display = "none";
@@ -1299,20 +1341,24 @@
       setProgressUI();
 
       if (!step){
-        lessonTextEl.textContent = "Finished.";
+        renderEndScreen();
         return;
-      }
-
-      // Always clear any pre-answer unless user already answered
-      if (stepAnswers[idx]){
-        // keep hint
-        hintLine.textContent = stepAnswers[idx].isCorrect ? "Nice ✅" : "Good try 💛";
       }
 
       const type = String(step.type || "").trim();
 
-      if (type === "intro" || type === "teach" || type === "finish"){
+      // If this is the final step and generator didn’t include finish, we still end nicely
+      const isLast = idx === steps.length - 1;
+
+      if (type === "intro" || type === "teach"){
         renderTextStep(step);
+        nextBtn.textContent = "➡️ Next";
+        return;
+      }
+
+      if (type === "finish"){
+        renderTextStep(step);
+        nextBtn.textContent = "✅ Complete";
         return;
       }
 
@@ -1348,17 +1394,11 @@
 
       renderUnknown(step);
       nextBtn.textContent = "➡️ Next";
-    }
 
-    async function completeLesson(){
-      contextLine.textContent = `Saved ✅ ${childName} finished "${lesson?.title || "Lesson"}".`;
-      lessonTextEl.textContent =
-        `Nice work, ${childName}.\n\nThat lesson is finished.\n\nNext time, you can do another short lesson.`;
-      mcqEl.style.display = "none";
-      clearInteractive();
-      nextBtn.disabled = true;
-      backBtn.disabled = true;
-      hintLine.textContent = "You can go back to Lessons or Dashboard.";
+      if (isLast){
+        // ensure the end still happens if last unsupported
+        setTimeout(renderEndScreen, 900);
+      }
     }
 
     // ----- Read aloud -----
@@ -1400,8 +1440,6 @@
         });
 
         if (!r.ok){
-          const t = await r.text().catch(()=> "");
-          console.warn("TTS failed", r.status, t);
           hintLine.textContent = "Read aloud isn’t available right now.";
           return;
         }
@@ -1449,7 +1487,6 @@
       const step = steps[idx];
       const type = String(step?.type || "");
 
-      // gate interactive and mcq
       const needsAnswer = ["mcq","fill_blank","match_pairs","number_line","interactive_drag"].includes(type);
       if (needsAnswer && !stepIsAnswered(idx)){
         hintLine.textContent = "Do this step first 💛";
@@ -1457,13 +1494,15 @@
       }
 
       if (type === "finish"){
-        await completeLesson();
+        renderEndScreen();
         return;
       }
 
       if (idx < steps.length - 1){
         idx += 1;
         renderStep();
+      } else {
+        renderEndScreen();
       }
     });
 
@@ -1476,7 +1515,7 @@
         "How lessons work:\n\n" +
         "• Read the step\n" +
         "• Do the activity\n" +
-        "• Press Next\n\n" +
+        "• It will move on automatically\n\n" +
         "No pressure. You can finish any time.\n\n" +
         "Tip: Read aloud plays only when you press the button."
       );
@@ -1512,20 +1551,16 @@
         return;
       }
 
-      clearError();
-      clearWarn();
+      clearError(); clearWarn();
       contextLine.textContent = `Loading a lesson for ${childName}…`;
 
-      // fetch generated lesson
       try{
         lesson = await fetchGeneratedLesson();
       }catch(e){
-        console.error(e);
         showError("Could not load a lesson: " + (e?.message || e));
         lessonTextEl.textContent =
           "We couldn’t load a lesson.\n\n" +
-          "Try again in a moment.\n\n" +
-          "If it keeps failing, the generator worker may be rejecting the request.";
+          "Try again in a moment.";
         nextBtn.disabled = true;
         backBtn.disabled = true;
         return;
@@ -1539,7 +1574,6 @@
         return;
       }
 
-      // reset runtime
       idx = 0;
       xp = 0;
       stepAnswers = {};
@@ -1552,11 +1586,9 @@
     }
 
     boot().catch(err => {
-      console.error(err);
       showError("Something went wrong: " + (err?.message || err));
     });
   })();
   </script>
 </body>
 </html>
-
