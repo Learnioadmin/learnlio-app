@@ -48,6 +48,9 @@
 
     /* Calculator */
     .calcBtn { padding:14px; font-size:18px; border-radius:10px; border:none; background:#fff; cursor:pointer; }
+
+    /* Small calm loading on speak button */
+    .btn-small:disabled { opacity:.65; cursor:not-allowed; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -150,6 +153,10 @@
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
     const BACKEND_URL = "https://softr-chat-backend.onrender.com";
+
+    // ✅ Google/Vertex TTS Worker
+    const TTS_WORKER_BASE = "https://learnlio-tts.falling-grass-34ab.workers.dev";
+    const TTS_ENDPOINT = "/speak"; // change if your worker uses a different path
     // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -204,6 +211,10 @@
     let waitingForNextButton = false;
     let guided = { active:false, steps:[], idx:0 };
 
+    // ✅ TTS audio state (so we can stop current playback cleanly)
+    let ttsAudioEl = null;
+    let ttsObjectUrl = null;
+
     // ---------------- UI helpers ----------------
     function showError(msg) {
       pageError.style.display = "block";
@@ -229,6 +240,7 @@
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
+    // ---------------- TTS (Worker first, fallback to browser) ----------------
     function pickBestUKVoice() {
       const voices = window.speechSynthesis.getVoices() || [];
       if (!voices.length) return null;
@@ -247,16 +259,134 @@
     }
     let cachedVoice = null;
     window.speechSynthesis.onvoiceschanged = () => { cachedVoice = pickBestUKVoice(); };
-    function speak(text) {
-      if (!("speechSynthesis" in window)) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(String(text || ""));
-      u.lang = "en-GB";
-      u.rate = 0.9;
-      u.pitch = 1.0;
-      const v = cachedVoice || pickBestUKVoice();
-      if (v) { cachedVoice = v; u.voice = v; }
-      window.speechSynthesis.speak(u);
+
+    function speakBrowser(text) {
+      try {
+        if (!("speechSynthesis" in window)) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(String(text || ""));
+        u.lang = "en-GB";
+        u.rate = 0.9;
+        u.pitch = 1.0;
+        const v = cachedVoice || pickBestUKVoice();
+        if (v) { cachedVoice = v; u.voice = v; }
+        window.speechSynthesis.speak(u);
+      } catch (e) {
+        console.error("browser TTS failed", e);
+      }
+    }
+
+    function stopTtsAudio() {
+      try {
+        if (ttsAudioEl) {
+          ttsAudioEl.pause();
+          ttsAudioEl.src = "";
+          ttsAudioEl = null;
+        }
+        if (ttsObjectUrl) {
+          URL.revokeObjectURL(ttsObjectUrl);
+          ttsObjectUrl = null;
+        }
+      } catch {}
+    }
+
+    async function getAccessTokenOrThrow() {
+      // Uses Supabase session token to authenticate the worker
+      let { data: s } = await sb.auth.getSession();
+      let accessToken = s?.session?.access_token;
+
+      if (!accessToken) {
+        const refreshed = await sb.auth.refreshSession();
+        accessToken = refreshed?.data?.session?.access_token;
+      }
+      if (!accessToken) throw new Error("No session token. Please log out and log in again.");
+      return accessToken;
+    }
+
+    function base64ToBlob(b64, mime) {
+      const byteChars = atob(b64);
+      const byteNums = new Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+      return new Blob([new Uint8Array(byteNums)], { type: mime || "audio/mpeg" });
+    }
+
+    async function speakViaWorker(text) {
+      const token = await getAccessTokenOrThrow();
+      const res = await fetch(`${TTS_WORKER_BASE}${TTS_ENDPOINT}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "audio/*,application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ text: String(text || ""), lang: "en-GB" })
+      });
+
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        throw new Error(`TTS worker error (HTTP ${res.status}) ${t ? "- " + t.slice(0, 160) : ""}`);
+      }
+
+      const ct = (res.headers.get("content-type") || "").toLowerCase();
+
+      // Preferred: audio bytes
+      if (ct.includes("audio/")) {
+        const blob = await res.blob();
+        return { blob, mime: ct.split(";")[0] || "audio/mpeg" };
+      }
+
+      // Alternate: JSON base64
+      const json = await res.json();
+      const b64 = json.audioBase64 || json.audio || json.data;
+      const mime = json.mime || json.contentType || "audio/mpeg";
+      if (!b64) throw new Error("TTS worker returned JSON but no audioBase64/audio field.");
+      const blob = base64ToBlob(b64, mime);
+      return { blob, mime };
+    }
+
+    async function speakText(text, btnEl) {
+      const safe = String(text || "").trim();
+      if (!safe) return;
+
+      // Stop any current audio + browser speech to avoid overlap
+      try { window.speechSynthesis.cancel(); } catch {}
+      stopTtsAudio();
+
+      const originalLabel = btnEl ? btnEl.textContent : null;
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.textContent = "🔊 Loading…";
+      }
+
+      try {
+        const { blob } = await speakViaWorker(safe);
+        ttsObjectUrl = URL.createObjectURL(blob);
+        ttsAudioEl = new Audio(ttsObjectUrl);
+        ttsAudioEl.onended = () => {
+          stopTtsAudio();
+          if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.textContent = originalLabel || "🔊 Listen";
+          }
+        };
+        ttsAudioEl.onerror = () => {
+          stopTtsAudio();
+          if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.textContent = originalLabel || "🔊 Listen";
+          }
+          // fallback
+          speakBrowser(safe);
+        };
+        await ttsAudioEl.play();
+      } catch (e) {
+        console.warn("Worker TTS failed — falling back to browser voice.", e);
+        if (btnEl) {
+          btnEl.disabled = false;
+          btnEl.textContent = originalLabel || "🔊 Listen";
+        }
+        speakBrowser(safe);
+      }
     }
 
     function addBotMessage(text, opts={showHint:false, showNext:false}) {
@@ -275,7 +405,7 @@
       speakBtn.type = "button";
       speakBtn.className = "btn-small speak-btn";
       speakBtn.innerText = "🔊 Listen";
-      speakBtn.onclick = () => speak(safeText);
+      speakBtn.onclick = () => speakText(safeText, speakBtn);
       controls.appendChild(speakBtn);
 
       if (opts.showHint) {
@@ -393,7 +523,6 @@
     }
 
     // ---------------- Database: Sessions + Items + Skill ----------------
-
     async function ensureSessionRow() {
       if (sessionDbId) return sessionDbId;
       if (!currentUser?.id || !child?.id || !subject) return null;
@@ -428,7 +557,6 @@
 
     async function insertSessionItem({ item_type, prompt_text=null, child_text=null, is_correct=null, meta=null }) {
       await ensureSessionRow();
-
       if (!sessionDbId || !currentUser?.id || !child?.id) return;
 
       const payload = {
@@ -468,7 +596,6 @@
     async function loadOrCreateSkillRow() {
       if (!currentUser?.id || !child?.id || !subject || !area) return null;
 
-      // Fetch existing
       const { data: existing, error: selErr } = await sb
         .from("child_skill_progress")
         .select("*")
@@ -478,9 +605,7 @@
         .eq("area", area)
         .maybeSingle();
 
-      if (selErr) {
-        console.error("child_skill_progress select failed:", selErr);
-      }
+      if (selErr) console.error("child_skill_progress select failed:", selErr);
 
       if (existing?.id) {
         skillRow = existing;
@@ -491,7 +616,6 @@
         return skillRow;
       }
 
-      // Create initial row (unique index prevents duplicates; supabase upsert makes it safe)
       const payload = {
         owner_id: currentUser.id,
         child_id: child.id,
@@ -528,19 +652,11 @@
     }
 
     function computeNewLevel({ level, accuracy, streak_correct, streak_wrong, total_attempts }) {
-      // Simple, understandable mastery rules:
-      // - level up when: streak_correct >= 3 AND accuracy >= 0.70 AND attempts >= 6
-      // - level down when: streak_wrong >= 3 AND accuracy < 0.40 AND attempts >= 6
-      // Keeps things stable and avoids “jumpiness”.
       let newLevel = level || 1;
       const att = total_attempts || 0;
 
-      if (att >= 6 && streak_correct >= 3 && accuracy >= 0.70) {
-        newLevel = Math.min(10, newLevel + 1);
-      }
-      if (att >= 6 && streak_wrong >= 3 && accuracy < 0.40) {
-        newLevel = Math.max(1, newLevel - 1);
-      }
+      if (att >= 6 && streak_correct >= 3 && accuracy >= 0.70) newLevel = Math.min(10, newLevel + 1);
+      if (att >= 6 && streak_wrong >= 3 && accuracy < 0.40) newLevel = Math.max(1, newLevel - 1);
       return newLevel;
     }
 
@@ -549,14 +665,11 @@
 
       const total_attempts = (skillRow.total_attempts || 0) + 1;
       const correct_attempts = (skillRow.correct_attempts || 0) + (isCorrect ? 1 : 0);
-
       const accuracy = total_attempts ? (correct_attempts / total_attempts) : 0.0;
 
       const newStreakCorrect = isCorrect ? (streakCorrect + 1) : 0;
       const newStreakWrong = isCorrect ? 0 : (streakWrong + 1);
 
-      // Confidence is a soft signal (doesn’t need to be perfect)
-      // We nudge it toward accuracy slowly.
       const oldConf = (typeof skillRow.confidence === "number") ? skillRow.confidence : 0.5;
       const confidence = Math.max(0, Math.min(1, oldConf * 0.85 + accuracy * 0.15));
 
@@ -606,8 +719,6 @@
     function boundsForAgeAndDifficulty() {
       const age = childAge;
       const d = Math.max(1, Math.min(10, difficultyLevel || 1));
-
-      // Map level 1..10 into 1..3 band (keeps it safe)
       const band = (d <= 3) ? 1 : (d <= 6) ? 2 : 3;
 
       if (age <= 7) {
@@ -684,7 +795,6 @@
         { showHint:true, showNext:false }
       );
 
-      // Log evidence: question asked
       insertSessionItem({
         item_type: "question",
         prompt_text: q.displayText,
@@ -791,10 +901,9 @@ Short lines.
 
           area = opt.area;
 
-          // new session per subject+area start (keeps reporting clean)
           resetSessionCounters();
           await ensureSessionRow();
-          await loadOrCreateSkillRow(); // loads real level for this skill
+          await loadOrCreateSkillRow();
           updateProgressUI();
 
           guided.active = false; guided.steps = []; guided.idx = 0;
@@ -920,7 +1029,6 @@ Short lines.
       addUserMessage(text);
       input.value = "";
 
-      // record user response as session_item evidence
       try {
         await insertSessionItem({
           item_type: "answer",
@@ -969,7 +1077,6 @@ Short lines.
               return;
             }
 
-            // Guided complete => count correct attempt
             guided.active = false; guided.steps = []; guided.idx = 0;
 
             questionsAnswered += 1;
@@ -980,7 +1087,6 @@ Short lines.
             maybeAwardBadge();
             updateProgressUI();
 
-            // evidence + rollups + skill update
             await insertSessionItem({
               item_type: "feedback",
               prompt_text: currentQuestion.displayText,
@@ -998,7 +1104,6 @@ Short lines.
             addBotMessage(`Brilliant, ${childName}!\n\nThat is correct.\n\nReady for the next one?`, { showNext:true });
             return;
           } else {
-            // guided wrong
             streakWrong += 1;
             streakCorrect = 0;
 
@@ -1085,12 +1190,9 @@ Short lines.
 
       // ---------------- English ----------------
       if (subject === "English") {
-        // English doesn’t have “correct” yet — we still track engagement attempts.
         questionsAnswered += 1;
         updateProgressUI();
 
-        // treat as attempt without correctness (does not change correct_attempts)
-        // if you want, later we can add “teacher rubric” scoring.
         await insertSessionItem({
           item_type: "turn",
           prompt_text: `English: ${area}`,
@@ -1099,8 +1201,6 @@ Short lines.
           meta: { subject, area, difficultyLevel }
         });
 
-        // optionally nudge confidence lightly just from participation
-        // (keeps it stable, doesn’t falsely claim correctness)
         try {
           if (skillRow?.id) {
             const total_attempts = (skillRow.total_attempts || 0) + 1;
@@ -1229,6 +1329,8 @@ British English.
 
     // ---------------- Logout ----------------
     logoutBtn.addEventListener("click", async () => {
+      stopTtsAudio();
+      try { window.speechSynthesis.cancel(); } catch {}
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
       window.location.href = "/login.html";
@@ -1255,5 +1357,4 @@ British English.
   </script>
 </body>
 </html>
-
 
