@@ -10,7 +10,7 @@
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f7f7fb; color:#111; }
     .container { max-width: 980px; margin: 0 auto; padding: 18px; }
-    .card { background:#fff; border-radius:16px; padding:16px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+
     .nav { background:#fff; border-bottom:1px solid #ececf4; }
     .nav-inner { max-width:980px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#111; font-weight:700; }
@@ -20,12 +20,52 @@
     .links a.active { background:#eef2ff; }
     .btn { background:#0b5cff; border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; }
     .btn.light { background:#e5e7eb; color:#111; }
+    .btn.ghost { background:transparent; border:1px solid #d1d5db; color:#111; }
     .muted { color:#6b7280; font-size: 14px; }
     .status { margin-top:10px; font-size:14px; }
     .status.bad { color:#dc2626; }
     .status.good { color:#16a34a; }
 
-    .msg { padding:14px 16px; margin-bottom:14px; border-radius:16px; max-width:85%;
+    /* ---- FULL-HEIGHT CHAT LAYOUT (mobile-friendly) ---- */
+    main.container { padding-bottom: 12px; }
+    .chat-card {
+      background:#fff; border-radius:16px; padding:16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.08);
+      display:flex; flex-direction:column;
+      /* Use dynamic viewport height so input stays visible on mobile */
+      min-height: calc(100dvh - 72px); /* approx nav height */
+    }
+    @media (min-width: 980px) {
+      .chat-card { min-height: calc(100dvh - 86px); }
+    }
+
+    /* Progress header stays at top */
+    .ph-wrap{ display:none; margin-bottom:10px; }
+    .ph-top{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+    .ph-kpi{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; font-size:14px; color:#333; }
+    .ph-bar{ height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden; margin-top:8px; }
+    .ph-bar > div{ height:10px; width:0%; background:#10b981; }
+
+    /* Messages scroll area */
+    #messages {
+      background:#fafafa; border-radius:14px; padding:12px; border:1px solid #ddd;
+      overflow-y:auto;
+      display:flex; flex-direction:column; align-items:flex-start;
+      flex: 1 1 auto; /* take remaining space */
+      min-height: 180px;
+    }
+
+    /* Sticky input area */
+    #inputDock {
+      margin-top:12px;
+      border-top:1px solid #ececf4;
+      padding-top:12px;
+      flex: 0 0 auto;
+    }
+
+    /* Chat bubbles */
+    .msg {
+      padding:14px 16px; margin-bottom:14px; border-radius:16px; max-width:85%;
       font-size:18px; line-height:1.85; white-space:pre-wrap;
       font-family:'OpenDyslexic', Arial, sans-serif;
       overflow-wrap:break-word; display:inline-block;
@@ -39,20 +79,40 @@
     .hint-btn  { background:#10b981; }
     .next-btn  { background:#7c3aed; }
 
-    /* Progress header */
-    .ph-wrap{ display:none; margin-bottom:10px; }
-    .ph-top{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
-    .ph-kpi{ font-family:'OpenDyslexic', Arial, sans-serif; font-size:14px; color:#333; }
-    .ph-bar{ height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden; margin-top:8px; }
-    .ph-bar > div{ height:10px; width:0%; background:#10b981; }
+    /* Multiple-choice buttons */
+    .mcq-wrap { margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+    .mcq-btn {
+      border:1px solid #d1d5db; background:#fff; color:#111;
+      padding:12px; border-radius:12px; cursor:pointer; text-align:left;
+      font-size:16px;
+    }
+    .mcq-btn:hover { background:#f3f4f6; }
 
     /* Calculator */
+    #calculator { display:none; margin-bottom:12px; background:#eef2ff; padding:10px; border-radius:14px; }
     .calcBtn { padding:14px; font-size:18px; border-radius:10px; border:none; background:#fff; cursor:pointer; }
+
+    /* Reward toast */
+    #rewardToast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: #111;
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 14px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.25);
+      display: none;
+      max-width: min(560px, calc(100vw - 24px));
+      font-size: 14px;
+      z-index: 9999;
+    }
+    #rewardToast strong { display:block; font-size: 15px; margin-bottom: 2px; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
 </head>
 
@@ -75,7 +135,7 @@
   </header>
 
   <main class="container">
-    <div class="card">
+    <div class="chat-card">
       <div id="pageError" class="status bad" style="display:none;"></div>
 
       <!-- Progress header -->
@@ -88,18 +148,14 @@
         <div class="ph-bar"><div id="progressBar"></div></div>
       </div>
 
-      <div id="messages" style="
-        background:#fafafa; border-radius:14px; padding:12px; border:1px solid #ddd;
-        max-height:520px; overflow-y:auto; margin-bottom:12px;
-        display:flex; flex-direction:column; align-items:flex-start;
-      "></div>
+      <div id="messages"></div>
 
-      <div id="typing-indicator" style="display:none; margin-bottom:10px; font-style:italic; color:#555;">
+      <div id="typing-indicator" style="display:none; margin:10px 0 0; font-style:italic; color:#555;">
         Learnlio is typing…
       </div>
 
       <!-- Calculator -->
-      <div id="calculator" style="display:none; margin-bottom:12px; background:#eef2ff; padding:10px; border-radius:14px;">
+      <div id="calculator">
         <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;">
           <button type="button" class="calcBtn">7</button>
           <button type="button" class="calcBtn">8</button>
@@ -123,7 +179,7 @@
         </div>
       </div>
 
-      <div id="subject-selection" style="display:none;">
+      <div id="subject-selection" style="display:none; margin-top:10px;">
         <p class="muted" style="margin:0 0 10px;">Select a subject to start:</p>
         <button class="btn" id="mathsBtn" type="button">Maths</button>
         <button class="btn" id="englishBtn" type="button">English</button>
@@ -131,16 +187,21 @@
 
       <div id="area-selection" style="display:none; margin-top:10px;"></div>
 
-      <div id="input-container" style="display:flex; gap:10px; margin-top:10px;">
-        <input id="input" placeholder="Type your answer here…"
-          style="flex:1; padding:14px; font-size:16px; border-radius:12px; border:1px solid #ccc;" />
-        <button id="sendBtn" type="button"
-          style="padding:14px 18px; font-size:16px; border-radius:12px; border:none; background:#0b5cff; color:#fff; cursor:pointer;">
-          Send
-        </button>
+      <!-- Sticky input dock -->
+      <div id="inputDock">
+        <div id="input-container" style="display:flex; gap:10px;">
+          <input id="input" placeholder="Type your answer here…"
+            style="flex:1; padding:14px; font-size:16px; border-radius:12px; border:1px solid #ccc;" />
+          <button id="sendBtn" type="button"
+            style="padding:14px 18px; font-size:16px; border-radius:12px; border:none; background:#0b5cff; color:#fff; cursor:pointer;">
+            Send
+          </button>
+        </div>
       </div>
     </div>
   </main>
+
+  <div id="rewardToast" role="status" aria-live="polite"></div>
 
   <script>
   (() => {
@@ -150,20 +211,7 @@
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
     const BACKEND_URL = "https://softr-chat-backend.onrender.com";
-
-    // Google TTS Worker (Cloudflare Worker)
     const TTS_WORKER_BASE = "https://learnlio-tts.falling-grass-34ab.workers.dev";
-    const TTS_ENDPOINT = TTS_WORKER_BASE.replace(/\/$/, "") + "/speak";
-
-    // Safety toggles:
-    const TTS_ENABLED = true;
-    // IMPORTANT: set false to prevent the “robot voice after Google voice” issue.
-    // If Google fails, we *won’t* automatically speak with browser TTS.
-    const ALLOW_BROWSER_TTS_FALLBACK = false;
-
-    // Guardrails
-    const TTS_MAX_CHARS = 1200;   // keeps latency reasonable
-    const TTS_TIMEOUT_MS = 20000; // 20s
     // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -187,6 +235,7 @@
     const areaSelection = document.getElementById("area-selection");
     const mathsBtn = document.getElementById("mathsBtn");
     const englishBtn = document.getElementById("englishBtn");
+    const rewardToast = document.getElementById("rewardToast");
 
     // Auth + child
     let currentUser = null;
@@ -200,7 +249,6 @@
 
     // Session + skill tracking
     let sessionDbId = null; // UUID from sessions table
-    let sessionLocalId = (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()));
     let maxQuestions = 10;
     let questionsAnswered = 0;
     let correctCount = 0;
@@ -213,196 +261,14 @@
     let streakWrong = 0;
 
     // Maths question
-    let currentQuestion = null; // { displayText, correctAnswer }
+    let currentQuestion = null; // { displayText, correctAnswer, choices? }
     let hintUsedForCurrent = false;
     let waitingForNextButton = false;
     let guided = { active:false, steps:[], idx:0 };
 
-    // =========================
-    // SPEECH (Google TTS via Worker)
-    // =========================
-    let ttsAbort = null;
-    let currentAudio = null;
-    let currentAudioUrl = null;
-    let speakingBusy = false;
-
-    function stopAllSpeech() {
-      try {
-        // stop google audio
-        if (ttsAbort) { try { ttsAbort.abort(); } catch {} }
-        ttsAbort = null;
-
-        if (currentAudio) {
-          try { currentAudio.pause(); } catch {}
-          try { currentAudio.currentTime = 0; } catch {}
-        }
-        currentAudio = null;
-
-        if (currentAudioUrl) {
-          try { URL.revokeObjectURL(currentAudioUrl); } catch {}
-        }
-        currentAudioUrl = null;
-
-        // stop browser TTS (even if fallback disabled)
-        if ("speechSynthesis" in window) {
-          try { window.speechSynthesis.cancel(); } catch {}
-        }
-
-        speakingBusy = false;
-      } catch {}
-    }
-
-    function pickBestUKVoice() {
-      const voices = window.speechSynthesis.getVoices() || [];
-      if (!voices.length) return null;
-      const preferredNames = [
-        "Google UK English Female","Google UK English Male",
-        "Microsoft Sonia Online","Microsoft Ryan Online","Microsoft Libby Online",
-        "Samantha","Daniel"
-      ];
-      for (const name of preferredNames) {
-        const v = voices.find(x => x.name === name);
-        if (v) return v;
-      }
-      const uk = voices.find(v => (v.lang || "").toLowerCase().startsWith("en-gb"));
-      if (uk) return uk;
-      return voices.find(v => (v.lang || "").toLowerCase().startsWith("en")) || null;
-    }
-    let cachedVoice = null;
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.onvoiceschanged = () => { cachedVoice = pickBestUKVoice(); };
-    }
-
-    function browserSpeak(text) {
-      if (!ALLOW_BROWSER_TTS_FALLBACK) return false;
-      if (!("speechSynthesis" in window)) return false;
-      try {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(String(text || ""));
-        u.lang = "en-GB";
-        u.rate = 0.9;
-        u.pitch = 1.0;
-        const v = cachedVoice || pickBestUKVoice();
-        if (v) { cachedVoice = v; u.voice = v; }
-        window.speechSynthesis.speak(u);
-        return true;
-      } catch {
-        return false;
-      }
-    }
-
-    async function speakViaWorker(text) {
-      if (!TTS_ENABLED) return false;
-      const raw = String(text || "").trim();
-      if (!raw) return false;
-
-      // Trim to keep it snappy + reduce costs
-      const clipped = raw.length > TTS_MAX_CHARS ? (raw.slice(0, TTS_MAX_CHARS) + "…") : raw;
-
-      // Prevent overlapping audio (this is usually what causes “double voice” feelings)
-      stopAllSpeech();
-
-      // Some browsers block audio until user gesture. This function is called from a click, so OK.
-      ttsAbort = new AbortController();
-      const to = setTimeout(() => { try { ttsAbort.abort(); } catch {} }, TTS_TIMEOUT_MS);
-
-      try {
-        speakingBusy = true;
-
-        const res = await fetch(TTS_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            text: clipped,
-            // keep this flexible for your worker if you later support voices:
-            // voice: "en-GB" / model etc (optional)
-          }),
-          signal: ttsAbort.signal
-        });
-
-        clearTimeout(to);
-
-        // Worker may return JSON errors
-        const ct = (res.headers.get("content-type") || "").toLowerCase();
-        if (!res.ok) {
-          let msg = `TTS error (${res.status})`;
-          try {
-            if (ct.includes("application/json")) {
-              const j = await res.json();
-              msg = j?.error || j?.message || msg;
-            } else {
-              msg = (await res.text()) || msg;
-            }
-          } catch {}
-          console.warn("TTS worker failed:", msg);
-          speakingBusy = false;
-          return false;
-        }
-
-        // Expect audio bytes; support audio/mpeg, audio/wav etc
-        const buf = await res.arrayBuffer();
-        if (!buf || !buf.byteLength) {
-          console.warn("TTS worker returned empty audio.");
-          speakingBusy = false;
-          return false;
-        }
-
-        const mime =
-          ct.includes("audio/") ? ct.split(";")[0].trim()
-          : "audio/mpeg";
-
-        const blob = new Blob([buf], { type: mime });
-        const url = URL.createObjectURL(blob);
-
-        const audio = new Audio(url);
-        audio.preload = "auto";
-
-        currentAudio = audio;
-        currentAudioUrl = url;
-
-        audio.onended = () => {
-          try { URL.revokeObjectURL(url); } catch {}
-          if (currentAudio === audio) currentAudio = null;
-          if (currentAudioUrl === url) currentAudioUrl = null;
-          speakingBusy = false;
-        };
-
-        audio.onerror = () => {
-          try { URL.revokeObjectURL(url); } catch {}
-          if (currentAudio === audio) currentAudio = null;
-          if (currentAudioUrl === url) currentAudioUrl = null;
-          speakingBusy = false;
-        };
-
-        await audio.play();
-        return true;
-      } catch (e) {
-        clearTimeout(to);
-        if (e?.name === "AbortError") {
-          // normal if user clicked again / navigated
-          speakingBusy = false;
-          return false;
-        }
-        console.warn("TTS worker fetch/play failed:", e);
-        speakingBusy = false;
-        return false;
-      } finally {
-        // Don't leave hanging
-        ttsAbort = null;
-      }
-    }
-
-    async function speak(text) {
-      const safe = String(text || "").trim();
-      if (!safe) return;
-
-      // Prefer Google TTS worker
-      const ok = await speakViaWorker(safe);
-      if (ok) return;
-
-      // Optional fallback (disabled by default to avoid “robot voice after Google voice”)
-      browserSpeak(safe);
-    }
+    // Single audio player for TTS
+    const ttsAudio = new Audio();
+    ttsAudio.preload = "none";
 
     // ---------------- UI helpers ----------------
     function showError(msg) {
@@ -421,18 +287,83 @@
     }
     function cleanBotText(t) { return String(t || "").replace(/\*\*/g, ""); }
 
-    function addUserMessage(text) {
-      // Stop any speech as soon as user engages again (prevents overlap)
-      stopAllSpeech();
+    function scrollMessagesToBottom() {
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
 
+    function addUserMessage(text) {
       const div = document.createElement("div");
       div.className = "msg user";
       div.innerText = String(text || "").trim();
       messagesDiv.appendChild(div);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      scrollMessagesToBottom();
     }
 
-    function addBotMessage(text, opts={showHint:false, showNext:false}) {
+    // Remove emojis / symbols that TTS will read awkwardly
+    function stripForTTS(text) {
+      let t = String(text || "");
+      // Remove emoji + pictographs broadly
+      t = t.replace(/[\u{1F300}-\u{1FAFF}]/gu, "");
+      t = t.replace(/[\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
+      // Remove repeated weird punctuation
+      t = t.replace(/[•★🏅🏆⭐✅➡️🔊💡📚✏️🎲➕➖✖️➗]/g, "");
+      // Collapse whitespace
+      t = t.replace(/\s{2,}/g, " ").trim();
+      return t;
+    }
+
+    async function speakViaWorker(text) {
+      const clean = stripForTTS(text);
+      if (!clean) return;
+
+      // Stop any current audio / speech
+      try { ttsAudio.pause(); } catch {}
+      ttsAudio.currentTime = 0;
+
+      const res = await fetch(`${TTS_WORKER_BASE}/speak`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: clean,
+          languageCode: "en-GB",
+          // Keep these gentle-but-natural. Your worker can override too.
+          speakingRate: 1.02,
+          pitch: 0
+        })
+      });
+
+      if (!res.ok) {
+        const msg = await res.text().catch(()=> "");
+        throw new Error(`TTS worker failed (${res.status}): ${msg}`);
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      ttsAudio.src = url;
+      await ttsAudio.play();
+      ttsAudio.onended = () => { URL.revokeObjectURL(url); };
+    }
+
+    function speakFallbackBrowser(text) {
+      if (!("speechSynthesis" in window)) return;
+      try { window.speechSynthesis.cancel(); } catch {}
+      const u = new SpeechSynthesisUtterance(stripForTTS(text));
+      u.lang = "en-GB";
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    }
+
+    async function speak(text) {
+      try {
+        await speakViaWorker(text);
+      } catch (e) {
+        console.warn("Worker TTS failed, falling back:", e);
+        speakFallbackBrowser(text);
+      }
+    }
+
+    function addBotMessage(text, opts={showHint:false, showNext:false, choices:null}) {
       const safeText = cleanBotText(text);
       const div = document.createElement("div");
       div.className = "msg bot";
@@ -440,6 +371,26 @@
       const content = document.createElement("div");
       content.innerText = safeText;
       div.appendChild(content);
+
+      // Optional MCQ choices (for younger children)
+      if (Array.isArray(opts.choices) && opts.choices.length) {
+        const wrap = document.createElement("div");
+        wrap.className = "mcq-wrap";
+        opts.choices.forEach((c, idx) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "mcq-btn";
+          const letter = ["A","B","C","D"][idx] || "";
+          b.textContent = `${letter}) ${c}`;
+          b.addEventListener("click", async () => {
+            // submit choice as if typed
+            input.value = String(c);
+            await handleSend();
+          });
+          wrap.appendChild(b);
+        });
+        div.appendChild(wrap);
+      }
 
       const controls = document.createElement("div");
       controls.className = "bot-controls";
@@ -471,7 +422,7 @@
 
       div.appendChild(controls);
       messagesDiv.appendChild(div);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      scrollMessagesToBottom();
     }
 
     function showActionButtons(buttons) {
@@ -526,7 +477,6 @@
     }
 
     function resetSessionCounters() {
-      sessionLocalId = (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()));
       sessionDbId = null;
       maxQuestions = computeMaxQuestions();
       questionsAnswered = 0;
@@ -537,10 +487,47 @@
 
     function sessionComplete() { return questionsAnswered >= maxQuestions; }
 
+    function showRewardToast(title, body) {
+      rewardToast.innerHTML = `<strong>${title}</strong>${body || ""}`;
+      rewardToast.style.display = "block";
+      setTimeout(() => { rewardToast.style.display = "none"; }, 2600);
+    }
+
     function maybeAwardBadge() {
-      if (correctCount === 3 && !badges.includes("⭐")) badges.push("⭐");
-      if (correctCount === 5 && !badges.includes("🏅")) badges.push("🏅");
-      if (correctCount === 10 && !badges.includes("🏆")) badges.push("🏆");
+      // Keep simple and motivating
+      if (correctCount === 3 && !badges.includes("⭐")) {
+        badges.push("⭐");
+        showRewardToast("New badge ⭐", "Three correct answers — lovely work.");
+      }
+      if (correctCount === 5 && !badges.includes("🏅")) {
+        badges.push("🏅");
+        showRewardToast("New badge 🏅", "Five correct — you’re on a roll.");
+      }
+      if (correctCount === 10 && !badges.includes("🏆")) {
+        badges.push("🏆");
+        showRewardToast("New badge 🏆", "Ten correct — brilliant effort.");
+      }
+    }
+
+    // Save last subject/area per child so next visit feels continuous
+    function ctxKey() {
+      return child?.id ? `learnlio_last_ctx_${child.id}` : "learnlio_last_ctx";
+    }
+    function saveLastContext() {
+      if (!child?.id) return;
+      localStorage.setItem(ctxKey(), JSON.stringify({
+        subject,
+        area,
+        at: new Date().toISOString()
+      }));
+    }
+    function loadLastContext() {
+      if (!child?.id) return null;
+      try {
+        const raw = localStorage.getItem(ctxKey());
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch { return null; }
     }
 
     // ---------------- Backend (AI) ----------------
@@ -566,7 +553,6 @@
     }
 
     // ---------------- Database: Sessions + Items + Skill ----------------
-
     async function ensureSessionRow() {
       if (sessionDbId) return sessionDbId;
       if (!currentUser?.id || !child?.id || !subject) return null;
@@ -601,7 +587,6 @@
 
     async function insertSessionItem({ item_type, prompt_text=null, child_text=null, is_correct=null, meta=null }) {
       await ensureSessionRow();
-
       if (!sessionDbId || !currentUser?.id || !child?.id) return;
 
       const payload = {
@@ -641,7 +626,6 @@
     async function loadOrCreateSkillRow() {
       if (!currentUser?.id || !child?.id || !subject || !area) return null;
 
-      // Fetch existing
       const { data: existing, error: selErr } = await sb
         .from("child_skill_progress")
         .select("*")
@@ -651,9 +635,7 @@
         .eq("area", area)
         .maybeSingle();
 
-      if (selErr) {
-        console.error("child_skill_progress select failed:", selErr);
-      }
+      if (selErr) console.error("child_skill_progress select failed:", selErr);
 
       if (existing?.id) {
         skillRow = existing;
@@ -664,7 +646,6 @@
         return skillRow;
       }
 
-      // Create initial row (unique index prevents duplicates; supabase upsert makes it safe)
       const payload = {
         owner_id: currentUser.id,
         child_id: child.id,
@@ -718,7 +699,6 @@
 
       const total_attempts = (skillRow.total_attempts || 0) + 1;
       const correct_attempts = (skillRow.correct_attempts || 0) + (isCorrect ? 1 : 0);
-
       const accuracy = total_attempts ? (correct_attempts / total_attempts) : 0.0;
 
       const newStreakCorrect = isCorrect ? (streakCorrect + 1) : 0;
@@ -765,6 +745,59 @@
 
       skillRow = data;
       updateProgressUI();
+    }
+
+    // ---------------- Load previous history (last session for subject+area) ----------------
+    async function loadPreviousHistorySnippet() {
+      if (!currentUser?.id || !child?.id || !subject || !area) return;
+
+      // Find last session for this child/subject/area (not the new one we are about to start)
+      const { data: lastSess, error: sErr } = await sb
+        .from("sessions")
+        .select("id, created_at, questions_done, correct_count")
+        .eq("owner_id", currentUser.id)
+        .eq("child_id", child.id)
+        .eq("subject", subject)
+        .eq("area", area)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (sErr) { console.warn("history session load error", sErr); return; }
+      if (!lastSess?.id) return;
+
+      addBotMessage(`Last time, we worked on ${area}.\n\nWould you like to carry on with that, or switch?`);
+
+      // Pull a handful of session items to provide continuity
+      const { data: items, error: iErr } = await sb
+        .from("session_items")
+        .select("item_type, prompt_text, child_text, is_correct, created_at")
+        .eq("session_id", lastSess.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (iErr) { console.warn("history items load error", iErr); return; }
+      if (!items?.length) return;
+
+      // Show oldest->newest for readability
+      const ordered = items.slice().reverse();
+
+      addBotMessage("Here’s a quick reminder of what happened:");
+
+      for (const it of ordered) {
+        if (it.item_type === "question" && it.prompt_text) {
+          addBotMessage(`Question:\n${it.prompt_text}`);
+        } else if ((it.item_type === "answer" || it.item_type === "turn") && it.child_text) {
+          addUserMessage(it.child_text);
+        } else if (it.item_type === "feedback" && it.prompt_text) {
+          // Keep feedback minimal in history
+          if (typeof it.is_correct === "boolean") {
+            addBotMessage(it.is_correct ? "✅ You got one right." : "🙂 We practised a tricky one.");
+          }
+        }
+      }
+
+      addBotMessage("Ready to start today’s session?");
     }
 
     // ---------------- Maths generation ----------------
@@ -837,6 +870,24 @@
       return Number(m[0]);
     }
 
+    function makeMCQChoices(correct) {
+      // Generate 3 plausible wrong answers
+      const choices = new Set([correct]);
+      while (choices.size < 4) {
+        const delta = randInt(1, 6);
+        const sign = Math.random() < 0.5 ? -1 : 1;
+        const candidate = Math.max(0, correct + sign * delta);
+        choices.add(candidate);
+      }
+      // Shuffle
+      const arr = Array.from(choices);
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr.map(n => String(n));
+    }
+
     function showMathQuestion(q) {
       guided.active = false;
       guided.steps = [];
@@ -844,9 +895,13 @@
       hintUsedForCurrent = false;
       waitingForNextButton = false;
 
+      const useMCQ = childAge <= 8; // younger students -> MCQ
+      let choices = null;
+      if (useMCQ) choices = makeMCQChoices(q.correctAnswer);
+
       addBotMessage(
-        `✏️ Question:\n\n${q.displayText}\n\nTake your time.\nWhat do you think the answer is?`,
-        { showHint:true, showNext:false }
+        `Question:\n\n${q.displayText}\n\nTake your time.\nWhat do you think the answer is?`,
+        { showHint: !useMCQ, showNext:false, choices }
       );
 
       insertSessionItem({
@@ -854,7 +909,7 @@
         prompt_text: q.displayText,
         child_text: null,
         is_correct: null,
-        meta: { subject, area, difficultyLevel }
+        meta: { subject, area, difficultyLevel, mode: useMCQ ? "mcq" : "free" }
       }).catch(console.error);
     }
 
@@ -940,8 +995,43 @@ Short lines.
     }
 
     // ---------------- Subject/Area selection ----------------
-    function showAreaSelection(options) {
+    function showAreaSelection(options, lastCtx=null) {
       areaSelection.innerHTML = "";
+
+      // If last ctx matches the subject, show quick “do again” button
+      if (lastCtx?.subject === subject && lastCtx?.area) {
+        const quick = document.createElement("button");
+        quick.className = "btn";
+        quick.type = "button";
+        quick.style.marginRight = "8px";
+        quick.style.marginBottom = "8px";
+        quick.innerText = `Do ${lastCtx.area} again`;
+        quick.addEventListener("click", async () => {
+          addUserMessage(`Do ${lastCtx.area} again`);
+          areaSelection.style.display = "none";
+          area = lastCtx.area;
+          await startAreaSession();
+        });
+        areaSelection.appendChild(quick);
+
+        const switchBtn = document.createElement("button");
+        switchBtn.className = "btn light";
+        switchBtn.type = "button";
+        switchBtn.style.marginRight = "8px";
+        switchBtn.style.marginBottom = "8px";
+        switchBtn.innerText = "Choose a different area";
+        switchBtn.addEventListener("click", () => {
+          // do nothing, just show all options below
+        });
+        areaSelection.appendChild(switchBtn);
+
+        const hr = document.createElement("div");
+        hr.style.height = "1px";
+        hr.style.background = "#ececf4";
+        hr.style.margin = "10px 0";
+        areaSelection.appendChild(hr);
+      }
+
       options.forEach(opt => {
         const btn = document.createElement("button");
         btn.className = "btn";
@@ -952,25 +1042,40 @@ Short lines.
         btn.addEventListener("click", async () => {
           addUserMessage(opt.label);
           areaSelection.style.display = "none";
-
           area = opt.area;
+          await startAreaSession();
+        });
+        areaSelection.appendChild(btn);
+      });
 
-          resetSessionCounters();
-          await ensureSessionRow();
-          await loadOrCreateSkillRow();
-          updateProgressUI();
+      areaSelection.style.display = "block";
+    }
 
-          guided.active = false; guided.steps = []; guided.idx = 0;
+    async function startAreaSession() {
+      // new session per subject+area start (keeps reporting clean)
+      resetSessionCounters();
 
-          if (subject === "Maths") {
-            calculator.style.display = "block";
-            currentQuestion = generateMathQuestion();
-            showMathQuestion(currentQuestion);
-          } else {
-            calculator.style.display = "none";
-            currentQuestion = null;
+      // Before creating a new session row, load some history for continuity
+      // (this uses previous session, not the new one)
+      await loadPreviousHistorySnippet();
 
-            const prompt = `
+      await ensureSessionRow();
+      await loadOrCreateSkillRow(); // loads real level for this skill
+      updateProgressUI();
+
+      guided.active = false; guided.steps = []; guided.idx = 0;
+
+      saveLastContext();
+
+      if (subject === "Maths") {
+        calculator.style.display = "block";
+        currentQuestion = generateMathQuestion();
+        showMathQuestion(currentQuestion);
+      } else {
+        calculator.style.display = "none";
+        currentQuestion = null;
+
+        const prompt = `
 You are Learnlio AI, a child-safe UK tutor.
 Child: ${childName}, age ${childAge}
 English area: ${area}
@@ -981,21 +1086,17 @@ End with a gentle question.
 British English.
 Short lines.
 `;
-            const reply = await callBackend(prompt);
-            addBotMessage(reply);
+        const reply = await callBackend(prompt);
+        addBotMessage(reply);
 
-            await insertSessionItem({
-              item_type: "prompt",
-              prompt_text: `English activity start: ${area}`,
-              child_text: null,
-              is_correct: null,
-              meta: { subject, area, difficultyLevel }
-            });
-          }
+        await insertSessionItem({
+          item_type: "prompt",
+          prompt_text: `English activity start: ${area}`,
+          child_text: null,
+          is_correct: null,
+          meta: { subject, area, difficultyLevel }
         });
-        areaSelection.appendChild(btn);
-      });
-      areaSelection.style.display = "block";
+      }
     }
 
     function selectSubject(selected) {
@@ -1012,25 +1113,27 @@ Short lines.
       calculator.style.display = "none";
       progressHeader.style.display = "none";
 
+      const last = loadLastContext();
+
       addBotMessage(selected === "Maths"
-        ? "✏️ Great!\n\nWhich Maths area would you like to try first?"
-        : "📚 Great!\n\nWhich English area would you like to practise?"
+        ? "Great.\n\nWhich Maths area would you like to work on?"
+        : "Great.\n\nWhich English area would you like to practise?"
       );
 
       if (selected === "Maths") {
         showAreaSelection([
-          { label: "Addition ➕", area: "Addition" },
-          { label: "Subtraction ➖", area: "Subtraction" },
-          { label: "Multiplication ✖️", area: "Multiplication" },
-          { label: "Division ➗", area: "Division" }
-        ]);
+          { label: "Addition", area: "Addition" },
+          { label: "Subtraction", area: "Subtraction" },
+          { label: "Multiplication", area: "Multiplication" },
+          { label: "Division", area: "Division" }
+        ], last);
       } else {
         showAreaSelection([
-          { label: "Reading aloud 📖", area: "Reading" },
-          { label: "Spelling 📝", area: "Spelling" },
-          { label: "Sentence building ✍️", area: "Sentence building" },
-          { label: "Fun word games 🎲", area: "Word games" }
-        ]);
+          { label: "Reading aloud", area: "Reading" },
+          { label: "Spelling", area: "Spelling" },
+          { label: "Sentence building", area: "Sentence building" },
+          { label: "Fun word games", area: "Word games" }
+        ], last);
       }
     }
 
@@ -1044,7 +1147,7 @@ Short lines.
       guided.steps = [];
       guided.idx = 0;
 
-      addBotMessage(`✅ That’s the end for today, ${childName}.\n\nYou did really well.`);
+      addBotMessage(`That’s the end for today, ${childName}.\n\nYou did really well.`);
 
       showActionButtons([
         {
@@ -1067,7 +1170,7 @@ Short lines.
             areaSelection.style.display = "none";
             disableInput(true);
             await updateSessionRollups();
-            addBotMessage("✅ All saved.\n\nSee you next time.");
+            addBotMessage("All saved.\n\nSee you next time.");
           }
         }
       ]);
@@ -1083,6 +1186,7 @@ Short lines.
       addUserMessage(text);
       input.value = "";
 
+      // record user response as session_item evidence
       try {
         await insertSessionItem({
           item_type: "answer",
@@ -1091,9 +1195,7 @@ Short lines.
           is_correct: null,
           meta: { subject, area, difficultyLevel }
         });
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) { console.error(e); }
 
       if (!subject) {
         addBotMessage("Please choose Maths or English using the buttons below.");
@@ -1118,6 +1220,7 @@ Short lines.
           return;
         }
 
+        // Guided mode
         if (guided.active) {
           const n = parseChildNumber(text);
           const step = guided.steps[guided.idx];
@@ -1126,7 +1229,7 @@ Short lines.
           if (ok) {
             guided.idx += 1;
             if (guided.idx < guided.steps.length) {
-              addBotMessage(`✅ Nice work!\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${guided.steps[guided.idx].prompt}`);
+              addBotMessage(`Nice work.\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${guided.steps[guided.idx].prompt}`);
               return;
             }
 
@@ -1154,7 +1257,7 @@ Short lines.
             if (sessionComplete()) { endSessionUI(); return; }
 
             waitingForNextButton = true;
-            addBotMessage(`Brilliant, ${childName}!\n\nThat is correct.\n\nReady for the next one?`, { showNext:true });
+            addBotMessage(`Brilliant, ${childName}.\n\nThat is correct.\n\nReady for the next one?`, { showNext:true });
             return;
           } else {
             streakWrong += 1;
@@ -1171,11 +1274,12 @@ Short lines.
             await recordAttemptToSkill({ isCorrect: false, meta: { guided: true, step: guided.idx+1 } });
             await updateSessionRollups();
 
-            addBotMessage(`Good try, ${childName}.\n\nLet’s do the same step again.\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${step.prompt}`);
+            addBotMessage(`Good try.\n\nLet’s do the same step again.\n\nStep ${guided.idx+1} of ${guided.steps.length}:\n\n${step.prompt}`);
             return;
           }
         }
 
+        // Normal marking
         const n = parseChildNumber(text);
         const correct = (n !== null && Math.abs(n - currentQuestion.correctAnswer) < 1e-9);
 
@@ -1212,6 +1316,7 @@ Short lines.
           return;
         }
 
+        // Incorrect => guided steps
         streakWrong += 1;
         streakCorrect = 0;
 
@@ -1373,14 +1478,22 @@ British English.
       clearError();
       disableInput(false);
 
-      addBotMessage(`👋 Hi ${childName}!\n\nI’ll help you in a calm, step-by-step way.\n\nWhat are we working on today?`);
-      subjectSelection.style.display = "block";
+      // Welcome + remember last subject/area
+      const last = loadLastContext();
+
+      if (last?.subject) {
+        addBotMessage(`Hi ${childName}.\n\nLast time you did ${last.subject}${last.area ? ` — ${last.area}` : ""}.\n\nWhat would you like to work on today?`);
+        subjectSelection.style.display = "block";
+      } else {
+        addBotMessage(`Hi ${childName}.\n\nI’ll help you in a calm, step-by-step way.\n\nWhat are we working on today?`);
+        subjectSelection.style.display = "block";
+      }
+
       return true;
     }
 
     // ---------------- Logout ----------------
     logoutBtn.addEventListener("click", async () => {
-      stopAllSpeech();
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
       window.location.href = "/login.html";
@@ -1389,15 +1502,8 @@ British English.
     // ---------------- Buttons ----------------
     mathsBtn.addEventListener("click", () => { addUserMessage("Maths"); selectSubject("Maths"); });
     englishBtn.addEventListener("click", () => { addUserMessage("English"); selectSubject("English"); });
-
     sendBtn.addEventListener("click", handleSend);
-    input.addEventListener("keypress", e => { if (e.key === "Enter") handleSend(); });
-
-    // Stop speech if tab loses focus (prevents audio continuing in background)
-    window.addEventListener("blur", stopAllSpeech);
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) stopAllSpeech();
-    });
+    input.addEventListener("keydown", e => { if (e.key === "Enter") handleSend(); });
 
     // ---------------- Init ----------------
     (async () => {
