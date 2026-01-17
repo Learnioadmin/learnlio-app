@@ -32,6 +32,7 @@
     }
     @media (min-width: 981px){ body{ overflow:hidden; } }
 
+    /* Logged-in nav (same as Tutor) */
     .nav{ background:#fff; border-bottom:1px solid rgba(15,23,42,.08); position:sticky; top:0; z-index:50; }
     .nav-inner{ max-width:1140px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-weight:900; letter-spacing:.2px; }
@@ -107,8 +108,6 @@
       border: 1px solid rgba(15,23,42,.10);
       border-radius: var(--radius2);
       padding: 12px;
-      padding-bottom: 120px;         /* ✅ prevents sticky controls blocking last option */
-      scroll-padding-bottom: 120px;  /* ✅ ensures last items can scroll above controls */
       box-shadow: var(--shadow2);
       display:flex;
       flex-direction:column;
@@ -141,12 +140,14 @@
       transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
       box-shadow: 0 10px 18px rgba(2,6,23,.06);
       font-weight:900;
+      user-select:none;
     }
     .mcq-opt:hover{
       transform: translateY(-1px);
       box-shadow: 0 14px 24px rgba(2,6,23,.10);
       border-color: rgba(11,92,255,.22);
     }
+    .mcq-opt:disabled{ opacity:.60; cursor:not-allowed; transform:none; }
     .mcq-letter{
       width:28px; height:28px; border-radius: 10px;
       background: var(--soft);
@@ -165,6 +166,20 @@
       color:var(--muted);
       line-height:1.7;
       font-size:14px;
+    }
+
+    .imgWrap{
+      border:1px solid rgba(15,23,42,.10);
+      background:#fff;
+      border-radius: 16px;
+      padding:10px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+    }
+    .imgWrap img{
+      width:100%;
+      height:auto;
+      display:block;
+      border-radius:12px;
     }
 
     .controls{
@@ -197,6 +212,7 @@
     }
     .pill:disabled{ opacity:.55; cursor:not-allowed; }
 
+    /* Side panel */
     .side{ padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
     .sideCard{
       background: rgba(255,255,255,.92);
@@ -229,172 +245,70 @@
       width: 0%;
       background: linear-gradient(90deg, #10b981, #22c55e);
       border-radius: 999px;
+      transition: width .25s ease;
     }
 
     .tiny{ color:var(--muted); font-size:13px; line-height:1.6; margin-top:10px; }
     .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 
-    /* Interactive components */
-    .ibox{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 18px;
-      padding: 12px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    /* Fill blank */
-    .blankInput{
-      width: 100%;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border:1px solid rgba(15,23,42,.14);
-      font-size: 15px;
-      outline: none;
-    }
-    .blankInput:focus{
-      border-color: rgba(11,92,255,.35);
-      box-shadow: 0 0 0 4px rgba(11,92,255,.10);
-    }
-
-    /* Match pairs */
-    .pairsGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    @media (max-width: 520px){
-      .pairsGrid{ grid-template-columns: 1fr; }
-    }
-    .pairCol{ display:flex; flex-direction:column; gap:8px; }
-    .pairBtn{
-      text-align:left;
-      padding:12px 12px;
-      border-radius: 16px;
-      border:1px solid rgba(15,23,42,.12);
-      background:#fff;
-      box-shadow: 0 8px 14px rgba(2,6,23,.06);
-      cursor:pointer;
-      font-weight:900;
-    }
-    .pairBtn.selected{
-      border-color: rgba(11,92,255,.35);
-      box-shadow: 0 0 0 4px rgba(11,92,255,.10);
-      background: rgba(11,92,255,.06);
-    }
-    .pairBtn.matched{
-      border-color: rgba(16,185,129,.35);
-      background: rgba(16,185,129,.08);
-      cursor: default;
-      opacity:.95;
-    }
-    .matchLine{ font-size: 13px; color: var(--muted); line-height:1.5; }
-
-    /* Number line */
-    .lineWrap{ padding: 8px 6px 4px; }
-    .numLine{
-      position: relative;
-      height: 64px;
-      border-radius: 16px;
-      background: rgba(238,242,255,.65);
-      border:1px solid rgba(15,23,42,.10);
-      overflow:hidden;
-    }
-    .numTrack{
-      position:absolute;
-      left: 14px; right: 14px;
-      top: 34px;
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(15,23,42,.10);
-    }
-    .numMarker{
-      position:absolute;
-      top: 18px;
-      width: 34px;
-      height: 34px;
-      border-radius: 14px;
-      background: #fff;
-      border:1px solid rgba(15,23,42,.14);
-      box-shadow: 0 10px 16px rgba(2,6,23,.10);
-      display:flex;
+    /* Modals */
+    .modal{
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,.35);
+      display:none;
       align-items:center;
       justify-content:center;
-      font-weight:950;
-      cursor: grab;
-      user-select:none;
-      touch-action:none;
+      z-index: 9999;
+      padding: 16px;
     }
-    .numLabels{
-      display:flex;
-      justify-content:space-between;
-      font-size: 13px;
-      color: var(--muted);
-      margin-top:8px;
-      padding: 0 4px;
-      font-weight:850;
-    }
-    .slider{ width: 100%; accent-color: var(--brand); }
-
-    /* Drag drop */
-    .dragGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    @media (max-width: 720px){
-      .dragGrid{ grid-template-columns: 1fr; }
-    }
-    .dragBank, .dropZoneWrap{
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 18px;
-      background: rgba(248,250,252,.95);
-      padding: 10px;
-    }
-    .dragItem{
-      padding: 10px 12px;
-      border-radius: 14px;
+    .modal.show{ display:flex; }
+    .modalCard{
+      width: min(560px, 100%);
+      background: rgba(255,255,255,.96);
       border:1px solid rgba(15,23,42,.12);
-      background:#fff;
-      box-shadow: 0 8px 14px rgba(2,6,23,.06);
-      cursor: grab;
-      font-weight: 950;
-      margin-bottom: 8px;
+      border-radius: 24px;
+      box-shadow: 0 30px 70px rgba(2,6,23,.20);
+      padding: 16px;
     }
-    .dropZone{
-      min-height: 46px;
-      padding: 10px 10px;
-      border-radius: 14px;
-      border: 2px dashed rgba(15,23,42,.18);
-      background: rgba(255,255,255,.9);
-      margin-bottom: 10px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
+    .modalTop{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
     }
-    .dropZone.over{
-      border-color: rgba(11,92,255,.35);
-      background: rgba(11,92,255,.06);
+    .modalTitle{
+      font-weight:950;
+      letter-spacing:-.2px;
+      font-size: 18px;
+      margin: 0;
     }
-    .dzLabel{ font-weight: 950; color: var(--ink); font-size: 14px; }
-    .dzValue{ font-weight: 950; color: var(--muted); font-size: 14px; }
-
-    /* End screen buttons */
-    .endBtns{
+    .modalText{
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+      font-family:'OpenDyslexic', Arial, sans-serif;
+    }
+    .modalActions{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
-      margin-top: 10px;
+      margin-top: 14px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(15,23,42,.12);
+      background:#fff;
+      font-weight:950;
+      font-size: 13px;
+      box-shadow: 0 10px 14px rgba(2,6,23,.06);
     }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
   <header class="nav">
     <div class="nav-inner">
@@ -413,6 +327,7 @@
 
   <main class="container">
     <div class="shell">
+      <!-- Lesson -->
       <section class="panel" aria-label="Learnlio Lesson">
         <div class="panel-head">
           <div>
@@ -428,7 +343,7 @@
         </div>
 
         <div class="stage">
-          <div id="cardbox" class="cardbox">
+          <div id="cardbox" class="cardbox" aria-live="polite">
             <div id="lessonText" class="lessonText"></div>
             <div id="mcq" class="mcq" style="display:none;"></div>
             <div id="interactiveMount" style="display:none;"></div>
@@ -442,11 +357,12 @@
         </div>
       </section>
 
+      <!-- Progress -->
       <aside class="panel" aria-label="Lesson progress">
         <div class="panel-head">
           <div>
             <div class="title">✨ Your progress</div>
-            <div class="subtitle">Just steady effort. No pressure.</div>
+            <div class="subtitle">Small steps. Big confidence.</div>
           </div>
         </div>
 
@@ -459,6 +375,7 @@
             </div>
             <div class="bar"><div id="barFill"></div></div>
             <div class="tiny" id="xpLine">XP: 0</div>
+            <div class="tiny" id="rewardLine">Next unlock: <b id="nextUnlock">50 XP</b></div>
           </div>
 
           <div class="sideCard">
@@ -478,6 +395,46 @@
       </aside>
     </div>
   </main>
+
+  <!-- Start modal -->
+  <div id="startModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalTop">
+        <div>
+          <h2 id="startTitle" class="modalTitle">Let’s do a calm lesson ✨</h2>
+          <div id="startChips" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+          <p id="startText" class="modalText">
+            We’ll do <b>one small step</b> at a time. When you pick an answer, we’ll move on for you.
+            If anything feels tricky, that’s okay — we keep going calmly.
+          </p>
+        </div>
+        <button id="closeStart" class="btn ghost" type="button">✕</button>
+      </div>
+      <div class="modalActions">
+        <button id="startBtn" class="btn" type="button">🚀 Start lesson</button>
+        <button id="startReadBtn" class="btn ghost" type="button">🔊 Read this out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- End modal -->
+  <div id="endModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalTop">
+        <div>
+          <h2 class="modalTitle">You did it ✅</h2>
+          <p id="endText" class="modalText">Nice calm effort. Want to stop for today, or try another short lesson?</p>
+          <div id="endStats" class="modalText" style="margin-top:10px;"></div>
+        </div>
+        <button id="closeEnd" class="btn ghost" type="button">✕</button>
+      </div>
+      <div class="modalActions">
+        <button id="doneTodayBtn" class="btn light" type="button">Done for today</button>
+        <button id="anotherBtn" class="btn" type="button">Try another lesson</button>
+        <a class="btn ghost" href="/lessons.html">Back to Lessons</a>
+      </div>
+    </div>
+  </div>
 
   <script>
   (() => {
@@ -509,17 +466,40 @@
     const helpBtn = document.getElementById("helpBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const speakBtn = document.getElementById("speakBtn");
+    const cardbox = document.getElementById("cardbox");
 
     const stepKpi = document.getElementById("stepKpi");
     const topicKpi = document.getElementById("topicKpi");
     const barFill = document.getElementById("barFill");
     const xpLine = document.getElementById("xpLine");
     const practiceLine = document.getElementById("practiceLine");
+    const nextUnlockEl = document.getElementById("nextUnlock");
+
+    // Modals
+    const startModal = document.getElementById("startModal");
+    const startTitle = document.getElementById("startTitle");
+    const startText = document.getElementById("startText");
+    const startChips = document.getElementById("startChips");
+    const startBtn = document.getElementById("startBtn");
+    const startReadBtn = document.getElementById("startReadBtn");
+    const closeStart = document.getElementById("closeStart");
+
+    const endModal = document.getElementById("endModal");
+    const endText = document.getElementById("endText");
+    const endStats = document.getElementById("endStats");
+    const doneTodayBtn = document.getElementById("doneTodayBtn");
+    const anotherBtn = document.getElementById("anotherBtn");
+    const closeEnd = document.getElementById("closeEnd");
 
     function showError(msg){ pageError.style.display="block"; pageError.textContent = msg; }
     function clearError(){ pageError.style.display="none"; pageError.textContent = ""; }
     function showWarn(msg){ pageWarn.style.display="block"; pageWarn.textContent = msg; }
     function clearWarn(){ pageWarn.style.display="none"; pageWarn.textContent = ""; }
+
+    function showStartModal(){ startModal.classList.add("show"); }
+    function hideStartModal(){ startModal.classList.remove("show"); }
+    function showEndModal(){ endModal.classList.add("show"); }
+    function hideEndModal(){ endModal.classList.remove("show"); }
 
     // Auth/child
     let currentUser = null;
@@ -535,15 +515,22 @@
     let lesson = null;
     let steps = [];
     let idx = 0;
-    let stepAnswers = {}; // stepIndex -> { kind, isCorrect, data }
+    let stepAnswers = {};
     let xp = 0;
+
+    // Session stats
+    let mcqTotal = 0;
+    let mcqCorrect = 0;
 
     // Audio
     let currentAudio = null;
 
-    function stepIsAnswered(stepIndex){
-      return !!stepAnswers[stepIndex];
-    }
+    // Flow controls
+    let started = false;
+    let autoAdvanceMs = 750; // feels natural but not rushed
+
+    // Rewards
+    const unlockSteps = [50, 100, 150, 200, 300];
 
     function computeAgeFromDob(dobStr){
       const d = new Date(dobStr);
@@ -628,6 +615,13 @@
       }
     }
 
+    function nextUnlockTarget(){
+      for (const t of unlockSteps){
+        if (xp < t) return t;
+      }
+      return unlockSteps[unlockSteps.length - 1];
+    }
+
     function setProgressUI(){
       const total = steps.length || 0;
       stepKpi.textContent = `${Math.min(idx+1,total)} / ${total}`;
@@ -636,6 +630,7 @@
       const pct = total ? Math.round(((idx) / total) * 100) : 0;
       barFill.style.width = Math.min(100, Math.max(0, pct)) + "%";
       xpLine.textContent = `XP: ${xp}`;
+      nextUnlockEl.textContent = `${nextUnlockTarget()} XP`;
     }
 
     function clearInteractive(){
@@ -643,24 +638,13 @@
       interactiveMount.innerHTML = "";
     }
 
-    function norm(s){ return String(s ?? "").trim().toLowerCase(); }
-    function safeNum(v, fallback){
-      const n = Number(v);
-      return Number.isFinite(n) ? n : fallback;
+    function scrollCardToTop(){
+      try{ cardbox.scrollTo({ top: 0, behavior: "smooth" }); }catch{}
     }
 
-    function autoAdvance(delayMs = 650){
-      // Don’t auto-advance if we’re already at the end
-      if (idx >= steps.length - 1) return;
-      setTimeout(() => {
-        // Only advance if still on same step and it’s answered
-        if (stepIsAnswered(idx)){
-          idx += 1;
-          renderStep();
-        }
-      }, delayMs);
-    }
-
+    // -------------------------
+    // LESSON GEN (Worker)
+    // -------------------------
     async function fetchGeneratedLesson(){
       const payload = {
         ownerId: currentUser.id,
@@ -669,6 +653,16 @@
         age: childAge,
         subject: SUBJECT,
         area: AREA,
+
+        // IMPORTANT: ask the worker to avoid image-dependent questions + avoid blanks
+        constraints: {
+          noImages: true,
+          noImageQuestions: true,
+          mustIncludeAllText: true,
+          fillBlankMustHaveSentence: true,
+          mcqMustHaveChoices: true
+        },
+
         wantInteractive: true,
         allowedTypes: ["intro","teach","mcq","fill_blank","match_pairs","number_line","interactive_drag","finish"]
       };
@@ -679,654 +673,180 @@
         body: JSON.stringify(payload)
       });
 
-      const raw = await r.text().catch(()=> "");
+      const text = await r.text().catch(()=> "");
       let json = null;
-      try{ json = raw ? JSON.parse(raw) : null; }catch{}
+      try{ json = text ? JSON.parse(text) : null; }catch{}
 
       if (!r.ok){
-        const msg = json?.error || raw || `Lesson generation failed (${r.status})`;
+        const msg = json?.error || text || `Lesson generation failed (${r.status})`;
         throw new Error(msg);
       }
 
-      const out = json?.steps ? json : (json?.lesson ? json.lesson : json);
-
-      if (!out?.steps || !Array.isArray(out.steps) || !out.steps.length){
+      if (!json?.steps || !Array.isArray(json.steps) || !json.steps.length){
         throw new Error("Lesson worker returned no steps.");
       }
 
+      return json;
+    }
+
+    // -------------------------
+    // Step safety / “ship-ready” patching
+    // -------------------------
+    function cleanLine(s){
+      return String(s || "").replace(/\s+/g, " ").trim();
+    }
+
+    function mentionsImage(text){
+      const t = String(text || "").toLowerCase();
+      return (
+        t.includes("picture") ||
+        t.includes("image") ||
+        t.includes("shown") ||
+        t.includes("in the picture") ||
+        t.includes("in this picture") ||
+        t.includes("in the image")
+      );
+    }
+
+    function safeCountingReplacement(){
+      // Text-only replacement for “count what you see”
+      // Keeps the lesson flowing instead of breaking.
+      const n = 6 + Math.floor(Math.random() * 5); // 6..10
+      const add = 1 + Math.floor(Math.random() * 3); // 1..3
+      return {
+        type: "mcq",
+        prompt: `Let’s do a calm count.\n\nStart at ${n}. Count on ${add}. Where do you land?`,
+        choices: Array.from({length:4}, (_,i)=> String(n + i)),
+        correctIndex: add
+      };
+    }
+
+    function ensureFillBlank(step){
+      // Make sure there is ALWAYS something visible + answerable.
+      const rawPrompt = cleanLine(step.prompt) || cleanLine(step.text) || cleanLine(step.sentence) || cleanLine(step.stem);
+      let prompt = rawPrompt;
+
+      // If totally missing, create a valid one.
+      if (!prompt){
+        prompt = "Complete the sentence: I can see ___ birds.";
+      }
+
+      // Ensure it contains a blank marker.
+      if (!prompt.includes("___")){
+        // If it says "Complete the sentence" but no blank, fix it.
+        if (/complete the sentence/i.test(prompt)){
+          prompt = "Complete the sentence: I can see ___ birds.";
+        } else {
+          prompt = prompt + " ___";
+        }
+      }
+
+      // Convert fill_blank into MCQ-for-now (ship-ready, no broken UI).
+      // If worker provided choices/wordbank, use them. Otherwise create safe ones.
+      let choices = Array.isArray(step.choices) ? step.choices.slice(0,6) : null;
+      let correctIndex = Number.isFinite(step.correctIndex) ? step.correctIndex : null;
+
+      // Some generators use answer instead of correctIndex
+      const answer = cleanLine(step.answer);
+
+      if (!choices || choices.length < 2){
+        // Create gentle options
+        // If answer exists, include it
+        const base = ["two","three","some","many"];
+        if (answer && !base.includes(answer.toLowerCase())) base.unshift(answer);
+        // Remove duplicates
+        const uniq = [];
+        for (const c of base){
+          const cc = cleanLine(c);
+          if (cc && !uniq.map(x=>x.toLowerCase()).includes(cc.toLowerCase())) uniq.push(cc);
+        }
+        choices = uniq.slice(0,4);
+        if (choices.length < 2) choices = ["two","three","four","five"];
+      }
+
+      if (correctIndex == null){
+        if (answer){
+          const i = choices.findIndex(c => cleanLine(c).toLowerCase() === answer.toLowerCase());
+          correctIndex = i >= 0 ? i : 0;
+        } else {
+          correctIndex = 0; // safe default
+        }
+      }
+
+      return {
+        type: "mcq",
+        prompt,
+        choices,
+        correctIndex
+      };
+    }
+
+    function patchStepsForShipReady(list){
+      const out = [];
+      for (const s of (list || [])){
+        const step = { ...s };
+
+        // If it mentions pictures/images but none is provided, replace with text-only
+        const hasImageUrl = !!(step.image_url || step.imageUrl || step.img || step.image);
+        const stepText = cleanLine(step.prompt || step.text || "");
+        if (!hasImageUrl && mentionsImage(stepText)){
+          showWarn("A question asked about a picture, but no image was provided — swapping to a text-only step.");
+          out.push(safeCountingReplacement());
+          continue;
+        }
+
+        // Fix fill_blank into a ship-ready MCQ
+        if (step.type === "fill_blank"){
+          out.push(ensureFillBlank(step));
+          continue;
+        }
+
+        // Basic MCQ safety: must have prompt + choices
+        if (step.type === "mcq"){
+          const prompt = cleanLine(step.prompt);
+          const choices = Array.isArray(step.choices) ? step.choices : [];
+          if (!prompt || choices.length < 2 || !Number.isFinite(Number(step.correctIndex))){
+            showWarn("A question was missing details — using a safe replacement question.");
+            out.push(safeCountingReplacement());
+            continue;
+          }
+        }
+
+        out.push(step);
+      }
+
+      // Ensure last step is finish so we always have a proper ending
+      const last = out[out.length - 1];
+      if (!last || last.type !== "finish"){
+        out.push({ type:"finish", text:"Nice work. You stayed calm and kept going." });
+      }
       return out;
     }
 
-    function renderTextStep(step){
-      lessonTextEl.textContent = step.text || "";
-      nextBtn.textContent = (step.type === "finish") ? "✅ Complete" : "➡️ Next";
-      if (step.type === "finish") hintLine.textContent = "Tap complete to finish this lesson.";
+    function escapeHtml(s){
+      return String(s || "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
     }
 
-    function renderMCQ(step){
-      lessonTextEl.textContent = step.prompt || "";
-      mcqEl.style.display = "grid";
-      mcqEl.innerHTML = "";
-
-      const letters = ["A","B","C","D","E","F"];
-      const choices = Array.isArray(step.choices) ? step.choices : [];
-      if (!choices.length){
-        mcqEl.innerHTML = `<div class="notice">This question has no choices.</div>`;
-        stepAnswers[idx] = { kind:"mcq", isCorrect:true, data:{ noChoices:true } };
-        autoAdvance(500);
-        return;
-      }
-
-      choices.forEach((choice, i) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "mcq-opt";
-        btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${choice}</span>`;
-        btn.addEventListener("click", () => {
-          const correctIndex = safeNum(step.correctIndex, -1);
-          const isCorrect = i === correctIndex;
-
-          xp += isCorrect ? 10 : 6;
-          stepAnswers[idx] = { kind:"mcq", isCorrect, data:{ pickedIndex:i } };
-          hintLine.textContent = isCorrect ? "Nice work ✅" : "Good try 💛";
-          setProgressUI();
-          autoAdvance();
-        });
-        mcqEl.appendChild(btn);
-      });
-    }
-
-    function renderFillBlank(step){
-      // Accept multiple shapes:
-      const prompt = step.prompt || step.text || "Complete the sentence:";
-      const expected =
-        (step.answer != null) ? [String(step.answer)] :
-        (Array.isArray(step.answers) ? step.answers.map(String) :
-        (step.correctAnswer != null ? [String(step.correctAnswer)] : []));
-
-      const choices =
-        Array.isArray(step.choices) ? step.choices :
-        Array.isArray(step.wordBank) ? step.wordBank :
-        [];
-
-      lessonTextEl.textContent = prompt;
-
-      interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = "";
-      const box = document.createElement("div");
-      box.className = "ibox";
-
-      // If there is no answer key AND no choices: it's unclear -> show "Next question"
-      const hasAnswerKey = expected.length > 0;
-      const hasChoices = choices.length > 0;
-
-      const note = document.createElement("div");
-      note.className = "matchLine";
-      note.textContent = "Type the missing bit, then press Check.";
-
-      const input = document.createElement("input");
-      input.className = "blankInput";
-      input.type = "text";
-      input.placeholder = hasChoices ? "Choose or type…" : "Type your answer…";
-
-      // Optional choice chips (makes it clearer)
-      if (hasChoices){
-        const row = document.createElement("div");
-        row.className = "row";
-        choices.slice(0, 8).forEach(c => {
-          const b = document.createElement("button");
-          b.type = "button";
-          b.className = "pill";
-          b.textContent = String(c);
-          b.addEventListener("click", () => {
-            input.value = String(c);
-            input.focus();
-          });
-          row.appendChild(b);
-        });
-        box.appendChild(row);
-      }
-
-      if (!hasAnswerKey && !hasChoices){
-        const warn = document.createElement("div");
-        warn.className = "notice";
-        warn.innerHTML = `
-          <b>This one needs a clearer answer.</b><br><br>
-          We’ll skip it and move on (no problem).
-        `;
-
-        const nextQ = document.createElement("button");
-        nextQ.type = "button";
-        nextQ.className = "pill primary";
-        nextQ.textContent = "➡️ Next question";
-
-        nextQ.addEventListener("click", () => {
-          xp += 6; // effort XP
-          stepAnswers[idx] = { kind:"fill_blank", isCorrect:true, data:{ skippedBecauseNoKey:true } };
-          hintLine.textContent = "Okay — moving on 💛";
-          setProgressUI();
-          autoAdvance(350);
-        });
-
-        box.appendChild(warn);
-        box.appendChild(nextQ);
-        interactiveMount.appendChild(box);
-        return;
-      }
-
-      const checkBtn = document.createElement("button");
-      checkBtn.className = "pill primary";
-      checkBtn.type = "button";
-      checkBtn.textContent = "✅ Check";
-
-      checkBtn.addEventListener("click", () => {
-        const val = String(input.value || "").trim();
-        if (!val){
-          hintLine.textContent = "Type an answer first 💛";
-          return;
-        }
-
-        let isCorrect = true;
-        if (hasAnswerKey){
-          isCorrect = expected.some(a => norm(a) === norm(val));
-        } else {
-          // If no key but choices exist: accept as effort and move on
-          showWarn("This step didn’t include an answer key — treating as practice.");
-          isCorrect = true;
-        }
-
-        xp += isCorrect ? 10 : 6;
-        stepAnswers[idx] = { kind:"fill_blank", isCorrect, data:{ value: val, expected } };
-        hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
-        setProgressUI();
-        autoAdvance();
-      });
-
-      box.appendChild(input);
-      box.appendChild(checkBtn);
-      box.appendChild(note);
-
-      interactiveMount.appendChild(box);
-    }
-
-    function renderMatchPairs(step){
-      const prompt = step.prompt || "Match the pairs:";
-      lessonTextEl.textContent = prompt;
-
-      let pairs = [];
-      if (Array.isArray(step.pairs)){
-        pairs = step.pairs.map(p => {
-          if (Array.isArray(p) && p.length >= 2) return { left:String(p[0]), right:String(p[1]) };
-          if (p && typeof p === "object") return { left:String(p.left), right:String(p.right) };
-          return null;
-        }).filter(Boolean);
-      }
-
-      if (!pairs.length){
-        interactiveMount.style.display = "block";
-        interactiveMount.innerHTML = `<div class="notice">This match step has no pairs.</div>`;
-        stepAnswers[idx] = { kind:"match_pairs", isCorrect:true, data:{ empty:true } };
-        autoAdvance(500);
-        return;
-      }
-
-      // shuffle rights
-      const rights = pairs.map(p => p.right);
-      for (let i = rights.length - 1; i > 0; i--){
-        const j = Math.floor(Math.random() * (i + 1));
-        [rights[i], rights[j]] = [rights[j], rights[i]];
-      }
-
-      interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = "";
-
-      const box = document.createElement("div");
-      box.className = "ibox";
-
-      const grid = document.createElement("div");
-      grid.className = "pairsGrid";
-
-      const leftCol = document.createElement("div");
-      leftCol.className = "pairCol";
-      const rightCol = document.createElement("div");
-      rightCol.className = "pairCol";
-
-      const usedLeft = new Set();
-      const usedRight = new Set();
-      let selectedLeft = null;
-
-      const matches = {}; // left -> right
-
-      function finishIfDone(){
-        const done = Object.keys(matches).length === pairs.length;
-        if (!done) return;
-
-        const map = new Map(pairs.map(p => [p.left, p.right]));
-        let correct = 0;
-        for (const l of Object.keys(matches)){
-          if (map.get(l) === matches[l]) correct++;
-        }
-        const isCorrect = correct === pairs.length;
-
-        xp += isCorrect ? 12 : 8;
-        stepAnswers[idx] = { kind:"match_pairs", isCorrect, data:{ matches, correct, total:pairs.length } };
-        hintLine.textContent = isCorrect ? "Perfect matching ✅" : "Nice effort 💛";
-        setProgressUI();
-        autoAdvance();
-      }
-
-      pairs.forEach(p => {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "pairBtn";
-        b.textContent = p.left;
-        b.addEventListener("click", () => {
-          if (usedLeft.has(p.left)) return;
-          selectedLeft = p.left;
-          [...leftCol.querySelectorAll(".pairBtn")].forEach(x => x.classList.remove("selected"));
-          b.classList.add("selected");
-          hintLine.textContent = "Now tap the matching answer on the right.";
-        });
-        leftCol.appendChild(b);
-      });
-
-      rights.forEach(r => {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "pairBtn";
-        b.textContent = r;
-        b.addEventListener("click", () => {
-          if (usedRight.has(r)) return;
-          if (!selectedLeft){
-            hintLine.textContent = "Tap something on the left first 💛";
-            return;
-          }
-
-          matches[selectedLeft] = r;
-          usedLeft.add(selectedLeft);
-          usedRight.add(r);
-
-          [...leftCol.querySelectorAll(".pairBtn")].forEach(x => {
-            if (x.textContent === selectedLeft){
-              x.classList.remove("selected");
-              x.classList.add("matched");
-              x.textContent = `${selectedLeft}  →  ${r}`;
-            }
-          });
-          b.classList.add("matched");
-
-          selectedLeft = null;
-          hintLine.textContent = "Nice. Keep going.";
-          finishIfDone();
-        });
-        rightCol.appendChild(b);
-      });
-
-      const tip = document.createElement("div");
-      tip.className = "matchLine";
-      tip.textContent = "Tap one on the left, then tap the matching one on the right.";
-
-      grid.appendChild(leftCol);
-      grid.appendChild(rightCol);
-
-      box.appendChild(grid);
-      box.appendChild(tip);
-
-      interactiveMount.appendChild(box);
-    }
-
-    function renderNumberLine(step){
-      const prompt = step.prompt || "Move the marker on the number line:";
-      lessonTextEl.textContent = prompt;
-
-      const min = safeNum(step.min, 0);
-      const max = safeNum(step.max, 10);
-      const target = (step.target != null) ? safeNum(step.target, null) : null;
-
-      let value = safeNum(step.start, min);
-
-      interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = "";
-
-      const box = document.createElement("div");
-      box.className = "ibox";
-
-      const lineWrap = document.createElement("div");
-      lineWrap.className = "lineWrap";
-
-      const nl = document.createElement("div");
-      nl.className = "numLine";
-
-      const track = document.createElement("div");
-      track.className = "numTrack";
-
-      const marker = document.createElement("div");
-      marker.className = "numMarker";
-      marker.textContent = value;
-
-      nl.appendChild(track);
-      nl.appendChild(marker);
-      lineWrap.appendChild(nl);
-
-      const labels = document.createElement("div");
-      labels.className = "numLabels";
-      labels.innerHTML = `<span>${min}</span><span>${max}</span>`;
-
-      const slider = document.createElement("input");
-      slider.className = "slider";
-      slider.type = "range";
-      slider.min = String(min);
-      slider.max = String(max);
-      slider.step = "1";
-      slider.value = String(value);
-
-      function setMarkerFromValue(v){
-        value = v;
-        marker.textContent = v;
-        slider.value = String(v);
-
-        const leftPad = 14;
-        const rightPad = 14;
-        const w = nl.clientWidth - leftPad - rightPad;
-        const pct = (max === min) ? 0 : (v - min) / (max - min);
-        const x = leftPad + (w * pct);
-        marker.style.left = (x - (marker.offsetWidth/2)) + "px";
-      }
-
-      let dragging = false;
-
-      function pointerToValue(clientX){
-        const rect = nl.getBoundingClientRect();
-        const leftPad = 14;
-        const rightPad = 14;
-        const x = Math.max(rect.left + leftPad, Math.min(clientX, rect.right - rightPad));
-        const pct = (x - (rect.left + leftPad)) / (rect.width - leftPad - rightPad);
-        const raw = min + pct * (max - min);
-        return Math.round(raw);
-      }
-
-      marker.addEventListener("pointerdown", (e) => {
-        dragging = true;
-        marker.setPointerCapture(e.pointerId);
-        marker.style.cursor = "grabbing";
-      });
-
-      marker.addEventListener("pointermove", (e) => {
-        if (!dragging) return;
-        const v = pointerToValue(e.clientX);
-        setMarkerFromValue(v);
-      });
-
-      marker.addEventListener("pointerup", () => {
-        dragging = false;
-        marker.style.cursor = "grab";
-      });
-
-      slider.addEventListener("input", () => {
-        setMarkerFromValue(Number(slider.value));
-      });
-
-      const checkBtn = document.createElement("button");
-      checkBtn.className = "pill primary";
-      checkBtn.type = "button";
-      checkBtn.textContent = "✅ Check";
-
-      checkBtn.addEventListener("click", () => {
-        let isCorrect = true;
-        if (target != null) isCorrect = (value === target);
-
-        xp += isCorrect ? 10 : 6;
-        stepAnswers[idx] = { kind:"number_line", isCorrect, data:{ value, target, min, max } };
-
-        hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
-        setProgressUI();
-        autoAdvance();
-      });
-
-      const tip = document.createElement("div");
-      tip.className = "matchLine";
-      tip.textContent = "Drag the marker or use the slider.";
-
-      box.appendChild(lineWrap);
-      box.appendChild(labels);
-      box.appendChild(slider);
-      box.appendChild(checkBtn);
-      box.appendChild(tip);
-
-      interactiveMount.appendChild(box);
-
-      setTimeout(() => setMarkerFromValue(value), 0);
-      window.addEventListener("resize", () => setMarkerFromValue(value));
-    }
-
-    function renderInteractiveDrag(step){
-      const prompt = step.prompt || "Drag the items into the boxes:";
-      lessonTextEl.textContent = prompt;
-
-      const items = Array.isArray(step.items) ? step.items.map(String) : [];
-      const targets = Array.isArray(step.targets) ? step.targets : [];
-
-      if (!items.length || !targets.length){
-        interactiveMount.style.display = "block";
-        interactiveMount.innerHTML = `<div class="notice">This drag step is missing items or targets.</div>`;
-        stepAnswers[idx] = { kind:"interactive_drag", isCorrect:true, data:{ empty:true } };
-        autoAdvance(500);
-        return;
-      }
-
-      const placed = {};
-      const remaining = new Set(items);
-
-      function isAllPlaced(){
-        return Object.keys(placed).length === targets.length;
-      }
-
-      function computeCorrect(){
-        let hasRules = false;
-        let correct = 0;
-
-        targets.forEach(t => {
-          const label = String(t.label ?? "Box");
-          const accept = Array.isArray(t.accept) ? t.accept.map(String) : null;
-          if (accept && accept.length) hasRules = true;
-
-          const v = placed[label];
-          if (!v) return;
-          if (!accept || !accept.length) correct++;
-          else if (accept.includes(v)) correct++;
-        });
-
-        if (!hasRules) return { isCorrect:true, hasRules:false, correct, total: targets.length };
-        return { isCorrect: correct === targets.length, hasRules:true, correct, total: targets.length };
-      }
-
-      interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = "";
-
-      const box = document.createElement("div");
-      box.className = "ibox";
-
-      const grid = document.createElement("div");
-      grid.className = "dragGrid";
-
-      const bank = document.createElement("div");
-      bank.className = "dragBank";
-
-      const bankTitle = document.createElement("div");
-      bankTitle.className = "matchLine";
-      bankTitle.textContent = "Drag from here:";
-      bank.appendChild(bankTitle);
-
-      const zonesWrap = document.createElement("div");
-      zonesWrap.className = "dropZoneWrap";
-
-      const zonesTitle = document.createElement("div");
-      zonesTitle.className = "matchLine";
-      zonesTitle.textContent = "Drop into the right box:";
-      zonesWrap.appendChild(zonesTitle);
-
-      function renderBank(){
-        bank.querySelectorAll(".dragItem").forEach(n => n.remove());
-        items.forEach(it => {
-          if (!remaining.has(it)) return;
-          const d = document.createElement("div");
-          d.className = "dragItem";
-          d.textContent = it;
-          d.draggable = true;
-          d.addEventListener("dragstart", (e) => {
-            e.dataTransfer.setData("text/plain", it);
-          });
-          bank.appendChild(d);
-        });
-      }
-
-      function createZone(t){
-        const label = String(t.label ?? "Box");
-        const z = document.createElement("div");
-        z.className = "dropZone";
-        z.dataset.label = label;
-
-        const left = document.createElement("div");
-        left.className = "dzLabel";
-        left.textContent = label;
-
-        const right = document.createElement("div");
-        right.className = "dzValue";
-        right.textContent = "Drop here";
-
-        z.appendChild(left);
-        z.appendChild(right);
-
-        z.addEventListener("dragover", (e) => {
-          e.preventDefault();
-          z.classList.add("over");
-        });
-        z.addEventListener("dragleave", () => z.classList.remove("over"));
-        z.addEventListener("drop", (e) => {
-          e.preventDefault();
-          z.classList.remove("over");
-          const it = e.dataTransfer.getData("text/plain");
-          if (!it || !remaining.has(it)) return;
-
-          const current = placed[label];
-          if (current){
-            remaining.add(current);
-          }
-
-          placed[label] = it;
-          remaining.delete(it);
-          right.textContent = it;
-          renderBank();
-
-          if (isAllPlaced()){
-            const res = computeCorrect();
-            xp += res.isCorrect ? 12 : 8;
-            stepAnswers[idx] = { kind:"interactive_drag", isCorrect: res.isCorrect, data:{ placed, ...res } };
-            hintLine.textContent = res.isCorrect ? "Nice sorting ✅" : "Good try 💛";
-            setProgressUI();
-            autoAdvance();
-          } else {
-            hintLine.textContent = "Nice. Keep going.";
-          }
-        });
-
-        return z;
-      }
-
-      targets.forEach(t => zonesWrap.appendChild(createZone(t)));
-
-      renderBank();
-
-      grid.appendChild(bank);
-      grid.appendChild(zonesWrap);
-
-      const tip = document.createElement("div");
-      tip.className = "matchLine";
-      tip.textContent = "If you want to change one, drop a different item into the box.";
-
-      box.appendChild(grid);
-      box.appendChild(tip);
-
-      interactiveMount.appendChild(box);
-    }
-
-    function renderUnknown(step){
-      lessonTextEl.textContent = step.prompt || step.text || "This step type is not supported yet.";
-      interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = `
-        <div class="notice">
-          <b>Unsupported step type:</b> ${String(step.type)}<br><br>
-          Please update the generator to only use:
-          intro, teach, mcq, fill_blank, match_pairs, number_line, interactive_drag, finish.
-        </div>
-      `;
-      stepAnswers[idx] = { kind:"unknown", isCorrect:true, data:{} };
-      autoAdvance(700);
-    }
-
-    function renderEndScreen(){
-      clearError(); clearWarn();
-      mcqEl.style.display = "none";
-      clearInteractive();
-
-      lessonTextEl.textContent =
-        `Nice work, ${childName}.\n\n` +
-        `That lesson is done.\n\n` +
-        `What would you like to do now?`;
-
-      const box = document.createElement("div");
-      box.className = "ibox";
-
-      const btns = document.createElement("div");
-      btns.className = "endBtns";
-
-      const doneBtn = document.createElement("button");
-      doneBtn.type = "button";
-      doneBtn.className = "pill primary";
-      doneBtn.textContent = "✅ Done for today";
-      doneBtn.onclick = () => window.location.href = "/lessons.html";
-
-      const anotherBtn = document.createElement("button");
-      anotherBtn.type = "button";
-      anotherBtn.className = "pill";
-      anotherBtn.textContent = "📘 Try another lesson";
-      anotherBtn.onclick = () => window.location.href = "/lessons.html";
-
-      const tutorBtn = document.createElement("button");
-      tutorBtn.type = "button";
-      tutorBtn.className = "pill";
-      tutorBtn.textContent = "🎓 Go to Tutor";
-      tutorBtn.onclick = () => window.location.href = "/chat.html";
-
-      const repeatBtn = document.createElement("button");
-      repeatBtn.type = "button";
-      repeatBtn.className = "pill";
-      repeatBtn.textContent = "🔁 Repeat this lesson";
-      repeatBtn.onclick = () => window.location.reload();
-
-      btns.appendChild(doneBtn);
-      btns.appendChild(anotherBtn);
-      btns.appendChild(tutorBtn);
-      btns.appendChild(repeatBtn);
-
-      const small = document.createElement("div");
-      small.className = "matchLine";
-      small.textContent = "No pressure — short lessons work best.";
-
-      box.appendChild(btns);
-      box.appendChild(small);
-
-      interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = "";
-      interactiveMount.appendChild(box);
-
-      nextBtn.disabled = true;
-      backBtn.disabled = true;
-      hintLine.textContent = "All done 💛";
+    // -------------------------
+    // RENDER
+    // -------------------------
+    function setStepCopyPrefix(step){
+      // “Do this step first” style prompt, child-friendly.
+      if (!step) return "";
+      if (step.type === "intro") return "First, read this:";
+      if (step.type === "teach") return "Do this step first:";
+      if (step.type === "mcq") return "Pick the best answer:";
+      return "Try this:";
     }
 
     function renderStep(){
-      clearError(); clearWarn();
+      clearError();
+      clearWarn();
       hintLine.textContent = "";
       mcqEl.innerHTML = "";
       mcqEl.style.display = "none";
@@ -1339,66 +859,131 @@
 
       const step = steps[idx];
       setProgressUI();
+      scrollCardToTop();
 
       if (!step){
-        renderEndScreen();
+        lessonTextEl.textContent = "Finished.";
         return;
       }
 
-      const type = String(step.type || "").trim();
+      // Text steps
+      if (step.type === "intro" || step.type === "teach" || step.type === "finish"){
+        const prefix = setStepCopyPrefix(step);
+        const text = cleanLine(step.text || "");
+        lessonTextEl.textContent = (text ? `${prefix}\n\n${text}` : `${prefix}\n\nLet’s keep going calmly.`);
 
-      // If this is the final step and generator didn’t include finish, we still end nicely
-      const isLast = idx === steps.length - 1;
+        nextBtn.textContent = (step.type === "finish") ? "✅ Complete" : "➡️ Next";
+        if (step.type === "finish"){
+          hintLine.textContent = "All done — tap complete.";
+        }
+        return;
+      }
 
-      if (type === "intro" || type === "teach"){
-        renderTextStep(step);
+      // MCQ
+      if (step.type === "mcq"){
+        const prefix = setStepCopyPrefix(step);
+        lessonTextEl.textContent = `${prefix}\n\n${step.prompt || ""}`;
+        mcqEl.style.display = "grid";
+
+        const letters = ["A","B","C","D","E","F"];
+        const saved = stepAnswers[idx];
+
+        (step.choices || []).forEach((choice, i) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "mcq-opt";
+          btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${escapeHtml(choice)}</span>`;
+
+          if (saved) btn.disabled = true;
+
+          btn.addEventListener("click", () => chooseMCQ(i, btn));
+          mcqEl.appendChild(btn);
+        });
+
+        if (saved){
+          hintLine.textContent = saved.isCorrect ? "Nice — that was correct ✅" : "Good try 💛";
+          nextBtn.textContent = "➡️ Next";
+        } else {
+          nextBtn.textContent = "➡️ Next";
+        }
+        return;
+      }
+
+      // Interactive types: for now, don’t break the lesson — show a calm placeholder
+      if (["match_pairs","number_line","interactive_drag"].includes(step.type)){
+        lessonTextEl.textContent = `Do this step first:\n\n${step.prompt || "Try this step."}`;
+        interactiveMount.style.display = "block";
+        interactiveMount.innerHTML = `
+          <div class="notice">
+            <b>Interactive step is next:</b><br><br>
+            Type: <b>${escapeHtml(step.type)}</b><br>
+            This is now blocked from being “broken” — but we’ll switch on the real component next.
+          </div>
+        `;
         nextBtn.textContent = "➡️ Next";
         return;
       }
 
-      if (type === "finish"){
-        renderTextStep(step);
-        nextBtn.textContent = "✅ Complete";
+      lessonTextEl.textContent = "Unknown step type.";
+    }
+
+    function goNext(){
+      const step = steps[idx];
+      if (step?.type === "finish"){
+        completeLesson();
         return;
       }
-
-      if (type === "mcq"){
-        renderMCQ(step);
-        nextBtn.textContent = "➡️ Next";
-        return;
+      if (idx < steps.length - 1){
+        idx += 1;
+        renderStep();
       }
+    }
 
-      if (type === "fill_blank"){
-        renderFillBlank(step);
-        nextBtn.textContent = "➡️ Next";
-        return;
-      }
+    async function chooseMCQ(pickedIndex){
+      const step = steps[idx];
+      if (!step || step.type !== "mcq") return;
 
-      if (type === "match_pairs"){
-        renderMatchPairs(step);
-        nextBtn.textContent = "➡️ Next";
-        return;
-      }
+      // lock buttons immediately
+      const buttons = mcqEl.querySelectorAll("button");
+      buttons.forEach(b => b.disabled = true);
 
-      if (type === "number_line"){
-        renderNumberLine(step);
-        nextBtn.textContent = "➡️ Next";
-        return;
-      }
+      const correctIndex = Number(step.correctIndex);
+      const isCorrect = pickedIndex === correctIndex;
 
-      if (type === "interactive_drag"){
-        renderInteractiveDrag(step);
-        nextBtn.textContent = "➡️ Next";
-        return;
-      }
+      // XP + stats
+      xp += isCorrect ? 10 : 6;
+      mcqTotal += 1;
+      if (isCorrect) mcqCorrect += 1;
 
-      renderUnknown(step);
-      nextBtn.textContent = "➡️ Next";
+      stepAnswers[idx] = { pickedIndex, isCorrect };
+      hintLine.textContent = isCorrect ? "Nice work ✅" : "Good try 💛";
+      setProgressUI();
 
-      if (isLast){
-        // ensure the end still happens if last unsupported
-        setTimeout(renderEndScreen, 900);
-      }
+      // AUTO-ADVANCE (requested)
+      setTimeout(() => {
+        goNext();
+      }, autoAdvanceMs);
+    }
+
+    function completeLesson(){
+      // Show end modal (requested)
+      const title = lesson?.title ? `“${lesson.title}”` : "this lesson";
+      contextLine.textContent = `Finished ✅ ${childName} completed ${title}.`;
+
+      const pct = mcqTotal ? Math.round((mcqCorrect / mcqTotal) * 100) : null;
+      endStats.innerHTML = `
+        <span class="chip">✨ XP earned: <b>${xp}</b></span>
+        ${pct == null ? "" : `<span class="chip">✅ Correct: <b>${mcqCorrect}/${mcqTotal}</b></span>`}
+      `;
+
+      endText.textContent = `Nice calm effort, ${childName}. Want to stop for today, or try another short lesson?`;
+
+      showEndModal();
+
+      // Disable in-page controls so the end feels “real”
+      nextBtn.disabled = true;
+      backBtn.disabled = true;
+      finishBtn.disabled = true;
     }
 
     // ----- Read aloud -----
@@ -1411,68 +996,72 @@
         .trim();
     }
 
-    async function speakCurrent(){
-      try{
-        const step = steps[idx];
-        if (!step) return;
+    async function speakText(text){
+      text = stripEmojis(text);
+      if (!text) return;
 
-        let text = "";
-        if (step.type === "mcq") text = step.prompt || "";
-        else if (step.text) text = step.text;
-        else if (step.prompt) text = step.prompt;
-        else text = lessonTextEl.textContent || "";
-
-        text = stripEmojis(text);
-        if (!text) return;
-
-        if (currentAudio){
-          try{ currentAudio.pause(); }catch{}
-          currentAudio = null;
-        }
-
-        speakBtn.disabled = true;
-        speakBtn.textContent = "🔊 Speaking…";
-
-        const r = await fetch(TTS_URL, {
-          method: "POST",
-          headers: { "Content-Type":"application/json" },
-          body: JSON.stringify({ text, languageCode: "en-GB" })
-        });
-
-        if (!r.ok){
-          hintLine.textContent = "Read aloud isn’t available right now.";
-          return;
-        }
-
-        const buf = await r.arrayBuffer();
-        const blob = new Blob([buf], { type: "audio/mpeg" });
-        const url = URL.createObjectURL(blob);
-
-        const audio = new Audio(url);
-        currentAudio = audio;
-
-        audio.onended = () => {
-          try{ URL.revokeObjectURL(url); }catch{}
-          speakBtn.disabled = false;
-          speakBtn.textContent = "🔊 Read aloud";
-        };
-
-        audio.onerror = () => {
-          try{ URL.revokeObjectURL(url); }catch{}
-          speakBtn.disabled = false;
-          speakBtn.textContent = "🔊 Read aloud";
-          hintLine.textContent = "Read aloud isn’t available right now.";
-        };
-
-        await audio.play();
-      } finally {
-        setTimeout(() => {
-          if (speakBtn.disabled && (!currentAudio || currentAudio.paused)){
-            speakBtn.disabled = false;
-            speakBtn.textContent = "🔊 Read aloud";
-          }
-        }, 600);
+      if (currentAudio){
+        try{ currentAudio.pause(); }catch{}
+        currentAudio = null;
       }
+
+      speakBtn.disabled = true;
+      speakBtn.textContent = "🔊 Speaking…";
+
+      const r = await fetch(TTS_URL, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify({ text, languageCode: "en-GB" })
+      });
+
+      if (!r.ok){
+        const t = await r.text().catch(()=> "");
+        console.warn("TTS failed", r.status, t);
+        hintLine.textContent = "Read aloud isn’t available right now.";
+        speakBtn.disabled = false;
+        speakBtn.textContent = "🔊 Read aloud";
+        return;
+      }
+
+      const buf = await r.arrayBuffer();
+      const blob = new Blob([buf], { type: "audio/mpeg" });
+      const url = URL.createObjectURL(blob);
+
+      const audio = new Audio(url);
+      currentAudio = audio;
+
+      audio.onended = () => {
+        try{ URL.revokeObjectURL(url); }catch{}
+        speakBtn.disabled = false;
+        speakBtn.textContent = "🔊 Read aloud";
+      };
+
+      audio.onerror = () => {
+        try{ URL.revokeObjectURL(url); }catch{}
+        speakBtn.disabled = false;
+        speakBtn.textContent = "🔊 Read aloud";
+        hintLine.textContent = "Read aloud isn’t available right now.";
+      };
+
+      try{
+        await audio.play();
+      }catch{
+        speakBtn.disabled = false;
+        speakBtn.textContent = "🔊 Read aloud";
+      }
+    }
+
+    async function speakCurrent(){
+      const step = steps[idx];
+      if (!step) return;
+
+      let text = "";
+      if (step.type === "mcq") text = step.prompt || "";
+      else if (step.text) text = step.text;
+      else if (step.prompt) text = step.prompt;
+      else text = lessonTextEl.textContent || "";
+
+      await speakText(text);
     }
 
     // Controls
@@ -1483,41 +1072,26 @@
       }
     });
 
-    nextBtn.addEventListener("click", async () => {
+    nextBtn.addEventListener("click", () => {
       const step = steps[idx];
-      const type = String(step?.type || "");
-
-      const needsAnswer = ["mcq","fill_blank","match_pairs","number_line","interactive_drag"].includes(type);
-      if (needsAnswer && !stepIsAnswered(idx)){
-        hintLine.textContent = "Do this step first 💛";
+      if (step?.type === "mcq" && !stepAnswers[idx]){
+        hintLine.textContent = "Pick an answer first 💛";
         return;
       }
-
-      if (type === "finish"){
-        renderEndScreen();
-        return;
-      }
-
-      if (idx < steps.length - 1){
-        idx += 1;
-        renderStep();
-      } else {
-        renderEndScreen();
-      }
+      goNext();
     });
 
     finishBtn.addEventListener("click", () => {
-      window.location.href = "/lessons.html";
+      showEndModal();
     });
 
     helpBtn.addEventListener("click", () => {
       alert(
-        "How lessons work:\n\n" +
-        "• Read the step\n" +
-        "• Do the activity\n" +
-        "• It will move on automatically\n\n" +
-        "No pressure. You can finish any time.\n\n" +
-        "Tip: Read aloud plays only when you press the button."
+        "How this lesson works:\n\n" +
+        "• We do one calm step at a time\n" +
+        "• When you pick an answer, we move on for you\n" +
+        "• If something is tricky, that’s okay — we keep going calmly\n\n" +
+        "Tip: Press “Read aloud” any time."
       );
     });
 
@@ -1527,6 +1101,25 @@
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
       window.location.href = "/login.html";
+    });
+
+    // Start modal actions
+    closeStart.addEventListener("click", () => hideStartModal());
+    startBtn.addEventListener("click", () => {
+      started = true;
+      hideStartModal();
+      renderStep();
+    });
+    startReadBtn.addEventListener("click", async () => {
+      await speakText(startText.textContent || "");
+    });
+
+    // End modal actions
+    closeEnd.addEventListener("click", () => hideEndModal());
+    doneTodayBtn.addEventListener("click", () => window.location.href = "/dash.html");
+    anotherBtn.addEventListener("click", () => {
+      // reload the page (same subject/area) to generate a fresh lesson
+      window.location.reload();
     });
 
     async function boot(){
@@ -1551,22 +1144,25 @@
         return;
       }
 
-      clearError(); clearWarn();
+      clearError();
+      clearWarn();
       contextLine.textContent = `Loading a lesson for ${childName}…`;
 
       try{
         lesson = await fetchGeneratedLesson();
       }catch(e){
-        showError("Could not load a lesson: " + (e?.message || e));
+        console.error(e);
+        showError("Could not load a lesson right now.");
         lessonTextEl.textContent =
           "We couldn’t load a lesson.\n\n" +
-          "Try again in a moment.";
+          "Please try again in a moment.\n\n" +
+          "If this keeps happening, the lesson generator worker may be offline.";
         nextBtn.disabled = true;
         backBtn.disabled = true;
         return;
       }
 
-      steps = lesson.steps || [];
+      steps = patchStepsForShipReady(lesson.steps || []);
       if (!steps.length){
         showError("Lesson returned no steps.");
         nextBtn.disabled = true;
@@ -1577,18 +1173,37 @@
       idx = 0;
       xp = 0;
       stepAnswers = {};
+      mcqTotal = 0;
+      mcqCorrect = 0;
 
       const title = lesson.title ? ` — ${lesson.title}` : "";
       contextLine.textContent = `${SUBJECT} • ${AREA}${title}`;
       nextBtn.disabled = false;
       backBtn.disabled = false;
-      renderStep();
+      finishBtn.disabled = false;
+
+      // Start screen = ship-ready onboarding
+      startTitle.textContent = `Ready, ${childName}? ✨`;
+      startChips.innerHTML = `
+        <span class="chip">📘 ${escapeHtml(SUBJECT)} • ${escapeHtml(AREA)}</span>
+        <span class="chip">⏱️ Short lesson</span>
+        <span class="chip">💛 No pressure</span>
+      `;
+      startText.innerHTML =
+        `We’ll do <b>one small step</b> at a time.<br><br>` +
+        `When you pick an answer, we’ll move on for you.<br>` +
+        `If something is tricky, that’s okay — we keep going calmly.`;
+
+      // Don’t render the first step until they start (feels premium)
+      showStartModal();
     }
 
     boot().catch(err => {
-      showError("Something went wrong: " + (err?.message || err));
+      console.error(err);
+      showError("Something went wrong loading the lesson.");
     });
   })();
   </script>
 </body>
 </html>
+
