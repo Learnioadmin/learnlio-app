@@ -10,14 +10,14 @@
 
   <style>
     :root{
-      --bg1:#f6f7ff; --bg2:#f9fafb; --ink:#0f172a; --muted:#64748b;
+      --bg1:#f6f7ff; --bg2:#f9fafb; --card:#fff; --ink:#0f172a; --muted:#64748b;
       --border:rgba(15, 23, 42, .10);
       --shadow: 0 20px 45px rgba(2, 6, 23, .10);
       --shadow2: 0 10px 25px rgba(2, 6, 23, .08);
       --brand:#0b5cff; --brand2:#2f7bff;
       --soft:#eef2ff; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
       --radius:20px; --radius2:16px;
-      --vh:1vh;
+      --vh: 1vh;
     }
     *{ box-sizing:border-box; }
     html, body{ height:100%; }
@@ -30,7 +30,7 @@
         linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-    @media (min-width:981px){ body{ overflow:hidden; } }
+    @media (min-width: 981px){ body{ overflow:hidden; } }
 
     /* Logged-in nav (same as Tutor) */
     .nav{ background:#fff; border-bottom:1px solid rgba(15,23,42,.08); position:sticky; top:0; z-index:50; }
@@ -43,7 +43,6 @@
     .btn{ background:linear-gradient(180deg, var(--brand2), var(--brand)); border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:800; box-shadow: 0 10px 18px rgba(11,92,255,.22); }
     .btn.light{ background:#e5e7eb; color:#111; box-shadow:none; }
     .btn.ghost{ background:transparent; border:1px solid rgba(15,23,42,.12); color:var(--ink); box-shadow:none; }
-    .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
     .container{ max-width:1140px; margin:0 auto; padding:16px 16px 20px; }
 
@@ -55,9 +54,9 @@
       height: calc((var(--vh) * 100) - 78px - 36px);
       min-height:0;
     }
-    @media (max-width:980px){
+    @media (max-width: 980px){
       body{ overflow:auto; }
-      .shell{ grid-template-columns: 1fr; height:auto; min-height:unset; }
+      .shell{ grid-template-columns: 1fr; height:auto; min-height: unset; }
     }
 
     .panel{
@@ -121,18 +120,49 @@
       white-space: pre-wrap;
     }
 
-    .hintBadge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
+    .mcq{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:4px;
+    }
+    .mcq-opt{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.12);
+      border-radius: 16px;
+      padding: 12px 12px;
+      cursor:pointer;
+      text-align:left;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
       font-weight:900;
-      font-size:13px;
+    }
+    .mcq-opt:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 14px 24px rgba(2,6,23,.10);
+      border-color: rgba(11,92,255,.22);
+    }
+    .mcq-letter{
+      width:28px; height:28px; border-radius: 10px;
+      background: var(--soft);
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid rgba(15,23,42,.10);
+      flex:0 0 auto;
+      font-weight:950;
+    }
+    .mcq-text{ line-height:1.45; }
+
+    .notice{
+      border:1px solid rgba(15,23,42,.10);
+      background:#fff;
+      border-radius: 16px;
+      padding:12px 12px;
       color:var(--muted);
-      background: rgba(255,255,255,.75);
-      border: 1px solid rgba(15,23,42,.10);
-      border-radius: 999px;
-      padding: 8px 10px;
-      box-shadow: 0 10px 14px rgba(2,6,23,.05);
+      line-height:1.7;
+      font-size:14px;
     }
 
     .controls{
@@ -165,8 +195,86 @@
     }
     .pill:disabled{ opacity:.55; cursor:not-allowed; }
 
-    .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-    .tiny{ color:var(--muted); font-size:13px; line-height:1.6; }
+    /* Fill blank */
+    .fillWrap{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.10);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .fillSentence{
+      font-family:'OpenDyslexic', Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.75;
+    }
+    .fillOptions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .chipBtn{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(15,23,42,.12);
+      background: rgba(248,250,252,.95);
+      cursor:pointer;
+      font-weight:950;
+      box-shadow: 0 10px 14px rgba(2,6,23,.05);
+    }
+    .chipBtn:hover{ border-color: rgba(11,92,255,.22); }
+
+    /* Match pairs */
+    .pairsGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 520px){
+      .pairsGrid{ grid-template-columns: 1fr; }
+    }
+    .pairCol{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.10);
+      border-radius: 16px;
+      padding: 10px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      min-height: 80px;
+    }
+    .pairColTitle{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .2px;
+      margin: 4px 4px 10px;
+    }
+    .pairBtn{
+      width:100%;
+      text-align:left;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid rgba(15,23,42,.12);
+      background: rgba(248,250,252,.95);
+      cursor:pointer;
+      font-weight: 950;
+      box-shadow: 0 10px 14px rgba(2,6,23,.05);
+      margin-bottom:8px;
+    }
+    .pairBtn:last-child{ margin-bottom:0; }
+    .pairBtn:hover{ border-color: rgba(11,92,255,.22); }
+    .pairBtn.selected{
+      outline: 2px solid rgba(11,92,255,.35);
+      border-color: rgba(11,92,255,.35);
+      background: rgba(11,92,255,.08);
+    }
+    .pairBtn.matched{
+      opacity: .55;
+      cursor: default;
+    }
 
     /* Side panel */
     .side{ padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
@@ -201,241 +309,10 @@
       width: 0%;
       background: linear-gradient(90deg, #10b981, #22c55e);
       border-radius: 999px;
-      transition: width .25s ease;
     }
 
-    /* Common answer tiles */
-    .grid1{ display:grid; grid-template-columns: 1fr; gap:10px; }
-    .opt{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.12);
-      border-radius: 16px;
-      padding: 12px 12px;
-      cursor:pointer;
-      text-align:left;
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-      transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-      font-weight:900;
-      user-select:none;
-    }
-    .opt:hover{
-      transform: translateY(-1px);
-      box-shadow: 0 14px 24px rgba(2,6,23,.10);
-      border-color: rgba(11,92,255,.22);
-    }
-    .opt.disabled{ opacity:.6; cursor:not-allowed; transform:none; }
-    .opt.good{ border-color: rgba(16,185,129,.45); box-shadow: 0 14px 24px rgba(16,185,129,.14); }
-    .opt.bad{ border-color: rgba(239,68,68,.45); box-shadow: 0 14px 24px rgba(239,68,68,.10); }
-
-    .letter{
-      width:28px; height:28px; border-radius: 10px;
-      background: var(--soft);
-      display:flex; align-items:center; justify-content:center;
-      border:1px solid rgba(15,23,42,.10);
-      flex:0 0 auto;
-      font-weight:950;
-    }
-
-    .notice{
-      border:1px solid rgba(15,23,42,.10);
-      background:#fff;
-      border-radius: 16px;
-      padding:12px 12px;
-      color:var(--muted);
-      line-height:1.7;
-      font-size:14px;
-    }
-
-    /* Fill blank */
-    .sentenceBox{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding: 12px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.05);
-      line-height:1.75;
-      font-family:'OpenDyslexic', Arial, sans-serif;
-      font-size: clamp(15px, 1.2vw, 17px);
-    }
-    .blank{
-      display:inline-flex;
-      min-width: 72px;
-      padding: 0 10px;
-      border-radius: 12px;
-      border: 2px dashed rgba(11,92,255,.35);
-      background: rgba(11,92,255,.06);
-      font-weight:950;
-      justify-content:center;
-      align-items:center;
-      height: 34px;
-      vertical-align: middle;
-    }
-
-    /* Number line */
-    .numLineWrap{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding: 12px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.05);
-    }
-    .line{
-      position: relative;
-      height: 44px;
-      margin-top: 10px;
-      border-radius: 999px;
-      background: rgba(15,23,42,.06);
-      border: 1px solid rgba(15,23,42,.10);
-      overflow:hidden;
-    }
-    .tick{
-      position:absolute;
-      top:0; bottom:0;
-      width:1px;
-      background: rgba(15,23,42,.20);
-    }
-    .tickLbl{
-      position:absolute;
-      top: -18px;
-      transform: translateX(-50%);
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 850;
-      user-select:none;
-    }
-    .dot{
-      position:absolute;
-      top:50%;
-      transform: translate(-50%, -50%);
-      width: 18px; height: 18px;
-      border-radius: 999px;
-      background: linear-gradient(180deg, var(--brand2), var(--brand));
-      box-shadow: 0 10px 16px rgba(11,92,255,.25);
-      border: 2px solid rgba(255,255,255,.95);
-      cursor:pointer;
-      transition: transform .08s ease;
-    }
-    .dot:hover{ transform: translate(-50%, -50%) scale(1.05); }
-
-    /* Match pairs */
-    .pairGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    @media (max-width:520px){ .pairGrid{ grid-template-columns: 1fr; } }
-    .pairCol{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding: 10px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.05);
-      min-height: 140px;
-    }
-    .pairTitle{
-      font-size: 12px;
-      font-weight: 950;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing:.2px;
-      margin: 2px 0 8px;
-    }
-    .chip{
-      border:1px solid rgba(15,23,42,.12);
-      border-radius: 14px;
-      padding: 10px 10px;
-      margin: 8px 0;
-      cursor:pointer;
-      background: #fff;
-      font-weight: 950;
-      box-shadow: 0 10px 16px rgba(2,6,23,.05);
-      user-select:none;
-    }
-    .chip.active{ outline: 3px solid rgba(11,92,255,.22); background: rgba(11,92,255,.06); }
-    .chip.matched{ opacity:.55; cursor:default; }
-    .pairStatus{
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    /* Interactive drag (simple tap-to-place version) */
-    .dragZone{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding: 12px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.05);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .slots{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-    .slot{
-      min-width: 92px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 2px dashed rgba(15,23,42,.18);
-      background: rgba(15,23,42,.03);
-      font-weight: 950;
-      color: var(--muted);
-      cursor:pointer;
-      user-select:none;
-    }
-    .slot.filled{
-      border-style: solid;
-      background: rgba(11,92,255,.06);
-      border-color: rgba(11,92,255,.22);
-      color: var(--ink);
-    }
-    .tokens{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-    .token{
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(15,23,42,.12);
-      background:#fff;
-      font-weight: 950;
-      cursor:pointer;
-      box-shadow: 0 10px 16px rgba(2,6,23,.05);
-      user-select:none;
-    }
-    .token.used{ opacity:.55; cursor:default; }
-    .selected{
-      outline: 3px solid rgba(11,92,255,.22);
-      background: rgba(11,92,255,.06);
-    }
-
-    /* End screen */
-    .endCard{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 18px;
-      padding: 14px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-    }
-    .endTitle{
-      font-weight: 950;
-      font-size: 16px;
-      margin: 0 0 6px;
-    }
-    .endSub{
-      color: var(--muted);
-      line-height: 1.7;
-      margin: 0 0 10px;
-      font-size: 14px;
-    }
+    .tiny{ color:var(--muted); font-size:13px; line-height:1.6; margin-top:10px; }
+    .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -474,16 +351,12 @@
 
         <div class="stage">
           <div id="cardbox" class="cardbox">
-            <div class="row" style="justify-content:space-between;">
-              <span id="flowHint" class="hintBadge">👆 Tap an answer to continue</span>
-              <button id="skipBtn" class="btn ghost" type="button" style="display:none;">Skip step</button>
-            </div>
-
             <div id="lessonText" class="lessonText"></div>
 
-            <div id="mount" class="grid1" style="display:none;"></div>
+            <div id="mcq" class="mcq" style="display:none;"></div>
 
-            <div id="endMount" style="display:none;"></div>
+            <!-- Interactive mount (NO IMAGES) -->
+            <div id="interactiveMount" style="display:none;"></div>
           </div>
 
           <div class="controls">
@@ -499,7 +372,7 @@
         <div class="panel-head">
           <div>
             <div class="title">✨ Your progress</div>
-            <div class="subtitle">Steady effort. Calm steps.</div>
+            <div class="subtitle">Small steps. You’re doing great.</div>
           </div>
         </div>
 
@@ -520,9 +393,9 @@
           </div>
 
           <div class="sideCard">
-            <h3>Quick actions</h3>
+            <h3>Next</h3>
             <div class="row" style="margin-top:10px;">
-              <button id="finishBtn" class="pill" type="button">✅ Finish</button>
+              <button id="finishBtn" class="pill" type="button">✅ Done for today</button>
               <a class="pill" href="/lessons.html" style="display:inline-flex; align-items:center;">📘 Lessons</a>
               <a class="pill" href="/dash.html" style="display:inline-flex; align-items:center;">🏠 Dashboard</a>
             </div>
@@ -543,10 +416,7 @@
     // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-
-    const LESSON_GEN_BASE = "https://learnlio-lessons.falling-grass-34ab.workers.dev";
-    const LESSON_GEN_ENDPOINT = `${LESSON_GEN_BASE.replace(/\/+$/,"")}/generate`;
-
+    const LESSON_GEN_URL = "https://learnlio-lessons.falling-grass-34ab.workers.dev/generate";
     const TTS_URL = "https://learnlio-tts.falling-grass-34ab.workers.dev/speak";
     // =========================
 
@@ -556,12 +426,9 @@
     const pageError = document.getElementById("pageError");
     const contextLine = document.getElementById("contextLine");
     const lessonTextEl = document.getElementById("lessonText");
-    const mount = document.getElementById("mount");
-    const endMount = document.getElementById("endMount");
+    const mcqEl = document.getElementById("mcq");
+    const interactiveMount = document.getElementById("interactiveMount");
     const hintLine = document.getElementById("hintLine");
-    const flowHint = document.getElementById("flowHint");
-    const skipBtn = document.getElementById("skipBtn");
-
     const backBtn = document.getElementById("backBtn");
     const nextBtn = document.getElementById("nextBtn");
     const finishBtn = document.getElementById("finishBtn");
@@ -578,35 +445,25 @@
     function showError(msg){ pageError.style.display="block"; pageError.textContent = msg; }
     function clearError(){ pageError.style.display="none"; pageError.textContent = ""; }
 
-    // State
+    // Auth/child
     let currentUser = null;
     let child = null;
     let childName = "Child";
     let childAge = 10;
 
+    // Context
     let SUBJECT = null;
     let AREA = null;
 
+    // Lesson runtime
     let lesson = null;
     let steps = [];
     let idx = 0;
-
-    let stepAnswers = {}; // idx -> payload
+    let stepAnswers = {};
     let xp = 0;
 
+    // Audio
     let currentAudio = null;
-    let autoAdvanceTimer = null;
-
-    // For match_pairs
-    let mp_leftSelected = null;
-    let mp_rightSelected = null;
-    let mp_matches = {}; // leftIndex -> rightIndex
-    let mp_done = new Set();
-
-    // For interactive_drag
-    let drag_selectedToken = null;
-    let drag_slots = []; // value or null
-    let drag_used = new Set();
 
     function computeAgeFromDob(dobStr){
       const d = new Date(dobStr);
@@ -619,11 +476,11 @@
     }
 
     function getSelectedChildFromLocalStorage(){
-      try{
+      try {
         const raw = localStorage.getItem("selectedChild");
         if (!raw) return null;
         return JSON.parse(raw);
-      }catch{ return null; }
+      } catch { return null; }
     }
 
     function lessonCtxKey(childId){
@@ -691,57 +548,6 @@
       }
     }
 
-    function normalizeLessonResponse(json){
-      if (!json) return null;
-      if (json.ok === false) throw new Error(json.error || "Lesson worker returned ok:false");
-      if (json.lesson && typeof json.lesson === "object"){
-        const L = json.lesson;
-        return { title: L.title || json.title, steps: L.steps || L.steps_json?.steps || L.steps_json || L.steps };
-      }
-      return { title: json.title, steps: json.steps };
-    }
-
-    async function fetchGeneratedLesson(){
-      const payload = {
-        ownerId: currentUser.id,
-        childId: child.id,
-        childName,
-        age: childAge,
-        subject: SUBJECT,
-        area: AREA,
-        wantInteractive: true,
-        allowedTypes: ["intro","teach","mcq","fill_blank","match_pairs","number_line","interactive_drag","finish"]
-      };
-
-      let lastErr = null;
-      for (let attempt=1; attempt<=2; attempt++){
-        try{
-          const r = await fetch(LESSON_GEN_ENDPOINT, {
-            method: "POST",
-            headers: { "Content-Type":"application/json" },
-            body: JSON.stringify(payload)
-          });
-
-          const text = await r.text().catch(()=> "");
-          let json = null;
-          try{ json = text ? JSON.parse(text) : null; }catch{}
-
-          if (!r.ok){
-            throw new Error((json && (json.error || json.message)) || text || `Lesson generation failed (${r.status})`);
-          }
-
-          const L = normalizeLessonResponse(json);
-          const st = Array.isArray(L?.steps) ? L.steps : [];
-          if (!st.length) throw new Error("Lesson worker returned no steps.");
-          return { title: L.title || null, steps: st };
-        }catch(e){
-          lastErr = e;
-          await new Promise(res => setTimeout(res, attempt === 1 ? 250 : 0));
-        }
-      }
-      throw lastErr || new Error("Lesson generation failed.");
-    }
-
     function setProgressUI(){
       const total = steps.length || 0;
       stepKpi.textContent = `${Math.min(idx+1,total)} / ${total}`;
@@ -752,674 +558,472 @@
       xpLine.textContent = `XP: ${xp}`;
     }
 
-    function clearMount(){
-      mount.style.display = "none";
-      mount.innerHTML = "";
-      endMount.style.display = "none";
-      endMount.innerHTML = "";
-      skipBtn.style.display = "none";
-      flowHint.style.display = "inline-flex";
-      hintLine.textContent = "";
-      clearTimeout(autoAdvanceTimer);
-      autoAdvanceTimer = null;
-
-      // reset per-step helpers
-      mp_leftSelected = null;
-      mp_rightSelected = null;
-      mp_matches = {};
-      mp_done = new Set();
-      drag_selectedToken = null;
-      drag_slots = [];
-      drag_used = new Set();
+    function clearInteractive(){
+      interactiveMount.style.display = "none";
+      interactiveMount.innerHTML = "";
     }
 
-    function isAnswered(i){ return stepAnswers[i] != null; }
+    function looksLikeImageQuestion(step){
+      const t = (step?.prompt || step?.text || step?.sentence || "").toLowerCase();
+      // remove anything that implies a picture, image, diagram etc
+      return (
+        t.includes("picture") ||
+        t.includes("image") ||
+        t.includes("diagram") ||
+        t.includes("shown") ||
+        t.includes("in the photo") ||
+        t.includes("in the image")
+      );
+    }
 
-    function setFlowHintForStep(step){
-      // Reduce reliance on Next for interactive steps
-      if (!step) { flowHint.textContent = "—"; return; }
-      if (step.type === "intro" || step.type === "teach"){
-        flowHint.textContent = "➡️ Press Next when ready";
-      } else if (step.type === "finish"){
-        flowHint.textContent = "✅ You’re at the end";
-      } else {
-        flowHint.textContent = "👆 Tap an answer to continue";
+    function sanitiseLesson(raw){
+      const safe = { ...(raw || {}) };
+      let s = Array.isArray(safe.steps) ? safe.steps.slice() : [];
+
+      // Drop any image/picture steps entirely for now
+      s = s.filter(step => !looksLikeImageQuestion(step));
+
+      // Keep only supported types
+      const allowed = new Set(["intro","teach","mcq","fill_blank","match_pairs","finish"]);
+      s = s.filter(step => allowed.has(String(step?.type || "").trim()));
+
+      // Fix/validate each step; invalid ones become null and are removed.
+      s = s.map(step => {
+        const type = String(step.type || "").trim();
+
+        if (type === "intro" || type === "teach" || type === "finish"){
+          const text = String(step.text || "").trim();
+          if (!text) return null;
+          return { type, text };
+        }
+
+        if (type === "mcq"){
+          const prompt = String(step.prompt || "").trim();
+          const choices = Array.isArray(step.choices) ? step.choices.map(x => String(x)).filter(Boolean) : [];
+          const ci = Number(step.correctIndex);
+          if (!prompt || choices.length < 2 || !Number.isFinite(ci) || ci < 0 || ci >= choices.length) return null;
+          return {
+            type,
+            prompt,
+            choices: choices.slice(0, 6),
+            correctIndex: ci,
+            hint: String(step.hint || "").trim(),
+            explainCorrect: String(step.explainCorrect || "").trim()
+          };
+        }
+
+        if (type === "fill_blank"){
+          const sentence = String(step.sentence || "").trim();
+          // allow either options[] OR answer
+          const answer = String(step.answer || "").trim();
+          const options = Array.isArray(step.options) ? step.options.map(x => String(x)).filter(Boolean) : [];
+          const prompt = String(step.prompt || "Complete the sentence.").trim();
+
+          // Must have sentence that includes ___
+          if (!sentence || !sentence.includes("___")) return null;
+
+          // If options missing, create 4 options from answer (simple) so UI has choices
+          let finalOptions = options.slice(0, 6);
+          if (!finalOptions.length && answer){
+            // create gentle distractors for single-word answers
+            const a = answer.toLowerCase();
+            const distract = [
+              a,
+              a + "s",
+              a.replace(/s$/,""),
+              a === "a" ? "the" : "a"
+            ].filter((v,i,arr)=>arr.indexOf(v)===i);
+            finalOptions = distract.slice(0,4);
+          }
+
+          if (!answer && !finalOptions.length) return null;
+
+          return { type, prompt, sentence, answer, options: finalOptions, hint: String(step.hint || "").trim() };
+        }
+
+        if (type === "match_pairs"){
+          const prompt = String(step.prompt || "Match the pairs.").trim();
+          const pairs = Array.isArray(step.pairs) ? step.pairs : [];
+          const cleaned = pairs
+            .map(p => ({ left: String(p.left||"").trim(), right: String(p.right||"").trim() }))
+            .filter(p => p.left && p.right)
+            .slice(0, 6);
+          if (cleaned.length < 2) return null;
+          return { type, prompt, pairs: cleaned, hint: String(step.hint || "").trim() };
+        }
+
+        return null;
+      }).filter(Boolean);
+
+      // Guarantee finish step
+      const hasFinish = s.some(x => x.type === "finish");
+      if (!hasFinish) s.push({ type:"finish", text:"Nice work. You kept going, step by step." });
+
+      safe.steps = s;
+      return safe;
+    }
+
+    async function fetchGeneratedLesson(){
+      const payload = {
+        subject: SUBJECT,
+        area: AREA,
+        age: childAge,
+        level: 1,
+        owner_id: currentUser.id,
+        child_id: child.id,
+
+        // Important: remove image-related types
+        wantInteractive: true,
+        allowedTypes: ["intro","teach","mcq","fill_blank","match_pairs","finish"],
+
+        // Also hint to generator to avoid image questions
+        noImages: true
+      };
+
+      const r = await fetch(LESSON_GEN_URL, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const text = await r.text().catch(()=> "");
+      let json = null;
+      try{ json = text ? JSON.parse(text) : null; }catch{}
+
+      if (!r.ok){
+        const msg = json?.error || text || `Lesson generation failed (${r.status})`;
+        throw new Error(msg);
       }
+
+      const lessonObj = json?.lesson || json;
+      const fixed = sanitiseLesson(lessonObj);
+
+      if (!fixed?.steps?.length) throw new Error("Lesson had no usable steps.");
+
+      return fixed;
     }
 
-    function safeAutoAdvance(delayMs=650){
-      clearTimeout(autoAdvanceTimer);
-      autoAdvanceTimer = setTimeout(() => {
-        // Move forward unless already finished
+    function autoAdvanceSoon(ms=650){
+      setTimeout(() => {
         if (idx < steps.length - 1){
           idx += 1;
           renderStep();
         } else {
-          // if last step isn't finish, show end screen
-          showEndScreen();
+          // already at end
+          renderStep();
         }
-      }, delayMs);
+      }, ms);
     }
 
-    function disableNavWhileAuto(){
-      // Prevent “double next”
-      nextBtn.disabled = true;
-      setTimeout(() => { nextBtn.disabled = false; }, 650);
-    }
-
-    // ---------- Step renderers ----------
-    function renderIntroTeachFinish(step){
-      lessonTextEl.textContent = step.text || "";
-      mount.style.display = "none";
-
-      setFlowHintForStep(step);
-
-      if (step.type === "finish"){
-        nextBtn.textContent = "✅ Complete";
-        hintLine.textContent = "Nice work. Tap complete.";
-      } else {
-        nextBtn.textContent = "➡️ Next";
-        hintLine.textContent = step.type === "intro" ? "We’ll go step by step." : "Take your time.";
-      }
-    }
-
-    function renderMCQ(step){
-      const prompt = step.prompt || "";
-      const choices = Array.isArray(step.choices) ? step.choices : [];
-      if (!prompt || choices.length < 2){
-        return renderBrokenStep("This question didn’t load properly.");
-      }
-
-      lessonTextEl.textContent = prompt;
-      mount.style.display = "block";
-      mount.innerHTML = "";
-      nextBtn.textContent = "➡️ Next";
-      setFlowHintForStep(step);
-
-      const letters = ["A","B","C","D","E","F"];
-      choices.forEach((choice, i) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "opt";
-        btn.innerHTML = `<span class="letter">${letters[i] || ""}</span><span style="line-height:1.45;">${choice}</span>`;
-        btn.addEventListener("click", () => {
-          if (isAnswered(idx)) return;
-          const correctIndex = Number(step.correctIndex);
-          const isCorrect = (i === correctIndex);
-
-          stepAnswers[idx] = { type:"mcq", pickedIndex:i, isCorrect };
-          xp += isCorrect ? 10 : 6;
-
-          // feedback
-          btn.classList.add(isCorrect ? "good" : "bad");
-          hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
-          disableAllOpts(mount);
-          disableNavWhileAuto();
-          safeAutoAdvance();
-          setProgressUI();
-        });
-        mount.appendChild(btn);
-      });
-
-      // If already answered (going back)
-      if (isAnswered(idx)){
-        hintLine.textContent = stepAnswers[idx].isCorrect ? "Nice ✅" : "Good try 💛";
-      }
-    }
-
-    function renderFillBlank(step){
-      // Expected formats we handle:
-      // A) step.sentence contains "___" or "{blank}"
-      // B) step.prompt is the sentence
-      // Options: step.choices or step.options
-      const sentence = (step.sentence || step.prompt || "").trim();
-      const opts = (Array.isArray(step.choices) ? step.choices : (Array.isArray(step.options) ? step.options : []));
-      const correctIndex = Number(step.correctIndex);
-
-      if (!sentence || opts.length < 2){
-        return renderBrokenStep("This fill-in step didn’t include a sentence or options.");
-      }
-
-      // Ensure there is a visible blank
-      let displaySentence = sentence;
-      const hasBlank = displaySentence.includes("___") || displaySentence.includes("{blank}") || displaySentence.includes("[blank]");
-      if (!hasBlank){
-        // If worker forgot the blank marker, we inject one at the end
-        displaySentence = displaySentence + " ___";
-      }
-      displaySentence = displaySentence
-        .replaceAll("{blank}", "___")
-        .replaceAll("[blank]", "___");
-
-      lessonTextEl.textContent = "Complete the sentence:";
-      mount.style.display = "block";
-      mount.innerHTML = "";
-
-      const box = document.createElement("div");
-      box.className = "sentenceBox";
-      box.innerHTML = escapeHtml(displaySentence).replaceAll("___", `<span class="blank" id="blankSpot">___</span>`);
-      mount.appendChild(box);
-
-      const grid = document.createElement("div");
-      grid.className = "grid1";
-      grid.style.marginTop = "10px";
-
-      const letters = ["A","B","C","D","E","F"];
-      opts.forEach((o, i) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "opt";
-        btn.innerHTML = `<span class="letter">${letters[i] || ""}</span><span style="line-height:1.45;">${o}</span>`;
-        btn.addEventListener("click", () => {
-          if (isAnswered(idx)) return;
-
-          const isCorrect = (i === correctIndex);
-          stepAnswers[idx] = { type:"fill_blank", pickedIndex:i, isCorrect, chosen:o };
-          xp += isCorrect ? 10 : 6;
-
-          // show chosen in blank
-          const blankSpot = document.getElementById("blankSpot");
-          if (blankSpot){
-            blankSpot.textContent = o;
-            blankSpot.style.borderStyle = "solid";
-            blankSpot.style.borderColor = isCorrect ? "rgba(16,185,129,.45)" : "rgba(239,68,68,.45)";
-            blankSpot.style.background = isCorrect ? "rgba(16,185,129,.10)" : "rgba(239,68,68,.06)";
-          }
-
-          btn.classList.add(isCorrect ? "good" : "bad");
-          hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
-          disableAllOpts(grid);
-          disableNavWhileAuto();
-          safeAutoAdvance();
-          setProgressUI();
-        });
-        grid.appendChild(btn);
-      });
-
-      mount.appendChild(grid);
-
-      nextBtn.textContent = "➡️ Next";
-      setFlowHintForStep(step);
-
-      // if already answered (going back)
-      if (isAnswered(idx)){
-        hintLine.textContent = stepAnswers[idx].isCorrect ? "Nice ✅" : "Good try 💛";
-      }
-    }
-
-    function renderNumberLine(step){
-      // Expected:
-      // step.min, step.max, step.target OR step.correctValue
-      // Optional prompt
-      const prompt = (step.prompt || "Tap the correct number on the number line.").trim();
-      const min = Number(step.min ?? step.start ?? 0);
-      const max = Number(step.max ?? step.end ?? 10);
-      const target = Number(step.target ?? step.correctValue ?? step.answer);
-
-      if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(target) || max <= min){
-        return renderBrokenStep("This number line step didn’t include valid numbers.");
-      }
-
-      lessonTextEl.textContent = prompt;
-      mount.style.display = "block";
-      mount.innerHTML = "";
-
-      const wrap = document.createElement("div");
-      wrap.className = "numLineWrap";
-
-      const meta = document.createElement("div");
-      meta.className = "tiny";
-      meta.textContent = `Pick the number between ${min} and ${max}.`;
-      wrap.appendChild(meta);
-
-      const line = document.createElement("div");
-      line.className = "line";
-
-      const count = (max - min);
-      for (let i=0;i<=count;i++){
-        const v = min + i;
-        const xPct = (i / count) * 100;
-
-        const t = document.createElement("div");
-        t.className = "tick";
-        t.style.left = `${xPct}%`;
-        line.appendChild(t);
-
-        if (i % Math.max(1, Math.round(count/5)) === 0 || v===min || v===max){
-          const lbl = document.createElement("div");
-          lbl.className = "tickLbl";
-          lbl.style.left = `${xPct}%`;
-          lbl.textContent = String(v);
-          line.appendChild(lbl);
-        }
-
-        // make each number clickable by placing transparent button area
-        const hit = document.createElement("div");
-        hit.style.position = "absolute";
-        hit.style.left = `${xPct}%`;
-        hit.style.top = "0";
-        hit.style.bottom = "0";
-        hit.style.width = `${100/count}%`;
-        hit.style.transform = "translateX(-50%)";
-        hit.style.cursor = "pointer";
-        hit.title = `Select ${v}`;
-        hit.addEventListener("click", () => {
-          if (isAnswered(idx)) return;
-
-          const isCorrect = (v === target);
-          stepAnswers[idx] = { type:"number_line", chosen:v, isCorrect };
-          xp += isCorrect ? 10 : 6;
-
-          // place dot where tapped
-          const dot = document.createElement("div");
-          dot.className = "dot";
-          dot.style.left = `${xPct}%`;
-          dot.style.background = isCorrect
-            ? "linear-gradient(180deg, rgba(16,185,129,.95), rgba(34,197,94,.95))"
-            : "linear-gradient(180deg, rgba(239,68,68,.95), rgba(239,68,68,.85))";
-          line.appendChild(dot);
-
-          hintLine.textContent = isCorrect ? "Nice ✅" : `Good try 💛 (Answer was ${target})`;
-          disableNavWhileAuto();
-          safeAutoAdvance();
-          setProgressUI();
-        });
-        line.appendChild(hit);
-      }
-
-      wrap.appendChild(line);
-      mount.appendChild(wrap);
-
-      nextBtn.textContent = "➡️ Next";
-      setFlowHintForStep(step);
-
-      if (isAnswered(idx)){
-        hintLine.textContent = stepAnswers[idx].isCorrect ? "Nice ✅" : "Good try 💛";
-      }
-    }
-
-    function renderMatchPairs(step){
-      // Expected:
-      // step.pairs = [{left,right},...]
-      // OR step.leftItems + step.rightItems (and a mapping)
-      const prompt = (step.prompt || "Match the pairs.").trim();
-      const pairs = Array.isArray(step.pairs) ? step.pairs : null;
-
-      let leftItems = [];
-      let rightItems = [];
-      let answerMap = {}; // leftIndex -> rightIndex
-
-      if (pairs && pairs.length >= 2){
-        leftItems = pairs.map(p => String(p.left));
-        rightItems = pairs.map(p => String(p.right));
-        // shuffle right but keep mapping
-        const rightShuf = rightItems.map((v,i)=>({v,i}));
-        shuffleInPlace(rightShuf);
-        rightItems = rightShuf.map(x=>x.v);
-        // mapping: for each left i, find where its correct right landed
-        pairs.forEach((p, li) => {
-          const correctRight = String(p.right);
-          const ri = rightItems.indexOf(correctRight);
-          answerMap[li] = ri;
-        });
-      } else {
-        // alternate format
-        if (Array.isArray(step.leftItems) && Array.isArray(step.rightItems) && step.leftItems.length>=2){
-          leftItems = step.leftItems.map(String);
-          rightItems = step.rightItems.map(String);
-          // if mapping provided as indices
-          if (step.mapping && typeof step.mapping === "object"){
-            answerMap = step.mapping;
-          } else {
-            // can't grade without mapping; still allow matching but mark ungraded
-            answerMap = null;
-          }
-        } else {
-          return renderBrokenStep("This match step didn’t include pairs to match.");
-        }
-      }
-
-      lessonTextEl.textContent = prompt;
-      mount.style.display = "block";
-      mount.innerHTML = "";
-
-      const grid = document.createElement("div");
-      grid.className = "pairGrid";
-
-      const colL = document.createElement("div");
-      colL.className = "pairCol";
-      colL.innerHTML = `<div class="pairTitle">Left</div>`;
-
-      const colR = document.createElement("div");
-      colR.className = "pairCol";
-      colR.innerHTML = `<div class="pairTitle">Right</div>`;
-
-      const status = document.createElement("div");
-      status.className = "pairStatus";
-      status.textContent = "Tap one on the left, then tap its match on the right.";
-
-      // Build chips
-      const leftChips = leftItems.map((txt, i) => {
-        const c = document.createElement("div");
-        c.className = "chip";
-        c.textContent = txt;
-        c.addEventListener("click", () => {
-          if (mp_done.has(i)) return;
-          mp_leftSelected = i;
-          // UI
-          leftChips.forEach((x,ix)=> x.classList.toggle("active", ix===i && !mp_done.has(ix)));
-          status.textContent = "Now tap the matching one on the right.";
-        });
-        colL.appendChild(c);
-        return c;
-      });
-
-      const rightChips = rightItems.map((txt, i) => {
-        const c = document.createElement("div");
-        c.className = "chip";
-        c.textContent = txt;
-        c.addEventListener("click", () => {
-          if (mp_leftSelected == null) return;
-          if (mp_done.has(mp_leftSelected)) return;
-
-          mp_rightSelected = i;
-          const li = mp_leftSelected;
-          mp_matches[li] = i;
-          mp_done.add(li);
-
-          // lock chosen left and right visually
-          leftChips[li].classList.remove("active");
-          leftChips[li].classList.add("matched");
-          rightChips[i].classList.add("matched");
-
-          mp_leftSelected = null;
-          mp_rightSelected = null;
-
-          const total = leftItems.length;
-          const done = mp_done.size;
-
-          status.textContent = done < total
-            ? `Nice. ${done}/${total} matched. Keep going.`
-            : "All matched ✅";
-
-          // When all matched, score & auto-advance
-          if (done === total && !isAnswered(idx)){
-            let isCorrect = true;
-            if (answerMap){
-              for (let k=0;k<total;k++){
-                if (mp_matches[k] !== Number(answerMap[k])) { isCorrect = false; break; }
-              }
-            } else {
-              isCorrect = true; // ungraded mode
-            }
-
-            stepAnswers[idx] = { type:"match_pairs", matches: mp_matches, isCorrect };
-            xp += isCorrect ? 12 : 8;
-            hintLine.textContent = isCorrect ? "Nice matching ✅" : "Good try 💛";
-            disableNavWhileAuto();
-            safeAutoAdvance(800);
-            setProgressUI();
-          }
-        });
-        colR.appendChild(c);
-        return c;
-      });
-
-      grid.appendChild(colL);
-      grid.appendChild(colR);
-
-      mount.appendChild(grid);
-      mount.appendChild(status);
-
-      nextBtn.textContent = "➡️ Next";
-      setFlowHintForStep(step);
-
-      // Important: your “last box not clickable” bug usually happens when an element overlays it.
-      // This layout avoids overlays: no absolute elements above the chips.
-    }
-
-    function renderInteractiveDrag(step){
-      // We implement a simple “tap a token, then tap a slot” (mobile-friendly, no HTML5 drag bugs).
-      // Expected:
-      // step.tokens: [...]
-      // step.slots: [...]
-      // step.correct: array mapping slotIndex -> tokenValue  OR step.answerMap object
-      const prompt = (step.prompt || "Place the items into the right spots.").trim();
-      const tokens = Array.isArray(step.tokens) ? step.tokens.map(String) : [];
-      const slots = Array.isArray(step.slots) ? step.slots.map(String) : [];
-
-      if (tokens.length < 2 || slots.length < 1){
-        return renderBrokenStep("This drag step didn’t include tokens and slots.");
-      }
-
-      // Determine correct map
-      let correct = null;
-      if (Array.isArray(step.correct)) correct = step.correct.map(String);
-      if (!correct && step.answerMap && typeof step.answerMap === "object"){
-        // expects { slot0:"x", slot1:"y" } or {0:"x"}
-        correct = [];
-        for (let i=0;i<slots.length;i++){
-          correct[i] = String(step.answerMap[i] ?? step.answerMap[`slot${i}`] ?? "");
-        }
-      }
-
-      lessonTextEl.textContent = prompt;
-      mount.style.display = "block";
-      mount.innerHTML = "";
-
-      drag_slots = new Array(slots.length).fill(null);
-      drag_used = new Set();
-      drag_selectedToken = null;
-
-      const zone = document.createElement("div");
-      zone.className = "dragZone";
-
-      const slotsWrap = document.createElement("div");
-      slotsWrap.className = "slots";
-
-      const slotEls = slots.map((label, i) => {
-        const s = document.createElement("div");
-        s.className = "slot";
-        s.textContent = label + ": ___";
-        s.addEventListener("click", () => {
-          if (!drag_selectedToken) return;
-          if (drag_slots[i] != null) return;
-
-          const token = drag_selectedToken;
-          drag_slots[i] = token;
-          drag_used.add(token);
-          drag_selectedToken = null;
-
-          s.classList.add("filled");
-          s.textContent = label + ": " + token;
-
-          renderTokens();
-
-          // if all filled, score + auto-advance
-          if (drag_slots.every(v => v != null) && !isAnswered(idx)){
-            let isCorrect = true;
-            if (correct){
-              for (let k=0;k<correct.length;k++){
-                if (String(drag_slots[k] || "") !== String(correct[k] || "")) { isCorrect = false; break; }
-              }
-            }
-            stepAnswers[idx] = { type:"interactive_drag", placed: drag_slots, isCorrect };
-            xp += isCorrect ? 12 : 8;
-            hintLine.textContent = isCorrect ? "Nice placing ✅" : "Good try 💛";
-            disableNavWhileAuto();
-            safeAutoAdvance(800);
-            setProgressUI();
-          }
-        });
-        slotsWrap.appendChild(s);
-        return s;
-      });
-
-      const tokensWrap = document.createElement("div");
-      tokensWrap.className = "tokens";
-
-      function renderTokens(){
-        tokensWrap.innerHTML = "";
-        tokens.forEach(t => {
-          const el = document.createElement("div");
-          el.className = "token";
-          if (drag_used.has(t)) el.classList.add("used");
-          if (drag_selectedToken === t) el.classList.add("selected");
-          el.textContent = t;
-          el.addEventListener("click", () => {
-            if (drag_used.has(t)) return;
-            drag_selectedToken = (drag_selectedToken === t) ? null : t;
-            renderTokens();
-          });
-          tokensWrap.appendChild(el);
-        });
-      }
-
-      const tip = document.createElement("div");
-      tip.className = "tiny";
-      tip.textContent = "Tap a token, then tap where it goes.";
-
-      const reset = document.createElement("button");
-      reset.type = "button";
-      reset.className = "btn ghost";
-      reset.textContent = "Reset";
-      reset.addEventListener("click", () => {
-        drag_slots = new Array(slots.length).fill(null);
-        drag_used = new Set();
-        drag_selectedToken = null;
-        slotEls.forEach((s, i) => {
-          s.className = "slot";
-          s.textContent = slots[i] + ": ___";
-        });
-        renderTokens();
-        hintLine.textContent = "";
-      });
-
-      const topRow = document.createElement("div");
-      topRow.className = "row";
-      topRow.style.justifyContent = "space-between";
-      topRow.appendChild(tip);
-      topRow.appendChild(reset);
-
-      zone.appendChild(topRow);
-      zone.appendChild(slotsWrap);
-      zone.appendChild(tokensWrap);
-      mount.appendChild(zone);
-
-      renderTokens();
-
-      nextBtn.textContent = "➡️ Next";
-      setFlowHintForStep(step);
-    }
-
-    function renderBrokenStep(message){
-      lessonTextEl.textContent = "";
-      mount.style.display = "block";
-      mount.innerHTML = `
-        <div class="notice">
-          <b>Hmm…</b><br>
-          ${escapeHtml(message)}<br><br>
-          You can skip this step and keep going.
-        </div>
-      `;
-      skipBtn.style.display = "inline-flex";
-      skipBtn.onclick = () => {
-        // mark as skipped but allow forward
-        if (!isAnswered(idx)){
-          stepAnswers[idx] = { type:"skipped", isCorrect:true };
-        }
-        safeAutoAdvance(200);
-        setProgressUI();
-      };
-      hintLine.textContent = "This one didn’t generate properly — skip is fine 💛";
-      flowHint.textContent = "➡️ Tap Skip step";
-      nextBtn.textContent = "➡️ Next";
-    }
-
-    function disableAllOpts(container){
-      const buttons = container.querySelectorAll("button, .opt");
-      buttons.forEach(b => {
-        if (b.tagName === "BUTTON") b.disabled = true;
-        b.classList.add("disabled");
-      });
-    }
-
-    function showEndScreen(){
-      clearMount();
-      lessonTextEl.textContent = "";
-      mount.style.display = "none";
-      endMount.style.display = "block";
-
-      const correctCount = Object.values(stepAnswers).filter(a => a && a.isCorrect).length;
-      const answeredCount = Object.keys(stepAnswers).length;
-
-      endMount.innerHTML = `
-        <div class="endCard">
-          <div class="endTitle">✅ Lesson finished</div>
-          <div class="endSub">
-            Nice steady work, ${escapeHtml(childName)}.<br>
-            You earned <b>${xp}</b> XP today.
-          </div>
-          <div class="row" style="margin-top:10px;">
-            <button id="doneTodayBtn" class="btn light" type="button">Done for today</button>
-            <button id="anotherBtn" class="btn" type="button">Try another lesson</button>
-            <a class="btn ghost" href="/lessons.html" style="text-decoration:none;">Back to Lessons</a>
-          </div>
-          <div class="tiny" style="margin-top:12px;">
-            Score (soft): ${correctCount} good answers out of ${answeredCount} steps you completed.
-          </div>
-        </div>
-      `;
-
-      document.getElementById("doneTodayBtn").onclick = () => window.location.href = "/dash.html";
-      document.getElementById("anotherBtn").onclick = () => window.location.href = "/lessons.html";
-
-      nextBtn.disabled = true;
-      backBtn.disabled = true;
-      flowHint.style.display = "none";
-      hintLine.textContent = "Pick what you’d like to do next.";
-      setProgressUI();
-    }
-
+    // -------------------------
+    // RENDER
+    // -------------------------
     function renderStep(){
       clearError();
-      clearMount();
-      setProgressUI();
+      hintLine.textContent = "";
+      mcqEl.innerHTML = "";
+      mcqEl.style.display = "none";
+      clearInteractive();
+
+      nextBtn.disabled = false;
+      backBtn.disabled = false;
+
+      if (!steps.length){
+        lessonTextEl.textContent = "No lesson steps found.";
+        nextBtn.disabled = true;
+        backBtn.disabled = true;
+        return;
+      }
 
       const step = steps[idx];
+      setProgressUI();
+
       if (!step){
-        return showEndScreen();
+        lessonTextEl.textContent = "Finished.";
+        return;
       }
 
-      setFlowHintForStep(step);
-
-      // Determine if this step is answer-tap flow or Next flow
-      const needsTapAnswer = ["mcq","fill_blank","number_line","match_pairs","interactive_drag"].includes(step.type);
-      nextBtn.disabled = false;
-      nextBtn.textContent = needsTapAnswer ? "➡️ Next" : "➡️ Next";
-
-      if (step.type === "intro" || step.type === "teach" || step.type === "finish"){
-        return renderIntroTeachFinish(step);
+      // Text
+      if (step.type === "intro" || step.type === "teach"){
+        lessonTextEl.textContent = step.text || "";
+        nextBtn.textContent = "➡️ Next";
+        // Make it feel less “clicky”: if it’s a short intro/teach, auto-advance after a moment (but still allow control)
+        if ((step.text || "").length < 90) {
+          hintLine.textContent = "Take a moment. Then we’ll continue.";
+        }
+        return;
       }
+
+      // Finish = end screen
+      if (step.type === "finish"){
+        nextBtn.textContent = "✅ Finish lesson";
+        lessonTextEl.textContent = (step.text || `Nice work, ${childName}.`) + "\n\nWhat would you like to do next?";
+        interactiveMount.style.display = "block";
+        interactiveMount.innerHTML = `
+          <div class="fillWrap">
+            <button class="pill primary" id="doneTodayBtn" type="button">✅ Done for today</button>
+            <button class="pill" id="anotherBtn" type="button">✨ Try another lesson</button>
+            <a class="pill" href="/lessons.html" style="display:inline-flex; align-items:center; justify-content:center;">📘 Back to Lessons</a>
+          </div>
+        `;
+        const doneTodayBtn = document.getElementById("doneTodayBtn");
+        const anotherBtn = document.getElementById("anotherBtn");
+        doneTodayBtn.onclick = () => window.location.href = "/dash.html";
+        anotherBtn.onclick = () => window.location.href = `/lesson.html?subject=${encodeURIComponent(SUBJECT)}&area=${encodeURIComponent(AREA)}&t=${Date.now()}`;
+        return;
+      }
+
+      // MCQ
       if (step.type === "mcq"){
-        return renderMCQ(step);
-      }
-      if (step.type === "fill_blank"){
-        return renderFillBlank(step);
-      }
-      if (step.type === "number_line"){
-        return renderNumberLine(step);
-      }
-      if (step.type === "match_pairs"){
-        return renderMatchPairs(step);
-      }
-      if (step.type === "interactive_drag"){
-        return renderInteractiveDrag(step);
+        lessonTextEl.textContent = step.prompt || "";
+        mcqEl.style.display = "grid";
+        nextBtn.textContent = "➡️ Next";
+
+        const letters = ["A","B","C","D","E","F"];
+        (step.choices || []).forEach((choice, i) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "mcq-opt";
+          btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${choice}</span>`;
+          btn.addEventListener("click", () => chooseMCQ(i));
+          mcqEl.appendChild(btn);
+        });
+
+        const saved = stepAnswers[idx];
+        if (saved){
+          hintLine.textContent = saved.isCorrect ? "Nice — that was correct ✅" : "Good try 💛";
+        }
+        return;
       }
 
-      // Unknown type -> broken step safe fallback
-      return renderBrokenStep(`Unknown step type: ${step.type}`);
+      // Fill blank (chip options)
+      if (step.type === "fill_blank"){
+        const sentence = step.sentence || "";
+        const options = Array.isArray(step.options) ? step.options : [];
+
+        if (!sentence || !sentence.includes("___") || (!options.length && !step.answer)){
+          // Should not happen after sanitise, but safe fallback
+          lessonTextEl.textContent = "Let’s skip this one and keep going.";
+          hintLine.textContent = "That step didn’t load properly.";
+          autoAdvanceSoon(500);
+          return;
+        }
+
+        lessonTextEl.textContent = step.prompt || "Complete the sentence.";
+        interactiveMount.style.display = "block";
+        interactiveMount.innerHTML = `
+          <div class="fillWrap">
+            <div class="fillSentence">${escapeHtml(sentence)}</div>
+            <div class="fillOptions" id="fillOptions"></div>
+            <div class="tiny" id="fillHint">${escapeHtml(step.hint || "Pick the word that fits best.")}</div>
+          </div>
+        `;
+
+        const host = document.getElementById("fillOptions");
+        (options.length ? options : [step.answer]).slice(0,6).forEach(opt => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "chipBtn";
+          b.textContent = opt;
+          b.onclick = () => chooseFillBlank(opt);
+          host.appendChild(b);
+        });
+
+        nextBtn.textContent = "➡️ Next";
+        return;
+      }
+
+      // Match pairs
+      if (step.type === "match_pairs"){
+        const pairs = Array.isArray(step.pairs) ? step.pairs : [];
+        if (pairs.length < 2){
+          lessonTextEl.textContent = "Let’s skip this one and keep going.";
+          autoAdvanceSoon(500);
+          return;
+        }
+
+        lessonTextEl.textContent = step.prompt || "Match the pairs.";
+
+        const lefts = pairs.map(p => p.left);
+        const rights = shuffle(pairs.map(p => p.right));
+
+        let selectedLeft = null;
+        let selectedRight = null;
+        const matchedLeft = new Set();
+        const matchedRight = new Set();
+
+        interactiveMount.style.display = "block";
+        interactiveMount.innerHTML = `
+          <div class="notice">${escapeHtml(step.hint || "Tap one on the left, then one on the right.")}</div>
+          <div class="pairsGrid">
+            <div class="pairCol">
+              <div class="pairColTitle">Left</div>
+              <div id="leftCol"></div>
+            </div>
+            <div class="pairCol">
+              <div class="pairColTitle">Right</div>
+              <div id="rightCol"></div>
+            </div>
+          </div>
+        `;
+
+        const leftCol = document.getElementById("leftCol");
+        const rightCol = document.getElementById("rightCol");
+
+        lefts.forEach(val => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "pairBtn";
+          b.textContent = val;
+          b.onclick = () => {
+            if (matchedLeft.has(val)) return;
+            selectedLeft = val;
+            refresh();
+            tryMatch();
+          };
+          leftCol.appendChild(b);
+        });
+
+        rights.forEach(val => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "pairBtn";
+          b.textContent = val;
+          b.onclick = () => {
+            if (matchedRight.has(val)) return;
+            selectedRight = val;
+            refresh();
+            tryMatch();
+          };
+          rightCol.appendChild(b);
+        });
+
+        function refresh(){
+          [...leftCol.children].forEach(btn => {
+            const v = btn.textContent;
+            btn.classList.toggle("selected", v === selectedLeft);
+            btn.classList.toggle("matched", matchedLeft.has(v));
+            btn.disabled = matchedLeft.has(v);
+          });
+          [...rightCol.children].forEach(btn => {
+            const v = btn.textContent;
+            btn.classList.toggle("selected", v === selectedRight);
+            btn.classList.toggle("matched", matchedRight.has(v));
+            btn.disabled = matchedRight.has(v);
+          });
+        }
+
+        function tryMatch(){
+          if (!selectedLeft || !selectedRight) return;
+
+          const correctRight = pairs.find(p => p.left === selectedLeft)?.right;
+          const ok = (selectedRight === correctRight);
+
+          if (ok){
+            matchedLeft.add(selectedLeft);
+            matchedRight.add(selectedRight);
+            xp += 10;
+            hintLine.textContent = "Nice match ✅";
+            selectedLeft = null;
+            selectedRight = null;
+            refresh();
+
+            if (matchedLeft.size === pairs.length){
+              // Completed: auto-advance
+              stepAnswers[idx] = { done:true, isCorrect:true };
+              autoAdvanceSoon(650);
+            }
+          } else {
+            xp += 4;
+            hintLine.textContent = "Good try — have another go 💛";
+            // clear selection but keep unlocked
+            selectedLeft = null;
+            selectedRight = null;
+            refresh();
+          }
+
+          setProgressUI();
+        }
+
+        nextBtn.textContent = "➡️ Next";
+        return;
+      }
+
+      // Any other type should not exist now
+      lessonTextEl.textContent = "Let’s keep going.";
+      autoAdvanceSoon(400);
     }
+
+    async function chooseMCQ(pickedIndex){
+      const step = steps[idx];
+      if (!step || step.type !== "mcq") return;
+
+      const correctIndex = Number(step.correctIndex);
+      const isCorrect = pickedIndex === correctIndex;
+
+      xp += isCorrect ? 10 : 6;
+      stepAnswers[idx] = { pickedIndex, isCorrect };
+
+      hintLine.textContent = isCorrect
+        ? (step.explainCorrect ? `Correct ✅ ${step.explainCorrect}` : "Correct ✅")
+        : (step.hint ? `Good try 💛 Hint: ${step.hint}` : "Good try 💛");
+
+      setProgressUI();
+
+      // Auto move on (premium feel)
+      autoAdvanceSoon(isCorrect ? 700 : 900);
+    }
+
+    async function chooseFillBlank(chosen){
+      const step = steps[idx];
+      if (!step || step.type !== "fill_blank") return;
+
+      const answer = String(step.answer || "").trim().toLowerCase();
+      const chosenNorm = String(chosen || "").trim().toLowerCase();
+
+      const isCorrect = answer ? (chosenNorm === answer) : true; // if no answer provided, accept
+      xp += isCorrect ? 10 : 6;
+      stepAnswers[idx] = { chosen, isCorrect };
+
+      hintLine.textContent = isCorrect ? "Nice ✅" : (step.hint ? `Good try 💛 ${step.hint}` : "Good try 💛");
+      setProgressUI();
+
+      autoAdvanceSoon(isCorrect ? 700 : 900);
+    }
+
+    // Controls
+    backBtn.addEventListener("click", () => {
+      if (idx > 0){ idx -= 1; renderStep(); }
+    });
+
+    nextBtn.addEventListener("click", () => {
+      const step = steps[idx];
+
+      // Don’t block flow hard; if a step is interactive, allow next anyway.
+      if (step?.type === "mcq" && !stepAnswers[idx]){
+        hintLine.textContent = "Tap an answer first 💛";
+        return;
+      }
+
+      if (idx < steps.length - 1){
+        idx += 1;
+        renderStep();
+      }
+    });
+
+    finishBtn.addEventListener("click", () => {
+      window.location.href = "/dash.html";
+    });
+
+    helpBtn.addEventListener("click", () => {
+      alert(
+        "How lessons work:\n\n" +
+        "• Read the step\n" +
+        "• Tap an answer (if shown)\n\n" +
+        "It’s okay to go slowly.\n\n" +
+        "Tip: Read aloud plays only when you press the button."
+      );
+    });
 
     // ----- Read aloud -----
     function stripEmojis(text){
@@ -1438,6 +1042,8 @@
 
         let text = "";
         if (step.type === "mcq") text = step.prompt || "";
+        else if (step.type === "fill_blank") text = (step.prompt || "") + ". " + (step.sentence || "");
+        else if (step.type === "match_pairs") text = step.prompt || "";
         else if (step.text) text = step.text;
         else if (step.prompt) text = step.prompt;
         else text = lessonTextEl.textContent || "";
@@ -1460,8 +1066,6 @@
         });
 
         if (!r.ok){
-          const t = await r.text().catch(()=> "");
-          console.warn("TTS failed", r.status, t);
           hintLine.textContent = "Read aloud isn’t available right now.";
           return;
         }
@@ -1496,53 +1100,6 @@
       }
     }
 
-    // Controls
-    backBtn.addEventListener("click", () => {
-      if (idx > 0){
-        idx -= 1;
-        renderStep();
-      }
-    });
-
-    nextBtn.addEventListener("click", async () => {
-      const step = steps[idx];
-
-      // If this is an answer-step, don’t force next (we prefer auto).
-      // But allow Next as a fallback only if answered or it’s a text step.
-      const needsAnswer = ["mcq","fill_blank","number_line","match_pairs","interactive_drag"].includes(step?.type);
-
-      if (needsAnswer && !isAnswered(idx)){
-        hintLine.textContent = "Tap an answer first 💛";
-        return;
-      }
-
-      if (step?.type === "finish"){
-        showEndScreen();
-        return;
-      }
-
-      if (idx < steps.length - 1){
-        idx += 1;
-        renderStep();
-      } else {
-        showEndScreen();
-      }
-    });
-
-    finishBtn.addEventListener("click", () => {
-      window.location.href = "/lessons.html";
-    });
-
-    helpBtn.addEventListener("click", () => {
-      alert(
-        "How lessons work:\n\n" +
-        "• Read the step\n" +
-        "• Tap an answer (if shown)\n" +
-        "• It will move on automatically\n\n" +
-        "Tip: Use Read aloud if you want it spoken."
-      );
-    });
-
     speakBtn.addEventListener("click", speakCurrent);
 
     logoutBtn.addEventListener("click", async () => {
@@ -1551,20 +1108,22 @@
       window.location.href = "/login.html";
     });
 
-    // Utilities
-    function shuffleInPlace(arr){
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
+    function escapeHtml(s){
+      return String(s || "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
     }
-    function escapeHtml(str){
-      return String(str || "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+
+    function shuffle(arr){
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
     }
 
     async function boot(){
@@ -1595,34 +1154,23 @@
       try{
         lesson = await fetchGeneratedLesson();
       }catch(e){
-        console.error("Lesson gen error:", e);
-        showError(`Lesson generator error: ${e?.message || "Unknown error"}`);
+        console.error(e);
+        showError("Could not load a lesson right now.");
         lessonTextEl.textContent =
           "We couldn’t load a lesson.\n\n" +
-          "Please try again in a moment.\n\n" +
-          "If this keeps happening, the lesson generator worker may be offline.";
+          "Please try again in a moment.";
         nextBtn.disabled = true;
         backBtn.disabled = true;
         return;
       }
 
-      steps = Array.isArray(lesson.steps) ? lesson.steps : [];
-      if (!steps.length){
-        showError("Lesson returned no steps.");
-        nextBtn.disabled = true;
-        backBtn.disabled = true;
-        return;
-      }
-
+      steps = lesson.steps || [];
       idx = 0;
       xp = 0;
       stepAnswers = {};
 
       const title = lesson.title ? ` — ${lesson.title}` : "";
       contextLine.textContent = `${SUBJECT} • ${AREA}${title}`;
-
-      nextBtn.disabled = false;
-      backBtn.disabled = false;
       renderStep();
     }
 
@@ -1634,6 +1182,3 @@
   </script>
 </body>
 </html>
-
-
-
