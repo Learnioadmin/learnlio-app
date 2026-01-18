@@ -32,6 +32,7 @@
     }
     @media (min-width: 981px){ body{ overflow:hidden; } }
 
+    /* Logged-in nav (same as Tutor) */
     .nav{ background:#fff; border-bottom:1px solid rgba(15,23,42,.08); position:sticky; top:0; z-index:50; }
     .nav-inner{ max-width:1140px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-weight:900; letter-spacing:.2px; }
@@ -42,7 +43,6 @@
     .btn{ background:linear-gradient(180deg, var(--brand2), var(--brand)); border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:800; box-shadow: 0 10px 18px rgba(11,92,255,.22); }
     .btn.light{ background:#e5e7eb; color:#111; box-shadow:none; }
     .btn.ghost{ background:transparent; border:1px solid rgba(15,23,42,.12); color:var(--ink); box-shadow:none; }
-    .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
     .container{ max-width:1140px; margin:0 auto; padding:16px 16px 20px; }
 
@@ -111,7 +111,6 @@
       display:flex;
       flex-direction:column;
       gap:12px;
-      position: relative;
     }
 
     .lessonText{
@@ -119,6 +118,16 @@
       font-size: clamp(15px, 1.2vw, 17px);
       line-height: 1.75;
       white-space: pre-wrap;
+    }
+
+    .hint{
+      border:1px solid rgba(15,23,42,.10);
+      background:#fff;
+      border-radius: 16px;
+      padding: 10px 12px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
     }
 
     .mcq{
@@ -146,7 +155,6 @@
       box-shadow: 0 14px 24px rgba(2,6,23,.10);
       border-color: rgba(11,92,255,.22);
     }
-    .mcq-opt:disabled{ opacity:.7; cursor:not-allowed; }
     .mcq-letter{
       width:28px; height:28px; border-radius: 10px;
       background: var(--soft);
@@ -187,6 +195,7 @@
     }
     .pill:disabled{ opacity:.55; cursor:not-allowed; }
 
+    /* Side panel */
     .side{ padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
     .sideCard{
       background: rgba(255,255,255,.92);
@@ -219,159 +228,117 @@
       width: 0%;
       background: linear-gradient(90deg, #10b981, #22c55e);
       border-radius: 999px;
-      transition: width .2s ease;
     }
 
-    .tiny{ color:var(--muted); font-size:13px; line-height:1.6; margin-top:10px; }
+    /* XP fun card */
+    .xpHero{
+      border-radius: var(--radius);
+      border: 1px solid rgba(15,23,42,.10);
+      background: linear-gradient(180deg, rgba(238,242,255,.95), rgba(255,255,255,.95));
+      box-shadow: 0 16px 28px rgba(2,6,23,.08);
+      padding: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .xpHero::after{
+      content:"";
+      position:absolute; inset:-60px -40px auto auto;
+      width:160px; height:160px; border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, rgba(11,92,255,.22), transparent 60%);
+      transform: rotate(12deg);
+    }
+    .xpTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; z-index:1; }
+    .xpBadge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 10px; border-radius: 999px;
+      background:#fff; border:1px solid rgba(15,23,42,.10);
+      box-shadow: 0 10px 14px rgba(2,6,23,.06);
+      font-weight: 950; font-size: 13px;
+    }
+    .xpBig{
+      font-size: 28px; font-weight: 1000; letter-spacing:-.6px;
+      line-height: 1;
+      position:relative; z-index:1;
+    }
+    .xpSmall{ color: var(--muted); font-size: 13px; margin-top: 6px; line-height: 1.5; position:relative; z-index:1; }
+    .xpBar{ height: 12px; background: rgba(15,23,42,.08); border-radius: 999px; overflow:hidden; margin-top: 10px; position:relative; z-index:1; }
+    .xpBar > div{ height: 12px; width: 0%; background: linear-gradient(90deg, #0b5cff, #22c55e); border-radius: 999px; }
+
+    .tiny{ color:var(--muted); font-size:13px; line-height:1.6; }
     .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 
-    /* XP UI (prominent & child friendly) */
-    .xpWrap{ display:flex; flex-direction:column; gap:10px; margin-top:10px; }
-    .xpTopRow{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .xpBadge{
-      display:inline-flex; gap:8px; align-items:center;
-      padding:10px 12px;
-      border-radius: 999px;
-      background: linear-gradient(180deg, rgba(47,123,255,.18), rgba(11,92,255,.10));
-      border:1px solid rgba(11,92,255,.20);
-      box-shadow: 0 12px 22px rgba(11,92,255,.14);
-      font-weight: 950;
-      font-size: 14px;
-    }
-    .xpBadge span{ font-size: 18px; letter-spacing:-.2px; }
-
-    .xpToday{
-      display:inline-flex; gap:8px; align-items:center;
-      padding:10px 12px;
-      border-radius: 999px;
-      background: rgba(16,185,129,.10);
-      border:1px solid rgba(16,185,129,.18);
-      box-shadow: 0 10px 18px rgba(16,185,129,.10);
-      font-weight: 950;
-      font-size: 13px;
-      color: #064e3b;
-    }
-    .xpToday span{ font-size: 16px; }
-
-    .xpNext{
-      background: rgba(255,255,255,.92);
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding: 12px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-    }
-    .xpNextText{
-      display:flex;
-      justify-content:space-between;
-      align-items:baseline;
-      gap:10px;
-      margin-bottom: 8px;
-    }
-    .xpNextBar{
-      height: 12px;
-      border-radius: 999px;
-      background: rgba(15,23,42,.08);
-      overflow:hidden;
-    }
-    .xpNextBar > div{
-      height: 12px;
-      width: 0%;
-      background: linear-gradient(90deg, #2f7bff, #10b981);
-      border-radius: 999px;
-      transition: width .25s ease;
-    }
-    .xpHint{
-      margin-top:8px;
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
     /* Interactive mounts */
-    #interactiveMount{ display:none; }
+    .interactiveMount{ display:none; }
 
-    /* Match pairs widget */
-    .pairsWrap{ display:grid; grid-template-columns: 1fr; gap:10px; }
-    .pairCols{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    @media (max-width: 520px){ .pairCols{ grid-template-columns: 1fr; } }
-    .pairColTitle{ font-weight:950; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.2px; margin:2px 0 6px; }
-    .pairItem{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.12);
-      border-radius: 14px;
-      padding: 10px 10px;
-      cursor:pointer;
-      font-weight:900;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-      user-select:none;
+    /* Number line */
+    .nl-wrap{ background:#fff; border:1px solid rgba(15,23,42,.10); border-radius: 16px; padding: 12px; }
+    .nl-track{
       position: relative;
-      z-index: 2;
-      pointer-events: auto;
-    }
-    .pairItem:hover{ border-color: rgba(11,92,255,.22); }
-    .pairItem.selected{ outline: 2px solid rgba(11,92,255,.35); background: rgba(238,242,255,.75); }
-    .pairItem.matched{ opacity:.6; cursor:default; text-decoration: line-through; }
-
-    /* Number line widget */
-    .nlBox{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.12);
-      border-radius: 16px;
-      padding: 12px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    .nlTrack{
-      position: relative;
-      height: 12px;
-      border-radius: 999px;
+      height: 10px;
       background: rgba(15,23,42,.08);
-      overflow: visible;
-    }
-    .nlFill{
-      position:absolute; left:0; top:0; height:12px;
       border-radius: 999px;
-      background: linear-gradient(90deg, #2f7bff, #10b981);
-      width:0%;
-      transition: width .2s ease;
+      margin: 10px 6px 14px;
     }
-    .nlKnob{
+    .nl-fill{
+      position:absolute; inset:0 auto 0 0;
+      height:10px;
+      width:0%;
+      background: linear-gradient(90deg, #0b5cff, #22c55e);
+      border-radius: 999px;
+    }
+    .nl-thumb{
       position:absolute; top:50%;
       transform: translate(-50%, -50%);
-      width:28px; height:28px;
-      border-radius: 999px;
-      background: #fff;
-      border:1px solid rgba(15,23,42,.18);
-      box-shadow: 0 10px 18px rgba(2,6,23,.10);
+      width: 22px; height: 22px; border-radius: 999px;
+      background:#fff;
+      border:2px solid rgba(11,92,255,.55);
+      box-shadow: 0 10px 16px rgba(2,6,23,.10);
       cursor: pointer;
       touch-action: none;
     }
-    .nlTicks{ display:flex; justify-content:space-between; font-size:12px; color:var(--muted); }
-    .nlBtnRow{ display:flex; gap:10px; flex-wrap:wrap; }
-    .nlValuePill{
-      padding: 10px 12px;
-      border-radius: 999px;
-      border:1px solid rgba(15,23,42,.12);
-      background:#fff;
-      font-weight:950;
-      box-shadow: 0 10px 14px rgba(2,6,23,.06);
+    .nl-labels{ display:flex; justify-content:space-between; color:var(--muted); font-weight:900; font-size:12px; }
+    .nl-value{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      margin-top: 10px;
     }
+    .nl-value strong{ font-size: 16px; font-weight: 1000; }
+    .nl-btns{ display:flex; gap:8px; flex-wrap:wrap; }
+    .nl-mini{ padding: 10px 12px; border-radius: 999px; border:1px solid rgba(15,23,42,.12); background:#fff; font-weight:950; cursor:pointer; }
+
+    /* Match pairs */
+    .mp-wrap{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 560px){ .mp-wrap{ grid-template-columns: 1fr; } }
+    .mp-col{ background:#fff; border:1px solid rgba(15,23,42,.10); border-radius: 16px; padding: 10px; min-height: 80px; }
+    .mp-item{
+      width:100%;
+      text-align:left;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(15,23,42,.12);
+      background: rgba(248,250,252,.9);
+      cursor:pointer;
+      font-weight: 1000;
+      box-shadow: 0 10px 14px rgba(2,6,23,.06);
+      margin: 8px 0;
+      transition: transform .06s ease, border-color .06s ease, box-shadow .06s ease;
+      user-select:none;
+      touch-action: manipulation;
+    }
+    .mp-item:hover{ transform: translateY(-1px); border-color: rgba(11,92,255,.25); box-shadow: 0 14px 20px rgba(2,6,23,.08); }
+    .mp-item.selected{ outline: 3px solid rgba(11,92,255,.25); background:#fff; }
+    .mp-item.done{ opacity: .55; cursor: default; }
+    .mp-pill{ display:inline-flex; align-items:center; gap:8px; padding: 8px 10px; border-radius: 999px; background: var(--soft); border:1px solid rgba(11,92,255,.18); font-weight: 950; font-size: 13px; }
 
     /* End screen */
-    .endCard{
-      background: rgba(255,255,255,.92);
+    .endBox{
       border:1px solid rgba(15,23,42,.10);
-      border-radius: 18px;
+      background:#fff;
+      border-radius: 16px;
       padding: 14px;
-      box-shadow: 0 14px 26px rgba(2,6,23,.08);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+      box-shadow: 0 14px 24px rgba(2,6,23,.08);
     }
-    .endTitle{ font-weight:950; font-size:16px; letter-spacing:-.2px; }
-    .endHint{ color:var(--muted); font-size:14px; line-height:1.65; }
+    .endTitle{ font-weight: 1000; font-size: 18px; letter-spacing:-.3px; }
+    .endActions{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -413,9 +380,13 @@
           <div id="cardbox" class="cardbox">
             <div id="lessonText" class="lessonText"></div>
 
+            <div id="hintBox" class="hint" style="display:none;"></div>
+
             <div id="mcq" class="mcq" style="display:none;"></div>
 
-            <div id="interactiveMount"></div>
+            <div id="interactiveMount" class="interactiveMount"></div>
+
+            <div id="endMount" style="display:none;"></div>
           </div>
 
           <div class="controls">
@@ -431,11 +402,22 @@
         <div class="panel-head">
           <div>
             <div class="title">✨ Your progress</div>
-            <div class="subtitle">Just steady effort. No pressure.</div>
+            <div class="subtitle">Small steps. Big confidence.</div>
           </div>
         </div>
 
         <div class="side">
+          <div class="xpHero">
+            <div class="xpTop">
+              <div class="xpBadge">🎁 XP rewards</div>
+              <div class="xpBadge" id="rewardBadge">Next reward soon</div>
+            </div>
+            <div class="xpBig" id="xpTotalBig">0 XP</div>
+            <div class="xpSmall" id="xpTodaySmall">Today: 0</div>
+            <div class="xpBar"><div id="xpBarFill"></div></div>
+            <div class="xpSmall" id="xpNextSmall">Next reward: 0 XP to go</div>
+          </div>
+
           <div class="sideCard">
             <h3>Lesson</h3>
             <div class="kpi">
@@ -443,25 +425,7 @@
               <span id="topicKpi">—</span>
             </div>
             <div class="bar"><div id="barFill"></div></div>
-
-            <!-- NEW XP UI -->
-            <div class="xpWrap">
-              <div class="xpTopRow">
-                <div class="xpBadge" title="Your XP">✨ <span id="xpTotalBig">0</span></div>
-                <div class="xpToday" title="XP earned today">Today <span id="xpTodayBig">0</span></div>
-              </div>
-
-              <div class="xpNext">
-                <div class="xpNextText">
-                  <span style="font-weight:950;">Next reward</span>
-                  <span class="muted" id="xpToGoText">—</span>
-                </div>
-                <div class="xpNextBar">
-                  <div id="xpNextFill"></div>
-                </div>
-                <div class="xpHint" id="xpHintText">Small steps still count.</div>
-              </div>
-            </div>
+            <div class="tiny" id="sessionXpLine">Session XP: 0</div>
           </div>
 
           <div class="sideCard">
@@ -472,7 +436,7 @@
           <div class="sideCard">
             <h3>Quick actions</h3>
             <div class="row" style="margin-top:10px;">
-              <button id="finishBtn" class="pill" type="button">✅ Finish</button>
+              <button id="finishBtn" class="pill" type="button">✅ Done for today</button>
               <a class="pill" href="/lessons.html" style="display:inline-flex; align-items:center;">📘 Lessons</a>
               <a class="pill" href="/dash.html" style="display:inline-flex; align-items:center;">🏠 Dashboard</a>
             </div>
@@ -481,7 +445,6 @@
       </aside>
     </div>
   </main>
-
   <script>
   (() => {
     // iOS vh fix
@@ -493,8 +456,12 @@
     // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+
+    // Lesson generation Worker
     const LESSON_GEN_BASE = "https://learnlio-lessons.falling-grass-34ab.workers.dev";
-    const LESSON_GEN_URL = LESSON_GEN_BASE.replace(/\/+$/,"") + "/generate";
+    const LESSON_GEN_URL = `${LESSON_GEN_BASE.replace(/\/+$/,"")}/generate`;
+
+    // Google TTS Worker
     const TTS_URL = "https://learnlio-tts.falling-grass-34ab.workers.dev/speak";
     // =========================
 
@@ -504,8 +471,10 @@
     const pageError = document.getElementById("pageError");
     const contextLine = document.getElementById("contextLine");
     const lessonTextEl = document.getElementById("lessonText");
+    const hintBox = document.getElementById("hintBox");
     const mcqEl = document.getElementById("mcq");
     const interactiveMount = document.getElementById("interactiveMount");
+    const endMount = document.getElementById("endMount");
     const hintLine = document.getElementById("hintLine");
     const backBtn = document.getElementById("backBtn");
     const nextBtn = document.getElementById("nextBtn");
@@ -517,17 +486,23 @@
     const stepKpi = document.getElementById("stepKpi");
     const topicKpi = document.getElementById("topicKpi");
     const barFill = document.getElementById("barFill");
+    const sessionXpLine = document.getElementById("sessionXpLine");
     const practiceLine = document.getElementById("practiceLine");
 
-    // XP UI
     const xpTotalBig = document.getElementById("xpTotalBig");
-    const xpTodayBig = document.getElementById("xpTodayBig");
-    const xpToGoText = document.getElementById("xpToGoText");
-    const xpNextFill = document.getElementById("xpNextFill");
-    const xpHintText = document.getElementById("xpHintText");
+    const xpTodaySmall = document.getElementById("xpTodaySmall");
+    const xpNextSmall = document.getElementById("xpNextSmall");
+    const xpBarFill = document.getElementById("xpBarFill");
+    const rewardBadge = document.getElementById("rewardBadge");
 
     function showError(msg){ pageError.style.display="block"; pageError.textContent = msg; }
     function clearError(){ pageError.style.display="none"; pageError.textContent = ""; }
+
+    function showHintBox(text){
+      if (!text){ hintBox.style.display="none"; hintBox.textContent=""; return; }
+      hintBox.style.display="block";
+      hintBox.textContent = text;
+    }
 
     // Auth/child
     let currentUser = null;
@@ -539,34 +514,23 @@
     let SUBJECT = null;
     let AREA = null;
 
-    // Lesson runtime
-    let lesson = null;         // worker response lesson
+    // Lesson
+    let lesson = null;     // {title, steps:[]}
     let steps = [];
     let idx = 0;
-    let xpEarnedThisLesson = 0;
 
-    // XP persisted
-    let xpTotal = 0;
-    let xpToday = 0;
-    let nextRewardTarget = 0;
+    // Answers tracking for scoring + auto-advance gating
+    let stepState = {}; // stepIndex -> {completed:boolean, correct:boolean}
+    let sessionXp = 0;
 
-    // Audio
+    // XP storage (overall)
+    let xp_total = 0;
+    let xp_lifetime = 0;
+    let xp_today = 0;
+    let xp_today_date = null; // YYYY-MM-DD
+
+    // TTS
     let currentAudio = null;
-
-    // Match pairs state
-    let mpSelectedLeft = null;
-    let mpSelectedRight = null;
-    let mpMatched = new Set(); // store "L{i}-R{j}"
-
-    // Number line state
-    let nlValue = null;
-    let nlMin = 0, nlMax = 20, nlTarget = 0;
-
-    // Supported types only (ship-ready)
-    const SUPPORTED_TYPES = new Set(["intro","teach","mcq","match_pairs","number_line","finish"]);
-
-    // Heuristic: block image/picture prompts for now
-    const IMAGE_HINT = /(picture|image|shown|in the picture|in the image|look at|see the picture|how many.*(shown|see))/i;
 
     function computeAgeFromDob(dobStr){
       const d = new Date(dobStr);
@@ -576,6 +540,14 @@
       const m = now.getMonth() - d.getMonth();
       if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
       return Math.max(4, Math.min(18, age));
+    }
+
+    function todayKey(){
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,"0");
+      const dd = String(d.getDate()).padStart(2,"0");
+      return `${yyyy}-${mm}-${dd}`;
     }
 
     function getSelectedChildFromLocalStorage(){
@@ -651,41 +623,134 @@
       }
     }
 
-    function todayKey(){
-      const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-    }
+    // -------------------------
+    // XP (overall) from public.child_xp
+    // -------------------------
+    async function loadChildXp(){
+      // If no row exists yet, create baseline
+      const { data: existing, error } = await sb
+        .from("child_xp")
+        .select("id, owner_id, child_id, xp_total, xp_lifetime, updated_at")
+        .eq("owner_id", currentUser.id)
+        .eq("child_id", child.id)
+        .maybeSingle();
 
-    function rewardTargetForXp(total){
-      // “next reward every 100 XP” (simple, predictable)
-      const step = 100;
-      return Math.ceil((total + 1) / step) * step;
-    }
+      if (error){
+        console.warn("child_xp load failed", error);
+        // still allow lesson to run
+        xp_total = 0; xp_lifetime = 0;
+        xp_today = 0; xp_today_date = todayKey();
+        renderXpUI();
+        return;
+      }
 
-    function updateXpUI(){
-      xpTotalBig.textContent = String(xpTotal);
-      xpTodayBig.textContent = String(xpToday);
+      if (!existing?.id){
+        const payload = {
+          owner_id: currentUser.id,
+          child_id: child.id,
+          xp_total: 0,
+          xp_lifetime: 0,
+          updated_at: new Date().toISOString()
+        };
+        const { data: created, error: cErr } = await sb
+          .from("child_xp")
+          .insert(payload)
+          .select("id, xp_total, xp_lifetime, updated_at")
+          .single();
 
-      nextRewardTarget = rewardTargetForXp(xpTotal);
-      const toGo = Math.max(0, nextRewardTarget - xpTotal);
-      xpToGoText.textContent = `${toGo} XP to go`;
-
-      const prevTarget = nextRewardTarget - 100;
-      const span = 100;
-      const pct = Math.max(0, Math.min(100, Math.round(((xpTotal - prevTarget) / span) * 100)));
-      xpNextFill.style.width = pct + "%";
-
-      if (toGo === 0){
-        xpHintText.textContent = "Reward unlocked! Nice work.";
-      } else if (toGo <= 20){
-        xpHintText.textContent = "So close — keep going.";
+        if (cErr){
+          console.warn("child_xp create failed", cErr);
+          xp_total = 0; xp_lifetime = 0;
+        } else {
+          xp_total = Number(created.xp_total || 0);
+          xp_lifetime = Number(created.xp_lifetime || 0);
+        }
       } else {
-        xpHintText.textContent = "Small steps still count.";
+        xp_total = Number(existing.xp_total || 0);
+        xp_lifetime = Number(existing.xp_lifetime || 0);
+      }
+
+      // Today XP is tracked locally per child (simple + reliable)
+      // (If you later want server-tracked daily XP, we can add a table.)
+      const tk = `learnlio_xp_today_${child.id}`;
+      const dk = `learnlio_xp_today_date_${child.id}`;
+      const storedDate = localStorage.getItem(dk);
+      const today = todayKey();
+      if (storedDate !== today){
+        localStorage.setItem(dk, today);
+        localStorage.setItem(tk, "0");
+      }
+      xp_today_date = today;
+      xp_today = Number(localStorage.getItem(tk) || 0);
+
+      renderXpUI();
+    }
+
+    async function awardXp(amount){
+      const add = Math.max(0, Math.round(Number(amount)||0));
+      if (!add) return;
+
+      sessionXp += add;
+      xp_total += add;
+      xp_lifetime += add;
+
+      // local daily
+      const tk = `learnlio_xp_today_${child.id}`;
+      xp_today = Number(localStorage.getItem(tk) || 0) + add;
+      localStorage.setItem(tk, String(xp_today));
+
+      renderXpUI();
+
+      // persist to supabase
+      try{
+        await sb.from("child_xp")
+          .upsert({
+            owner_id: currentUser.id,
+            child_id: child.id,
+            xp_total,
+            xp_lifetime,
+            updated_at: new Date().toISOString()
+          }, { onConflict: "owner_id,child_id" });
+      }catch(e){
+        console.warn("child_xp upsert failed (safe)", e);
       }
     }
 
-    async function loadOrCreateChildSkill(){
-      // Store XP inside child_skill_progress for subject+area
+    function nextRewardAt(xp){
+      // Simple + predictable reward ladder: every 100 XP
+      const n = Math.max(0, Number(xp||0));
+      return (Math.floor(n / 100) + 1) * 100;
+    }
+
+    function rewardLabel(xp){
+      const tier = Math.floor((Number(xp||0)) / 100);
+      if (tier <= 0) return "Starter";
+      if (tier === 1) return "Bronze";
+      if (tier === 2) return "Silver";
+      if (tier === 3) return "Gold";
+      if (tier === 4) return "Superstar";
+      return "Legend";
+    }
+
+    function renderXpUI(){
+      const total = Math.max(0, Number(xp_total||0));
+      const next = nextRewardAt(total);
+      const toGo = Math.max(0, next - total);
+      const pct = next ? Math.min(100, Math.max(0, Math.round((total / next) * 100))) : 0;
+
+      xpTotalBig.textContent = `${total} XP`;
+      xpTodaySmall.textContent = `Today: ${xp_today}`;
+      xpNextSmall.textContent = `Next reward: ${toGo} XP to go`;
+      xpBarFill.style.width = pct + "%";
+      rewardBadge.textContent = `${rewardLabel(total)} badge`;
+      sessionXpLine.textContent = `Session XP: ${sessionXp}`;
+    }
+
+    // -------------------------
+    // Skill progress (quietly, no UI level)
+    // Uses public.child_skill_progress (your table)
+    // -------------------------
+    async function loadOrCreateSkillRow(){
       const { data: existing, error } = await sb
         .from("child_skill_progress")
         .select("*")
@@ -695,18 +760,12 @@
         .eq("area", AREA)
         .maybeSingle();
 
-      if (error) console.warn(error);
-
-      if (existing?.id){
-        xpTotal = Number(existing.xp_total || 0);
-        const updatedAt = existing.xp_updated_at ? String(existing.xp_updated_at) : "";
-        const today = todayKey();
-        // If last update is today, keep today xp; else reset
-        const sameDay = updatedAt.startsWith(today);
-        xpToday = sameDay ? Number(existing.xp_last_earned || 0) : 0;
-        updateXpUI();
-        return existing;
+      if (error){
+        console.warn("child_skill_progress load failed", error);
+        return null;
       }
+
+      if (existing?.id) return existing;
 
       const payload = {
         owner_id: currentUser.id,
@@ -715,151 +774,144 @@
         area: AREA,
         level: 1,
         confidence: 0.5,
-        accuracy: 0,
+        accuracy: 0.0,
         total_attempts: 0,
         correct_attempts: 0,
         streak_correct: 0,
         streak_wrong: 0,
         last_session_id: null,
-        last_seen_at: new Date().toISOString(),
-        xp_total: 0,
-        xp_last_earned: 0,
-        xp_updated_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString()
       };
 
-      const { data: up, error: upErr } = await sb
+      const { data: created, error: cErr } = await sb
         .from("child_skill_progress")
         .upsert(payload, { onConflict: "owner_id,child_id,subject,area" })
         .select("*")
         .single();
 
-      if (upErr){
-        console.warn("xp row create failed", upErr);
-      } else {
-        xpTotal = 0;
-        xpToday = 0;
-        updateXpUI();
+      if (cErr){
+        console.warn("child_skill_progress create failed", cErr);
+        return null;
       }
-      return up || null;
+      return created;
     }
 
-    async function persistXpEarned(){
-      if (!xpEarnedThisLesson) return;
+    async function updateSkillRowAfterLesson(skillRow, score){
+      if (!skillRow?.id) return;
 
-      // Re-load current to avoid race
-      const { data: row } = await sb
-        .from("child_skill_progress")
-        .select("id,xp_total,xp_last_earned,xp_updated_at,total_attempts,last_seen_at")
-        .eq("owner_id", currentUser.id)
-        .eq("child_id", child.id)
-        .eq("subject", SUBJECT)
-        .eq("area", AREA)
-        .maybeSingle();
+      // score: 0..1
+      const total_attempts = (skillRow.total_attempts || 0) + 1;
+      const passed = (typeof score === "number") ? (score >= 0.7) : false;
+      const correct_attempts = (skillRow.correct_attempts || 0) + (passed ? 1 : 0);
+      const accuracy = total_attempts ? (correct_attempts / total_attempts) : 0.0;
 
-      const currentTotal = Number(row?.xp_total || 0);
-      const updatedAt = row?.xp_updated_at ? String(row.xp_updated_at) : "";
-      const today = todayKey();
-      const sameDay = updatedAt.startsWith(today);
+      const oldConf = (typeof skillRow.confidence === "number") ? skillRow.confidence : 0.5;
 
-      const newTotal = currentTotal + xpEarnedThisLesson;
-      const newToday = (sameDay ? Number(row?.xp_last_earned || 0) : 0) + xpEarnedThisLesson;
-
-      const { data: updated, error } = await sb
-        .from("child_skill_progress")
-        .update({
-          xp_total: newTotal,
-          xp_last_earned: newToday,
-          xp_updated_at: new Date().toISOString(),
-          total_attempts: (row?.total_attempts || 0) + 1,
-          last_seen_at: new Date().toISOString()
-        })
-        .eq("id", row?.id)
-        .select("*")
-        .single();
-
-      if (error){
-        console.warn("xp persist failed", error);
-      } else {
-        xpTotal = Number(updated.xp_total || newTotal);
-        const updAt = String(updated.xp_updated_at || "");
-        xpToday = updAt.startsWith(todayKey()) ? Number(updated.xp_last_earned || newToday) : newToday;
-        updateXpUI();
+      let confDelta = 0;
+      if (typeof score === "number"){
+        if (score >= 0.85) confDelta = +0.06;
+        else if (score >= 0.70) confDelta = +0.04;
+        else if (score >= 0.50) confDelta = +0.02;
+        else confDelta = -0.02;
       }
 
-      xpEarnedThisLesson = 0;
+      const confidence = Math.max(0, Math.min(1, oldConf + confDelta));
+
+      // Level moves slowly (stored for your reporting/adaptation later)
+      let level = Number(skillRow.level || 1);
+      if (total_attempts >= 6 && confidence > 0.70) level = Math.min(10, level + 1);
+      if (total_attempts >= 6 && confidence < 0.35) level = Math.max(1, level - 1);
+
+      // Streaks
+      const streak_correct = passed ? (skillRow.streak_correct || 0) + 1 : 0;
+      const streak_wrong = passed ? 0 : (skillRow.streak_wrong || 0) + 1;
+
+      try{
+        const { data: updated } = await sb
+          .from("child_skill_progress")
+          .update({
+            total_attempts,
+            correct_attempts,
+            accuracy,
+            confidence,
+            level,
+            streak_correct,
+            streak_wrong,
+            last_seen_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", skillRow.id)
+          .select("*")
+          .single();
+
+        return updated || skillRow;
+      }catch(e){
+        console.warn("child_skill_progress update failed", e);
+        return skillRow;
+      }
+    }
+    // -------------------------
+    // Lesson generation (Worker)
+    // -------------------------
+    function cleanText(t){
+      return String(t || "").replace(/\s{2,}/g, " ").trim();
     }
 
-    function setProgressUI(){
-      const total = steps.length || 0;
-      stepKpi.textContent = `${Math.min(idx+1,total)} / ${total}`;
-      topicKpi.textContent = `${SUBJECT} • ${AREA}`;
-      practiceLine.textContent = `${SUBJECT} practice: ${AREA}`;
-      const pct = total ? Math.round(((idx) / total) * 100) : 0;
-      barFill.style.width = Math.min(100, Math.max(0, pct)) + "%";
-      updateXpUI();
-    }
+    function normaliseLessonFromWorker(json){
+      // Worker returns: { ok:true, cached:..., lesson:{...} }
+      const raw = json?.lesson || json || {};
+      const title = cleanText(raw.title || "");
+      const rawSteps = Array.isArray(raw.steps) ? raw.steps : [];
 
-    function clearInteractive(){
-      interactiveMount.style.display = "none";
-      interactiveMount.innerHTML = "";
-      mpSelectedLeft = null;
-      mpSelectedRight = null;
-      mpMatched = new Set();
-      nlValue = null;
-    }
+      const allowed = new Set(["intro","teach","mcq","number_line","match_pairs","finish"]);
 
-    function autoAdvanceSoon(){
-      setTimeout(() => {
-        if (idx < steps.length - 1){
-          idx += 1;
-          renderStep();
-        } else {
-          // If last step isn't finish, show end anyway
-          showEndScreen();
-        }
-      }, 650);
-    }
+      // Hard clean: remove unsupported and incomplete steps
+      const safeSteps = rawSteps
+        .filter(s => s && allowed.has(s.type))
+        .map(s => ({
+          ...s,
+          type: String(s.type || "").trim(),
+          text: cleanText(s.text),
+          prompt: cleanText(s.prompt),
+          hint: cleanText(s.hint),
+          explainCorrect: cleanText(s.explainCorrect)
+        }))
+        .filter(s => {
+          if (["intro","teach","finish"].includes(s.type)) return !!s.text;
+          if (["mcq","number_line","match_pairs"].includes(s.type)) return !!s.prompt;
+          return false;
+        });
 
-    function stepTextBlob(step){
-      const parts = [];
-      if (step?.prompt) parts.push(step.prompt);
-      if (step?.text) parts.push(step.text);
-      if (Array.isArray(step?.choices)) parts.push(step.choices.join(" "));
-      return parts.join(" ").trim();
-    }
-
-    function sanitizeAndFilterSteps(rawSteps){
-      if (!Array.isArray(rawSteps)) return [];
-      // remove unsupported + image/picture steps
-      const cleaned = rawSteps.filter(s => {
-        if (!s || typeof s !== "object") return false;
-        if (!SUPPORTED_TYPES.has(String(s.type||"").trim())) return false;
-        const blob = stepTextBlob(s);
-        if (IMAGE_HINT.test(blob)) return false;
-        // Also filter “complete the sentence” style which often breaks without assets
-        if (/complete the sentence/i.test(blob) && String(s.type||"") !== "mcq") return false;
-        return true;
-      });
-
-      // Ensure there is a finish step at end
-      const hasFinish = cleaned.some(s => s.type === "finish");
+      // Ensure finish exists
+      const hasFinish = safeSteps.some(s => s.type === "finish");
       if (!hasFinish){
-        cleaned.push({ type:"finish", text:`Nice work, ${childName}. You stayed calm and kept going.` });
+        safeSteps.push({ type:"finish", text:"Nice work. You stayed calm and kept going. You can stop for today or try another lesson." });
+      } else {
+        // move finish to end
+        const rest = safeSteps.filter(s => s.type !== "finish");
+        const fin = safeSteps.find(s => s.type === "finish");
+        safeSteps.length = 0;
+        safeSteps.push(...rest, fin);
       }
-      return cleaned;
+
+      return {
+        title: title || `${SUBJECT} • ${AREA}`,
+        steps: safeSteps
+      };
     }
 
-    async function fetchGeneratedLesson(){
+    async function fetchGeneratedLesson(skillRow){
+      // We send both owner_id/child_id for caching context (optional)
+      // and "level" to adapt difficulty (from skillRow if present).
+      const level = clampInt(skillRow?.level ?? 1, 1, 10);
+
       const payload = {
+        owner_id: currentUser.id,
+        child_id: child.id,
         subject: SUBJECT,
         area: AREA,
         age: childAge,
-        level: 1,
-        owner_id: currentUser.id,
-        child_id: child.id,
-        // hard restrict to supported types only
-        allowedTypes: ["intro","teach","mcq","match_pairs","number_line","finish"],
-        wantImages: false
+        level
       };
 
       const r = await fetch(LESSON_GEN_URL, {
@@ -868,21 +920,516 @@
         body: JSON.stringify(payload)
       });
 
-      const text = await r.text().catch(()=> "");
-      let json = null;
-      try{ json = text ? JSON.parse(text) : null; }catch{}
+      const txt = await r.text().catch(()=> "");
+      let json;
+      try{ json = txt ? JSON.parse(txt) : null; }catch{ json = null; }
 
       if (!r.ok){
-        throw new Error(json?.error || text || `Lesson generation failed (${r.status})`);
+        const msg = json?.error || txt || `Lesson generator error (${r.status})`;
+        throw new Error(msg);
       }
-      const lessonObj = json?.lesson || json;
-      if (!lessonObj?.steps || !Array.isArray(lessonObj.steps)){
-        throw new Error("Lesson worker returned no steps.");
-      }
-      return lessonObj;
+
+      if (!json?.ok) throw new Error(json?.error || "Lesson generator returned ok=false");
+      return normaliseLessonFromWorker(json);
     }
 
-    // ----- Read aloud -----
+    function clampInt(v, min, max){
+      const n = Number(v);
+      if (!Number.isFinite(n)) return min;
+      return Math.max(min, Math.min(max, Math.round(n)));
+    }
+
+    // -------------------------
+    // Progress UI
+    // -------------------------
+    function setProgressUI(){
+      const total = steps.length || 0;
+      stepKpi.textContent = `${Math.min(idx+1,total)} / ${total}`;
+      topicKpi.textContent = `${SUBJECT} • ${AREA}`;
+      practiceLine.textContent = `${SUBJECT} practice: ${AREA}`;
+
+      const pct = total ? Math.round(((idx) / total) * 100) : 0;
+      barFill.style.width = Math.min(100, Math.max(0, pct)) + "%";
+      renderXpUI();
+    }
+
+    function resetStepUI(){
+      hintLine.textContent = "";
+      showHintBox(null);
+      mcqEl.innerHTML = "";
+      mcqEl.style.display = "none";
+      interactiveMount.innerHTML = "";
+      interactiveMount.style.display = "none";
+      endMount.innerHTML = "";
+      endMount.style.display = "none";
+    }
+
+    function friendlyStepInstruction(step){
+      // Child-friendly micro prompts; keeps them moving
+      if (step.type === "mcq") return "Tap the best answer.";
+      if (step.type === "number_line") return "Move the dot to the right number.";
+      if (step.type === "match_pairs") return "Tap one from the left, then the match on the right.";
+      return "";
+    }
+
+    function scheduleAutoAdvance(ms=650){
+      // Small delay so it feels natural + gives feedback time
+      setTimeout(() => {
+        // Only advance if still on same step and completed
+        const st = stepState[idx];
+        if (st?.completed && idx < steps.length - 1){
+          idx += 1;
+          renderStep();
+        } else if (st?.completed && steps[idx]?.type === "finish") {
+          completeLesson();
+        }
+      }, ms);
+    }
+
+    function renderStep(){
+      resetStepUI();
+      clearError();
+
+      if (!steps.length){
+        lessonTextEl.textContent = "No lesson steps found.";
+        nextBtn.disabled = true;
+        backBtn.disabled = true;
+        return;
+      }
+
+      const step = steps[idx];
+      setProgressUI();
+
+      if (!step){
+        lessonTextEl.textContent = "Finished.";
+        nextBtn.disabled = true;
+        return;
+      }
+
+      // Back/Next rules
+      backBtn.disabled = (idx === 0);
+      nextBtn.disabled = false;
+      nextBtn.textContent = "➡️ Next";
+
+      // Text steps
+      if (step.type === "intro" || step.type === "teach"){
+        lessonTextEl.textContent = step.text || "";
+        const line = step.type === "intro"
+          ? "We’ll go one calm step at a time."
+          : "Read this bit, then we’ll try a quick activity.";
+        showHintBox(line);
+        return;
+      }
+
+      // Finish step
+      if (step.type === "finish"){
+        lessonTextEl.textContent = step.text || "Nice work.";
+        showHintBox("When you’re ready, tap Complete.");
+        nextBtn.textContent = "✅ Complete";
+        return;
+      }
+
+      // Activity steps
+      lessonTextEl.textContent = step.prompt || "";
+      const instr = friendlyStepInstruction(step);
+      if (instr) showHintBox(instr);
+      if (step.hint) hintLine.textContent = step.hint;
+
+      if (step.type === "mcq"){
+        renderMCQ(step);
+        return;
+      }
+
+      if (step.type === "number_line"){
+        renderNumberLine(step);
+        return;
+      }
+
+      if (step.type === "match_pairs"){
+        renderMatchPairs(step);
+        return;
+      }
+
+      // Unknown (should be filtered out, but just in case)
+      stepState[idx] = { completed: true, correct: false };
+      hintLine.textContent = "Skipping a step that isn’t supported yet.";
+      scheduleAutoAdvance(350);
+    }
+
+    // -------------------------
+    // MCQ (auto-advance)
+    // -------------------------
+    function renderMCQ(step){
+      mcqEl.style.display = "grid";
+
+      const letters = ["A","B","C","D","E","F"];
+      const choices = Array.isArray(step.choices) ? step.choices : [];
+      const correctIndex = Number(step.correctIndex);
+
+      choices.forEach((choice, i) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "mcq-opt";
+        btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${choice}</span>`;
+        btn.addEventListener("click", async () => {
+          // lock further taps
+          Array.from(mcqEl.querySelectorAll("button")).forEach(b => b.disabled = true);
+
+          const isCorrect = (i === correctIndex);
+          stepState[idx] = { completed:true, correct:isCorrect };
+
+          // Gentle XP: reward effort + a bit more for correct
+          await awardXp(isCorrect ? 10 : 6);
+
+          hintLine.textContent = isCorrect ? "Nice work ✅" : "Good try — keep going 💛";
+
+          // Auto-advance
+          scheduleAutoAdvance(700);
+        });
+        mcqEl.appendChild(btn);
+      });
+    }
+
+    // -------------------------
+    // Number line (auto-advance)
+    // -------------------------
+    function renderNumberLine(step){
+      const min = Number(step.min);
+      const max = Number(step.max);
+      const start = Number(step.start);
+      const target = Number(step.target);
+
+      if (![min,max,start,target].every(n => Number.isFinite(n)) || max <= min){
+        // skip bad step safely
+        stepState[idx] = { completed:true, correct:false };
+        hintLine.textContent = "Skipping a step that wasn’t set up properly.";
+        scheduleAutoAdvance(350);
+        return;
+      }
+
+      interactiveMount.style.display = "block";
+      interactiveMount.innerHTML = `
+        <div class="nl-wrap" role="group" aria-label="Number line">
+          <div class="nl-labels"><span>${min}</span><span>${max}</span></div>
+          <div class="nl-track" id="nlTrack">
+            <div class="nl-fill" id="nlFill"></div>
+            <div class="nl-thumb" id="nlThumb" aria-label="Move to choose a number"></div>
+          </div>
+
+          <div class="nl-value">
+            <div class="mp-pill">Chosen: <strong id="nlChosen"></strong></div>
+            <div class="nl-btns">
+              <button class="nl-mini" id="nlMinus" type="button">−1</button>
+              <button class="nl-mini" id="nlPlus" type="button">+1</button>
+              <button class="pill primary" id="nlCheck" type="button">Check</button>
+            </div>
+          </div>
+
+          <div class="tiny" style="margin-top:8px;color:var(--muted);">
+            Start at <b>${start}</b>. Try to land on <b>${target}</b>.
+          </div>
+        </div>
+      `;
+
+      const track = interactiveMount.querySelector("#nlTrack");
+      const fill = interactiveMount.querySelector("#nlFill");
+      const thumb = interactiveMount.querySelector("#nlThumb");
+      const chosenEl = interactiveMount.querySelector("#nlChosen");
+      const minusBtn = interactiveMount.querySelector("#nlMinus");
+      const plusBtn = interactiveMount.querySelector("#nlPlus");
+      const checkBtn = interactiveMount.querySelector("#nlCheck");
+
+      let chosen = clampInt(start, min, max);
+
+      function setThumbFromValue(v){
+        chosen = clampInt(v, min, max);
+        chosenEl.textContent = String(chosen);
+        const pct = (chosen - min) / (max - min);
+        const px = pct * track.clientWidth;
+        thumb.style.left = `${px}px`;
+        fill.style.width = `${pct * 100}%`;
+      }
+
+      function valueFromPointer(clientX){
+        const rect = track.getBoundingClientRect();
+        const x = Math.max(rect.left, Math.min(rect.right, clientX));
+        const pct = (x - rect.left) / (rect.width || 1);
+        const v = min + Math.round(pct * (max - min));
+        return clampInt(v, min, max);
+      }
+
+      // Drag handling (touch + mouse)
+      let dragging = false;
+
+      function startDrag(e){
+        dragging = true;
+        const x = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+        setThumbFromValue(valueFromPointer(x));
+        e.preventDefault?.();
+      }
+      function moveDrag(e){
+        if (!dragging) return;
+        const x = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+        setThumbFromValue(valueFromPointer(x));
+        e.preventDefault?.();
+      }
+      function endDrag(){
+        dragging = false;
+      }
+
+      thumb.addEventListener("mousedown", startDrag);
+      window.addEventListener("mousemove", moveDrag);
+      window.addEventListener("mouseup", endDrag);
+
+      thumb.addEventListener("touchstart", startDrag, { passive:false });
+      window.addEventListener("touchmove", moveDrag, { passive:false });
+      window.addEventListener("touchend", endDrag);
+
+      track.addEventListener("click", (e) => {
+        setThumbFromValue(valueFromPointer(e.clientX));
+      });
+
+      minusBtn.addEventListener("click", () => setThumbFromValue(chosen - 1));
+      plusBtn.addEventListener("click", () => setThumbFromValue(chosen + 1));
+
+      // Init
+      setThumbFromValue(start);
+
+      checkBtn.addEventListener("click", async () => {
+        // lock
+        minusBtn.disabled = true; plusBtn.disabled = true; checkBtn.disabled = true;
+        thumb.style.pointerEvents = "none";
+        track.style.pointerEvents = "none";
+
+        const isCorrect = (chosen === target);
+        stepState[idx] = { completed:true, correct:isCorrect };
+
+        await awardXp(isCorrect ? 12 : 7);
+        hintLine.textContent = isCorrect ? "Yes — you landed on it ✅" : `Nearly. It was ${target}. Keep going 💛`;
+        scheduleAutoAdvance(850);
+      });
+    }
+
+    // -------------------------
+    // Match pairs (auto-advance)
+    // -------------------------
+    function shuffle(arr){
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function renderMatchPairs(step){
+      const pairs = Array.isArray(step.pairs) ? step.pairs : [];
+      const cleanPairs = pairs
+        .filter(p => p && typeof p.left === "string" && typeof p.right === "string")
+        .map(p => ({ left: cleanText(p.left), right: cleanText(p.right) }))
+        .filter(p => p.left && p.right);
+
+      if (cleanPairs.length < 2){
+        stepState[idx] = { completed:true, correct:false };
+        hintLine.textContent = "Skipping a step that wasn’t set up properly.";
+        scheduleAutoAdvance(350);
+        return;
+      }
+
+      const leftItems = cleanPairs.map(p => p.left);
+      const rightItems = shuffle(cleanPairs.map(p => p.right));
+
+      // map for checking
+      const answerMap = new Map(cleanPairs.map(p => [p.left, p.right]));
+
+      interactiveMount.style.display = "block";
+      interactiveMount.innerHTML = `
+        <div class="mp-pill">Make matches</div>
+        <div class="tiny" style="margin-top:8px;color:var(--muted);">Tap one on the left, then the match on the right.</div>
+        <div class="mp-wrap" style="margin-top:10px;">
+          <div class="mp-col" id="mpLeft" aria-label="Left options"></div>
+          <div class="mp-col" id="mpRight" aria-label="Right options"></div>
+        </div>
+        <div class="tiny" id="mpStatus" style="margin-top:10px;"></div>
+      `;
+
+      const leftCol = interactiveMount.querySelector("#mpLeft");
+      const rightCol = interactiveMount.querySelector("#mpRight");
+      const status = interactiveMount.querySelector("#mpStatus");
+
+      let selectedLeft = null;
+      let matched = 0;
+      let mistakes = 0;
+
+      function makeBtn(label, side){
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "mp-item";
+        b.textContent = label;
+        b.dataset.value = label;
+        b.dataset.side = side;
+        return b;
+      }
+
+      leftItems.forEach(l => leftCol.appendChild(makeBtn(l, "L")));
+      rightItems.forEach(r => rightCol.appendChild(makeBtn(r, "R")));
+
+      function clearSelected(side){
+        const nodes = (side === "L" ? leftCol : rightCol).querySelectorAll(".mp-item");
+        nodes.forEach(n => n.classList.remove("selected"));
+      }
+
+      function disableBtn(btn){
+        btn.classList.add("done");
+        btn.disabled = true;
+        btn.classList.remove("selected");
+      }
+
+      function setStatus(){
+        status.textContent = `Matched: ${matched} / ${cleanPairs.length}`;
+      }
+      setStatus();
+
+      function handleLeftClick(btn){
+        if (btn.disabled) return;
+        clearSelected("L");
+        btn.classList.add("selected");
+        selectedLeft = btn.dataset.value;
+        hintLine.textContent = "Now choose the match on the right.";
+      }
+
+      async function handleRightClick(btn){
+        if (btn.disabled) return;
+        if (!selectedLeft){
+          hintLine.textContent = "Pick one on the left first.";
+          return;
+        }
+
+        // check match
+        const expected = answerMap.get(selectedLeft);
+        const chosenRight = btn.dataset.value;
+
+        const leftBtn = Array.from(leftCol.querySelectorAll(".mp-item"))
+          .find(x => x.dataset.value === selectedLeft);
+
+        if (expected === chosenRight){
+          matched += 1;
+
+          disableBtn(btn);
+          if (leftBtn) disableBtn(leftBtn);
+
+          selectedLeft = null;
+          hintLine.textContent = "Nice match ✅";
+          await awardXp(10);
+
+          setStatus();
+
+          if (matched >= cleanPairs.length){
+            stepState[idx] = { completed:true, correct:(mistakes === 0) };
+            hintLine.textContent = "All matched ✅";
+            scheduleAutoAdvance(900);
+          }
+        } else {
+          mistakes += 1;
+          hintLine.textContent = "Not that one — try a different match 💛";
+          await awardXp(3);
+
+          // keep left selected so they can try again
+          // but clear right selected state if any
+        }
+      }
+
+      // click wiring
+      leftCol.addEventListener("click", (e) => {
+        const btn = e.target.closest(".mp-item");
+        if (!btn) return;
+        handleLeftClick(btn);
+      });
+
+      rightCol.addEventListener("click", (e) => {
+        const btn = e.target.closest(".mp-item");
+        if (!btn) return;
+        handleRightClick(btn);
+      });
+    }
+    // -------------------------
+    // End of lesson (reporting + actions)
+    // -------------------------
+    function showEndScreen(){
+      endMount.style.display = "block";
+      endMount.innerHTML = `
+        <div class="endBox">
+          <div class="endTitle">You did it 🎉</div>
+          <div class="tiny" style="margin-top:8px;">
+            You earned <b>${sessionXp} XP</b> in this lesson.
+            <br>Want to stop for today or try another lesson?
+          </div>
+          <div class="endActions">
+            <button id="endDone" class="pill primary" type="button">✅ Done for today</button>
+            <button id="endAnother" class="pill" type="button">✨ Try another lesson</button>
+            <a class="pill" href="/dash.html" style="display:inline-flex; align-items:center;">🏠 Go to Dashboard</a>
+          </div>
+        </div>
+      `;
+
+      const endDone = endMount.querySelector("#endDone");
+      const endAnother = endMount.querySelector("#endAnother");
+
+      endDone.addEventListener("click", () => window.location.href = "/lessons.html");
+      endAnother.addEventListener("click", () => {
+        // go back to lessons selection (same subject/area can re-generate a new one)
+        window.location.href = "/lessons.html";
+      });
+    }
+
+    function calculateLessonScore(){
+      // Score only activity steps
+      const activityIdxs = steps
+        .map((s,i) => (["mcq","number_line","match_pairs"].includes(s.type) ? i : null))
+        .filter(v => v !== null);
+
+      if (!activityIdxs.length) return null;
+
+      let correct = 0;
+      let completed = 0;
+      activityIdxs.forEach(i => {
+        const st = stepState[i];
+        if (st?.completed){
+          completed += 1;
+          if (st.correct) correct += 1;
+        }
+      });
+
+      if (!completed) return 0;
+      return correct / completed;
+    }
+
+    async function completeLesson(){
+      // disable nav buttons
+      nextBtn.disabled = true;
+      backBtn.disabled = true;
+
+      // quiet update to child_skill_progress
+      const score = calculateLessonScore(); // 0..1
+      try{
+        const skillRow = await loadOrCreateSkillRow();
+        await updateSkillRowAfterLesson(skillRow, score);
+      }catch(e){
+        console.warn("skill progress update failed (safe)", e);
+      }
+
+      // show end screen
+      contextLine.textContent = `${SUBJECT} • ${AREA} — Finished ✅`;
+      lessonTextEl.textContent = `Nice work, ${childName}.`;
+      showHintBox("You can stop for today or try another lesson.");
+      mcqEl.style.display = "none";
+      interactiveMount.style.display = "none";
+      showEndScreen();
+    }
+
+    // -------------------------
+    // Read aloud (Google TTS Worker)
+    // -------------------------
     function stripEmojis(text){
       return String(text || "")
         .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
@@ -921,6 +1468,8 @@
         });
 
         if (!r.ok){
+          const t = await r.text().catch(()=> "");
+          console.warn("TTS failed", r.status, t);
           hintLine.textContent = "Read aloud isn’t available right now.";
           return;
         }
@@ -952,281 +1501,143 @@
             speakBtn.disabled = false;
             speakBtn.textContent = "🔊 Read aloud";
           }
-        }, 600);
+        }, 700);
       }
     }
-<script>
-(() => {
-  function setVh(){ document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
-  setVh(); window.addEventListener('resize', setVh);
 
-  /* ================= CONFIG ================= */
-  const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-  const LESSON_GEN_URL = "https://learnlio-lessons.falling-grass-34ab.workers.dev/generate";
-  const TTS_URL = "https://learnlio-tts.falling-grass-34ab.workers.dev/speak";
-
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  /* ================= UI ================= */
-  const lessonTextEl = document.getElementById("lessonText");
-  const mcqEl = document.getElementById("mcq");
-  const interactiveMount = document.getElementById("interactiveMount");
-  const backBtn = document.getElementById("backBtn");
-  const nextBtn = document.getElementById("nextBtn");
-  const contextLine = document.getElementById("contextLine");
-  const hintLine = document.getElementById("hintLine");
-
-  const stepKpi = document.getElementById("stepKpi");
-  const barFill = document.getElementById("barFill");
-
-  const xpTotalBig = document.getElementById("xpTotalBig");
-  const xpTodayBig = document.getElementById("xpTodayBig");
-  const xpToGoText = document.getElementById("xpToGoText");
-  const xpNextFill = document.getElementById("xpNextFill");
-  const xpHintText = document.getElementById("xpHintText");
-
-  /* ================= STATE ================= */
-  let steps = [];
-  let idx = 0;
-  let xpSession = 0;
-  let xpTotal = 0;
-  let child = null;
-  let SUBJECT = null;
-  let AREA = null;
-
-  const REWARD_STEP = 180; // XP per reward
-
-  /* ================= HELPERS ================= */
-  function autoNext(){
-    setTimeout(() => {
-      if (idx < steps.length - 1) {
-        idx++;
+    // -------------------------
+    // Controls / navigation
+    // -------------------------
+    backBtn.addEventListener("click", () => {
+      if (idx > 0){
+        idx -= 1;
         renderStep();
       }
-    }, 650);
-  }
-
-  function updateXPUI(){
-    xpTotalBig.textContent = xpTotal;
-    xpTodayBig.textContent = xpSession;
-
-    const nextTarget = Math.ceil(xpTotal / REWARD_STEP) * REWARD_STEP;
-    const toGo = Math.max(0, nextTarget - xpTotal);
-
-    xpToGoText.textContent = `${toGo} XP to go`;
-    xpNextFill.style.width = `${Math.min(100, (xpTotal % REWARD_STEP) / REWARD_STEP * 100)}%`;
-
-    xpHintText.textContent =
-      toGo === 0
-        ? "🎉 Reward unlocked!"
-        : "Keep going — you're doing great.";
-  }
-
-  async function saveXP(){
-    if (!child) return;
-
-    await sb.from("child_skill_progress")
-      .upsert({
-        owner_id: child.parent_user_id,
-        child_id: child.id,
-        subject: SUBJECT,
-        area: AREA,
-        xp_total: xpTotal,
-        xp_last_earned: xpSession,
-        xp_updated_at: new Date().toISOString()
-      }, { onConflict: "owner_id,child_id,subject,area" });
-  }
-
-  function clearUI(){
-    lessonTextEl.textContent = "";
-    mcqEl.innerHTML = "";
-    mcqEl.style.display = "none";
-    interactiveMount.innerHTML = "";
-    interactiveMount.style.display = "none";
-    hintLine.textContent = "";
-  }
-
-  /* ================= RENDER ================= */
-  function renderStep(){
-    clearUI();
-
-    if (!steps[idx]) {
-      idx++;
-      if (idx < steps.length) renderStep();
-      return;
-    }
-
-    stepKpi.textContent = `${idx + 1} / ${steps.length}`;
-    barFill.style.width = `${(idx / steps.length) * 100}%`;
-
-    const step = steps[idx];
-
-    /* ---- INTRO / TEACH / FINISH ---- */
-    if (["intro","teach","finish"].includes(step.type)) {
-      lessonTextEl.textContent = step.text || "";
-      nextBtn.textContent = step.type === "finish" ? "Done" : "Next";
-      return;
-    }
-
-    /* ---- MCQ ---- */
-    if (step.type === "mcq" && step.prompt && Array.isArray(step.choices)) {
-      lessonTextEl.textContent = step.prompt;
-      mcqEl.style.display = "grid";
-
-      step.choices.forEach((choice, i) => {
-        const btn = document.createElement("button");
-        btn.className = "mcq-opt";
-        btn.innerHTML = `<span class="mcq-letter">${String.fromCharCode(65+i)}</span><span>${choice}</span>`;
-        btn.onclick = () => {
-          xpSession += 10;
-          xpTotal += 10;
-          updateXPUI();
-          autoNext();
-        };
-        mcqEl.appendChild(btn);
-      });
-      return;
-    }
-
-    /* ---- MATCH PAIRS ---- */
-    if (step.type === "match_pairs" && Array.isArray(step.pairs)) {
-      lessonTextEl.textContent = step.prompt || "Match the pairs";
-
-      interactiveMount.style.display = "block";
-      const wrap = document.createElement("div");
-      wrap.className = "pairCols";
-
-      const leftCol = document.createElement("div");
-      const rightCol = document.createElement("div");
-
-      let selected = null;
-      let remaining = step.pairs.length;
-
-      step.pairs.forEach(p => {
-        const l = document.createElement("div");
-        l.className = "pairItem";
-        l.textContent = p.left;
-
-        const r = document.createElement("div");
-        r.className = "pairItem";
-        r.textContent = p.right;
-
-        l.onclick = () => {
-          selected = { l, p };
-          l.classList.add("selected");
-        };
-
-        r.onclick = () => {
-          if (!selected) return;
-          if (selected.p.right === p.right) {
-            selected.l.classList.add("matched");
-            r.classList.add("matched");
-            selected.l.onclick = null;
-            r.onclick = null;
-            remaining--;
-            if (remaining === 0) {
-              xpSession += 12;
-              xpTotal += 12;
-              updateXPUI();
-              autoNext();
-            }
-          }
-          selected?.l.classList.remove("selected");
-          selected = null;
-        };
-
-        leftCol.appendChild(l);
-        rightCol.appendChild(r);
-      });
-
-      wrap.append(leftCol, rightCol);
-      interactiveMount.appendChild(wrap);
-      return;
-    }
-
-    /* ---- NUMBER LINE ---- */
-    if (step.type === "number_line" && Number.isFinite(step.target)) {
-      lessonTextEl.textContent = step.prompt || "Choose the number";
-
-      interactiveMount.style.display = "block";
-      const input = document.createElement("input");
-      input.type = "range";
-      input.min = step.min ?? 0;
-      input.max = step.max ?? 20;
-      input.value = step.start ?? step.min ?? 0;
-
-      const label = document.createElement("div");
-      label.style.fontWeight = "900";
-      label.textContent = input.value;
-
-      input.oninput = () => label.textContent = input.value;
-      input.onchange = () => {
-        xpSession += 8;
-        xpTotal += 8;
-        updateXPUI();
-        autoNext();
-      };
-
-      interactiveMount.append(label, input);
-      return;
-    }
-
-    /* ---- ANYTHING ELSE: SILENT SKIP ---- */
-    idx++;
-    renderStep();
-  }
-
-  /* ================= BOOT ================= */
-  async function boot(){
-    const { data: auth } = await sb.auth.getUser();
-    if (!auth?.user) return location.href = "/login.html";
-
-    const storedChild = JSON.parse(localStorage.getItem("selectedChild") || "null");
-    if (!storedChild) return;
-
-    const { data: childRow } = await sb
-      .from("children")
-      .select("*")
-      .eq("id", storedChild.id)
-      .single();
-
-    child = childRow;
-
-    const url = new URL(location.href);
-    SUBJECT = url.searchParams.get("subject");
-    AREA = url.searchParams.get("area");
-
-    const r = await fetch(LESSON_GEN_URL, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        subject: SUBJECT,
-        area: AREA,
-        age: 10
-      })
     });
 
-    const j = await r.json();
-    steps = (j.lesson?.steps || []).filter(s =>
-      ["intro","teach","mcq","match_pairs","number_line","finish"].includes(s.type)
-    );
+    nextBtn.addEventListener("click", async () => {
+      const step = steps[idx];
 
-    xpTotal = (await sb.from("child_skill_progress")
-      .select("xp_total")
-      .eq("child_id", child.id)
-      .eq("subject", SUBJECT)
-      .eq("area", AREA)
-      .maybeSingle()).data?.xp_total || 0;
+      if (step?.type === "finish"){
+        await completeLesson();
+        return;
+      }
 
-    updateXPUI();
-    renderStep();
-  }
+      // If activity not completed, guide them (but keep it minimal)
+      if (["mcq","number_line","match_pairs"].includes(step?.type)){
+        if (!stepState[idx]?.completed){
+          hintLine.textContent = "Finish this activity first 💛";
+          return;
+        }
+      }
 
-  window.addEventListener("beforeunload", saveXP);
-  nextBtn.onclick = () => { idx++; renderStep(); };
-  backBtn.onclick = () => { if (idx > 0) idx--; renderStep(); };
+      if (idx < steps.length - 1){
+        idx += 1;
+        renderStep();
+      }
+    });
 
-  boot();
-})();
-</script>
+    finishBtn.addEventListener("click", () => {
+      window.location.href = "/lessons.html";
+    });
+
+    helpBtn.addEventListener("click", () => {
+      alert(
+        "How lessons work:\n\n" +
+        "• Read the short step\n" +
+        "• Do the activity (tap / drag)\n" +
+        "• The lesson moves on when you finish\n\n" +
+        "Tip: You can press Read aloud any time."
+      );
+    });
+
+    speakBtn.addEventListener("click", speakCurrent);
+
+    logoutBtn.addEventListener("click", async () => {
+      await sb.auth.signOut();
+      localStorage.removeItem("selectedChild");
+      window.location.href = "/login.html";
+    });
+
+    // -------------------------
+    // Boot
+    // -------------------------
+    async function boot(){
+      if (!sb){ showError("Supabase did not load."); return; }
+
+      parseUrlContext();
+
+      const ok = await requireAuth();
+      if (!ok) return;
+
+      const childOk = await loadChildProfile();
+      if (!childOk) return;
+
+      ensureSubjectAreaFromStorageIfMissing();
+
+      if (!SUBJECT || !AREA){
+        showError("Missing lesson context. Please go to Lessons and choose a subject + area.");
+        contextLine.textContent = "Go back to Lessons to choose what to practise.";
+        lessonTextEl.textContent = "We couldn’t see which subject/area you chose.";
+        nextBtn.disabled = true;
+        backBtn.disabled = true;
+        return;
+      }
+
+      clearError();
+      contextLine.textContent = `Loading a lesson for ${childName}…`;
+      lessonTextEl.textContent = "";
+      resetStepUI();
+
+      // Load XP first so UI feels alive immediately
+      await loadChildXp();
+
+      // Load/create skill row to get a level for generation (quietly)
+      let skillRow = null;
+      try{ skillRow = await loadOrCreateSkillRow(); }catch{}
+
+      // Generate lesson from worker
+      try{
+        lesson = await fetchGeneratedLesson(skillRow);
+      }catch(e){
+        console.error(e);
+        showError("Could not load a lesson right now.");
+        lessonTextEl.textContent =
+          "We couldn’t load a lesson.\n\n" +
+          "Please try again in a moment.\n\n" +
+          "If this keeps happening, the lesson generator worker may be offline.";
+        nextBtn.disabled = true;
+        backBtn.disabled = true;
+        return;
+      }
+
+      steps = Array.isArray(lesson.steps) ? lesson.steps : [];
+      if (!steps.length){
+        showError("Lesson returned no steps.");
+        nextBtn.disabled = true;
+        backBtn.disabled = true;
+        return;
+      }
+
+      idx = 0;
+      stepState = {};
+      sessionXp = 0;
+      renderXpUI();
+
+      const title = lesson.title ? ` — ${lesson.title}` : "";
+      contextLine.textContent = `${SUBJECT} • ${AREA}${title}`;
+
+      nextBtn.disabled = false;
+      backBtn.disabled = true;
+      renderStep();
+    }
+
+    boot().catch(err => {
+      console.error(err);
+      showError("Something went wrong loading the lesson.");
+    });
+  })();
+  </script>
+</body>
+</html>
+
