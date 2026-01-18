@@ -32,7 +32,7 @@
     }
     @media (min-width: 981px){ body{ overflow:hidden; } }
 
-    /* Logged-in nav (same as Tutor) */
+    /* Nav */
     .nav{ background:#fff; border-bottom:1px solid rgba(15,23,42,.08); position:sticky; top:0; z-index:50; }
     .nav-inner{ max-width:1140px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-weight:900; letter-spacing:.2px; }
@@ -40,7 +40,11 @@
     .links{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
     .links a{ text-decoration:none; color:var(--ink); padding:9px 10px; border-radius:12px; font-size:14px; }
     .links a.active{ background:var(--soft); }
-    .btn{ background:linear-gradient(180deg, var(--brand2), var(--brand)); border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:800; box-shadow: 0 10px 18px rgba(11,92,255,.22); }
+    .btn{
+      background:linear-gradient(180deg, var(--brand2), var(--brand));
+      border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer;
+      font-size:14px; font-weight:800; box-shadow: 0 10px 18px rgba(11,92,255,.22);
+    }
     .btn.light{ background:#e5e7eb; color:#111; box-shadow:none; }
     .btn.ghost{ background:transparent; border:1px solid rgba(15,23,42,.12); color:var(--ink); box-shadow:none; }
 
@@ -120,41 +124,6 @@
       white-space: pre-wrap;
     }
 
-    .mcq{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-      margin-top:4px;
-    }
-    .mcq-opt{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.12);
-      border-radius: 16px;
-      padding: 12px 12px;
-      cursor:pointer;
-      text-align:left;
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-      transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-      font-weight:900;
-    }
-    .mcq-opt:hover{
-      transform: translateY(-1px);
-      box-shadow: 0 14px 24px rgba(2,6,23,.10);
-      border-color: rgba(11,92,255,.22);
-    }
-    .mcq-letter{
-      width:28px; height:28px; border-radius: 10px;
-      background: var(--soft);
-      display:flex; align-items:center; justify-content:center;
-      border:1px solid rgba(15,23,42,.10);
-      flex:0 0 auto;
-      font-weight:950;
-    }
-    .mcq-text{ line-height:1.45; }
-
     .notice{
       border:1px solid rgba(15,23,42,.10);
       background:#fff;
@@ -163,6 +132,7 @@
       color:var(--muted);
       line-height:1.7;
       font-size:14px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
     }
 
     .controls{
@@ -195,135 +165,162 @@
     }
     .pill:disabled{ opacity:.55; cursor:not-allowed; }
 
-    .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-
-    /* Interactive widgets */
-    .widget{
-      border:1px solid rgba(15,23,42,.10);
+    /* MCQ */
+    .mcq{ display:grid; grid-template-columns: 1fr; gap:10px; margin-top:4px; }
+    .mcq-opt{
       background:#fff;
-      border-radius: 16px;
-      padding:12px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.05);
-    }
-    .widget h4{
-      margin:0 0 8px;
-      font-size: 13px;
-      letter-spacing:.2px;
-      color: var(--muted);
-      font-weight:950;
-      text-transform: uppercase;
-    }
-
-    /* Fill blank */
-    .fb-line{ font-size: 16px; line-height: 1.7; font-weight: 900; }
-    .fb-blank{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width: 110px;
-      padding: 6px 10px;
-      border-radius: 12px;
-      border:1px dashed rgba(15,23,42,.25);
-      background: rgba(248,250,252,.9);
-      margin: 0 6px;
-    }
-    .fb-options{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
-    .optChip{
       border:1px solid rgba(15,23,42,.12);
-      background:#fff;
-      border-radius: 999px;
-      padding: 10px 12px;
-      font-weight:950;
-      cursor:pointer;
-      box-shadow: 0 10px 14px rgba(2,6,23,.06);
-    }
-    .optChip:hover{ border-color: rgba(11,92,255,.25); }
-
-    /* Number line */
-    .nl-wrap{ margin-top:10px; }
-    .nl-track{
-      position:relative;
-      height: 16px;
-      border-radius: 999px;
-      background: rgba(15,23,42,.08);
-      overflow:hidden;
-    }
-    .nl-fill{
-      position:absolute; left:0; top:0; bottom:0;
-      width:0%;
-      background: linear-gradient(90deg, #10b981, #22c55e);
-    }
-    .nl-marker{
-      position:absolute;
-      top:-10px;
-      width: 10px; height: 36px;
-      border-radius: 8px;
-      background: rgba(11,92,255,.35);
-      border:1px solid rgba(11,92,255,.30);
-      transform: translateX(-50%);
-      pointer-events:none;
-    }
-    .nl-nums{
-      display:flex;
-      justify-content:space-between;
-      margin-top:8px;
-      font-size: 12px;
-      color: var(--muted);
-      font-weight:850;
-    }
-    .nl-buttons{
-      display:flex; gap:10px; flex-wrap:wrap;
-      margin-top:10px;
-    }
-
-    /* Match pairs */
-    .mp-grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
-    @media (max-width: 540px){
-      .mp-grid{ grid-template-columns: 1fr; }
-    }
-    .mp-col{ display:flex; flex-direction:column; gap:10px; min-width:0; }
-    .mp-btn{
-      width:100%;
-      text-align:left;
-      border:1px solid rgba(15,23,42,.12);
-      background:#fff;
       border-radius: 16px;
       padding: 12px 12px;
       cursor:pointer;
-      font-weight:950;
+      text-align:left;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
       box-shadow: 0 10px 18px rgba(2,6,23,.06);
-      min-height: 48px;
+      font-weight:900;
     }
-    .mp-btn:hover{ border-color: rgba(11,92,255,.25); }
-    .mp-btn.sel{ border-color: rgba(11,92,255,.55); box-shadow: 0 14px 24px rgba(2,6,23,.10); }
-    .mp-btn.done{ opacity:.55; cursor:not-allowed; }
-    .mp-status{ margin-top:10px; }
+    .mcq-opt:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 14px 24px rgba(2,6,23,.10);
+      border-color: rgba(11,92,255,.22);
+    }
+    .mcq-letter{
+      width:28px; height:28px; border-radius: 10px;
+      background: var(--soft);
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid rgba(15,23,42,.10);
+      flex:0 0 auto;
+      font-weight:950;
+    }
+    .mcq-text{ line-height:1.45; }
+
+    /* Fill blank */
+    .fillWrap{
+      display:flex; flex-direction:column; gap:10px;
+      background:#fff;
+      border:1px solid rgba(15,23,42,.10);
+      border-radius: 16px;
+      padding:12px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+    }
+    .fillSentence{
+      font-family:'OpenDyslexic', Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+    .fillOptions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .chip{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(15,23,42,.12);
+      background: rgba(248,250,252,.9);
+      cursor:pointer;
+      font-weight:950;
+    }
+    .chip:hover{ border-color: rgba(11,92,255,.22); }
+
+    /* Match pairs */
+    .pairsWrap{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      background:#fff;
+      border:1px solid rgba(15,23,42,.10);
+      border-radius: 16px;
+      padding:12px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+    }
+    @media (max-width: 520px){ .pairsWrap{ grid-template-columns: 1fr; } }
+    .pairCol{ display:flex; flex-direction:column; gap:8px; }
+    .pairItem{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(15,23,42,.12);
+      background: rgba(248,250,252,.9);
+      cursor:pointer;
+      font-weight:950;
+      user-select:none;
+    }
+    .pairItem.selected{ border-color: rgba(11,92,255,.35); background: var(--soft); }
+    .pairItem.matched{
+      border-color: rgba(16,185,129,.35);
+      background: rgba(16,185,129,.08);
+      cursor: default;
+      opacity: .92;
+    }
+
+    /* Number line */
+    .nlWrap{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.10);
+      border-radius: 16px;
+      padding:12px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .nlRow{
+      display:flex; justify-content:space-between; gap:8px; align-items:center;
+      color: var(--muted);
+      font-weight:850;
+      font-size: 13px;
+    }
+    input[type="range"]{ width:100%; }
+
+    /* Drag step */
+    .dragWrap{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.10);
+      border-radius: 16px;
+      padding:12px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .dragRow{ display:flex; gap:8px; flex-wrap:wrap; }
+    .dragToken{
+      padding:10px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(15,23,42,.12);
+      background: rgba(248,250,252,.9);
+      cursor: grab;
+      font-weight:950;
+      user-select:none;
+    }
+    .dropZone{
+      border:2px dashed rgba(15,23,42,.18);
+      border-radius: 16px;
+      padding:14px;
+      min-height: 54px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: var(--muted);
+      font-weight:850;
+      background: rgba(248,250,252,.7);
+    }
+    .dropZone.active{
+      border-color: rgba(11,92,255,.35);
+      background: rgba(11,92,255,.06);
+    }
 
     /* End screen */
-    .endActions{
-      display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;
+    .endWrap{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.10);
+      border-radius: 16px;
+      padding:14px;
+      box-shadow: 0 14px 26px rgba(2,6,23,.08);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
     }
-    .endBtn{
-      border:none;
-      border-radius: 12px;
-      padding: 10px 12px;
-      cursor:pointer;
-      font-size:14px;
-      font-weight:950;
-    }
-    .endBtn.primary{
-      background: linear-gradient(180deg, var(--brand2), var(--brand));
-      color:#fff;
-      box-shadow: 0 10px 18px rgba(11,92,255,.22);
-    }
-    .endBtn.light{
-      background:#e5e7eb;
-      color:#111;
-    }
+    .endTitle{ font-weight:950; font-size:16px; letter-spacing:-.2px; }
+    .endActions{ display:flex; gap:10px; flex-wrap:wrap; }
 
     /* Side panel */
     .side{ padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
@@ -361,12 +358,12 @@
     }
 
     .tiny{ color:var(--muted); font-size:13px; line-height:1.6; margin-top:10px; }
-
-    .hide{ display:none !important; }
+    .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
   <header class="nav">
     <div class="nav-inner">
@@ -385,7 +382,6 @@
 
   <main class="container">
     <div class="shell">
-      <!-- Lesson -->
       <section class="panel" aria-label="Learnlio Lesson">
         <div class="panel-head">
           <div>
@@ -402,10 +398,7 @@
         <div class="stage">
           <div id="cardbox" class="cardbox">
             <div id="lessonText" class="lessonText"></div>
-
             <div id="mcq" class="mcq" style="display:none;"></div>
-
-            <!-- Mount for interactive step types -->
             <div id="interactiveMount" style="display:none;"></div>
           </div>
 
@@ -417,12 +410,11 @@
         </div>
       </section>
 
-      <!-- Progress -->
       <aside class="panel" aria-label="Lesson progress">
         <div class="panel-head">
           <div>
             <div class="title">✨ Your progress</div>
-            <div class="subtitle">Just steady effort. No pressure.</div>
+            <div class="subtitle">Steady effort. No pressure.</div>
           </div>
         </div>
 
@@ -434,7 +426,7 @@
               <span id="topicKpi">—</span>
             </div>
             <div class="bar"><div id="barFill"></div></div>
-            <div class="tiny" id="xpLine">XP: 0</div>
+            <div class="tiny" id="xpLine">XP this lesson: 0</div>
           </div>
 
           <div class="sideCard">
@@ -457,30 +449,17 @@
 
   <script>
   (() => {
-    // iOS vh fix
     function setVh(){ document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
     setVh(); window.addEventListener('resize', setVh);
 
-    // =========================
     // CONFIG
-    // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-
-    // Lesson generation Worker
-    const LESSON_GEN_URL = "https://learnlio-lessons.falling-grass-34ab.workers.dev/generate";
-
-    // Google TTS Worker
+    const LESSON_GEN_URL = "https://learnlio-lessons.falling-grass-34ab.workers.dev";
     const TTS_URL = "https://learnlio-tts.falling-grass-34ab.workers.dev/speak";
-
-    // IMPORTANT: For now we explicitly DISABLE image questions.
-    // If the worker returns image-required steps anyway, we skip them safely.
-    const ALLOW_IMAGE_STEPS = false;
-    // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // UI
     const pageError = document.getElementById("pageError");
     const contextLine = document.getElementById("contextLine");
     const lessonTextEl = document.getElementById("lessonText");
@@ -503,33 +482,25 @@
     function showError(msg){ pageError.style.display="block"; pageError.textContent = msg; }
     function clearError(){ pageError.style.display="none"; pageError.textContent = ""; }
 
-    // Auth/child
     let currentUser = null;
     let child = null;
     let childName = "Child";
     let childAge = 10;
 
-    // Context
     let SUBJECT = null;
     let AREA = null;
 
-    // Lesson runtime
-    let lesson = null;         // from worker
+    let lesson = null;
     let steps = [];
     let idx = 0;
 
-    // Answer state
-    let stepAnswers = {};      // stepIndex -> { kind, ... }
-    let xp = 0;
+    let gradedCount = 0;
+    let correctCount = 0;
 
-    // History for Back button
-    let visited = [];          // stack of indices visited (for deterministic back even with auto-advance)
+    let xpSession = 0;
+    let skillRow = null;
 
-    // Audio
     let currentAudio = null;
-
-    // ---------- helpers ----------
-    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 
     function computeAgeFromDob(dobStr){
       const d = new Date(dobStr);
@@ -538,7 +509,7 @@
       let age = now.getFullYear() - d.getFullYear();
       const m = now.getMonth() - d.getMonth();
       if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
-      return clamp(age, 4, 18);
+      return Math.max(4, Math.min(18, age));
     }
 
     function getSelectedChildFromLocalStorage(){
@@ -614,99 +585,177 @@
       }
     }
 
-    function setProgressUI(){
-      const total = steps.length || 0;
-      stepKpi.textContent = `${Math.min(idx+1,total)} / ${total}`;
-      topicKpi.textContent = `${SUBJECT} • ${AREA}`;
-      practiceLine.textContent = `${SUBJECT} practice: ${AREA}`;
-      const pct = total ? Math.round(((idx) / total) * 100) : 0;
-      barFill.style.width = Math.min(100, Math.max(0, pct)) + "%";
-      xpLine.textContent = `XP: ${xp}`;
-    }
+    async function loadOrCreateSkillRow(){
+      const { data: existing, error } = await sb
+        .from("child_skill_progress")
+        .select("*")
+        .eq("owner_id", currentUser.id)
+        .eq("child_id", child.id)
+        .eq("subject", SUBJECT)
+        .eq("area", AREA)
+        .maybeSingle();
 
-    function clearInteractive(){
-      interactiveMount.style.display = "none";
-      interactiveMount.innerHTML = "";
-    }
+      if (error) console.warn("child_skill_progress load error", error);
 
-    function isSkippableBrokenStep(step){
-      if (!step || !step.type) return true;
-
-      // Image steps: not shipping yet
-      if (!ALLOW_IMAGE_STEPS && (step.image || step.imageKey || step.image_url || step.imageUrl)){
-        return true;
+      if (existing?.id){
+        skillRow = existing;
+        return skillRow;
       }
 
-      // Fill blank needs a sentence AND options OR an answer
-      if (step.type === "fill_blank"){
-        const sentence = String(step.sentence || "").trim();
-        const opts = Array.isArray(step.options) ? step.options : (Array.isArray(step.choices) ? step.choices : []);
-        const answer = String(step.answer || "").trim();
-        // Must have something to show + a way to answer
-        if (!sentence) return true;
-        if (!opts.length && !answer) return true;
-      }
-
-      // Match pairs needs at least 2 pairs
-      if (step.type === "match_pairs"){
-        const pairs = Array.isArray(step.pairs) ? step.pairs : [];
-        if (pairs.length < 2) return true;
-      }
-
-      // Number line needs range and target
-      if (step.type === "number_line"){
-        const min = Number(step.min); const max = Number(step.max);
-        const start = Number(step.start); const target = Number(step.target);
-        if (![min,max,start,target].every(Number.isFinite)) return true;
-        if (min >= max) return true;
-      }
-
-      return false;
-    }
-
-    function findNextValidIndex(fromIndex){
-      for (let i = fromIndex; i < steps.length; i++){
-        if (!isSkippableBrokenStep(steps[i])) return i;
-      }
-      return steps.length; // end
-    }
-
-    function findPrevValidIndex(fromIndex){
-      for (let i = fromIndex; i >= 0; i--){
-        if (!isSkippableBrokenStep(steps[i])) return i;
-      }
-      return 0;
-    }
-
-    function autoAdvance(ms=500){
-      // Move to next step after a short pause (feels natural)
-      window.setTimeout(() => {
-        goNext(true);
-      }, ms);
-    }
-
-    function awardXP(kind, isCorrect){
-      // gentle, effort-based, no “level/accuracy” shown to child
-      if (kind === "mcq") xp += isCorrect ? 10 : 6;
-      else xp += 8; // interactive steps award for completing
-    }
-
-    // ---------- lesson gen ----------
-    async function fetchGeneratedLesson(){
-      // IMPORTANT: match worker expects: owner_id / child_id (your worker uses those)
-      // Also ask worker to avoid images for now.
       const payload = {
         owner_id: currentUser.id,
         child_id: child.id,
         subject: SUBJECT,
         area: AREA,
-        age: childAge,
-        level: await getSkillLevelSafe(SUBJECT, AREA),
-        no_images: true,
-        allowed_types: ["intro","teach","mcq","fill_blank","number_line","match_pairs","interactive_drag","finish"]
+        level: 1,
+        confidence: 0.5,
+        accuracy: 0.0,
+        total_attempts: 0,
+        correct_attempts: 0,
+        streak_correct: 0,
+        streak_wrong: 0,
+        last_session_id: null,
+        last_seen_at: new Date().toISOString(),
+        xp_total: 0,
+        xp_last_earned: 0,
+        xp_updated_at: new Date().toISOString()
       };
 
-      const r = await fetch(LESSON_GEN_URL, {
+      const { data: up, error: upErr } = await sb
+        .from("child_skill_progress")
+        .upsert(payload, { onConflict: "owner_id,child_id,subject,area" })
+        .select("*")
+        .single();
+
+      if (upErr){
+        console.warn("child_skill_progress upsert error", upErr);
+        return null;
+      }
+      skillRow = up;
+      return skillRow;
+    }
+
+    async function applyLessonProgressToSkillRow(){
+      if (!skillRow?.id) return;
+
+      const totalAttempts = Number(skillRow.total_attempts || 0) + 1;
+
+      const score = gradedCount ? (correctCount / gradedCount) : null;
+      const pass = (typeof score === "number") ? (score >= 0.70) : false;
+
+      const correctAttempts = Number(skillRow.correct_attempts || 0) + (pass ? 1 : 0);
+      const accuracy = totalAttempts ? (correctAttempts / totalAttempts) : 0;
+
+      const oldConf = (typeof skillRow.confidence === "number") ? skillRow.confidence : 0.5;
+      let confDelta = 0;
+      if (typeof score === "number") {
+        if (score >= 0.85) confDelta = +0.06;
+        else if (score >= 0.70) confDelta = +0.04;
+        else if (score >= 0.50) confDelta = +0.02;
+        else confDelta = -0.02;
+      } else {
+        confDelta = -0.01;
+      }
+      const confidence = Math.max(0, Math.min(1, oldConf + confDelta));
+
+      let streakCorrect = Number(skillRow.streak_correct || 0);
+      let streakWrong = Number(skillRow.streak_wrong || 0);
+      if (typeof score === "number") {
+        if (pass) { streakCorrect += 1; streakWrong = 0; }
+        else { streakWrong += 1; streakCorrect = 0; }
+      }
+
+      let level = Number(skillRow.level || 1);
+      if (totalAttempts >= 6 && confidence > 0.70) level = Math.min(10, level + 1);
+      if (totalAttempts >= 6 && confidence < 0.35) level = Math.max(1, level - 1);
+
+      const xpTotal = Number(skillRow.xp_total || 0) + Number(xpSession || 0);
+
+      const patch = {
+        total_attempts: totalAttempts,
+        correct_attempts: correctAttempts,
+        accuracy,
+        confidence,
+        level,
+        streak_correct: streakCorrect,
+        streak_wrong: streakWrong,
+        last_seen_at: new Date().toISOString(),
+        xp_total: xpTotal,
+        xp_last_earned: Number(xpSession || 0),
+        xp_updated_at: new Date().toISOString()
+      };
+
+      const { data: updated, error } = await sb
+        .from("child_skill_progress")
+        .update(patch)
+        .eq("id", skillRow.id)
+        .select("*")
+        .single();
+
+      if (error){
+        console.warn("child_skill_progress update error", error);
+        return;
+      }
+      skillRow = updated;
+    }
+
+    function looksLikeImageStep(step){
+      const txt = (step?.prompt || step?.text || step?.sentence || "").toLowerCase();
+      return Boolean(step?.requiresImage) ||
+        txt.includes("in the picture") ||
+        txt.includes("in this picture") ||
+        txt.includes("in the image") ||
+        txt.includes("in this image") ||
+        txt.includes("look at the picture") ||
+        txt.includes("look at the image");
+    }
+
+    function sanitizeSteps(rawSteps){
+      const out = [];
+      for (const s of (rawSteps || [])){
+        if (!s || typeof s !== "object") continue;
+        if (looksLikeImageStep(s)) continue;
+
+        if (s.type === "fill_blank"){
+          const sentence = String(s.sentence || "").trim();
+          const answer = String(s.answer || "").trim();
+          const options = Array.isArray(s.options) ? s.options.filter(x => typeof x === "string" && x.trim()) : [];
+          if (!sentence || (!answer && options.length < 2)) continue;
+        }
+
+        if (s.type === "mcq"){
+          const choices = Array.isArray(s.choices) ? s.choices.filter(x => typeof x === "string" && x.trim()) : [];
+          if (choices.length < 2) continue;
+        }
+
+        if (s.type === "match_pairs"){
+          const pairs = Array.isArray(s.pairs) ? s.pairs : [];
+          if (pairs.length < 2) continue;
+        }
+
+        if (s.type === "number_line"){
+          if (!Number.isFinite(Number(s.min)) || !Number.isFinite(Number(s.max))) continue;
+          if (!Number.isFinite(Number(s.start)) || !Number.isFinite(Number(s.target))) continue;
+        }
+
+        out.push(s);
+      }
+      return out;
+    }
+
+    async function fetchGeneratedLesson(){
+      const payload = {
+        subject: SUBJECT,
+        area: AREA,
+        age: childAge,
+        level: Number(skillRow?.level || 1),
+        owner_id: currentUser.id,
+        child_id: child.id,
+        wantInteractive: true,
+        allowedTypes: ["intro","teach","mcq","fill_blank","match_pairs","number_line","interactive_drag","finish"]
+      };
+
+      const r = await fetch(`${LESSON_GEN_URL.replace(/\/+$/,"")}/generate`, {
         method: "POST",
         headers: { "Content-Type":"application/json" },
         body: JSON.stringify(payload)
@@ -721,640 +770,142 @@
         throw new Error(msg);
       }
 
-      const lessonObj = json?.lesson || json; // your worker sometimes wraps as {lesson: ...}
-      if (!lessonObj?.steps || !Array.isArray(lessonObj.steps) || !lessonObj.steps.length){
-        throw new Error("Lesson worker returned no steps.");
+      const lessonObj = json?.lesson || json;
+      const rawSteps = Array.isArray(lessonObj?.steps) ? lessonObj.steps : [];
+      const cleanSteps = sanitizeSteps(rawSteps);
+
+      if (!cleanSteps.length){
+        throw new Error("No usable steps returned (image-only or incomplete steps were removed).");
       }
 
-      return lessonObj;
+      return { title: lessonObj?.title || "", steps: cleanSteps };
     }
 
-    async function getSkillLevelSafe(subject, area){
-      // Pull from child_skill_progress if present; else default 1
-      try{
-        const { data, error } = await sb
-          .from("child_skill_progress")
-          .select("level, confidence")
-          .eq("owner_id", currentUser.id)
-          .eq("child_id", child.id)
-          .eq("subject", subject)
-          .eq("area", area)
-          .maybeSingle();
-
-        if (error) return 1;
-        const lvl = Number(data?.level || 1);
-        // slight nudge based on confidence (kept calm)
-        const conf = typeof data?.confidence === "number" ? data.confidence : 0.5;
-        if (conf > 0.75) return clamp(lvl + 1, 1, 10);
-        if (conf < 0.35) return clamp(lvl - 1, 1, 10);
-        return clamp(lvl, 1, 10);
-      }catch{
-        return 1;
-      }
+    function setProgressUI(){
+      const total = steps.length || 0;
+      stepKpi.textContent = `${Math.min(idx+1,total)} / ${total}`;
+      topicKpi.textContent = `${SUBJECT} • ${AREA}`;
+      practiceLine.textContent = `${SUBJECT} practice: ${AREA}`;
+      const pct = total ? Math.round(((idx) / total) * 100) : 0;
+      barFill.style.width = Math.min(100, Math.max(0, pct)) + "%";
+      xpLine.textContent = `XP this lesson: ${xpSession}`;
     }
 
-    // ---------- render ----------
-    function renderStep(){
-      clearError();
-      hintLine.textContent = "";
-      mcqEl.innerHTML = "";
-      mcqEl.style.display = "none";
-      clearInteractive();
-
-      // Ensure current index is valid (skip broken steps)
-      const fixed = findNextValidIndex(idx);
-      if (fixed !== idx){
-        idx = fixed;
-      }
-      if (idx >= steps.length){
-        renderEndScreen();
-        return;
-      }
-
-      const step = steps[idx];
-      setProgressUI();
-
-      // Make Next less necessary:
-      // - intro/teach: Next still available
-      // - answer steps: auto-advance on answer
-      nextBtn.disabled = false;
-
-      if (step.type === "intro"){
-        lessonTextEl.textContent = step.text || `Hello ${childName}. We will go slowly, one step at a time.`;
-        nextBtn.textContent = "Start";
-        hintLine.textContent = "When you’re ready, press Start.";
-        return;
-      }
-
-      if (step.type === "teach"){
-        lessonTextEl.textContent = step.text || "";
-        nextBtn.textContent = "Next step";
-        hintLine.textContent = step.hint ? String(step.hint) : "Ready? Let’s do the next step.";
-        return;
-      }
-
-      if (step.type === "finish"){
-        // Turn finish into proper end screen (instead of a dead-end)
-        renderEndScreen(true);
-        return;
-      }
-
-      if (step.type === "mcq"){
-        lessonTextEl.textContent = step.prompt || "";
-        mcqEl.style.display = "grid";
-
-        const letters = ["A","B","C","D","E","F"];
-        (step.choices || []).forEach((choice, i) => {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "mcq-opt";
-          btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${choice}</span>`;
-          btn.addEventListener("click", () => chooseMCQ(i));
-          mcqEl.appendChild(btn);
-        });
-
-        nextBtn.textContent = "Next";
-        // Make Next optional: we auto-advance once answered
-        return;
-      }
-
-      if (step.type === "fill_blank"){
-        renderFillBlank(step);
-        nextBtn.textContent = "Next";
-        return;
-      }
-
-      if (step.type === "number_line"){
-        renderNumberLine(step);
-        nextBtn.textContent = "Next";
-        return;
-      }
-
-      if (step.type === "match_pairs"){
-        renderMatchPairs(step);
-        nextBtn.textContent = "Next";
-        return;
-      }
-
-      if (step.type === "interactive_drag"){
-        // “Drag” without complex drag: we make it a tap-to-place mini interaction.
-        renderInteractiveDrag(step);
-        nextBtn.textContent = "Next";
-        return;
-      }
-
-      // Unknown => skip safely
-      hintLine.textContent = "Skipping this step.";
-      idx = findNextValidIndex(idx + 1);
-      renderStep();
+    function clearInteractive(){
+      interactiveMount.style.display = "none";
+      interactiveMount.innerHTML = "";
     }
 
-    function renderEndScreen(fromFinishStep=false){
-      const total = steps.length;
-      const completed = Object.keys(stepAnswers).length;
-      lessonTextEl.textContent =
-        `Nice work, ${childName}.\n\n` +
-        `You have finished this lesson.\n` +
-        `Steps completed: ${completed}.\n\n` +
-        `What would you like to do now?`;
-
-      mcqEl.style.display = "none";
-      clearInteractive();
-
+    function showInteractive(html){
       interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = `
-        <div class="widget">
-          <h4>Next</h4>
-          <div class="endActions">
-            <button id="doneBtn" class="endBtn primary" type="button">Done for today</button>
-            <button id="anotherBtn" class="endBtn light" type="button">Try another lesson</button>
-            <button id="backLessonsBtn" class="endBtn light" type="button">Back to Lessons</button>
+      interactiveMount.innerHTML = html;
+    }
+
+    function awardXP(points){
+      xpSession += Number(points || 0);
+      setProgressUI();
+    }
+
+    function markAnswer(isCorrect){
+      gradedCount += 1;
+      if (isCorrect) correctCount += 1;
+    }
+
+    function scheduleAdvance(delayMs=520){
+      setTimeout(() => {
+        if (idx < steps.length - 1){
+          idx += 1;
+          renderStep();
+        } else {
+          renderEndScreen();
+        }
+      }, delayMs);
+    }
+
+    function renderEndScreen(){
+      clearError();
+      mcqEl.style.display = "none";
+      mcqEl.innerHTML = "";
+      clearInteractive();
+      lessonTextEl.textContent = "";
+
+      const title = (lesson?.title || "Lesson");
+
+      showInteractive(`
+        <div class="endWrap">
+          <div class="endTitle">Nice work, ${escapeHtml(childName)}.</div>
+          <div class="notice">
+            You finished <b>${escapeHtml(title)}</b>.<br><br>
+            XP earned today: <b>${xpSession}</b>
           </div>
-          <div class="tiny" style="margin-top:10px;">
-            Your effort points (XP) today: <b>${xp}</b>
+          <div class="endActions">
+            <button id="doneTodayBtn" class="pill primary" type="button">✅ Done for today</button>
+            <button id="anotherLessonBtn" class="pill" type="button">✨ Try another lesson</button>
+            <a class="pill" href="/dash.html" style="display:inline-flex; align-items:center;">🏠 Dashboard</a>
           </div>
         </div>
-      `;
+      `);
 
-      // Lock navigation buttons (end screen is the end)
       nextBtn.disabled = true;
       backBtn.disabled = true;
-      hintLine.textContent = "You can choose what to do next.";
+      hintLine.textContent = "Choose what to do next.";
 
-      document.getElementById("doneBtn").onclick = () => window.location.href = "/dash.html";
-      document.getElementById("anotherBtn").onclick = () => window.location.href = "/lessons.html";
-      document.getElementById("backLessonsBtn").onclick = () => window.location.href = "/lessons.html";
-    }
+      persistAndLock();
 
-    // ---------- MCQ ----------
-    function chooseMCQ(pickedIndex){
-      const step = steps[idx];
-      if (!step || step.type !== "mcq") return;
-
-      const correctIndex = Number(step.correctIndex);
-      const isCorrect = Number.isFinite(correctIndex) ? (pickedIndex === correctIndex) : true;
-
-      stepAnswers[idx] = { kind:"mcq", pickedIndex, isCorrect };
-      awardXP("mcq", isCorrect);
-
-      // feedback
-      hintLine.textContent = isCorrect ? "Nice work. ✅" : "Good try. Keep going. 💛".replace("💛",""); // no emoji in UI text
-      setProgressUI();
-
-      // Auto move on
-      autoAdvance(500);
-    }
-
-    // ---------- Fill blank ----------
-    function renderFillBlank(step){
-      // Normalise fields
-      let sentence = String(step.sentence || "").trim();
-      const prompt = String(step.prompt || "Complete the sentence.").trim();
-
-      // If sentence missing, treat as broken and skip
-      if (!sentence){
-        hintLine.textContent = "Skipping a broken step.";
-        idx = findNextValidIndex(idx + 1);
-        renderStep();
-        return;
-      }
-
-      // Ensure it contains ___
-      if (!sentence.includes("___")){
-        // If model returned {before,after} etc, try salvage
-        if (step.before || step.after){
-          sentence = `${String(step.before||"").trim()} ___ ${String(step.after||"").trim()}`.replace(/\s+/g," ").trim();
-        } else {
-          // force placeholder (best effort)
-          sentence = sentence + " ___";
-        }
-      }
-
-      const options = Array.isArray(step.options) ? step.options
-                    : (Array.isArray(step.choices) ? step.choices : []);
-      let answer = String(step.answer || "").trim();
-
-      // If no options but we have an answer, create a small set
-      let opts = options.slice(0, 6).map(String);
-      if (!opts.length && answer){
-        const distractors = makeWordDistractors(answer);
-        opts = shuffle([answer, ...distractors]).slice(0, 4);
-      }
-
-      // If still no options, skip
-      if (!opts.length){
-        hintLine.textContent = "Skipping a broken step.";
-        idx = findNextValidIndex(idx + 1);
-        renderStep();
-        return;
-      }
-
-      // Choose correct value
-      if (!answer){
-        // If correctIndex exists, use it
-        const ci = Number(step.correctIndex);
-        if (Number.isFinite(ci) && opts[ci] != null) answer = String(opts[ci]);
-      }
-      if (!answer){
-        // fallback: first option is treated as correct (not ideal but prevents dead ends)
-        answer = String(opts[0]);
-      }
-
-      lessonTextEl.textContent = prompt;
-
-      interactiveMount.style.display = "block";
-
-      const displayLine = sentence.split("___").join(`<span class="fb-blank" id="fbBlank">___</span>`);
-      interactiveMount.innerHTML = `
-        <div class="widget">
-          <h4>Fill in</h4>
-          <div class="fb-line">${displayLine}</div>
-          <div class="fb-options" id="fbOptions"></div>
-          <div class="tiny" id="fbHint">${step.hint ? String(step.hint) : "Choose the word that fits best."}</div>
-        </div>
-      `;
-
-      const fbBlank = document.getElementById("fbBlank");
-      const fbOptions = document.getElementById("fbOptions");
-
-      opts.forEach(word => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "optChip";
-        btn.textContent = word;
-        btn.onclick = () => {
-          const isCorrect = String(word).trim().toLowerCase() === String(answer).trim().toLowerCase();
-          stepAnswers[idx] = { kind:"fill_blank", chosen: word, isCorrect };
-          awardXP("fill_blank", isCorrect);
-
-          fbBlank.textContent = word;
-          hintLine.textContent = isCorrect ? "Good. ✅" : "Nice try. Let’s keep going.";
-          setProgressUI();
-
-          autoAdvance(650);
-        };
-        fbOptions.appendChild(btn);
-      });
-    }
-
-    function makeWordDistractors(answer){
-      // simple distractors (safe): similar length variations
-      const a = String(answer).trim();
-      const lower = a.toLowerCase();
-      const variants = new Set();
-
-      if (lower === "two") variants.add("to").add("too");
-      if (lower === "their") variants.add("there").add("they're");
-      if (lower === "there") variants.add("their").add("they're");
-      if (lower === "they're") variants.add("their").add("there");
-
-      // generic: add "a", "the", plural, etc
-      if (a.length >= 3){
-        variants.add(a + "s");
-        variants.add(a.slice(0, Math.max(1, a.length-1)));
-        variants.add(a + "ing");
-      }
-      variants.delete(a);
-
-      const arr = Array.from(variants).filter(v => v && v.length <= 10);
-      while (arr.length < 3){
-        arr.push(randomSafeWord());
-      }
-      return arr.slice(0, 3);
-    }
-
-    function randomSafeWord(){
-      const words = ["the","a","some","many","few","three","four","five","blue","red"];
-      return words[Math.floor(Math.random()*words.length)];
-    }
-
-    // ---------- Number line ----------
-    function renderNumberLine(step){
-      const prompt = String(step.prompt || "Move along the number line.").trim();
-      const min = Number(step.min);
-      const max = Number(step.max);
-      const start = Number(step.start);
-      const target = Number(step.target);
-
-      if (![min,max,start,target].every(Number.isFinite) || min >= max){
-        hintLine.textContent = "Skipping a broken step.";
-        idx = findNextValidIndex(idx + 1);
-        renderStep();
-        return;
-      }
-
-      lessonTextEl.textContent = prompt;
-
-      let cur = clamp(start, min, max);
-
-      function pct(v){ return ((v - min) / (max - min)) * 100; }
-
-      interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = `
-        <div class="widget">
-          <h4>Number line</h4>
-          <div class="tiny">Start: <b>${start}</b> • Target: <b>${target}</b></div>
-          <div class="nl-wrap">
-            <div class="nl-track">
-              <div class="nl-fill" id="nlFill"></div>
-              <div class="nl-marker" id="nlMarker"></div>
-            </div>
-            <div class="nl-nums">
-              <span>${min}</span><span>${max}</span>
-            </div>
-            <div class="nl-buttons">
-              <button id="nlMinus" class="pill" type="button">-1</button>
-              <button id="nlPlus" class="pill primary" type="button">+1</button>
-              <button id="nlCheck" class="pill" type="button">Check</button>
-            </div>
-            <div class="tiny" id="nlHint">${step.hint ? String(step.hint) : "Use +1 and -1 until you reach the target."}</div>
-          </div>
-        </div>
-      `;
-
-      const nlFill = document.getElementById("nlFill");
-      const nlMarker = document.getElementById("nlMarker");
-
-      function paint(){
-        const p = pct(cur);
-        nlFill.style.width = p + "%";
-        nlMarker.style.left = p + "%";
-      }
-      paint();
-
-      document.getElementById("nlMinus").onclick = () => { cur = clamp(cur - 1, min, max); paint(); };
-      document.getElementById("nlPlus").onclick = () => { cur = clamp(cur + 1, min, max); paint(); };
-      document.getElementById("nlCheck").onclick = () => {
-        const isCorrect = (cur === target);
-        stepAnswers[idx] = { kind:"number_line", value: cur, isCorrect };
-        awardXP("number_line", isCorrect);
-
-        hintLine.textContent = isCorrect ? "Yes. ✅" : "Nearly. Keep going.";
-        setProgressUI();
-
-        if (isCorrect) autoAdvance(650);
-      };
-    }
-
-    // ---------- Match pairs ----------
-    function renderMatchPairs(step){
-      const prompt = String(step.prompt || "Match the pairs.").trim();
-      const pairs = Array.isArray(step.pairs) ? step.pairs : [];
-      if (pairs.length < 2){
-        hintLine.textContent = "Skipping a broken step.";
-        idx = findNextValidIndex(idx + 1);
-        renderStep();
-        return;
-      }
-
-      // Normalise to strings
-      const leftItems = pairs.map(p => String(p.left ?? "").trim()).filter(Boolean);
-      const rightItems = pairs.map(p => String(p.right ?? "").trim()).filter(Boolean);
-      if (leftItems.length !== pairs.length || rightItems.length !== pairs.length){
-        hintLine.textContent = "Skipping a broken step.";
-        idx = findNextValidIndex(idx + 1);
-        renderStep();
-        return;
-      }
-
-      const rightShuffled = shuffle(rightItems.slice());
-
-      lessonTextEl.textContent = prompt;
-
-      interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = `
-        <div class="widget">
-          <h4>Match pairs</h4>
-          <div class="mp-grid">
-            <div class="mp-col" id="mpLeft"></div>
-            <div class="mp-col" id="mpRight"></div>
-          </div>
-          <div class="tiny mp-status" id="mpStatus">${step.hint ? String(step.hint) : "Tap one on the left, then one on the right."}</div>
-        </div>
-      `;
-
-      const mpLeft = document.getElementById("mpLeft");
-      const mpRight = document.getElementById("mpRight");
-      const mpStatus = document.getElementById("mpStatus");
-
-      // State
-      let selectedLeft = null;
-      let selectedRight = null;
-      const solvedLeft = new Set();
-      const solvedRight = new Set();
-      let correctCount = 0;
-
-      function makeBtn(text, side){
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "mp-btn";
-        b.textContent = text;
-        b.dataset.side = side;
-        b.dataset.val = text;
-        return b;
-      }
-
-      leftItems.forEach(t => mpLeft.appendChild(makeBtn(t, "L")));
-      rightShuffled.forEach(t => mpRight.appendChild(makeBtn(t, "R")));
-
-      function clearSelections(){
-        selectedLeft = null;
-        selectedRight = null;
-        [...mpLeft.children, ...mpRight.children].forEach(btn => btn.classList.remove("sel"));
-      }
-
-      function markDone(leftVal, rightVal){
-        // mark buttons as done
-        [...mpLeft.children].forEach(btn => {
-          if (btn.dataset.val === leftVal){
-            btn.classList.remove("sel");
-            btn.classList.add("done");
-            btn.disabled = true;
-          }
-        });
-        [...mpRight.children].forEach(btn => {
-          if (btn.dataset.val === rightVal){
-            btn.classList.remove("sel");
-            btn.classList.add("done");
-            btn.disabled = true;
-          }
-        });
-      }
-
-      function checkPair(){
-        if (!selectedLeft || !selectedRight) return;
-
-        const l = selectedLeft;
-        const r = selectedRight;
-
-        // find correct right for this left
-        const idxPair = pairs.findIndex(p => String(p.left).trim() === l);
-        const correctRight = idxPair >= 0 ? String(pairs[idxPair].right).trim() : null;
-
-        if (correctRight && correctRight === r){
-          solvedLeft.add(l); solvedRight.add(r);
-          correctCount += 1;
-          mpStatus.textContent = "Good match. Keep going.";
-          markDone(l, r);
-        } else {
-          mpStatus.textContent = "Not that pair. Try another.";
-        }
-
-        clearSelections();
-
-        if (correctCount === pairs.length){
-          stepAnswers[idx] = { kind:"match_pairs", correct: correctCount, total: pairs.length, isCorrect: true };
-          awardXP("match_pairs", true);
-          hintLine.textContent = "All matched. ✅";
-          setProgressUI();
-          autoAdvance(650);
-        }
-      }
-
-      // Event delegation
-      mpLeft.addEventListener("click", (e) => {
-        const btn = e.target.closest("button");
-        if (!btn || btn.disabled) return;
-
-        // select
-        [...mpLeft.children].forEach(b => b.classList.remove("sel"));
-        btn.classList.add("sel");
-        selectedLeft = btn.dataset.val;
-
-        // attempt check if right already selected
-        if (selectedRight) checkPair();
-      });
-
-      mpRight.addEventListener("click", (e) => {
-        const btn = e.target.closest("button");
-        if (!btn || btn.disabled) return;
-
-        [...mpRight.children].forEach(b => b.classList.remove("sel"));
-        btn.classList.add("sel");
-        selectedRight = btn.dataset.val;
-
-        if (selectedLeft) checkPair();
-      });
-
-      // Fix: ensure last box clickable on mobile
-      // (touch/scroll + overlay issues)
-      interactiveMount.style.pointerEvents = "auto";
-    }
-
-    // ---------- interactive_drag (tap-to-place) ----------
-    function renderInteractiveDrag(step){
-      const prompt = String(step.prompt || "Do the next step.").trim();
-      // Expect items: [{label:"+3", to:"12"}] etc — if missing, we degrade gracefully.
-      const items = Array.isArray(step.items) ? step.items : [];
-      lessonTextEl.textContent = prompt;
-
-      interactiveMount.style.display = "block";
-
-      // Simple: show 2–4 choice chips; the “correct” is first or matching step.answer
-      let options = items.map(it => String(it.label || "").trim()).filter(Boolean);
-      if (!options.length){
-        options = Array.isArray(step.options) ? step.options.map(String) : [];
-      }
-      if (!options.length){
-        hintLine.textContent = "Skipping a broken step.";
-        idx = findNextValidIndex(idx + 1);
-        renderStep();
-        return;
-      }
-
-      let answer = String(step.answer || "").trim();
-      if (!answer) answer = options[0];
-
-      interactiveMount.innerHTML = `
-        <div class="widget">
-          <h4>Try this</h4>
-          <div class="notice">${step.hint ? String(step.hint) : "Tap the best choice."}</div>
-          <div class="fb-options" id="dragOpts"></div>
-        </div>
-      `;
-
-      const mount = document.getElementById("dragOpts");
-      shuffle(options.slice()).slice(0, 6).forEach(opt => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "optChip";
-        btn.textContent = opt;
-        btn.onclick = () => {
-          const isCorrect = String(opt).trim().toLowerCase() === String(answer).trim().toLowerCase();
-          stepAnswers[idx] = { kind:"interactive_drag", chosen: opt, isCorrect };
-          awardXP("interactive_drag", isCorrect);
-          hintLine.textContent = isCorrect ? "Nice. ✅" : "Good try. Let’s keep going.";
-          setProgressUI();
-          autoAdvance(650);
-        };
-        mount.appendChild(btn);
-      });
-    }
-
-    // ---------- navigation ----------
-    function goNext(fromAuto=false){
-      // If at end, show end screen
-      if (idx >= steps.length){
-        renderEndScreen();
-        return;
-      }
-
-      const step = steps[idx];
-
-      // If step is answer-type and not answered yet, block manual Next
-      if (!fromAuto){
-        if (["mcq","fill_blank","number_line","match_pairs","interactive_drag"].includes(step?.type)){
-          if (!stepAnswers[idx]){
-            hintLine.textContent = "Have a go at this step first.";
-            return;
-          }
-        }
-      }
-
-      // push history
-      visited.push(idx);
-
-      idx = findNextValidIndex(idx + 1);
-      renderStep();
-    }
-
-    function goBack(){
-      if (!visited.length){
-        // fallback to previous valid
-        idx = findPrevValidIndex(idx - 1);
-        renderStep();
-        return;
-      }
-      idx = visited.pop();
-      idx = findPrevValidIndex(idx);
-      renderStep();
-    }
-
-    backBtn.addEventListener("click", goBack);
-
-    nextBtn.addEventListener("click", () => goNext(false));
-
-    finishBtn.addEventListener("click", () => {
-      window.location.href = "/lessons.html";
-    });
-
-    helpBtn.addEventListener("click", () => {
-      alert(
-        "How Lessons work:\n\n" +
-        "• Do one small step at a time.\n" +
-        "• Most steps move on automatically when you answer.\n" +
-        "• You can use Read aloud if you want.\n\n" +
-        "No pressure. You can finish any time."
+      document.getElementById("doneTodayBtn")?.addEventListener("click", () => window.location.href = "/dash.html");
+      document.getElementById("anotherLessonBtn")?.addEventListener("click", () =>
+        window.location.href = `/lesson.html?subject=${encodeURIComponent(SUBJECT)}&area=${encodeURIComponent(AREA)}`
       );
-    });
+    }
 
-    logoutBtn.addEventListener("click", async () => {
-      await sb.auth.signOut();
-      localStorage.removeItem("selectedChild");
-      window.location.href = "/login.html";
-    });
+    let persistRan = false;
+    async function persistAndLock(){
+      if (persistRan) return;
+      persistRan = true;
+      await applyLessonProgressToSkillRow();
+    }
 
-    // ---------- read aloud ----------
+    function disableAllButtons(root){
+      if (!root) return;
+      root.querySelectorAll("button").forEach(b => { b.disabled = true; });
+    }
+
+    function escapeHtml(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function makeSimpleOptions(answer){
+      const a = String(answer).trim();
+      if (!a) return [];
+      const lower = a.toLowerCase();
+
+      // If it's a number word or digit, try small variations
+      const asNum = Number(a);
+      if (Number.isFinite(asNum)){
+        const opts = [String(asNum), String(asNum+1), String(Math.max(0, asNum-1)), String(asNum+2)];
+        return shuffle(opts).slice(0,4);
+      }
+
+      // Otherwise: swap/nearby common confusions
+      const opts = [a, a + "s", lower, a.replace(/.$/,"")];
+      return shuffle(Array.from(new Set(opts))).slice(0,4);
+    }
+
+    function shuffle(arr){
+      const a = arr.slice();
+      for (let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]] = [a[j],a[i]];
+      }
+      return a;
+    }
+
+    // ----- Read aloud -----
     function stripEmojis(text){
       return String(text || "")
         .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
@@ -1364,20 +915,18 @@
         .trim();
     }
 
-    function extractSpeakText(step){
-      if (!step) return "";
-      if (step.type === "mcq") return step.prompt || "";
-      if (step.type === "fill_blank"){
-        const sentence = String(step.sentence || "").trim();
-        return sentence ? `${step.prompt ? step.prompt + " " : ""}${sentence.replace("___", "blank")}` : (step.prompt || "");
-      }
-      return step.text || step.prompt || "";
-    }
-
     async function speakCurrent(){
       try{
         const step = steps[idx];
-        let text = stripEmojis(extractSpeakText(step));
+        if (!step) return;
+
+        let text = "";
+        if (step.type === "mcq") text = step.prompt || "";
+        else if (step.text) text = step.text;
+        else if (step.prompt) text = step.prompt;
+        else text = lessonTextEl.textContent || "";
+
+        text = stripEmojis(text);
         if (!text) return;
 
         if (currentAudio){
@@ -1395,6 +944,8 @@
         });
 
         if (!r.ok){
+          const t = await r.text().catch(()=> "");
+          console.warn("TTS failed", r.status, t);
           hintLine.textContent = "Read aloud isn’t available right now.";
           return;
         }
@@ -1430,19 +981,385 @@
       }
     }
 
-    speakBtn.addEventListener("click", speakCurrent);
+    // Render step (continues in Chunk 2)
+    // -------------------------
+    // Step rendering + widgets
+    // -------------------------
+    function renderStep(){
+      clearError();
+      hintLine.textContent = "";
+      mcqEl.innerHTML = "";
+      mcqEl.style.display = "none";
+      clearInteractive();
 
-    // ---------- utils ----------
-    function shuffle(arr){
-      const a = arr.slice();
-      for (let i = a.length - 1; i > 0; i--){
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
+      if (!steps.length){
+        lessonTextEl.textContent = "No lesson steps found.";
+        return;
       }
-      return a;
+
+      const step = steps[idx];
+      setProgressUI();
+
+      if (!step){
+        renderEndScreen();
+        return;
+      }
+
+      // Intro/teach
+      if (step.type === "intro" || step.type === "teach"){
+        lessonTextEl.textContent = step.text || "";
+        nextBtn.textContent = "➡️ Next";
+        nextBtn.disabled = false;
+        return;
+      }
+
+      // Finish
+      if (step.type === "finish"){
+        lessonTextEl.textContent = step.text || "Nice work. You are done.";
+        nextBtn.textContent = "✅ Finish";
+        nextBtn.disabled = false;
+        return;
+      }
+
+      // MCQ
+      if (step.type === "mcq"){
+        lessonTextEl.textContent = step.prompt || "";
+        mcqEl.style.display = "grid";
+
+        const letters = ["A","B","C","D","E","F"];
+        const choices = Array.isArray(step.choices) ? step.choices : [];
+
+        choices.forEach((choice, i) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "mcq-opt";
+          btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${escapeHtml(String(choice))}</span>`;
+          btn.addEventListener("click", () => {
+            const correctIndex = Number(step.correctIndex);
+            const isCorrect = (i === correctIndex);
+            awardXP(isCorrect ? 10 : 6);
+            markAnswer(isCorrect);
+            hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
+            disableAllButtons(mcqEl);
+            scheduleAdvance(520);
+          });
+          mcqEl.appendChild(btn);
+        });
+
+        nextBtn.textContent = "➡️ Next";
+        nextBtn.disabled = false;
+        return;
+      }
+
+      // Fill blank
+      if (step.type === "fill_blank"){
+        const sentence = String(step.sentence || "").trim();
+        const prompt = String(step.prompt || "").trim();
+        const answer = String(step.answer || "").trim();
+        let options = Array.isArray(step.options) ? step.options : [];
+        if (!options.length && answer) options = makeSimpleOptions(answer);
+        options = options.filter(x => typeof x === "string" && x.trim()).slice(0, 6);
+
+        // Safety: if still broken, skip silently
+        if (!sentence || options.length < 2){
+          scheduleAdvance(10);
+          return;
+        }
+
+        lessonTextEl.textContent = prompt || "Choose the missing word:";
+        showInteractive(`
+          <div class="fillWrap">
+            <div class="fillSentence">${escapeHtml(sentence)}</div>
+            <div class="fillOptions" id="fillOpts"></div>
+          </div>
+        `);
+
+        const wrap = document.getElementById("fillOpts");
+        options.forEach(opt => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "chip";
+          chip.textContent = opt;
+          chip.addEventListener("click", () => {
+            const isCorrect = answer ? (opt.trim().toLowerCase() === answer.trim().toLowerCase()) : true;
+            awardXP(isCorrect ? 10 : 6);
+            markAnswer(isCorrect);
+            hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
+            disableAllButtons(interactiveMount);
+            scheduleAdvance(520);
+          });
+          wrap.appendChild(chip);
+        });
+
+        nextBtn.textContent = "➡️ Next";
+        nextBtn.disabled = false;
+        return;
+      }
+
+      // Match pairs
+      if (step.type === "match_pairs"){
+        const prompt = String(step.prompt || "Match the pairs.").trim();
+        const pairs = Array.isArray(step.pairs) ? step.pairs : [];
+        if (pairs.length < 2){
+          scheduleAdvance(10);
+          return;
+        }
+
+        lessonTextEl.textContent = prompt;
+
+        // Build left list and right list (shuffled)
+        const left = pairs.map(p => String(p.left ?? "")).filter(Boolean);
+        const right = shuffle(pairs.map(p => String(p.right ?? "")).filter(Boolean));
+        const map = new Map(pairs.map(p => [String(p.left ?? ""), String(p.right ?? "")]));
+
+        let selectedLeft = null;
+        let matched = new Set();
+        let totalToMatch = Math.min(left.length, right.length);
+
+        showInteractive(`
+          <div class="pairsWrap">
+            <div class="pairCol" id="leftCol"></div>
+            <div class="pairCol" id="rightCol"></div>
+          </div>
+        `);
+
+        const leftCol = document.getElementById("leftCol");
+        const rightCol = document.getElementById("rightCol");
+
+        function renderCols(){
+          leftCol.innerHTML = "";
+          rightCol.innerHTML = "";
+
+          left.forEach(lv => {
+            const btn = document.createElement("div");
+            btn.className = "pairItem" + (matched.has("L:"+lv) ? " matched" : (selectedLeft === lv ? " selected" : ""));
+            btn.textContent = lv;
+            if (!matched.has("L:"+lv)){
+              btn.addEventListener("click", () => {
+                selectedLeft = lv;
+                renderCols();
+              });
+            }
+            leftCol.appendChild(btn);
+          });
+
+          right.forEach(rv => {
+            const btn = document.createElement("div");
+            btn.className = "pairItem" + (matched.has("R:"+rv) ? " matched" : "");
+            btn.textContent = rv;
+
+            if (!matched.has("R:"+rv)){
+              btn.addEventListener("click", () => {
+                if (!selectedLeft) return;
+                const correctRight = map.get(selectedLeft);
+                const isCorrect = (rv === correctRight);
+
+                if (isCorrect){
+                  matched.add("L:"+selectedLeft);
+                  matched.add("R:"+rv);
+                  awardXP(8);
+                  hintLine.textContent = "Nice ✅";
+                } else {
+                  awardXP(4);
+                  hintLine.textContent = "Good try 💛";
+                }
+
+                markAnswer(isCorrect);
+
+                selectedLeft = null;
+                renderCols();
+
+                // Completed?
+                const matchedPairs = Array.from(matched).filter(x => x.startsWith("L:")).length;
+                if (matchedPairs >= totalToMatch){
+                  hintLine.textContent = "All matched ✅";
+                  disableAllButtons(interactiveMount);
+                  scheduleAdvance(650);
+                }
+              });
+            }
+            rightCol.appendChild(btn);
+          });
+        }
+
+        renderCols();
+
+        nextBtn.textContent = "➡️ Next";
+        nextBtn.disabled = false;
+        return;
+      }
+
+      // Number line
+      if (step.type === "number_line"){
+        const prompt = String(step.prompt || "Use the number line.").trim();
+        const min = Number(step.min);
+        const max = Number(step.max);
+        const start = Number(step.start);
+        const target = Number(step.target);
+
+        if (![min,max,start,target].every(n => Number.isFinite(n))){
+          scheduleAdvance(10);
+          return;
+        }
+
+        lessonTextEl.textContent = prompt;
+
+        showInteractive(`
+          <div class="nlWrap">
+            <div class="nlRow">
+              <span>Min: ${min}</span>
+              <span><b>Move to: ${target}</b></span>
+              <span>Max: ${max}</span>
+            </div>
+            <input id="nlRange" type="range" min="${min}" max="${max}" value="${start}" step="1" />
+            <div class="nlRow">
+              <span>Start: ${start}</span>
+              <span id="nlVal"><b>Now: ${start}</b></span>
+              <span>Target: ${target}</span>
+            </div>
+            <button id="nlSubmit" class="pill primary" type="button">✅ Check</button>
+          </div>
+        `);
+
+        const range = document.getElementById("nlRange");
+        const val = document.getElementById("nlVal");
+        const submit = document.getElementById("nlSubmit");
+
+        range.addEventListener("input", () => {
+          val.innerHTML = `<b>Now: ${range.value}</b>`;
+        });
+
+        submit.addEventListener("click", () => {
+          const picked = Number(range.value);
+          const isCorrect = picked === target;
+          awardXP(isCorrect ? 10 : 6);
+          markAnswer(isCorrect);
+          hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
+          submit.disabled = true;
+          range.disabled = true;
+          scheduleAdvance(650);
+        });
+
+        nextBtn.textContent = "➡️ Next";
+        nextBtn.disabled = false;
+        return;
+      }
+
+      // Drag (simple token -> zone)
+      if (step.type === "interactive_drag"){
+        const prompt = String(step.prompt || "Drag the token into the box.").trim();
+        const items = Array.isArray(step.items) ? step.items : [];
+        if (!items.length){
+          scheduleAdvance(10);
+          return;
+        }
+
+        lessonTextEl.textContent = prompt;
+
+        // We treat "items[0].label" as the correct token for now.
+        const correct = String(items[0]?.label ?? "").trim();
+        const tokens = shuffle(items.map(i => String(i.label ?? "")).filter(Boolean));
+        if (!correct || !tokens.length){
+          scheduleAdvance(10);
+          return;
+        }
+
+        showInteractive(`
+          <div class="dragWrap">
+            <div class="dragRow" id="dragRow"></div>
+            <div class="dropZone" id="dropZone">Drop here</div>
+          </div>
+        `);
+
+        const row = document.getElementById("dragRow");
+        const zone = document.getElementById("dropZone");
+
+        tokens.forEach(t => {
+          const el = document.createElement("div");
+          el.className = "dragToken";
+          el.draggable = true;
+          el.textContent = t;
+          el.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("text/plain", t);
+          });
+          row.appendChild(el);
+        });
+
+        zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("active"); });
+        zone.addEventListener("dragleave", () => zone.classList.remove("active"));
+        zone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          zone.classList.remove("active");
+          const t = e.dataTransfer.getData("text/plain");
+          const isCorrect = (t === correct);
+          awardXP(isCorrect ? 10 : 6);
+          markAnswer(isCorrect);
+          hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
+          zone.textContent = `Dropped: ${t}`;
+          disableAllButtons(interactiveMount);
+          scheduleAdvance(700);
+        });
+
+        nextBtn.textContent = "➡️ Next";
+        nextBtn.disabled = false;
+        return;
+      }
+
+      // Unknown: skip
+      scheduleAdvance(10);
     }
 
-    // ---------- boot ----------
+    // Controls
+    backBtn.addEventListener("click", () => {
+      if (idx > 0){
+        idx -= 1;
+        renderStep();
+      }
+    });
+
+    nextBtn.addEventListener("click", async () => {
+      const step = steps[idx];
+      if (!step){
+        renderEndScreen();
+        return;
+      }
+
+      if (step.type === "finish"){
+        renderEndScreen();
+        return;
+      }
+
+      if (idx < steps.length - 1){
+        idx += 1;
+        renderStep();
+      } else {
+        renderEndScreen();
+      }
+    });
+
+    finishBtn.addEventListener("click", async () => {
+      await persistAndLock();
+      window.location.href = "/lessons.html";
+    });
+
+    helpBtn.addEventListener("click", () => {
+      alert(
+        "How lessons work:\n\n" +
+        "• Tap answers to move on automatically\n" +
+        "• Use Read aloud if you want it\n" +
+        "• No pressure — you can finish any time\n\n" +
+        "Tip: If something feels tricky, try your best and keep going."
+      );
+    });
+
+    speakBtn.addEventListener("click", speakCurrent);
+
+    logoutBtn.addEventListener("click", async () => {
+      await sb.auth.signOut();
+      localStorage.removeItem("selectedChild");
+      window.location.href = "/login.html";
+    });
+
     async function boot(){
       if (!sb){ showError("Supabase did not load."); return; }
 
@@ -1466,9 +1383,10 @@
       }
 
       clearError();
-      contextLine.textContent = `Loading a lesson for ${childName}…`;
+      contextLine.textContent = `Preparing a lesson for ${childName}…`;
 
-      // Fetch generated lesson
+      await loadOrCreateSkillRow();
+
       try{
         lesson = await fetchGeneratedLesson();
       }catch(e){
@@ -1483,7 +1401,7 @@
         return;
       }
 
-      steps = Array.isArray(lesson.steps) ? lesson.steps : [];
+      steps = lesson.steps || [];
       if (!steps.length){
         showError("Lesson returned no steps.");
         nextBtn.disabled = true;
@@ -1491,17 +1409,13 @@
         return;
       }
 
-      // Skip any broken steps up front
-      steps = steps.filter(s => !!s); // remove nulls
-
-      idx = findNextValidIndex(0);
-      visited = [];
-      xp = 0;
-      stepAnswers = {};
+      idx = 0;
+      xpSession = 0;
+      gradedCount = 0;
+      correctCount = 0;
 
       const title = lesson.title ? ` — ${lesson.title}` : "";
       contextLine.textContent = `${SUBJECT} • ${AREA}${title}`;
-
       nextBtn.disabled = false;
       backBtn.disabled = false;
 
@@ -1516,4 +1430,3 @@
   </script>
 </body>
 </html>
-
