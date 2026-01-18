@@ -27,8 +27,6 @@
       --bad:#ef4444;
       --radius:20px;
       --radius2:16px;
-
-      /* JS will update this on mobile for iOS address-bar behaviour */
       --vh: 1vh;
     }
     *{ box-sizing:border-box; }
@@ -42,13 +40,10 @@
         linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-
-    /* Prevent whole-page scrolling on desktop – the chat panel will handle scroll */
     @media (min-width: 981px){
       body{ overflow:hidden; }
     }
 
-    /* Logged-in nav */
     .nav{ background:#fff; border-bottom:1px solid rgba(15,23,42,.08); position:sticky; top:0; z-index:50; }
     .nav-inner{ max-width:1140px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-weight:900; letter-spacing:.2px; }
@@ -62,16 +57,13 @@
 
     .container{ max-width:1140px; margin:0 auto; padding:16px 16px 20px; }
 
-    /* Main layout */
     .shell{
       display:grid;
       grid-template-columns: 1fr 360px;
       gap:14px;
       align-items:stretch;
-
-      /* Use iOS-safe viewport variable; fallback is still fine */
       height: calc((var(--vh) * 100) - 78px - 36px);
-      min-height: 0; /* critical so children can shrink */
+      min-height: 0;
     }
     @media (max-width: 980px){
       body{ overflow:auto; }
@@ -87,8 +79,6 @@
       overflow:hidden;
       display:flex;
       flex-direction:column;
-
-      /* IMPORTANT: allow flex children to shrink so #messages can scroll */
       min-height: 0;
     }
     @media (max-width: 980px){
@@ -103,8 +93,6 @@
       align-items:flex-start;
       justify-content:space-between;
       gap:12px;
-
-      /* Keep header visible inside panel */
       position: sticky;
       top: 0;
       z-index: 10;
@@ -123,26 +111,22 @@
       font-size: 12.5px;
       line-height:1.4;
     }
-
     .status{ margin-top:6px; font-size:12.5px; }
     .status.bad{ color:var(--bad); font-weight:800; }
 
-    /* Chat */
     .chat{
       padding:12px;
       flex: 1 1 auto;
       display:flex;
       flex-direction:column;
       gap:10px;
-
-      /* IMPORTANT: allow #messages to shrink and scroll */
       min-height: 0;
       overflow:hidden;
     }
 
     #messages{
       flex:1 1 auto;
-      min-height:0; /* CRITICAL for scroll inside flex */
+      min-height:0;
       overflow-y:auto;
       background: rgba(248,250,252,.88);
       border: 1px solid rgba(15,23,42,.10);
@@ -216,7 +200,6 @@
       padding: 0 2px;
     }
 
-    /* Jump to latest */
     #jumpLatest{
       position: absolute;
       right: 12px;
@@ -234,7 +217,6 @@
       box-shadow: 0 14px 26px rgba(2,6,23,.18);
     }
 
-    /* MCQ */
     .mcq{
       margin-top:10px;
       display:grid;
@@ -280,7 +262,6 @@
       color:var(--ink);
     }
 
-    /* Composer */
     .composer{
       border-top:1px solid rgba(15,23,42,.08);
       padding: 12px;
@@ -288,8 +269,6 @@
       display:flex;
       flex-direction:column;
       gap:10px;
-
-      /* Keep composer visible */
       position: sticky;
       bottom: 0;
       z-index: 10;
@@ -345,7 +324,6 @@
       border-color: rgba(11,92,255,.18);
     }
 
-    /* Side panel */
     .side{ padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
     .card{
       background: rgba(255,255,255,.92);
@@ -417,7 +395,6 @@
       border:1px solid rgba(245,158,11,.22);
     }
 
-    /* Calculator */
     #calculator{ display:none; }
     .calcGrid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-top:10px; }
     .calcBtn{
@@ -432,7 +409,6 @@
     }
     .calcBtn:hover{ background:#f3f4f6; }
 
-    /* Reward toast */
     #rewardToast{
       position: fixed;
       left:50%;
@@ -450,7 +426,6 @@
     }
     #rewardToast strong{ display:block; font-size: 15px; margin-bottom:2px; }
 
-    /* Mobile */
     @media (max-width: 520px){
       .row{ flex-direction:column; align-items:stretch; }
       #sendBtn{ width:100%; }
@@ -648,18 +623,22 @@
     let correctCount = 0;
     let badges = [];
 
-    // Skill progress (kept for internal difficulty, but NOT shown to child)
+    // Skill progress (internal only; NOT shown to child)
     let skillRow = null;
     let difficultyLevel = 1;
     let streakCorrect = 0;
     let streakWrong = 0;
 
-    // XP (child-friendly progress)
-    let totalXp = 0;     // lifetime-ish (per child)
-    let sessionXp = 0;   // this session only
-    let unlockedRewards = []; // stored per child
+    // XP (stored in Supabase child_xp; shown child-friendly)
+    let totalXp = 0;       // overall XP from child_xp.xp_total
+    let sessionXp = 0;     // XP earned this session (in-memory)
+    let lastXpEarned = 0;  // last award amount (for skill row patch)
 
-    // Reward tiers (easy to tweak later)
+    // Write-behind timers (avoid hammering DB)
+    let xpPersistTimer = null;
+    let skillXpPersistTimer = null;
+
+    // Reward tiers
     const REWARD_TIERS = [
       { xp: 50,  icon: "🧩", label: "Puzzle piece" },
       { xp: 120, icon: "🎨", label: "Colour badge" },
@@ -668,10 +647,12 @@
       { xp: 520, icon: "🐉", label: "Dragon friend" }
     ];
 
+    // Keep unlocked rewards local for now (fast UI; you can move this into DB later)
+    let unlockedRewards = [];
+
     // Current task
     let currentQuestion = null;
     let hintUsedForCurrent = false;
-    let guided = { active:false, steps:[], idx:0 };
 
     // Audio player
     const ttsAudio = new Audio();
@@ -836,34 +817,130 @@
       updateJumpButton();
     }
 
-    // ---------- XP helpers ----------
-    function xpKey(){ return child?.id ? `learnlio_xp_${child.id}` : "learnlio_xp"; }
-    function rewardsKey(){ return child?.id ? `learnlio_rewards_${child.id}` : "learnlio_rewards"; }
-
-    function loadXpAndRewards(){
-      try {
-        const raw = localStorage.getItem(xpKey());
-        totalXp = raw ? Number(raw) : 0;
-        if (!Number.isFinite(totalXp) || totalXp < 0) totalXp = 0;
-      } catch { totalXp = 0; }
-
-      try {
-        const rawR = localStorage.getItem(rewardsKey());
-        unlockedRewards = rawR ? JSON.parse(rawR) : [];
+    // ---------- Rewards local helpers ----------
+    function rewardsKey(){ return child?.id ? `learnlio_rewards_${child.id}` : `learnlio_rewards`; }
+    function loadRewards(){
+      try{
+        const raw = localStorage.getItem(rewardsKey());
+        unlockedRewards = raw ? JSON.parse(raw) : [];
         if (!Array.isArray(unlockedRewards)) unlockedRewards = [];
-      } catch { unlockedRewards = []; }
+      }catch{ unlockedRewards = []; }
+    }
+    function saveRewards(){
+      try{ localStorage.setItem(rewardsKey(), JSON.stringify(unlockedRewards)); }catch{}
     }
 
-    function saveXpAndRewards(){
-      try { localStorage.setItem(xpKey(), String(totalXp)); } catch {}
-      try { localStorage.setItem(rewardsKey(), JSON.stringify(unlockedRewards)); } catch {}
+    // ---------- XP (Supabase) ----------
+    async function loadChildXpFromDb(){
+      totalXp = 0;
+      if (!currentUser?.id || !child?.id) return;
+
+      // Prefer most recent row if duplicates exist (fallback safe)
+      const { data, error } = await sb
+        .from("child_xp")
+        .select("id, xp_total, xp_lifetime, updated_at")
+        .eq("owner_id", currentUser.id)
+        .eq("child_id", child.id)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      if (error){
+        console.warn("child_xp select failed (defaulting to 0):", error);
+        totalXp = 0;
+        return;
+      }
+
+      const row = Array.isArray(data) ? data[0] : data;
+      const val = Number(row?.xp_total ?? 0);
+      totalXp = Number.isFinite(val) && val >= 0 ? val : 0;
     }
 
+    async function persistChildXpToDb(){
+      if (!currentUser?.id || !child?.id) return;
+
+      // Write xp_total + xp_lifetime (lifetime tracks total too for now)
+      const payload = {
+        owner_id: currentUser.id,
+        child_id: child.id,
+        xp_total: totalXp,
+        xp_lifetime: totalXp,
+        updated_at: new Date().toISOString()
+      };
+
+      // Try upsert with assumed unique key; if it fails, fallback to UPDATE latest row or INSERT.
+      try{
+        const { error } = await sb
+          .from("child_xp")
+          .upsert(payload, { onConflict: "owner_id,child_id" });
+        if (!error) return;
+        throw error;
+      }catch(e){
+        console.warn("child_xp upsert failed, trying fallback:", e);
+
+        // Fallback 1: update most recent row
+        try{
+          const { data: rows } = await sb
+            .from("child_xp")
+            .select("id")
+            .eq("owner_id", currentUser.id)
+            .eq("child_id", child.id)
+            .order("updated_at", { ascending: false })
+            .limit(1);
+
+          const id = rows?.[0]?.id;
+          if (id){
+            const { error: uErr } = await sb
+              .from("child_xp")
+              .update({ xp_total: totalXp, xp_lifetime: totalXp, updated_at: payload.updated_at })
+              .eq("id", id);
+            if (!uErr) return;
+            throw uErr;
+          }
+        }catch(err2){
+          console.warn("child_xp update fallback failed:", err2);
+        }
+
+        // Fallback 2: insert a new row
+        try{
+          await sb.from("child_xp").insert(payload);
+        }catch(err3){
+          console.warn("child_xp insert fallback failed:", err3);
+        }
+      }
+    }
+
+    function scheduleXpPersist(){
+      if (xpPersistTimer) clearTimeout(xpPersistTimer);
+      xpPersistTimer = setTimeout(() => {
+        persistChildXpToDb().catch(console.warn);
+      }, 650); // small delay reduces writes but still feels instant
+    }
+
+    function scheduleSkillXpPersist(){
+      if (skillXpPersistTimer) clearTimeout(skillXpPersistTimer);
+      skillXpPersistTimer = setTimeout(() => {
+        persistSkillXpSignals().catch(console.warn);
+      }, 650);
+    }
+
+    async function persistSkillXpSignals(){
+      // This writes XP signals into child_skill_progress row for the current subject+area.
+      // It does NOT change the child UI.
+      if (!skillRow?.id) return;
+      const patch = {
+        xp_total: totalXp,
+        xp_last_earned: lastXpEarned || 0,
+        xp_updated_at: new Date().toISOString()
+      };
+      const { error } = await sb.from("child_skill_progress").update(patch).eq("id", skillRow.id);
+      if (error) console.warn("child_skill_progress xp patch failed:", error);
+    }
+
+    // ---------- XP UI helpers ----------
     function nextRewardInfo(){
       const next = REWARD_TIERS.find(t => t.xp > totalXp) || null;
       if (!next) return { done:true, text:"All rewards unlocked 🎉", goalXp: totalXp, pct: 100 };
       const remaining = next.xp - totalXp;
-      // progress within current tier segment
       const prev = [...REWARD_TIERS].reverse().find(t => t.xp <= totalXp) || { xp: 0 };
       const span = Math.max(1, next.xp - prev.xp);
       const into = totalXp - prev.xp;
@@ -882,19 +959,26 @@
         }
       }
       if (newlyUnlocked.length){
-        // show toast for the last unlocked tier (feels tidy)
         const last = newlyUnlocked[newlyUnlocked.length - 1];
         showRewardToast(`${last.icon} New reward!`, `You unlocked ${last.label}.`);
-        saveXpAndRewards();
+        saveRewards();
       }
     }
 
     function addXp(points, reasonText){
       const p = Math.max(0, Number(points) || 0);
       if (!p) return;
+
+      lastXpEarned = p;
       sessionXp += p;
       totalXp += p;
-      saveXpAndRewards();
+
+      // Persist to Supabase (write-behind)
+      scheduleXpPersist();
+
+      // Also update skill XP signals (write-behind)
+      if (skillRow?.id) scheduleSkillXpPersist();
+
       checkRewardUnlocks();
       if (reasonText) showRewardToast(`+${p} XP`, reasonText);
       updateProgressUI();
@@ -903,23 +987,11 @@
     function friendlyPracticeLabel(){
       if (!subject && !area) return "—";
       if (subject && !area) return subject;
-      // child-friendly naming
       if (subject === "Maths"){
-        const map = {
-          "Addition":"Adding",
-          "Subtraction":"Taking away",
-          "Multiplication":"Times tables",
-          "Division":"Sharing"
-        };
+        const map = { "Addition":"Adding", "Subtraction":"Taking away", "Multiplication":"Times tables", "Division":"Sharing" };
         return map[area] ? `Maths • ${map[area]}` : `Maths • ${area}`;
       }
-      // English
-      const mapE = {
-        "Reading":"Reading",
-        "Spelling":"Spelling",
-        "Sentence building":"Sentences",
-        "Word games":"Word games"
-      };
+      const mapE = { "Reading":"Reading", "Spelling":"Spelling", "Sentence building":"Sentences", "Word games":"Word games" };
       return mapE[area] ? `English • ${mapE[area]}` : `English • ${area}`;
     }
 
@@ -931,17 +1003,15 @@
 
     function updateProgressUI(){
       progressKpi.textContent = `${questionsAnswered} / ${maxQuestions}`;
-
       badgeKpi.textContent = `Badges: ${badges.length ? badges.join(" ") : "—"}`;
 
       const pct = maxQuestions ? Math.min(100, Math.round((questionsAnswered / maxQuestions) * 100)) : 0;
       progressBar.style.width = pct + "%";
 
-      // child-friendly practice label
       const practice = friendlyPracticeLabel();
       practiceKpi.textContent = practice;
 
-      // XP
+      // XP UI: show total XP only, plus next reward
       xpKpi.textContent = `${totalXp} XP`;
       const next = nextRewardInfo();
       nextRewardKpi.textContent = next.text;
@@ -976,7 +1046,6 @@
         badgeChips.style.display = "none";
       }
 
-      // Context line (friendly)
       if (!subject) contextLine.textContent = "Pick a subject to start.";
       else if (!area) contextLine.textContent = `Nice! Choose what you want to practise in ${subject}.`;
       else contextLine.textContent = `We’re practising ${friendlyPracticeLabel()}. Nice and steady.`;
@@ -1006,7 +1075,7 @@
       questionsAnswered = 0;
       correctCount = 0;
       badges = [];
-      sessionXp = 0; // session XP resets, lifetime stays
+      sessionXp = 0;
       updateProgressUI();
     }
 
@@ -1038,7 +1107,7 @@
         return response.data.reply;
       } catch {
         typingIndicator.style.display = "none";
-        return "Sorry — I couldn’t connect right now. Please try again. 🙁";
+        return "Sorry — I couldn’t connect right now. Please try again.";
       }
     }
 
@@ -1087,7 +1156,6 @@
     }
 
     async function loadOrCreateSkillRow(){
-      // We keep this so difficulty can adapt, but we do not show it on the child UI.
       if (!currentUser?.id || !child?.id || !subject || !area) return null;
 
       const { data: existing } = await sb
@@ -1104,6 +1172,7 @@
         difficultyLevel = skillRow.level || 1;
         streakCorrect = skillRow.streak_correct || 0;
         streakWrong = skillRow.streak_wrong || 0;
+        // keep xp_total aligned if row has it
         updateProgressUI();
         return skillRow;
       }
@@ -1121,7 +1190,11 @@
         streak_correct: 0,
         streak_wrong: 0,
         last_session_id: sessionDbId || null,
-        last_seen_at: new Date().toISOString()
+        last_seen_at: new Date().toISOString(),
+        // XP fields if present:
+        xp_total: totalXp,
+        xp_last_earned: 0,
+        xp_updated_at: new Date().toISOString()
       };
 
       const { data: up, error: upErr } = await sb
@@ -1177,7 +1250,11 @@
         streak_correct: newStreakCorrect,
         streak_wrong: newStreakWrong,
         last_session_id: sessionDbId || null,
-        last_seen_at: new Date().toISOString()
+        last_seen_at: new Date().toISOString(),
+        // XP signals for reporting layer:
+        xp_total: totalXp,
+        xp_last_earned: lastXpEarned || 0,
+        xp_updated_at: new Date().toISOString()
       };
 
       const { data, error } = await sb.from("child_skill_progress").update(patch).eq("id", skillRow.id).select("*").single();
@@ -1274,11 +1351,11 @@ Short lines.
 
     async function requestHint(){
       if (!currentQuestion || currentQuestion.kind !== "math"){
-        addBotMessage("I can give a hint when a Maths question is on the screen. 😊");
+        addBotMessage("I can give a hint when a Maths question is on the screen.");
         return;
       }
       if (hintUsedForCurrent){
-        addBotMessage("You’ve already had a hint for this one. Have another go. 😊");
+        addBotMessage("You’ve already had a hint for this one. Have another go.");
         return;
       }
       hintUsedForCurrent = true;
@@ -1340,7 +1417,6 @@ Short lines.
 
     function englishQuestionBank(){
       const bank = [];
-
       bank.push(
         { area:"Reading", prompt:"Which sentence is easiest to read aloud?", choices:[
           "The cat sat on the mat.",
@@ -1357,7 +1433,6 @@ Short lines.
           "School after park went I."
         ], correctIndex:0 }
       );
-
       bank.push(
         { area:"Spelling", prompt:"Which spelling is correct?", choices:[
           "becos",
@@ -1374,7 +1449,6 @@ Short lines.
           "definetely"
         ], correctIndex:1 }
       );
-
       bank.push(
         { area:"Sentence building", prompt:"Choose the best sentence:", choices:[
           "I went shop because hungry was I.",
@@ -1391,7 +1465,6 @@ Short lines.
           "She likes to reading book at night."
         ], correctIndex:0 }
       );
-
       bank.push(
         { area:"Word games", prompt:"Which word means the same as 'happy'?", choices:[
           "sad",
@@ -1408,7 +1481,6 @@ Short lines.
           "small"
         ], correctIndex:1 }
       );
-
       return bank;
     }
 
@@ -1461,9 +1533,7 @@ Short lines.
         streakCorrect = 0;
       }
 
-      // XP: always reward effort; extra for correct
       addXp(isCorrect ? 10 : 4, isCorrect ? "Nice one!" : "Good effort — keep going!");
-
       maybeAwardBadge();
       updateProgressUI();
 
@@ -1563,6 +1633,9 @@ Short lines.
 
       await updateSessionRollups();
 
+      // Make sure XP is persisted when finishing
+      try{ await persistChildXpToDb(); }catch{}
+
       addBotMessage(`✅ That’s the end for today, ${childName}.\n\nYou did really well.`);
     }
 
@@ -1646,9 +1719,7 @@ Short lines.
         streakCorrect = 0;
       }
 
-      // XP: reward effort; extra for correct
       addXp(correct ? 10 : 4, correct ? "Brilliant!" : "Good try — keep going!");
-
       maybeAwardBadge();
       updateProgressUI();
 
@@ -1739,8 +1810,9 @@ Short lines.
       childName = child.child_name || "Child";
       childAge = computeAgeFromDob(child.child_dob);
 
-      // Load XP + rewards for this child
-      loadXpAndRewards();
+      // Load rewards local + XP from Supabase
+      loadRewards();
+      await loadChildXpFromDb();
 
       clearError();
       disableInput(false);
