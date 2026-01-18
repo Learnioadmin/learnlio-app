@@ -1,3 +1,7 @@
+<!-- =========================
+SECTION 1/2 — lesson.html (HEAD + BODY)
+Copy/paste this whole section first.
+========================= -->
 <!doctype html>
 <html lang="en-GB">
 <head>
@@ -32,7 +36,6 @@
     }
     @media (min-width: 981px){ body{ overflow:hidden; } }
 
-    /* Nav */
     .nav{ background:#fff; border-bottom:1px solid rgba(15,23,42,.08); position:sticky; top:0; z-index:50; }
     .nav-inner{ max-width:1140px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-weight:900; letter-spacing:.2px; }
@@ -40,11 +43,7 @@
     .links{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
     .links a{ text-decoration:none; color:var(--ink); padding:9px 10px; border-radius:12px; font-size:14px; }
     .links a.active{ background:var(--soft); }
-    .btn{
-      background:linear-gradient(180deg, var(--brand2), var(--brand));
-      border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer;
-      font-size:14px; font-weight:800; box-shadow: 0 10px 18px rgba(11,92,255,.22);
-    }
+    .btn{ background:linear-gradient(180deg, var(--brand2), var(--brand)); border:none; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:800; box-shadow: 0 10px 18px rgba(11,92,255,.22); }
     .btn.light{ background:#e5e7eb; color:#111; box-shadow:none; }
     .btn.ghost{ background:transparent; border:1px solid rgba(15,23,42,.12); color:var(--ink); box-shadow:none; }
 
@@ -124,6 +123,41 @@
       white-space: pre-wrap;
     }
 
+    .mcq{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:4px;
+    }
+    .mcq-opt{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.12);
+      border-radius: 16px;
+      padding: 12px 12px;
+      cursor:pointer;
+      text-align:left;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      font-weight:900;
+    }
+    .mcq-opt:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 14px 24px rgba(2,6,23,.10);
+      border-color: rgba(11,92,255,.22);
+    }
+    .mcq-letter{
+      width:28px; height:28px; border-radius: 10px;
+      background: var(--soft);
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid rgba(15,23,42,.10);
+      flex:0 0 auto;
+      font-weight:950;
+    }
+    .mcq-text{ line-height:1.45; }
+
     .notice{
       border:1px solid rgba(15,23,42,.10);
       background:#fff;
@@ -132,7 +166,6 @@
       color:var(--muted);
       line-height:1.7;
       font-size:14px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
     }
 
     .controls{
@@ -165,164 +198,6 @@
     }
     .pill:disabled{ opacity:.55; cursor:not-allowed; }
 
-    /* MCQ */
-    .mcq{ display:grid; grid-template-columns: 1fr; gap:10px; margin-top:4px; }
-    .mcq-opt{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.12);
-      border-radius: 16px;
-      padding: 12px 12px;
-      cursor:pointer;
-      text-align:left;
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-      transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-      font-weight:900;
-    }
-    .mcq-opt:hover{
-      transform: translateY(-1px);
-      box-shadow: 0 14px 24px rgba(2,6,23,.10);
-      border-color: rgba(11,92,255,.22);
-    }
-    .mcq-letter{
-      width:28px; height:28px; border-radius: 10px;
-      background: var(--soft);
-      display:flex; align-items:center; justify-content:center;
-      border:1px solid rgba(15,23,42,.10);
-      flex:0 0 auto;
-      font-weight:950;
-    }
-    .mcq-text{ line-height:1.45; }
-
-    /* Fill blank */
-    .fillWrap{
-      display:flex; flex-direction:column; gap:10px;
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding:12px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-    }
-    .fillSentence{
-      font-family:'OpenDyslexic', Arial, sans-serif;
-      font-size: 16px;
-      line-height: 1.8;
-    }
-    .fillOptions{ display:flex; gap:8px; flex-wrap:wrap; }
-    .chip{
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid rgba(15,23,42,.12);
-      background: rgba(248,250,252,.9);
-      cursor:pointer;
-      font-weight:950;
-    }
-    .chip:hover{ border-color: rgba(11,92,255,.22); }
-
-    /* Match pairs */
-    .pairsWrap{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding:12px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-    }
-    @media (max-width: 520px){ .pairsWrap{ grid-template-columns: 1fr; } }
-    .pairCol{ display:flex; flex-direction:column; gap:8px; }
-    .pairItem{
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(15,23,42,.12);
-      background: rgba(248,250,252,.9);
-      cursor:pointer;
-      font-weight:950;
-      user-select:none;
-    }
-    .pairItem.selected{ border-color: rgba(11,92,255,.35); background: var(--soft); }
-    .pairItem.matched{
-      border-color: rgba(16,185,129,.35);
-      background: rgba(16,185,129,.08);
-      cursor: default;
-      opacity: .92;
-    }
-
-    /* Number line */
-    .nlWrap{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding:12px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    .nlRow{
-      display:flex; justify-content:space-between; gap:8px; align-items:center;
-      color: var(--muted);
-      font-weight:850;
-      font-size: 13px;
-    }
-    input[type="range"]{ width:100%; }
-
-    /* Drag step */
-    .dragWrap{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding:12px;
-      box-shadow: 0 10px 18px rgba(2,6,23,.06);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    .dragRow{ display:flex; gap:8px; flex-wrap:wrap; }
-    .dragToken{
-      padding:10px 12px;
-      border-radius: 999px;
-      border:1px solid rgba(15,23,42,.12);
-      background: rgba(248,250,252,.9);
-      cursor: grab;
-      font-weight:950;
-      user-select:none;
-    }
-    .dropZone{
-      border:2px dashed rgba(15,23,42,.18);
-      border-radius: 16px;
-      padding:14px;
-      min-height: 54px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color: var(--muted);
-      font-weight:850;
-      background: rgba(248,250,252,.7);
-    }
-    .dropZone.active{
-      border-color: rgba(11,92,255,.35);
-      background: rgba(11,92,255,.06);
-    }
-
-    /* End screen */
-    .endWrap{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius: 16px;
-      padding:14px;
-      box-shadow: 0 14px 26px rgba(2,6,23,.08);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .endTitle{ font-weight:950; font-size:16px; letter-spacing:-.2px; }
-    .endActions{ display:flex; gap:10px; flex-wrap:wrap; }
-
-    /* Side panel */
     .side{ padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
     .sideCard{
       background: rgba(255,255,255,.92);
@@ -363,7 +238,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
   <header class="nav">
     <div class="nav-inner">
@@ -382,6 +256,7 @@
 
   <main class="container">
     <div class="shell">
+      <!-- Lesson -->
       <section class="panel" aria-label="Learnlio Lesson">
         <div class="panel-head">
           <div>
@@ -399,6 +274,8 @@
           <div id="cardbox" class="cardbox">
             <div id="lessonText" class="lessonText"></div>
             <div id="mcq" class="mcq" style="display:none;"></div>
+
+            <!-- Mount for interactive step types -->
             <div id="interactiveMount" style="display:none;"></div>
           </div>
 
@@ -410,11 +287,12 @@
         </div>
       </section>
 
+      <!-- Progress -->
       <aside class="panel" aria-label="Lesson progress">
         <div class="panel-head">
           <div>
             <div class="title">✨ Your progress</div>
-            <div class="subtitle">Steady effort. No pressure.</div>
+            <div class="subtitle">Just steady effort. No pressure.</div>
           </div>
         </div>
 
@@ -426,7 +304,11 @@
               <span id="topicKpi">—</span>
             </div>
             <div class="bar"><div id="barFill"></div></div>
-            <div class="tiny" id="xpLine">XP this lesson: 0</div>
+
+            <!-- XP UI (no skill level shown) -->
+            <div class="tiny" id="xpLine">XP: 0</div>
+            <div class="tiny" id="xpTodayLine" style="margin-top:6px;">Today: 0</div>
+            <div class="tiny" id="xpNextRewardLine" style="margin-top:6px;">Next reward: —</div>
           </div>
 
           <div class="sideCard">
@@ -447,19 +329,33 @@
     </div>
   </main>
 
+  <!-- SECTION 2 starts below -->
+<!-- =========================
+SECTION 2/2 — lesson.html (SCRIPT + CLOSE TAGS)
+Copy/paste this whole section after Section 1.
+========================= -->
   <script>
   (() => {
+    // iOS vh fix
     function setVh(){ document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
     setVh(); window.addEventListener('resize', setVh);
 
+    // =========================
     // CONFIG
+    // =========================
     const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-    const LESSON_GEN_URL = "https://learnlio-lessons.falling-grass-34ab.workers.dev";
+
+    // Lesson generation Worker
+    const LESSON_GEN_URL = "https://learnlio-lessons.falling-grass-34ab.workers.dev/generate";
+
+    // Google TTS Worker
     const TTS_URL = "https://learnlio-tts.falling-grass-34ab.workers.dev/speak";
+    // =========================
 
     const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // UI
     const pageError = document.getElementById("pageError");
     const contextLine = document.getElementById("contextLine");
     const lessonTextEl = document.getElementById("lessonText");
@@ -477,29 +373,34 @@
     const topicKpi = document.getElementById("topicKpi");
     const barFill = document.getElementById("barFill");
     const xpLine = document.getElementById("xpLine");
+    const xpTodayLine = document.getElementById("xpTodayLine");
+    const xpNextRewardLine = document.getElementById("xpNextRewardLine");
     const practiceLine = document.getElementById("practiceLine");
 
     function showError(msg){ pageError.style.display="block"; pageError.textContent = msg; }
     function clearError(){ pageError.style.display="none"; pageError.textContent = ""; }
 
+    // Auth/child
     let currentUser = null;
     let child = null;
     let childName = "Child";
     let childAge = 10;
 
+    // Context
     let SUBJECT = null;
     let AREA = null;
 
+    // Skill row (for XP storage)
+    let skillRow = null;
+
+    // Lesson runtime
     let lesson = null;
     let steps = [];
     let idx = 0;
+    let stepAnswers = {};
+    let xpEarnedThisLesson = 0;
 
-    let gradedCount = 0;
-    let correctCount = 0;
-
-    let xpSession = 0;
-    let skillRow = null;
-
+    // Audio
     let currentAudio = null;
 
     function computeAgeFromDob(dobStr){
@@ -536,6 +437,15 @@
       const u = new URL(window.location.href);
       SUBJECT = u.searchParams.get("subject");
       AREA = u.searchParams.get("area");
+    }
+
+    function ensureSubjectAreaFromStorageIfMissing(){
+      if (SUBJECT && AREA) return;
+      const ctx = loadCtxFromLocalStorage(child?.id);
+      if (ctx?.subject && ctx?.area){
+        SUBJECT = SUBJECT || ctx.subject;
+        AREA = AREA || ctx.area;
+      }
     }
 
     async function requireAuth(){
@@ -576,16 +486,42 @@
       return true;
     }
 
-    function ensureSubjectAreaFromStorageIfMissing(){
-      if (SUBJECT && AREA) return;
-      const ctx = loadCtxFromLocalStorage(child?.id);
-      if (ctx?.subject && ctx?.area){
-        SUBJECT = SUBJECT || ctx.subject;
-        AREA = AREA || ctx.area;
-      }
+    // ---------- XP helpers ----------
+    function isToday(isoStr){
+      if (!isoStr) return false;
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return false;
+      const now = new Date();
+      return d.getFullYear() === now.getFullYear()
+        && d.getMonth() === now.getMonth()
+        && d.getDate() === now.getDate();
+    }
+
+    function nextRewardInfo(xpTotal){
+      const milestones = [50, 100, 200, 350, 500, 750, 1000];
+      const next = milestones.find(m => xpTotal < m) || (xpTotal + 250);
+      return { next, remaining: Math.max(0, next - xpTotal) };
+    }
+
+    function renderXpUIFromSkillRow(row){
+      const total = Number(row?.xp_total || 0);
+      const last = Number(row?.xp_last_earned || 0);
+      const updatedAt = row?.xp_updated_at || null;
+
+      xpLine.textContent = `XP: ${total}`;
+
+      const today = (updatedAt && isToday(updatedAt)) ? last : 0;
+      xpTodayLine.textContent = `Today: ${today}`;
+
+      const { remaining } = nextRewardInfo(total);
+      xpNextRewardLine.textContent = remaining === 0
+        ? "Next reward: ready 🎁"
+        : `Next reward: ${remaining} XP to go`;
     }
 
     async function loadOrCreateSkillRow(){
+      // child_skill_progress: id owner_id child_id subject area level confidence accuracy ...
+      // plus your XP fields: xp_total xp_last_earned xp_updated_at
       const { data: existing, error } = await sb
         .from("child_skill_progress")
         .select("*")
@@ -595,13 +531,18 @@
         .eq("area", AREA)
         .maybeSingle();
 
-      if (error) console.warn("child_skill_progress load error", error);
+      if (error){
+        console.warn("skill progress load failed", error);
+        return null;
+      }
 
       if (existing?.id){
         skillRow = existing;
+        renderXpUIFromSkillRow(skillRow);
         return skillRow;
       }
 
+      // baseline row (no UI uses level/accuracy)
       const payload = {
         owner_id: currentUser.id,
         child_id: child.id,
@@ -618,7 +559,7 @@
         last_seen_at: new Date().toISOString(),
         xp_total: 0,
         xp_last_earned: 0,
-        xp_updated_at: new Date().toISOString()
+        xp_updated_at: null
       };
 
       const { data: up, error: upErr } = await sb
@@ -628,159 +569,76 @@
         .single();
 
       if (upErr){
-        console.warn("child_skill_progress upsert error", upErr);
+        console.warn("skill progress upsert failed", upErr);
         return null;
       }
+
       skillRow = up;
+      renderXpUIFromSkillRow(skillRow);
       return skillRow;
     }
 
-    async function applyLessonProgressToSkillRow(){
+    async function applyXpToSkillRow(deltaXp){
+      if (!deltaXp || deltaXp <= 0) return;
       if (!skillRow?.id) return;
 
-      const totalAttempts = Number(skillRow.total_attempts || 0) + 1;
-
-      const score = gradedCount ? (correctCount / gradedCount) : null;
-      const pass = (typeof score === "number") ? (score >= 0.70) : false;
-
-      const correctAttempts = Number(skillRow.correct_attempts || 0) + (pass ? 1 : 0);
-      const accuracy = totalAttempts ? (correctAttempts / totalAttempts) : 0;
-
-      const oldConf = (typeof skillRow.confidence === "number") ? skillRow.confidence : 0.5;
-      let confDelta = 0;
-      if (typeof score === "number") {
-        if (score >= 0.85) confDelta = +0.06;
-        else if (score >= 0.70) confDelta = +0.04;
-        else if (score >= 0.50) confDelta = +0.02;
-        else confDelta = -0.02;
-      } else {
-        confDelta = -0.01;
-      }
-      const confidence = Math.max(0, Math.min(1, oldConf + confDelta));
-
-      let streakCorrect = Number(skillRow.streak_correct || 0);
-      let streakWrong = Number(skillRow.streak_wrong || 0);
-      if (typeof score === "number") {
-        if (pass) { streakCorrect += 1; streakWrong = 0; }
-        else { streakWrong += 1; streakCorrect = 0; }
-      }
-
-      let level = Number(skillRow.level || 1);
-      if (totalAttempts >= 6 && confidence > 0.70) level = Math.min(10, level + 1);
-      if (totalAttempts >= 6 && confidence < 0.35) level = Math.max(1, level - 1);
-
-      const xpTotal = Number(skillRow.xp_total || 0) + Number(xpSession || 0);
-
-      const patch = {
-        total_attempts: totalAttempts,
-        correct_attempts: correctAttempts,
-        accuracy,
-        confidence,
-        level,
-        streak_correct: streakCorrect,
-        streak_wrong: streakWrong,
-        last_seen_at: new Date().toISOString(),
-        xp_total: xpTotal,
-        xp_last_earned: Number(xpSession || 0),
-        xp_updated_at: new Date().toISOString()
-      };
+      const newTotal = Number(skillRow.xp_total || 0) + deltaXp;
 
       const { data: updated, error } = await sb
         .from("child_skill_progress")
-        .update(patch)
+        .update({
+          xp_total: newTotal,
+          xp_last_earned: deltaXp,
+          xp_updated_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString()
+        })
         .eq("id", skillRow.id)
         .select("*")
         .single();
 
       if (error){
-        console.warn("child_skill_progress update error", error);
+        console.warn("xp update failed", error);
         return;
       }
+
       skillRow = updated;
+      renderXpUIFromSkillRow(skillRow);
     }
 
-    function looksLikeImageStep(step){
-      const txt = (step?.prompt || step?.text || step?.sentence || "").toLowerCase();
-      return Boolean(step?.requiresImage) ||
-        txt.includes("in the picture") ||
-        txt.includes("in this picture") ||
-        txt.includes("in the image") ||
-        txt.includes("in this image") ||
-        txt.includes("look at the picture") ||
-        txt.includes("look at the image");
-    }
-
-    function sanitizeSteps(rawSteps){
-      const out = [];
-      for (const s of (rawSteps || [])){
-        if (!s || typeof s !== "object") continue;
-        if (looksLikeImageStep(s)) continue;
-
-        if (s.type === "fill_blank"){
-          const sentence = String(s.sentence || "").trim();
-          const answer = String(s.answer || "").trim();
-          const options = Array.isArray(s.options) ? s.options.filter(x => typeof x === "string" && x.trim()) : [];
-          if (!sentence || (!answer && options.length < 2)) continue;
-        }
-
-        if (s.type === "mcq"){
-          const choices = Array.isArray(s.choices) ? s.choices.filter(x => typeof x === "string" && x.trim()) : [];
-          if (choices.length < 2) continue;
-        }
-
-        if (s.type === "match_pairs"){
-          const pairs = Array.isArray(s.pairs) ? s.pairs : [];
-          if (pairs.length < 2) continue;
-        }
-
-        if (s.type === "number_line"){
-          if (!Number.isFinite(Number(s.min)) || !Number.isFinite(Number(s.max))) continue;
-          if (!Number.isFinite(Number(s.start)) || !Number.isFinite(Number(s.target))) continue;
-        }
-
-        out.push(s);
-      }
-      return out;
-    }
-
+    // ---------- Lesson generation ----------
     async function fetchGeneratedLesson(){
       const payload = {
         subject: SUBJECT,
         area: AREA,
         age: childAge,
-        level: Number(skillRow?.level || 1),
+        level: 1, // not shown; worker uses it as “difficulty hint”
         owner_id: currentUser.id,
-        child_id: child.id,
-        wantInteractive: true,
-        allowedTypes: ["intro","teach","mcq","fill_blank","match_pairs","number_line","interactive_drag","finish"]
+        child_id: child.id
       };
 
-      const r = await fetch(`${LESSON_GEN_URL.replace(/\/+$/,"")}/generate`, {
+      const r = await fetch(LESSON_GEN_URL, {
         method: "POST",
         headers: { "Content-Type":"application/json" },
         body: JSON.stringify(payload)
       });
 
       const text = await r.text().catch(()=> "");
-      let json = null;
-      try{ json = text ? JSON.parse(text) : null; }catch{}
+      let j = null;
+      try{ j = text ? JSON.parse(text) : null; }catch{}
 
       if (!r.ok){
-        const msg = json?.error || text || `Lesson generation failed (${r.status})`;
-        throw new Error(msg);
+        throw new Error(j?.error || text || `Lesson generation failed (${r.status})`);
       }
 
-      const lessonObj = json?.lesson || json;
-      const rawSteps = Array.isArray(lessonObj?.steps) ? lessonObj.steps : [];
-      const cleanSteps = sanitizeSteps(rawSteps);
-
-      if (!cleanSteps.length){
-        throw new Error("No usable steps returned (image-only or incomplete steps were removed).");
+      const lessonObj = j?.lesson || j; // supports either {lesson:{...}} or direct
+      if (!lessonObj?.steps || !Array.isArray(lessonObj.steps) || !lessonObj.steps.length){
+        throw new Error("Lesson returned no steps.");
       }
 
-      return { title: lessonObj?.title || "", steps: cleanSteps };
+      return lessonObj;
     }
 
+    // ---------- Render ----------
     function setProgressUI(){
       const total = steps.length || 0;
       stepKpi.textContent = `${Math.min(idx+1,total)} / ${total}`;
@@ -788,7 +646,6 @@
       practiceLine.textContent = `${SUBJECT} practice: ${AREA}`;
       const pct = total ? Math.round(((idx) / total) * 100) : 0;
       barFill.style.width = Math.min(100, Math.max(0, pct)) + "%";
-      xpLine.textContent = `XP this lesson: ${xpSession}`;
     }
 
     function clearInteractive(){
@@ -796,113 +653,119 @@
       interactiveMount.innerHTML = "";
     }
 
-    function showInteractive(html){
-      interactiveMount.style.display = "block";
-      interactiveMount.innerHTML = html;
-    }
+    function renderStep(){
+      clearError();
+      hintLine.textContent = "";
+      mcqEl.innerHTML = "";
+      mcqEl.style.display = "none";
+      clearInteractive();
 
-    function awardXP(points){
-      xpSession += Number(points || 0);
+      if (!steps.length){
+        lessonTextEl.textContent = "No lesson steps found.";
+        return;
+      }
+
+      const step = steps[idx];
       setProgressUI();
+
+      if (!step){
+        lessonTextEl.textContent = "Finished.";
+        return;
+      }
+
+      if (step.type === "intro" || step.type === "teach" || step.type === "finish"){
+        lessonTextEl.textContent = step.text || "";
+        nextBtn.textContent = (step.type === "finish") ? "✅ Complete" : "➡️ Next";
+        if (step.type === "finish") hintLine.textContent = "Tap complete to finish.";
+        return;
+      }
+
+      if (step.type === "mcq"){
+        lessonTextEl.textContent = step.prompt || "";
+        mcqEl.style.display = "grid";
+
+        const letters = ["A","B","C","D","E","F"];
+        (step.choices || []).forEach((choice, i) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "mcq-opt";
+          btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${choice}</span>`;
+          btn.addEventListener("click", () => chooseMCQ(i));
+          mcqEl.appendChild(btn);
+        });
+
+        const saved = stepAnswers[idx];
+        if (saved){
+          hintLine.textContent = saved.isCorrect ? "Nice — that was correct ✅" : "Good try — keep going 💛";
+        }
+
+        nextBtn.textContent = "➡️ Next";
+        return;
+      }
+
+      // Everything else: skip gracefully (keeps customer experience smooth)
+      lessonTextEl.textContent = step.prompt || "This step is not available yet.";
+      interactiveMount.style.display = "block";
+      interactiveMount.innerHTML = `
+        <div class="notice">
+          This activity is coming soon. You can press Next to keep going.
+        </div>
+      `;
+      nextBtn.textContent = "➡️ Next";
     }
 
-    function markAnswer(isCorrect){
-      gradedCount += 1;
-      if (isCorrect) correctCount += 1;
-    }
+    async function chooseMCQ(pickedIndex){
+      const step = steps[idx];
+      if (!step || step.type !== "mcq") return;
 
-    function scheduleAdvance(delayMs=520){
+      const correctIndex = Number(step.correctIndex);
+      const isCorrect = pickedIndex === correctIndex;
+
+      // gentle XP
+      const delta = isCorrect ? 10 : 6;
+      xpEarnedThisLesson += delta;
+
+      stepAnswers[idx] = { pickedIndex, isCorrect };
+      hintLine.textContent = isCorrect ? "Nice work ✅" : "Good try 💛";
+
+      // Auto-move on (small delay feels natural)
       setTimeout(() => {
         if (idx < steps.length - 1){
           idx += 1;
           renderStep();
         } else {
-          renderEndScreen();
+          // If last step is MCQ, let Next handle finish if needed
         }
-      }, delayMs);
+      }, 450);
     }
 
-    function renderEndScreen(){
-      clearError();
+    async function completeLesson(){
+      // Apply XP to Supabase (persists)
+      await applyXpToSkillRow(xpEarnedThisLesson);
+
+      contextLine.textContent = `Saved ✅ ${childName} finished "${lesson?.title || "Lesson"}".`;
+      lessonTextEl.textContent =
+        `Nice work, ${childName}.\n\n` +
+        `You earned ${xpEarnedThisLesson} XP.\n\n` +
+        `What would you like to do now?`;
+
       mcqEl.style.display = "none";
-      mcqEl.innerHTML = "";
       clearInteractive();
-      lessonTextEl.textContent = "";
 
-      const title = (lesson?.title || "Lesson");
-
-      showInteractive(`
-        <div class="endWrap">
-          <div class="endTitle">Nice work, ${escapeHtml(childName)}.</div>
-          <div class="notice">
-            You finished <b>${escapeHtml(title)}</b>.<br><br>
-            XP earned today: <b>${xpSession}</b>
-          </div>
-          <div class="endActions">
-            <button id="doneTodayBtn" class="pill primary" type="button">✅ Done for today</button>
-            <button id="anotherLessonBtn" class="pill" type="button">✨ Try another lesson</button>
-            <a class="pill" href="/dash.html" style="display:inline-flex; align-items:center;">🏠 Dashboard</a>
-          </div>
-        </div>
-      `);
-
+      // Replace controls with end options
       nextBtn.disabled = true;
       backBtn.disabled = true;
-      hintLine.textContent = "Choose what to do next.";
 
-      persistAndLock();
+      interactiveMount.style.display = "block";
+      interactiveMount.innerHTML = `
+        <div class="row" style="margin-top:10px;">
+          <a class="pill primary" href="/lessons.html" style="display:inline-flex; align-items:center;">📘 Try another lesson</a>
+          <a class="pill" href="/chat.html" style="display:inline-flex; align-items:center;">🎓 Go to Tutor</a>
+          <a class="pill" href="/dash.html" style="display:inline-flex; align-items:center;">🏠 Done for today</a>
+        </div>
+      `;
 
-      document.getElementById("doneTodayBtn")?.addEventListener("click", () => window.location.href = "/dash.html");
-      document.getElementById("anotherLessonBtn")?.addEventListener("click", () =>
-        window.location.href = `/lesson.html?subject=${encodeURIComponent(SUBJECT)}&area=${encodeURIComponent(AREA)}`
-      );
-    }
-
-    let persistRan = false;
-    async function persistAndLock(){
-      if (persistRan) return;
-      persistRan = true;
-      await applyLessonProgressToSkillRow();
-    }
-
-    function disableAllButtons(root){
-      if (!root) return;
-      root.querySelectorAll("button").forEach(b => { b.disabled = true; });
-    }
-
-    function escapeHtml(s){
-      return String(s ?? "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    function makeSimpleOptions(answer){
-      const a = String(answer).trim();
-      if (!a) return [];
-      const lower = a.toLowerCase();
-
-      // If it's a number word or digit, try small variations
-      const asNum = Number(a);
-      if (Number.isFinite(asNum)){
-        const opts = [String(asNum), String(asNum+1), String(Math.max(0, asNum-1)), String(asNum+2)];
-        return shuffle(opts).slice(0,4);
-      }
-
-      // Otherwise: swap/nearby common confusions
-      const opts = [a, a + "s", lower, a.replace(/.$/,"")];
-      return shuffle(Array.from(new Set(opts))).slice(0,4);
-    }
-
-    function shuffle(arr){
-      const a = arr.slice();
-      for (let i=a.length-1;i>0;i--){
-        const j = Math.floor(Math.random()*(i+1));
-        [a[i],a[j]] = [a[j],a[i]];
-      }
-      return a;
+      hintLine.textContent = "You can choose what to do next.";
     }
 
     // ----- Read aloud -----
@@ -944,8 +807,6 @@
         });
 
         if (!r.ok){
-          const t = await r.text().catch(()=> "");
-          console.warn("TTS failed", r.status, t);
           hintLine.textContent = "Read aloud isn’t available right now.";
           return;
         }
@@ -981,374 +842,43 @@
       }
     }
 
-    // Render step (continues in Chunk 2)
-    // -------------------------
-    // Step rendering + widgets
-    // -------------------------
-    function renderStep(){
-      clearError();
-      hintLine.textContent = "";
-      mcqEl.innerHTML = "";
-      mcqEl.style.display = "none";
-      clearInteractive();
-
-      if (!steps.length){
-        lessonTextEl.textContent = "No lesson steps found.";
-        return;
-      }
-
-      const step = steps[idx];
-      setProgressUI();
-
-      if (!step){
-        renderEndScreen();
-        return;
-      }
-
-      // Intro/teach
-      if (step.type === "intro" || step.type === "teach"){
-        lessonTextEl.textContent = step.text || "";
-        nextBtn.textContent = "➡️ Next";
-        nextBtn.disabled = false;
-        return;
-      }
-
-      // Finish
-      if (step.type === "finish"){
-        lessonTextEl.textContent = step.text || "Nice work. You are done.";
-        nextBtn.textContent = "✅ Finish";
-        nextBtn.disabled = false;
-        return;
-      }
-
-      // MCQ
-      if (step.type === "mcq"){
-        lessonTextEl.textContent = step.prompt || "";
-        mcqEl.style.display = "grid";
-
-        const letters = ["A","B","C","D","E","F"];
-        const choices = Array.isArray(step.choices) ? step.choices : [];
-
-        choices.forEach((choice, i) => {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "mcq-opt";
-          btn.innerHTML = `<span class="mcq-letter">${letters[i] || ""}</span><span class="mcq-text">${escapeHtml(String(choice))}</span>`;
-          btn.addEventListener("click", () => {
-            const correctIndex = Number(step.correctIndex);
-            const isCorrect = (i === correctIndex);
-            awardXP(isCorrect ? 10 : 6);
-            markAnswer(isCorrect);
-            hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
-            disableAllButtons(mcqEl);
-            scheduleAdvance(520);
-          });
-          mcqEl.appendChild(btn);
-        });
-
-        nextBtn.textContent = "➡️ Next";
-        nextBtn.disabled = false;
-        return;
-      }
-
-      // Fill blank
-      if (step.type === "fill_blank"){
-        const sentence = String(step.sentence || "").trim();
-        const prompt = String(step.prompt || "").trim();
-        const answer = String(step.answer || "").trim();
-        let options = Array.isArray(step.options) ? step.options : [];
-        if (!options.length && answer) options = makeSimpleOptions(answer);
-        options = options.filter(x => typeof x === "string" && x.trim()).slice(0, 6);
-
-        // Safety: if still broken, skip silently
-        if (!sentence || options.length < 2){
-          scheduleAdvance(10);
-          return;
-        }
-
-        lessonTextEl.textContent = prompt || "Choose the missing word:";
-        showInteractive(`
-          <div class="fillWrap">
-            <div class="fillSentence">${escapeHtml(sentence)}</div>
-            <div class="fillOptions" id="fillOpts"></div>
-          </div>
-        `);
-
-        const wrap = document.getElementById("fillOpts");
-        options.forEach(opt => {
-          const chip = document.createElement("button");
-          chip.type = "button";
-          chip.className = "chip";
-          chip.textContent = opt;
-          chip.addEventListener("click", () => {
-            const isCorrect = answer ? (opt.trim().toLowerCase() === answer.trim().toLowerCase()) : true;
-            awardXP(isCorrect ? 10 : 6);
-            markAnswer(isCorrect);
-            hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
-            disableAllButtons(interactiveMount);
-            scheduleAdvance(520);
-          });
-          wrap.appendChild(chip);
-        });
-
-        nextBtn.textContent = "➡️ Next";
-        nextBtn.disabled = false;
-        return;
-      }
-
-      // Match pairs
-      if (step.type === "match_pairs"){
-        const prompt = String(step.prompt || "Match the pairs.").trim();
-        const pairs = Array.isArray(step.pairs) ? step.pairs : [];
-        if (pairs.length < 2){
-          scheduleAdvance(10);
-          return;
-        }
-
-        lessonTextEl.textContent = prompt;
-
-        // Build left list and right list (shuffled)
-        const left = pairs.map(p => String(p.left ?? "")).filter(Boolean);
-        const right = shuffle(pairs.map(p => String(p.right ?? "")).filter(Boolean));
-        const map = new Map(pairs.map(p => [String(p.left ?? ""), String(p.right ?? "")]));
-
-        let selectedLeft = null;
-        let matched = new Set();
-        let totalToMatch = Math.min(left.length, right.length);
-
-        showInteractive(`
-          <div class="pairsWrap">
-            <div class="pairCol" id="leftCol"></div>
-            <div class="pairCol" id="rightCol"></div>
-          </div>
-        `);
-
-        const leftCol = document.getElementById("leftCol");
-        const rightCol = document.getElementById("rightCol");
-
-        function renderCols(){
-          leftCol.innerHTML = "";
-          rightCol.innerHTML = "";
-
-          left.forEach(lv => {
-            const btn = document.createElement("div");
-            btn.className = "pairItem" + (matched.has("L:"+lv) ? " matched" : (selectedLeft === lv ? " selected" : ""));
-            btn.textContent = lv;
-            if (!matched.has("L:"+lv)){
-              btn.addEventListener("click", () => {
-                selectedLeft = lv;
-                renderCols();
-              });
-            }
-            leftCol.appendChild(btn);
-          });
-
-          right.forEach(rv => {
-            const btn = document.createElement("div");
-            btn.className = "pairItem" + (matched.has("R:"+rv) ? " matched" : "");
-            btn.textContent = rv;
-
-            if (!matched.has("R:"+rv)){
-              btn.addEventListener("click", () => {
-                if (!selectedLeft) return;
-                const correctRight = map.get(selectedLeft);
-                const isCorrect = (rv === correctRight);
-
-                if (isCorrect){
-                  matched.add("L:"+selectedLeft);
-                  matched.add("R:"+rv);
-                  awardXP(8);
-                  hintLine.textContent = "Nice ✅";
-                } else {
-                  awardXP(4);
-                  hintLine.textContent = "Good try 💛";
-                }
-
-                markAnswer(isCorrect);
-
-                selectedLeft = null;
-                renderCols();
-
-                // Completed?
-                const matchedPairs = Array.from(matched).filter(x => x.startsWith("L:")).length;
-                if (matchedPairs >= totalToMatch){
-                  hintLine.textContent = "All matched ✅";
-                  disableAllButtons(interactiveMount);
-                  scheduleAdvance(650);
-                }
-              });
-            }
-            rightCol.appendChild(btn);
-          });
-        }
-
-        renderCols();
-
-        nextBtn.textContent = "➡️ Next";
-        nextBtn.disabled = false;
-        return;
-      }
-
-      // Number line
-      if (step.type === "number_line"){
-        const prompt = String(step.prompt || "Use the number line.").trim();
-        const min = Number(step.min);
-        const max = Number(step.max);
-        const start = Number(step.start);
-        const target = Number(step.target);
-
-        if (![min,max,start,target].every(n => Number.isFinite(n))){
-          scheduleAdvance(10);
-          return;
-        }
-
-        lessonTextEl.textContent = prompt;
-
-        showInteractive(`
-          <div class="nlWrap">
-            <div class="nlRow">
-              <span>Min: ${min}</span>
-              <span><b>Move to: ${target}</b></span>
-              <span>Max: ${max}</span>
-            </div>
-            <input id="nlRange" type="range" min="${min}" max="${max}" value="${start}" step="1" />
-            <div class="nlRow">
-              <span>Start: ${start}</span>
-              <span id="nlVal"><b>Now: ${start}</b></span>
-              <span>Target: ${target}</span>
-            </div>
-            <button id="nlSubmit" class="pill primary" type="button">✅ Check</button>
-          </div>
-        `);
-
-        const range = document.getElementById("nlRange");
-        const val = document.getElementById("nlVal");
-        const submit = document.getElementById("nlSubmit");
-
-        range.addEventListener("input", () => {
-          val.innerHTML = `<b>Now: ${range.value}</b>`;
-        });
-
-        submit.addEventListener("click", () => {
-          const picked = Number(range.value);
-          const isCorrect = picked === target;
-          awardXP(isCorrect ? 10 : 6);
-          markAnswer(isCorrect);
-          hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
-          submit.disabled = true;
-          range.disabled = true;
-          scheduleAdvance(650);
-        });
-
-        nextBtn.textContent = "➡️ Next";
-        nextBtn.disabled = false;
-        return;
-      }
-
-      // Drag (simple token -> zone)
-      if (step.type === "interactive_drag"){
-        const prompt = String(step.prompt || "Drag the token into the box.").trim();
-        const items = Array.isArray(step.items) ? step.items : [];
-        if (!items.length){
-          scheduleAdvance(10);
-          return;
-        }
-
-        lessonTextEl.textContent = prompt;
-
-        // We treat "items[0].label" as the correct token for now.
-        const correct = String(items[0]?.label ?? "").trim();
-        const tokens = shuffle(items.map(i => String(i.label ?? "")).filter(Boolean));
-        if (!correct || !tokens.length){
-          scheduleAdvance(10);
-          return;
-        }
-
-        showInteractive(`
-          <div class="dragWrap">
-            <div class="dragRow" id="dragRow"></div>
-            <div class="dropZone" id="dropZone">Drop here</div>
-          </div>
-        `);
-
-        const row = document.getElementById("dragRow");
-        const zone = document.getElementById("dropZone");
-
-        tokens.forEach(t => {
-          const el = document.createElement("div");
-          el.className = "dragToken";
-          el.draggable = true;
-          el.textContent = t;
-          el.addEventListener("dragstart", (e) => {
-            e.dataTransfer.setData("text/plain", t);
-          });
-          row.appendChild(el);
-        });
-
-        zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("active"); });
-        zone.addEventListener("dragleave", () => zone.classList.remove("active"));
-        zone.addEventListener("drop", (e) => {
-          e.preventDefault();
-          zone.classList.remove("active");
-          const t = e.dataTransfer.getData("text/plain");
-          const isCorrect = (t === correct);
-          awardXP(isCorrect ? 10 : 6);
-          markAnswer(isCorrect);
-          hintLine.textContent = isCorrect ? "Nice ✅" : "Good try 💛";
-          zone.textContent = `Dropped: ${t}`;
-          disableAllButtons(interactiveMount);
-          scheduleAdvance(700);
-        });
-
-        nextBtn.textContent = "➡️ Next";
-        nextBtn.disabled = false;
-        return;
-      }
-
-      // Unknown: skip
-      scheduleAdvance(10);
-    }
-
     // Controls
     backBtn.addEventListener("click", () => {
-      if (idx > 0){
-        idx -= 1;
-        renderStep();
-      }
+      if (idx > 0){ idx -= 1; renderStep(); }
     });
 
     nextBtn.addEventListener("click", async () => {
       const step = steps[idx];
-      if (!step){
-        renderEndScreen();
+
+      if (step?.type === "mcq" && !stepAnswers[idx]){
+        hintLine.textContent = "Tap an answer first 💛";
         return;
       }
 
-      if (step.type === "finish"){
-        renderEndScreen();
+      if (step?.type === "finish"){
+        await completeLesson();
         return;
       }
 
       if (idx < steps.length - 1){
         idx += 1;
         renderStep();
-      } else {
-        renderEndScreen();
       }
     });
 
     finishBtn.addEventListener("click", async () => {
-      await persistAndLock();
+      // Early exit still saves XP earned so far
+      await applyXpToSkillRow(xpEarnedThisLesson);
       window.location.href = "/lessons.html";
     });
 
     helpBtn.addEventListener("click", () => {
       alert(
         "How lessons work:\n\n" +
-        "• Tap answers to move on automatically\n" +
-        "• Use Read aloud if you want it\n" +
-        "• No pressure — you can finish any time\n\n" +
-        "Tip: If something feels tricky, try your best and keep going."
+        "• Read the step\n" +
+        "• Tap an answer (if shown)\n\n" +
+        "No pressure. You can finish any time.\n\n" +
+        "Read aloud plays only when you press the button."
       );
     });
 
@@ -1383,19 +913,19 @@
       }
 
       clearError();
-      contextLine.textContent = `Preparing a lesson for ${childName}…`;
+      contextLine.textContent = `Loading a lesson for ${childName}…`;
 
+      // Load XP + ensure row exists
       await loadOrCreateSkillRow();
 
+      // Get a generated lesson
       try{
         lesson = await fetchGeneratedLesson();
       }catch(e){
         console.error(e);
         showError("Could not load a lesson right now.");
         lessonTextEl.textContent =
-          "We couldn’t load a lesson.\n\n" +
-          "Please try again in a moment.\n\n" +
-          "If this keeps happening, the lesson generator worker may be offline.";
+          "We couldn’t load a lesson.\n\nPlease try again in a moment.";
         nextBtn.disabled = true;
         backBtn.disabled = true;
         return;
@@ -1410,12 +940,12 @@
       }
 
       idx = 0;
-      xpSession = 0;
-      gradedCount = 0;
-      correctCount = 0;
+      stepAnswers = {};
+      xpEarnedThisLesson = 0;
 
       const title = lesson.title ? ` — ${lesson.title}` : "";
       contextLine.textContent = `${SUBJECT} • ${AREA}${title}`;
+
       nextBtn.disabled = false;
       backBtn.disabled = false;
 
