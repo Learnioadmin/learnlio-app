@@ -40,10 +40,30 @@
         linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
+
+    /* Overlay themes (applied by data attribute on <body>) */
+    body[data-overlay="softYellow"]{
+      --bg1:#fff9db; --bg2:#fffdf2; --soft:#fff2c7;
+    }
+    body[data-overlay="softBlue"]{
+      --bg1:#eef6ff; --bg2:#f7fbff; --soft:#e7f0ff;
+    }
+    body[data-overlay="softGreen"]{
+      --bg1:#eefcf3; --bg2:#f7fffa; --soft:#e6f8ee;
+    }
+    body[data-overlay="paper"]{
+      --bg1:#fbf6ec; --bg2:#fffdf8; --soft:#f4ead7;
+    }
+    body[data-overlay="dark"]{
+      --bg1:#0b1220; --bg2:#0b1220; --soft:rgba(255,255,255,.08);
+      --ink:#e5e7eb; --muted:#a3a3a3;
+    }
+
     @media (min-width: 981px){
       body{ overflow:hidden; }
     }
 
+    /* Logged-in nav */
     .nav{ background:#fff; border-bottom:1px solid rgba(15,23,42,.08); position:sticky; top:0; z-index:50; }
     .nav-inner{ max-width:1140px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-weight:900; letter-spacing:.2px; }
@@ -57,6 +77,7 @@
 
     .container{ max-width:1140px; margin:0 auto; padding:16px 16px 20px; }
 
+    /* Main layout */
     .shell{
       display:grid;
       grid-template-columns: 1fr 360px;
@@ -82,7 +103,7 @@
       min-height: 0;
     }
     @media (max-width: 980px){
-      .panel{ min-height: 520px; }
+      .panel{ min-height: 560px; }
     }
 
     .panel-head{
@@ -114,6 +135,29 @@
     .status{ margin-top:6px; font-size:12.5px; }
     .status.bad{ color:var(--bad); font-weight:800; }
 
+    /* Mini progress row (mobile) */
+    #miniProgress{
+      display:none;
+      margin-top:8px;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .miniChip{
+      background: rgba(11,92,255,.10);
+      border: 1px solid rgba(11,92,255,.18);
+      color: var(--ink);
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-weight:950;
+      font-size: 13px;
+    }
+    .miniChip.dark{
+      background: rgba(245,158,11,.12);
+      border: 1px solid rgba(245,158,11,.22);
+    }
+
+    /* Chat */
     .chat{
       padding:12px;
       flex: 1 1 auto;
@@ -123,7 +167,6 @@
       min-height: 0;
       overflow:hidden;
     }
-
     #messages{
       flex:1 1 auto;
       min-height:0;
@@ -200,6 +243,7 @@
       padding: 0 2px;
     }
 
+    /* Jump to latest */
     #jumpLatest{
       position: absolute;
       right: 12px;
@@ -217,6 +261,7 @@
       box-shadow: 0 14px 26px rgba(2,6,23,.18);
     }
 
+    /* MCQ */
     .mcq{
       margin-top:10px;
       display:grid;
@@ -262,6 +307,42 @@
       color:var(--ink);
     }
 
+    /* Inline choice buttons (subject/area) inside chat bubbles */
+    .choiceGrid{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+    .choiceBtn{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.12);
+      border-radius:16px;
+      padding:12px 12px;
+      cursor:pointer;
+      text-align:left;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      font-weight:900;
+      transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
+    }
+    .choiceBtn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(11,92,255,.22);
+      box-shadow: 0 14px 24px rgba(2,6,23,.10);
+    }
+    .choiceIcon{
+      width:28px;height:28px;border-radius:10px;
+      background: var(--soft);
+      display:flex;align-items:center;justify-content:center;
+      border:1px solid rgba(15,23,42,.10);
+      flex:0 0 auto;
+      font-weight:950;
+    }
+
+    /* Composer */
     .composer{
       border-top:1px solid rgba(15,23,42,.08);
       padding: 12px;
@@ -324,6 +405,7 @@
       border-color: rgba(11,92,255,.18);
     }
 
+    /* Side panel */
     .side{ padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
     .card{
       background: rgba(255,255,255,.92);
@@ -395,6 +477,7 @@
       border:1px solid rgba(245,158,11,.22);
     }
 
+    /* Calculator */
     #calculator{ display:none; }
     .calcGrid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-top:10px; }
     .calcBtn{
@@ -409,6 +492,7 @@
     }
     .calcBtn:hover{ background:#f3f4f6; }
 
+    /* Reward toast */
     #rewardToast{
       position: fixed;
       left:50%;
@@ -426,6 +510,13 @@
     }
     #rewardToast strong{ display:block; font-size: 15px; margin-bottom:2px; }
 
+    /* Mobile: hide the big progress panel (we use mini + modal) */
+    @media (max-width: 980px){
+      aside.panel[aria-label="Session progress"]{ display:none; }
+      #miniProgress{ display:flex; }
+    }
+
+    /* Mobile */
     @media (max-width: 520px){
       .row{ flex-direction:column; align-items:stretch; }
       #sendBtn{ width:100%; }
@@ -464,9 +555,21 @@
           <div class="title-wrap">
             <div class="title">🎓 Learnlio Tutor</div>
             <div id="contextLine" class="subtitle">A calm, step-by-step session. Pick a subject to start.</div>
+
+            <!-- Mini progress shown on mobile -->
+            <div id="miniProgress">
+              <span class="miniChip" id="miniXp">0 XP</span>
+              <span class="miniChip dark" id="miniNext">Next: —</span>
+              <button id="openProgressBtn" class="btn ghost" type="button" style="padding:8px 10px; font-weight:950;">✨ Progress</button>
+            </div>
+
             <div id="pageError" class="status bad" style="display:none;"></div>
           </div>
-          <button id="helpBtn" class="btn ghost" type="button">Help</button>
+
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button id="overlayBtn" class="btn ghost" type="button">Overlay</button>
+            <button id="helpBtn" class="btn ghost" type="button">Help</button>
+          </div>
         </div>
 
         <div class="chat">
@@ -477,6 +580,7 @@
         </div>
 
         <div class="composer">
+          <!-- Hidden (we now pick inside chat) -->
           <div id="subject-selection" class="pillbar" style="display:none;">
             <button class="pill primary" id="mathsBtn" type="button">➕ Maths</button>
             <button class="pill primary" id="englishBtn" type="button">📚 English</button>
@@ -500,7 +604,7 @@
         </div>
       </section>
 
-      <!-- Side panel -->
+      <!-- Side panel (desktop only; hidden on mobile) -->
       <aside class="panel" aria-label="Session progress">
         <div class="panel-head">
           <div class="title-wrap">
@@ -549,6 +653,72 @@
 
   <div id="rewardToast" role="status" aria-live="polite"></div>
 
+  <!-- Overlay chooser modal -->
+  <div id="overlayModal" style="display:none; position:fixed; inset:0; z-index:9998; background:rgba(2,6,23,.45);">
+    <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+                width:min(520px, calc(100vw - 24px)); background:#fff; border-radius:18px;
+                border:1px solid rgba(15,23,42,.12); box-shadow:0 30px 60px rgba(2,6,23,.22);
+                padding:14px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <div style="font-weight:950;">Choose a calm background</div>
+        <button id="overlayClose" class="btn light" type="button">Close</button>
+      </div>
+      <div style="margin-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <button class="pill" data-overlay="default" type="button">Default</button>
+        <button class="pill" data-overlay="softYellow" type="button">Soft Yellow</button>
+        <button class="pill" data-overlay="softBlue" type="button">Soft Blue</button>
+        <button class="pill" data-overlay="softGreen" type="button">Soft Green</button>
+        <button class="pill" data-overlay="paper" type="button">Paper</button>
+        <button class="pill" data-overlay="dark" type="button">Dark Calm</button>
+      </div>
+      <div class="subtitle" style="margin-top:10px;">
+        This only changes colours — it won’t change your work.
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile progress modal -->
+  <div id="progressModal" style="display:none; position:fixed; inset:0; z-index:9998; background:rgba(2,6,23,.45);">
+    <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+                width:min(520px, calc(100vw - 24px)); background:#fff; border-radius:18px;
+                border:1px solid rgba(15,23,42,.12); box-shadow:0 30px 60px rgba(2,6,23,.22);
+                padding:14px; max-height: calc(100vh - 48px); overflow:auto;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <div style="font-weight:950;">✨ Your progress</div>
+        <button id="progressClose" class="btn light" type="button">Close</button>
+      </div>
+
+      <div class="card" style="margin-top:12px;">
+        <h3>Today</h3>
+
+        <div class="kpi">
+          <strong id="m_progressKpi">0 / 0</strong>
+          <span id="m_badgeKpi">Badges: —</span>
+        </div>
+        <div class="bar"><div id="m_progressBar"></div></div>
+
+        <div class="meta">
+          <div class="meta-row"><span>We’re practising</span><b id="m_practiceKpi">—</b></div>
+          <div class="meta-row"><span>Your XP</span><b id="m_xpKpi">0 XP</b></div>
+          <div class="meta-row"><span>Next reward</span><b id="m_nextRewardKpi">—</b></div>
+        </div>
+
+        <div class="bar" style="margin-top:12px;"><div id="m_xpBar"></div></div>
+
+        <div class="reward" id="m_rewardChips" style="display:none;"></div>
+        <div class="reward" id="m_badgeChips" style="display:none;"></div>
+      </div>
+
+      <div class="card">
+        <h3>Quick actions</h3>
+        <div class="pillbar">
+          <button id="m_newSessionBtn" class="pill" type="button">🔄 New session</button>
+          <button id="m_finishBtn" class="pill" type="button">✅ Finish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
   (() => {
     // --- Mobile viewport fix (iOS address bar) ---
@@ -580,8 +750,8 @@
     const input = document.getElementById("input");
     const sendBtn = document.getElementById("sendBtn");
 
-    const subjectSelection = document.getElementById("subject-selection");
-    const areaSelection = document.getElementById("area-selection");
+    const subjectSelection = document.getElementById("subject-selection"); // hidden now
+    const areaSelection = document.getElementById("area-selection");       // hidden now
     const calculator = document.getElementById("calculator");
 
     const mathsBtn = document.getElementById("mathsBtn");
@@ -590,7 +760,12 @@
     const logoutBtn = document.getElementById("logoutBtn");
     const helpBtn = document.getElementById("helpBtn");
 
-    // Side KPIs
+    // Mini progress
+    const miniXp = document.getElementById("miniXp");
+    const miniNext = document.getElementById("miniNext");
+    const openProgressBtn = document.getElementById("openProgressBtn");
+
+    // Desktop side KPIs
     const progressKpi = document.getElementById("progressKpi");
     const badgeKpi = document.getElementById("badgeKpi");
     const practiceKpi = document.getElementById("practiceKpi");
@@ -598,79 +773,35 @@
     const nextRewardKpi = document.getElementById("nextRewardKpi");
     const progressBar = document.getElementById("progressBar");
     const xpBar = document.getElementById("xpBar");
-
     const badgeChips = document.getElementById("badgeChips");
     const rewardChips = document.getElementById("rewardChips");
 
+    // Mobile modal KPIs
+    const m_progressKpi = document.getElementById("m_progressKpi");
+    const m_badgeKpi = document.getElementById("m_badgeKpi");
+    const m_practiceKpi = document.getElementById("m_practiceKpi");
+    const m_xpKpi = document.getElementById("m_xpKpi");
+    const m_nextRewardKpi = document.getElementById("m_nextRewardKpi");
+    const m_progressBar = document.getElementById("m_progressBar");
+    const m_xpBar = document.getElementById("m_xpBar");
+    const m_badgeChips = document.getElementById("m_badgeChips");
+    const m_rewardChips = document.getElementById("m_rewardChips");
+    const m_newSessionBtn = document.getElementById("m_newSessionBtn");
+    const m_finishBtn = document.getElementById("m_finishBtn");
+
+    // Actions
     const newSessionBtn = document.getElementById("newSessionBtn");
     const finishBtn = document.getElementById("finishBtn");
     const rewardToast = document.getElementById("rewardToast");
 
-    // Auth + child
-    let currentUser = null;
-    let child = null;
-    let childName = "Child";
-    let childAge = 10;
+    // Modals
+    const overlayBtn = document.getElementById("overlayBtn");
+    const overlayModal = document.getElementById("overlayModal");
+    const overlayClose = document.getElementById("overlayClose");
 
-    // Tutor state
-    let subject = null;
-    let area = null;
+    const progressModal = document.getElementById("progressModal");
+    const progressClose = document.getElementById("progressClose");
 
-    // Session tracking
-    let sessionDbId = null;
-    let maxQuestions = 10;
-    let questionsAnswered = 0;
-    let correctCount = 0;
-    let badges = [];
-
-    // Skill progress (internal only; NOT shown to child)
-    let skillRow = null;
-    let difficultyLevel = 1;
-    let streakCorrect = 0;
-    let streakWrong = 0;
-
-    // XP (stored in Supabase child_xp; shown child-friendly)
-    let totalXp = 0;       // overall XP from child_xp.xp_total
-    let sessionXp = 0;     // XP earned this session (in-memory)
-    let lastXpEarned = 0;  // last award amount (for skill row patch)
-
-    // Write-behind timers (avoid hammering DB)
-    let xpPersistTimer = null;
-    let skillXpPersistTimer = null;
-
-    // Reward tiers
-    const REWARD_TIERS = [
-      { xp: 50,  icon: "🧩", label: "Puzzle piece" },
-      { xp: 120, icon: "🎨", label: "Colour badge" },
-      { xp: 220, icon: "🚀", label: "Rocket boost" },
-      { xp: 350, icon: "🏰", label: "Castle builder" },
-      { xp: 520, icon: "🐉", label: "Dragon friend" }
-    ];
-
-    // Keep unlocked rewards local for now (fast UI; you can move this into DB later)
-    let unlockedRewards = [];
-
-    // Current task
-    let currentQuestion = null;
-    let hintUsedForCurrent = false;
-
-    // Audio player
-    const ttsAudio = new Audio();
-    ttsAudio.preload = "none";
-
-    // ---------- scroll helpers ----------
-    function scrollBottom(){ messagesDiv.scrollTop = messagesDiv.scrollHeight; }
-    function isNearBottom(el, px=140){
-      return el.scrollHeight - el.scrollTop - el.clientHeight < px;
-    }
-    function updateJumpButton(){
-      if (!jumpLatestBtn) return;
-      jumpLatestBtn.style.display = isNearBottom(messagesDiv) ? "none" : "inline-flex";
-    }
-    messagesDiv.addEventListener("scroll", updateJumpButton);
-    jumpLatestBtn.addEventListener("click", () => { scrollBottom(); updateJumpButton(); });
-
-    // ---------- helpers ----------
     function showError(msg){ pageError.style.display="block"; pageError.textContent=msg; }
     function clearError(){ pageError.style.display="none"; pageError.textContent=""; }
     function disableInput(disabled){
@@ -690,6 +821,33 @@
       setTimeout(() => { rewardToast.style.display = "none"; }, 2600);
     }
 
+    // --- scroll helpers ---
+    function isNearBottom(el, px=140){
+      return el.scrollHeight - el.scrollTop - el.clientHeight < px;
+    }
+    function updateJumpButton(){
+      if (!jumpLatestBtn) return;
+      jumpLatestBtn.style.display = isNearBottom(messagesDiv) ? "none" : "inline-flex";
+    }
+    function scrollBottom(){
+      // iOS needs a double-frame to reliably stick
+      requestAnimationFrame(() => {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        requestAnimationFrame(() => {
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+      });
+    }
+    function appendAndMaybeScroll(el){
+      const shouldStick = isNearBottom(messagesDiv, 180);
+      messagesDiv.appendChild(el);
+      if (shouldStick) scrollBottom();
+      updateJumpButton();
+    }
+
+    messagesDiv.addEventListener("scroll", updateJumpButton);
+    jumpLatestBtn.addEventListener("click", () => { scrollBottom(); updateJumpButton(); });
+
     // Keep emojis in UI, but strip for speech
     function stripForTTS(text){
       let t = String(text || "");
@@ -702,6 +860,9 @@
     async function speakViaWorker(text){
       const clean = stripForTTS(text);
       if (!clean) return;
+
+      const ttsAudio = window.__learnlio_tts_audio || new Audio();
+      window.__learnlio_tts_audio = ttsAudio;
 
       try { ttsAudio.pause(); } catch {}
       ttsAudio.currentTime = 0;
@@ -726,7 +887,7 @@
       const url = URL.createObjectURL(blob);
       ttsAudio.src = url;
       await ttsAudio.play();
-      ttsAudio.onended = () => { URL.revokeObjectURL(url); };
+      ttsAudio.onended = () => { try{ URL.revokeObjectURL(url); }catch{} };
     }
 
     function speakFallbackBrowser(text){
@@ -748,9 +909,7 @@
       const div = document.createElement("div");
       div.className = "msg user";
       div.innerText = String(text || "").trim();
-      messagesDiv.appendChild(div);
-      scrollBottom();
-      updateJumpButton();
+      appendAndMaybeScroll(div);
     }
 
     function addBotMessage(text, opts={}){
@@ -812,131 +971,110 @@
       }
 
       div.appendChild(controls);
-      messagesDiv.appendChild(div);
-      scrollBottom();
-      updateJumpButton();
+
+      appendAndMaybeScroll(div);
     }
 
-    // ---------- Rewards local helpers ----------
-    function rewardsKey(){ return child?.id ? `learnlio_rewards_${child.id}` : `learnlio_rewards`; }
-    function loadRewards(){
-      try{
-        const raw = localStorage.getItem(rewardsKey());
-        unlockedRewards = raw ? JSON.parse(raw) : [];
+    // Subject/Area choices INSIDE chat
+    function addBotChoicesMessage(text, choices){
+      const div = document.createElement("div");
+      div.className = "msg bot";
+
+      const content = document.createElement("div");
+      content.innerText = cleanBotText(text);
+      div.appendChild(content);
+
+      const grid = document.createElement("div");
+      grid.className = "choiceGrid";
+
+      (choices || []).forEach(c => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "choiceBtn";
+        btn.innerHTML = `<span class="choiceIcon">▶</span><span>${escapeHtml(c.label)}</span>`;
+        btn.addEventListener("click", async () => {
+          Array.from(grid.querySelectorAll("button")).forEach(b => b.disabled = true);
+          try { await c.onClick?.(); } catch(e){ console.error(e); }
+        });
+        grid.appendChild(btn);
+      });
+
+      div.appendChild(grid);
+
+      const controls = document.createElement("div");
+      controls.className = "bot-controls";
+      const speakBtn = document.createElement("button");
+      speakBtn.type = "button";
+      speakBtn.className = "btn-small speak-btn";
+      speakBtn.innerText = "🔊 Listen";
+      speakBtn.onclick = () => speak(cleanBotText(text));
+      controls.appendChild(speakBtn);
+      div.appendChild(controls);
+
+      appendAndMaybeScroll(div);
+    }
+
+    // Auth + child
+    let currentUser = null;
+    let child = null;
+    let childName = "Child";
+    let childAge = 10;
+
+    // Tutor state
+    let subject = null;
+    let area = null;
+
+    // Session tracking
+    let sessionDbId = null;
+    let maxQuestions = 10;
+    let questionsAnswered = 0;
+    let correctCount = 0;
+    let badges = [];
+
+    // Skill progress (internal only)
+    let skillRow = null;
+    let difficultyLevel = 1;
+    let streakCorrect = 0;
+    let streakWrong = 0;
+
+    // XP (child-friendly progress)
+    let totalXp = 0;
+    let sessionXp = 0;
+    let unlockedRewards = [];
+
+    const REWARD_TIERS = [
+      { xp: 50,  icon: "🧩", label: "Puzzle piece" },
+      { xp: 120, icon: "🎨", label: "Colour badge" },
+      { xp: 220, icon: "🚀", label: "Rocket boost" },
+      { xp: 350, icon: "🏰", label: "Castle builder" },
+      { xp: 520, icon: "🐉", label: "Dragon friend" }
+    ];
+
+    let currentQuestion = null;
+    let hintUsedForCurrent = false;
+
+    function xpKey(){ return child?.id ? `learnlio_xp_${child.id}` : "learnlio_xp"; }
+    function rewardsKey(){ return child?.id ? `learnlio_rewards_${child.id}` : "learnlio_rewards"; }
+
+    function loadXpAndRewards(){
+      try {
+        const raw = localStorage.getItem(xpKey());
+        totalXp = raw ? Number(raw) : 0;
+        if (!Number.isFinite(totalXp) || totalXp < 0) totalXp = 0;
+      } catch { totalXp = 0; }
+
+      try {
+        const rawR = localStorage.getItem(rewardsKey());
+        unlockedRewards = rawR ? JSON.parse(rawR) : [];
         if (!Array.isArray(unlockedRewards)) unlockedRewards = [];
-      }catch{ unlockedRewards = []; }
-    }
-    function saveRewards(){
-      try{ localStorage.setItem(rewardsKey(), JSON.stringify(unlockedRewards)); }catch{}
+      } catch { unlockedRewards = []; }
     }
 
-    // ---------- XP (Supabase) ----------
-    async function loadChildXpFromDb(){
-      totalXp = 0;
-      if (!currentUser?.id || !child?.id) return;
-
-      // Prefer most recent row if duplicates exist (fallback safe)
-      const { data, error } = await sb
-        .from("child_xp")
-        .select("id, xp_total, xp_lifetime, updated_at")
-        .eq("owner_id", currentUser.id)
-        .eq("child_id", child.id)
-        .order("updated_at", { ascending: false })
-        .limit(1);
-
-      if (error){
-        console.warn("child_xp select failed (defaulting to 0):", error);
-        totalXp = 0;
-        return;
-      }
-
-      const row = Array.isArray(data) ? data[0] : data;
-      const val = Number(row?.xp_total ?? 0);
-      totalXp = Number.isFinite(val) && val >= 0 ? val : 0;
+    function saveXpAndRewards(){
+      try { localStorage.setItem(xpKey(), String(totalXp)); } catch {}
+      try { localStorage.setItem(rewardsKey(), JSON.stringify(unlockedRewards)); } catch {}
     }
 
-    async function persistChildXpToDb(){
-      if (!currentUser?.id || !child?.id) return;
-
-      // Write xp_total + xp_lifetime (lifetime tracks total too for now)
-      const payload = {
-        owner_id: currentUser.id,
-        child_id: child.id,
-        xp_total: totalXp,
-        xp_lifetime: totalXp,
-        updated_at: new Date().toISOString()
-      };
-
-      // Try upsert with assumed unique key; if it fails, fallback to UPDATE latest row or INSERT.
-      try{
-        const { error } = await sb
-          .from("child_xp")
-          .upsert(payload, { onConflict: "owner_id,child_id" });
-        if (!error) return;
-        throw error;
-      }catch(e){
-        console.warn("child_xp upsert failed, trying fallback:", e);
-
-        // Fallback 1: update most recent row
-        try{
-          const { data: rows } = await sb
-            .from("child_xp")
-            .select("id")
-            .eq("owner_id", currentUser.id)
-            .eq("child_id", child.id)
-            .order("updated_at", { ascending: false })
-            .limit(1);
-
-          const id = rows?.[0]?.id;
-          if (id){
-            const { error: uErr } = await sb
-              .from("child_xp")
-              .update({ xp_total: totalXp, xp_lifetime: totalXp, updated_at: payload.updated_at })
-              .eq("id", id);
-            if (!uErr) return;
-            throw uErr;
-          }
-        }catch(err2){
-          console.warn("child_xp update fallback failed:", err2);
-        }
-
-        // Fallback 2: insert a new row
-        try{
-          await sb.from("child_xp").insert(payload);
-        }catch(err3){
-          console.warn("child_xp insert fallback failed:", err3);
-        }
-      }
-    }
-
-    function scheduleXpPersist(){
-      if (xpPersistTimer) clearTimeout(xpPersistTimer);
-      xpPersistTimer = setTimeout(() => {
-        persistChildXpToDb().catch(console.warn);
-      }, 650); // small delay reduces writes but still feels instant
-    }
-
-    function scheduleSkillXpPersist(){
-      if (skillXpPersistTimer) clearTimeout(skillXpPersistTimer);
-      skillXpPersistTimer = setTimeout(() => {
-        persistSkillXpSignals().catch(console.warn);
-      }, 650);
-    }
-
-    async function persistSkillXpSignals(){
-      // This writes XP signals into child_skill_progress row for the current subject+area.
-      // It does NOT change the child UI.
-      if (!skillRow?.id) return;
-      const patch = {
-        xp_total: totalXp,
-        xp_last_earned: lastXpEarned || 0,
-        xp_updated_at: new Date().toISOString()
-      };
-      const { error } = await sb.from("child_skill_progress").update(patch).eq("id", skillRow.id);
-      if (error) console.warn("child_skill_progress xp patch failed:", error);
-    }
-
-    // ---------- XP UI helpers ----------
     function nextRewardInfo(){
       const next = REWARD_TIERS.find(t => t.xp > totalXp) || null;
       if (!next) return { done:true, text:"All rewards unlocked 🎉", goalXp: totalXp, pct: 100 };
@@ -961,24 +1099,16 @@
       if (newlyUnlocked.length){
         const last = newlyUnlocked[newlyUnlocked.length - 1];
         showRewardToast(`${last.icon} New reward!`, `You unlocked ${last.label}.`);
-        saveRewards();
+        saveXpAndRewards();
       }
     }
 
     function addXp(points, reasonText){
       const p = Math.max(0, Number(points) || 0);
       if (!p) return;
-
-      lastXpEarned = p;
       sessionXp += p;
       totalXp += p;
-
-      // Persist to Supabase (write-behind)
-      scheduleXpPersist();
-
-      // Also update skill XP signals (write-behind)
-      if (skillRow?.id) scheduleSkillXpPersist();
-
+      saveXpAndRewards();
       checkRewardUnlocks();
       if (reasonText) showRewardToast(`+${p} XP`, reasonText);
       updateProgressUI();
@@ -988,10 +1118,10 @@
       if (!subject && !area) return "—";
       if (subject && !area) return subject;
       if (subject === "Maths"){
-        const map = { "Addition":"Adding", "Subtraction":"Taking away", "Multiplication":"Times tables", "Division":"Sharing" };
+        const map = { "Addition":"Adding","Subtraction":"Taking away","Multiplication":"Times tables","Division":"Sharing" };
         return map[area] ? `Maths • ${map[area]}` : `Maths • ${area}`;
       }
-      const mapE = { "Reading":"Reading", "Spelling":"Spelling", "Sentence building":"Sentences", "Word games":"Word games" };
+      const mapE = { "Reading":"Reading","Spelling":"Spelling","Sentence building":"Sentences","Word games":"Word games" };
       return mapE[area] ? `English • ${mapE[area]}` : `English • ${area}`;
     }
 
@@ -1001,25 +1131,38 @@
       if (correctCount === 10 && !badges.includes("🏆")) { badges.push("🏆"); showRewardToast("🏆 New badge", "Ten correct — brilliant effort."); }
     }
 
+    function renderChips(container, items, className){
+      container.innerHTML = "";
+      if (!items.length){
+        container.style.display = "none";
+        return;
+      }
+      container.style.display = "flex";
+      items.forEach(t => {
+        const chip = document.createElement("div");
+        chip.className = className;
+        chip.textContent = t;
+        container.appendChild(chip);
+      });
+    }
+
     function updateProgressUI(){
+      const pct = maxQuestions ? Math.min(100, Math.round((questionsAnswered / maxQuestions) * 100)) : 0;
+      const practice = friendlyPracticeLabel();
+
+      // desktop
       progressKpi.textContent = `${questionsAnswered} / ${maxQuestions}`;
       badgeKpi.textContent = `Badges: ${badges.length ? badges.join(" ") : "—"}`;
-
-      const pct = maxQuestions ? Math.min(100, Math.round((questionsAnswered / maxQuestions) * 100)) : 0;
       progressBar.style.width = pct + "%";
-
-      const practice = friendlyPracticeLabel();
       practiceKpi.textContent = practice;
 
-      // XP UI: show total XP only, plus next reward
       xpKpi.textContent = `${totalXp} XP`;
       const next = nextRewardInfo();
       nextRewardKpi.textContent = next.text;
       xpBar.style.width = (next.done ? "100%" : `${next.pct}%`);
 
-      // Rewards chips (unlocked)
-      rewardChips.innerHTML = "";
       const unlockedTierObjs = REWARD_TIERS.filter(t => unlockedRewards.includes(String(t.xp)));
+      rewardChips.innerHTML = "";
       if (unlockedTierObjs.length){
         rewardChips.style.display = "flex";
         unlockedTierObjs.slice(-6).forEach(t => {
@@ -1028,11 +1171,8 @@
           chip.textContent = `${t.icon} ${t.label}`;
           rewardChips.appendChild(chip);
         });
-      } else {
-        rewardChips.style.display = "none";
-      }
+      } else rewardChips.style.display = "none";
 
-      // Session badges chips
       badgeChips.innerHTML = "";
       if (badges.length){
         badgeChips.style.display = "flex";
@@ -1042,13 +1182,48 @@
           chip.textContent = b + " Earned";
           badgeChips.appendChild(chip);
         });
-      } else {
-        badgeChips.style.display = "none";
-      }
+      } else badgeChips.style.display = "none";
 
+      // mobile mini
+      if (miniXp) miniXp.textContent = `${totalXp} XP`;
+      if (miniNext) miniNext.textContent = `Next: ${next.text}`;
+
+      // mobile modal mirrors
+      m_progressKpi.textContent = `${questionsAnswered} / ${maxQuestions}`;
+      m_badgeKpi.textContent = `Badges: ${badges.length ? badges.join(" ") : "—"}`;
+      m_progressBar.style.width = pct + "%";
+      m_practiceKpi.textContent = practice;
+      m_xpKpi.textContent = `${totalXp} XP`;
+      m_nextRewardKpi.textContent = next.text;
+      m_xpBar.style.width = (next.done ? "100%" : `${next.pct}%`);
+
+      // modal chips
+      m_rewardChips.innerHTML = "";
+      if (unlockedTierObjs.length){
+        m_rewardChips.style.display = "flex";
+        unlockedTierObjs.slice(-6).forEach(t => {
+          const chip = document.createElement("div");
+          chip.className = "badge trophy";
+          chip.textContent = `${t.icon} ${t.label}`;
+          m_rewardChips.appendChild(chip);
+        });
+      } else m_rewardChips.style.display = "none";
+
+      m_badgeChips.innerHTML = "";
+      if (badges.length){
+        m_badgeChips.style.display = "flex";
+        badges.forEach(b => {
+          const chip = document.createElement("div");
+          chip.className = "badge";
+          chip.textContent = b + " Earned";
+          m_badgeChips.appendChild(chip);
+        });
+      } else m_badgeChips.style.display = "none";
+
+      // friendly header line
       if (!subject) contextLine.textContent = "Pick a subject to start.";
       else if (!area) contextLine.textContent = `Nice! Choose what you want to practise in ${subject}.`;
-      else contextLine.textContent = `We’re practising ${friendlyPracticeLabel()}. Nice and steady.`;
+      else contextLine.textContent = `We’re practising ${practice}. Nice and steady.`;
     }
 
     function computeAgeFromDob(dobStr){
@@ -1081,7 +1256,6 @@
 
     function sessionComplete(){ return questionsAnswered >= maxQuestions; }
 
-    // Remember last context per child
     function ctxKey(){ return child?.id ? `learnlio_last_ctx_${child.id}` : "learnlio_last_ctx"; }
     function saveLastContext(){
       if (!child?.id) return;
@@ -1172,7 +1346,6 @@
         difficultyLevel = skillRow.level || 1;
         streakCorrect = skillRow.streak_correct || 0;
         streakWrong = skillRow.streak_wrong || 0;
-        // keep xp_total aligned if row has it
         updateProgressUI();
         return skillRow;
       }
@@ -1190,11 +1363,7 @@
         streak_correct: 0,
         streak_wrong: 0,
         last_session_id: sessionDbId || null,
-        last_seen_at: new Date().toISOString(),
-        // XP fields if present:
-        xp_total: totalXp,
-        xp_last_earned: 0,
-        xp_updated_at: new Date().toISOString()
+        last_seen_at: new Date().toISOString()
       };
 
       const { data: up, error: upErr } = await sb
@@ -1220,7 +1389,7 @@
       return newLevel;
     }
 
-    async function recordAttemptToSkill({ isCorrect, meta }){
+    async function recordAttemptToSkill({ isCorrect }){
       if (!skillRow?.id) return;
 
       const total_attempts = (skillRow.total_attempts || 0) + 1;
@@ -1250,11 +1419,7 @@
         streak_correct: newStreakCorrect,
         streak_wrong: newStreakWrong,
         last_session_id: sessionDbId || null,
-        last_seen_at: new Date().toISOString(),
-        // XP signals for reporting layer:
-        xp_total: totalXp,
-        xp_last_earned: lastXpEarned || 0,
-        xp_updated_at: new Date().toISOString()
+        last_seen_at: new Date().toISOString()
       };
 
       const { data, error } = await sb.from("child_skill_progress").update(patch).eq("id", skillRow.id).select("*").single();
@@ -1435,18 +1600,12 @@ Short lines.
       );
       bank.push(
         { area:"Spelling", prompt:"Which spelling is correct?", choices:[
-          "becos",
-          "because",
-          "becuase",
-          "becouse"
+          "becos","because","becuase","becouse"
         ], correctIndex:1 }
       );
       bank.push(
         { area:"Spelling", prompt:"Which spelling is correct?", choices:[
-          "definately",
-          "definitely",
-          "definatly",
-          "definetely"
+          "definately","definitely","definatly","definetely"
         ], correctIndex:1 }
       );
       bank.push(
@@ -1467,18 +1626,12 @@ Short lines.
       );
       bank.push(
         { area:"Word games", prompt:"Which word means the same as 'happy'?", choices:[
-          "sad",
-          "angry",
-          "glad",
-          "tired"
+          "sad","angry","glad","tired"
         ], correctIndex:2 }
       );
       bank.push(
         { area:"Word games", prompt:"Which word is the opposite of 'easy'?", choices:[
-          "simple",
-          "hard",
-          "quick",
-          "small"
+          "simple","hard","quick","small"
         ], correctIndex:1 }
       );
       return bank;
@@ -1545,7 +1698,7 @@ Short lines.
         meta: { subject, area, difficultyLevel, pickedIndex, correctIndex: q.correctIndex }
       });
 
-      await recordAttemptToSkill({ isCorrect, meta: { mcq:true } });
+      await recordAttemptToSkill({ isCorrect });
       await updateSessionRollups();
 
       if (isCorrect){
@@ -1558,39 +1711,25 @@ Short lines.
       if (sessionComplete()) endSessionUI();
     }
 
-    // ---------- Areas ----------
-    function showAreaButtons(opts){
-      areaSelection.innerHTML = "";
-      opts.forEach(opt => {
-        const btn = document.createElement("button");
-        btn.className = "pill";
-        btn.type = "button";
-        btn.textContent = opt.label;
-        btn.addEventListener("click", async () => {
-          addUserMessage(opt.label);
-          areaSelection.style.display = "none";
+    // ---------- Start area from chat choices ----------
+    async function startArea(chosenArea){
+      area = chosenArea;
+      saveLastContext();
 
-          area = opt.area;
-          saveLastContext();
+      resetSessionCounters();
+      await ensureSessionRow();
+      await loadOrCreateSkillRow();
+      updateProgressUI();
 
-          resetSessionCounters();
-          await ensureSessionRow();
-          await loadOrCreateSkillRow();
-          updateProgressUI();
-
-          if (subject === "Maths"){
-            calculator.style.display = "block";
-            currentQuestion = generateMathQuestion();
-            showMathQuestion(currentQuestion);
-          } else {
-            calculator.style.display = "none";
-            englishQueue = [];
-            presentEnglishMCQ();
-          }
-        });
-        areaSelection.appendChild(btn);
-      });
-      areaSelection.style.display = "flex";
+      if (subject === "Maths"){
+        calculator.style.display = "block";
+        currentQuestion = generateMathQuestion();
+        showMathQuestion(currentQuestion);
+      } else {
+        calculator.style.display = "none";
+        englishQueue = [];
+        presentEnglishMCQ();
+      }
     }
 
     function selectSubject(s){
@@ -1599,44 +1738,41 @@ Short lines.
       currentQuestion = null;
       hintUsedForCurrent = false;
 
-      subjectSelection.style.display = "none";
-      areaSelection.style.display = "none";
       calculator.style.display = "none";
-
       updateProgressUI();
 
       if (s === "Maths"){
-        addBotMessage("➕ Great!\n\nWhich Maths area would you like to try?");
-        showAreaButtons([
-          { label:"Addition ➕", area:"Addition" },
-          { label:"Subtraction ➖", area:"Subtraction" },
-          { label:"Multiplication ✖️", area:"Multiplication" },
-          { label:"Division ➗", area:"Division" }
+        addBotChoicesMessage("Great. Which Maths area would you like to try?", [
+          { label:"Addition ➕", onClick: async () => startArea("Addition") },
+          { label:"Subtraction ➖", onClick: async () => startArea("Subtraction") },
+          { label:"Multiplication ✖️", onClick: async () => startArea("Multiplication") },
+          { label:"Division ➗", onClick: async () => startArea("Division") },
         ]);
       } else {
-        addBotMessage("📚 Great!\n\nWhich English area would you like to practise?");
-        showAreaButtons([
-          { label:"Reading aloud 📖", area:"Reading" },
-          { label:"Spelling 📝", area:"Spelling" },
-          { label:"Sentence building ✍️", area:"Sentence building" },
-          { label:"Word games 🎲", area:"Word games" }
+        addBotChoicesMessage("Great. Which English area would you like to practise?", [
+          { label:"Reading aloud 📖", onClick: async () => startArea("Reading") },
+          { label:"Spelling 📝", onClick: async () => startArea("Spelling") },
+          { label:"Sentence building ✍️", onClick: async () => startArea("Sentence building") },
+          { label:"Word games 🎲", onClick: async () => startArea("Word games") },
         ]);
       }
+    }
+
+    function showSubjectPickerInChat(){
+      addBotChoicesMessage(`What would you like to work on today?`, [
+        { label: "➕ Maths", onClick: async () => { addUserMessage("Maths"); selectSubject("Maths"); saveLastContext(); } },
+        { label: "📚 English", onClick: async () => { addUserMessage("English"); selectSubject("English"); saveLastContext(); } }
+      ]);
     }
 
     // ---------- End session ----------
     async function endSessionUI(){
       disableInput(true);
       calculator.style.display = "none";
-      areaSelection.style.display = "none";
-      subjectSelection.style.display = "none";
 
       await updateSessionRollups();
 
-      // Make sure XP is persisted when finishing
-      try{ await persistChildXpToDb(); }catch{}
-
-      addBotMessage(`✅ That’s the end for today, ${childName}.\n\nYou did really well.`);
+      addBotMessage(`✅ That’s the end for today, ${childName}.\n\nYou did really well.\n\nIf you want, you can start a new session any time.`);
     }
 
     function startNewSession(){
@@ -1649,12 +1785,11 @@ Short lines.
       englishQueue = [];
 
       disableInput(false);
-      subjectSelection.style.display = "flex";
-      areaSelection.style.display = "none";
       calculator.style.display = "none";
 
       updateProgressUI();
-      addBotMessage(`👋 Hi ${childName}!\n\nWhat would you like to work on today?`);
+      addBotMessage(`👋 Hi ${childName}!\n\nLet’s do one small step at a time.`);
+      showSubjectPickerInChat();
     }
 
     // ---------- Send handler ----------
@@ -1666,12 +1801,13 @@ Short lines.
       input.value = "";
 
       if (!subject){
-        addBotMessage("Pick Maths or English below.");
-        subjectSelection.style.display = "flex";
+        addBotMessage("Tap a subject below to begin.");
+        showSubjectPickerInChat();
         return;
       }
       if (!area){
-        addBotMessage("Pick an area below.");
+        addBotMessage("Pick an area to start.");
+        selectSubject(subject);
         return;
       }
 
@@ -1689,7 +1825,6 @@ Short lines.
         return;
       }
 
-      // Maths
       if (!currentQuestion || currentQuestion.kind !== "math"){
         currentQuestion = generateMathQuestion();
         showMathQuestion(currentQuestion);
@@ -1731,7 +1866,7 @@ Short lines.
         meta: { subject, area, difficultyLevel }
       });
 
-      await recordAttemptToSkill({ isCorrect: correct, meta: {} });
+      await recordAttemptToSkill({ isCorrect: correct });
       await updateSessionRollups();
 
       const reply = await giveMathFeedback_AI(currentQuestion, text);
@@ -1810,10 +1945,7 @@ Short lines.
       childName = child.child_name || "Child";
       childAge = computeAgeFromDob(child.child_dob);
 
-      // Load rewards local + XP from Supabase
-      loadRewards();
-      await loadChildXpFromDb();
-
+      loadXpAndRewards();
       clearError();
       disableInput(false);
 
@@ -1822,15 +1954,53 @@ Short lines.
 
       const last = loadLastContext();
       if (last?.subject){
-        addBotMessage(`👋 Hi ${childName}!\n\nLast time you worked on:\n${last.subject} • ${last.area || "—"}\n\nWhat would you like to work on today?`);
+        addBotMessage(`👋 Hi ${childName}!\n\nLast time you worked on:\n${last.subject} • ${last.area || "—"}\n\nLet’s choose what you want to do today.`);
       } else {
-        addBotMessage(`👋 Hi ${childName}!\n\nI’ll help you in a calm, step-by-step way.\n\nWhat are we working on today?`);
+        addBotMessage(`👋 Hi ${childName}!\n\nI’ll help you in a calm, step-by-step way.\n\nLet’s choose what we’re working on.`);
       }
 
-      subjectSelection.style.display = "flex";
+      // Start inside-chat picker
+      showSubjectPickerInChat();
       updateJumpButton();
       return true;
     }
+
+    // ---------- Overlay modal ----------
+    function applyOverlay(name){
+      if (!name || name === "default"){
+        document.body.removeAttribute("data-overlay");
+        localStorage.removeItem("learnlio_overlay");
+        return;
+      }
+      document.body.setAttribute("data-overlay", name);
+      localStorage.setItem("learnlio_overlay", name);
+    }
+    (function initOverlay(){
+      const saved = localStorage.getItem("learnlio_overlay");
+      if (saved) applyOverlay(saved);
+    })();
+
+    overlayBtn?.addEventListener("click", () => { overlayModal.style.display = "block"; });
+    overlayClose?.addEventListener("click", () => { overlayModal.style.display = "none"; });
+    overlayModal?.addEventListener("click", (e) => { if (e.target === overlayModal) overlayModal.style.display = "none"; });
+    overlayModal?.querySelectorAll("[data-overlay]")?.forEach(btn => {
+      btn.addEventListener("click", () => {
+        applyOverlay(btn.getAttribute("data-overlay"));
+        overlayModal.style.display = "none";
+      });
+    });
+
+    // ---------- Progress modal ----------
+    openProgressBtn?.addEventListener("click", () => {
+      progressModal.style.display = "block";
+      updateProgressUI();
+    });
+    progressClose?.addEventListener("click", () => { progressModal.style.display = "none"; });
+    progressModal?.addEventListener("click", (e) => { if (e.target === progressModal) progressModal.style.display = "none"; });
+
+    // Mobile modal quick actions mirror desktop
+    m_newSessionBtn.addEventListener("click", () => { progressModal.style.display="none"; startNewSession(); });
+    m_finishBtn.addEventListener("click", async () => { progressModal.style.display="none"; await endSessionUI(); });
 
     // ---------- Events ----------
     logoutBtn.addEventListener("click", async () => {
@@ -1840,11 +2010,12 @@ Short lines.
     });
 
     helpBtn.addEventListener("click", () => {
-      addBotMessage("Quick help:\n\n• Pick a subject\n• Pick an area\n• Tap a choice (English) or type an answer (Maths)\n• Use Listen if you want it read out loud\n\nYou earn XP for effort — just keep trying.");
+      addBotMessage("Quick help:\n\n• Tap a subject\n• Tap an area\n• For English: tap a choice\n• For Maths: type an answer\n• Tap Listen if you want it read out loud\n\nYou earn XP for effort — just keep trying.");
     });
 
-    mathsBtn.addEventListener("click", () => { addUserMessage("Maths"); selectSubject("Maths"); saveLastContext(); });
-    englishBtn.addEventListener("click", () => { addUserMessage("English"); selectSubject("English"); saveLastContext(); });
+    // (kept, but unused now)
+    mathsBtn?.addEventListener("click", () => { addUserMessage("Maths"); selectSubject("Maths"); saveLastContext(); });
+    englishBtn?.addEventListener("click", () => { addUserMessage("English"); selectSubject("English"); saveLastContext(); });
 
     sendBtn.addEventListener("click", handleSend);
     input.addEventListener("keypress", e => { if (e.key === "Enter") handleSend(); });
@@ -1855,6 +2026,11 @@ Short lines.
     // ---------- Init ----------
     (async () => {
       if (!sb){ showError("Supabase did not load."); return; }
+
+      // ensure external pickers are hidden (we use in-chat now)
+      subjectSelection.style.display = "none";
+      areaSelection.style.display = "none";
+
       setupCalculator();
 
       const ok = await requireAuth();
@@ -1866,3 +2042,4 @@ Short lines.
   </script>
 </body>
 </html>
+
