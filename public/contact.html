@@ -67,15 +67,21 @@
           Have a question, feedback, or need support? We’re here to help.
         </p>
 
-        <form id="contactForm" novalidate>
+        <!-- ✅ Formspree: sends email reliably -->
+        <form
+          id="contactForm"
+          action="https://formspree.io/f/xdaazbew"
+          method="POST"
+          novalidate
+        >
           <label class="label" for="name">Your name</label>
-          <input id="name" class="input" placeholder="e.g. Sarah" required />
+          <input id="name" name="name" class="input" placeholder="e.g. Sarah" required />
 
           <label class="label" for="email">Email address</label>
-          <input id="email" class="input" type="email" placeholder="you@example.com" required />
+          <input id="email" name="email" class="input" type="email" placeholder="you@example.com" required />
 
           <label class="label" for="topic">What’s this about?</label>
-          <select id="topic" class="input">
+          <select id="topic" name="topic" class="input">
             <option value="support">Support</option>
             <option value="feedback">Feedback</option>
             <option value="billing">Billing</option>
@@ -84,9 +90,12 @@
           </select>
 
           <label class="label" for="message">Message</label>
-          <textarea id="message" class="textarea" placeholder="Tell us how we can help…" required></textarea>
+          <textarea id="message" name="message" class="textarea" placeholder="Tell us how we can help…" required></textarea>
 
-          <button class="btn" type="submit" style="margin-top:14px;">Send message</button>
+          <!-- Honeypot (spam protection) -->
+          <input type="text" name="_gotcha" style="display:none">
+
+          <button id="submitBtn" class="btn" type="submit" style="margin-top:14px;">Send message</button>
           <div id="formStatus" class="status" aria-live="polite"></div>
         </form>
       </section>
@@ -106,7 +115,7 @@
 
         <p style="margin:0 0 6px;"><strong>Safeguarding</strong></p>
         <p class="muted" style="margin:0;">
-          For child safety concerns, please email  
+          For child safety concerns, please email
           <a href="mailto:safeguarding@learnlio.co.uk">safeguarding@learnlio.co.uk</a>
         </p>
       </aside>
@@ -115,22 +124,62 @@
 
   <!-- Footer (reuse the footer strip you added earlier) -->
 
-  <!-- Simple form handler (no backend yet) -->
+  <!-- ✅ Reliable form handler (POST to Formspree, shows success/error) -->
   <script>
     const form = document.getElementById("contactForm");
     const statusEl = document.getElementById("formStatus");
+    const submitBtn = document.getElementById("submitBtn");
 
-    form.addEventListener("submit", (e) => {
+    function setBusy(isBusy){
+      submitBtn.disabled = isBusy;
+      submitBtn.style.opacity = isBusy ? "0.75" : "1";
+      submitBtn.style.cursor = isBusy ? "not-allowed" : "pointer";
+    }
+
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      // This is intentionally simple for now
-      statusEl.textContent =
-        "Thanks — your message has been sent. We’ll be in touch shortly.";
-      statusEl.className = "status good";
+      statusEl.textContent = "Sending…";
+      statusEl.className = "status";
+      setBusy(true);
 
-      form.reset();
+      // Basic client-side checks (keeps your UX calm)
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const message = document.getElementById("message").value.trim();
+
+      if (!name || !email || !message){
+        statusEl.textContent = "Please fill in your name, email, and message.";
+        statusEl.className = "status bad";
+        setBusy(false);
+        return;
+      }
+
+      try {
+        const data = new FormData(form);
+
+        const res = await fetch(form.action, {
+          method: "POST",
+          body: data,
+          headers: { "Accept": "application/json" }
+        });
+
+        if (res.ok) {
+          statusEl.textContent = "Thanks — your message has been sent. We’ll be in touch shortly.";
+          statusEl.className = "status good";
+          form.reset();
+        } else {
+          // Formspree returns JSON with errors sometimes; keep it simple/reliable
+          statusEl.textContent = "Sorry — something went wrong. Please email hello@learnlio.co.uk.";
+          statusEl.className = "status bad";
+        }
+      } catch (err) {
+        statusEl.textContent = "Sorry — something went wrong. Please email hello@learnlio.co.uk.";
+        statusEl.className = "status bad";
+      } finally {
+        setBusy(false);
+      }
     });
   </script>
 </body>
 </html>
-
