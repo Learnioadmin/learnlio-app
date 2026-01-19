@@ -516,18 +516,33 @@
       #miniProgress{ display:flex; }
     }
 
-    /* Mobile */
+    /* ===========================
+       MOBILE UI IMPROVEMENTS
+       (keeps ALL features; just less cramped)
+       =========================== */
     @media (max-width: 520px){
+      .container{ padding:10px 10px 14px; }
+      .nav-inner{ padding:10px 10px; gap:10px; }
+      .brand img{ height:28px; }
+      .links a{ padding:8px 8px; font-size:13px; }
+      .panel-head{ padding:12px 12px 8px; }
+      .title{ font-size:15px; }
+      .subtitle{ font-size:12px; }
+      .chat{ padding:10px; gap:8px; }
+      #messages{ padding:10px; border-radius: 14px; }
+      .msg{ max-width: 92%; padding: 11px 12px; }
+      .composer{ padding:10px; gap:8px; }
       .row{ flex-direction:column; align-items:stretch; }
-      #sendBtn{ width:100%; }
-      .msg{ max-width: 92%; }
+      #input{ font-size:16px; padding: 13px 12px; } /* 16px prevents iOS zoom */
+      #sendBtn{ width:100%; padding: 13px 14px; font-size:16px; }
+      #jumpLatest{ right:10px; bottom:10px; }
+      .btn-small{ padding: 9px 10px; font-size:13px; }
     }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
-
 <body>
   <header class="nav">
     <div class="nav-inner">
@@ -1037,10 +1052,15 @@
     let streakCorrect = 0;
     let streakWrong = 0;
 
-    // XP (child-friendly progress)
-    let totalXp = 0;
-    let sessionXp = 0;
+    // ============================
+    // XP (NOW SUPABASE via child_xp)
+    // ============================
+    let totalXp = 0;       // from child_xp.xp_total
+    let sessionXp = 0;     // in-memory
     let unlockedRewards = [];
+
+    // write-behind timers so we don't hammer DB
+    let xpPersistTimer = null;
 
     const REWARD_TIERS = [
       { xp: 50,  icon: "🧩", label: "Puzzle piece" },
@@ -1053,28 +1073,100 @@
     let currentQuestion = null;
     let hintUsedForCurrent = false;
 
-    function xpKey(){ return child?.id ? `learnlio_xp_${child.id}` : "learnlio_xp"; }
+    // Rewards still local (fast UI); XP moves to Supabase
     function rewardsKey(){ return child?.id ? `learnlio_rewards_${child.id}` : "learnlio_rewards"; }
-
-    function loadXpAndRewards(){
-      try {
-        const raw = localStorage.getItem(xpKey());
-        totalXp = raw ? Number(raw) : 0;
-        if (!Number.isFinite(totalXp) || totalXp < 0) totalXp = 0;
-      } catch { totalXp = 0; }
-
-      try {
+    function loadRewards(){
+      try{
         const rawR = localStorage.getItem(rewardsKey());
         unlockedRewards = rawR ? JSON.parse(rawR) : [];
         if (!Array.isArray(unlockedRewards)) unlockedRewards = [];
-      } catch { unlockedRewards = []; }
+      }catch{ unlockedRewards = []; }
+    }
+    function saveRewards(){
+      try{ localStorage.setItem(rewardsKey(), JSON.stringify(unlockedRewards)); }catch{}
     }
 
-    function saveXpAndRewards(){
-      try { localStorage.setItem(xpKey(), String(totalXp)); } catch {}
-      try { localStorage.setItem(rewardsKey(), JSON.stringify(unlockedRewards)); } catch {}
+    async function loadChildXpFromDb(){
+      totalXp = 0;
+      if (!currentUser?.id || !child?.id) return;
+
+      const { data, error } = await sb
+        .from("child_xp")
+        .select("id, xp_total, xp_lifetime, updated_at")
+        .eq("owner_id", currentUser.id)
+        .eq("child_id", child.id)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      if (error){
+        console.warn("child_xp select failed (defaulting to 0):", error);
+        totalXp = 0;
+        return;
+      }
+
+      const row = Array.isArray(data) ? data[0] : data;
+      const val = Number(row?.xp_total ?? 0);
+      totalXp = Number.isFinite(val) && val >= 0 ? val : 0;
     }
 
+    async function persistChildXpToDb(){
+      if (!currentUser?.id || !child?.id) return;
+
+      const payload = {
+        owner_id: currentUser.id,
+        child_id: child.id,
+        xp_total: totalXp,
+        xp_lifetime: totalXp,
+        updated_at: new Date().toISOString()
+      };
+
+      try{
+        const { error } = await sb
+          .from("child_xp")
+          .upsert(payload, { onConflict: "owner_id,child_id" });
+        if (!error) return;
+        throw error;
+      }catch(e){
+        console.warn("child_xp upsert failed, trying fallback:", e);
+
+        // Fallback 1: update most recent row
+        try{
+          const { data: rows } = await sb
+            .from("child_xp")
+            .select("id")
+            .eq("owner_id", currentUser.id)
+            .eq("child_id", child.id)
+            .order("updated_at", { ascending: false })
+            .limit(1);
+
+          const id = rows?.[0]?.id;
+          if (id){
+            const { error: uErr } = await sb
+              .from("child_xp")
+              .update({ xp_total: totalXp, xp_lifetime: totalXp, updated_at: payload.updated_at })
+              .eq("id", id);
+            if (!uErr) return;
+            throw uErr;
+          }
+        }catch(err2){
+          console.warn("child_xp update fallback failed:", err2);
+        }
+
+        // Fallback 2: insert a new row
+        try{
+          await sb.from("child_xp").insert(payload);
+        }catch(err3){
+          console.warn("child_xp insert fallback failed:", err3);
+        }
+      }
+    }
+
+    function scheduleXpPersist(){
+      if (xpPersistTimer) clearTimeout(xpPersistTimer);
+      xpPersistTimer = setTimeout(() => {
+        persistChildXpToDb().catch(console.warn);
+      }, 650);
+    }
     function nextRewardInfo(){
       const next = REWARD_TIERS.find(t => t.xp > totalXp) || null;
       if (!next) return { done:true, text:"All rewards unlocked 🎉", goalXp: totalXp, pct: 100 };
@@ -1099,7 +1191,7 @@
       if (newlyUnlocked.length){
         const last = newlyUnlocked[newlyUnlocked.length - 1];
         showRewardToast(`${last.icon} New reward!`, `You unlocked ${last.label}.`);
-        saveXpAndRewards();
+        saveRewards();
       }
     }
 
@@ -1108,7 +1200,10 @@
       if (!p) return;
       sessionXp += p;
       totalXp += p;
-      saveXpAndRewards();
+
+      // ✅ Persist to Supabase (debounced)
+      scheduleXpPersist();
+
       checkRewardUnlocks();
       if (reasonText) showRewardToast(`+${p} XP`, reasonText);
       updateProgressUI();
@@ -1129,21 +1224,6 @@
       if (correctCount === 3 && !badges.includes("⭐")) { badges.push("⭐"); showRewardToast("⭐ New badge", "Three correct answers — lovely work."); }
       if (correctCount === 5 && !badges.includes("🏅")) { badges.push("🏅"); showRewardToast("🏅 New badge", "Five correct — you’re on a roll."); }
       if (correctCount === 10 && !badges.includes("🏆")) { badges.push("🏆"); showRewardToast("🏆 New badge", "Ten correct — brilliant effort."); }
-    }
-
-    function renderChips(container, items, className){
-      container.innerHTML = "";
-      if (!items.length){
-        container.style.display = "none";
-        return;
-      }
-      container.style.display = "flex";
-      items.forEach(t => {
-        const chip = document.createElement("div");
-        chip.className = className;
-        chip.textContent = t;
-        container.appendChild(chip);
-      });
     }
 
     function updateProgressUI(){
@@ -1380,7 +1460,6 @@
       updateProgressUI();
       return skillRow;
     }
-
     function computeNewLevel({ level, accuracy, streak_correct, streak_wrong, total_attempts }){
       let newLevel = level || 1;
       const att = total_attempts || 0;
@@ -1422,11 +1501,125 @@
         last_seen_at: new Date().toISOString()
       };
 
-      const { data, error } = await sb.from("child_skill_progress").update(patch).eq("id", skillRow.id).select("*").single();
+      const { data, error } = await sb
+        .from("child_skill_progress")
+        .update(patch)
+        .eq("id", skillRow.id)
+        .select("*")
+        .single();
+
       if (error){ console.error("child_skill_progress update failed:", error); throw error; }
       skillRow = data;
       updateProgressUI();
     }
+
+    // =========================
+    // XP PERSISTENCE (Supabase child_xp)
+    // =========================
+    // Expected table (minimum):
+    // child_xp: id (uuid), owner_id (uuid), child_id (uuid), total_xp (int), updated_at (timestamptz)
+    //
+    // RLS suggestion: owner_id = auth.uid()
+
+    let xpRow = null;
+    let xpPersistTimer = null;
+    let xpPersistInFlight = false;
+    let xpPersistPending = false;
+
+    function saveRewards(){
+      try { localStorage.setItem(rewardsKey(), JSON.stringify(unlockedRewards)); } catch {}
+    }
+
+    async function loadXpFromSupabase(){
+      if (!sb || !currentUser?.id || !child?.id) return;
+
+      const { data, error } = await sb
+        .from("child_xp")
+        .select("id, owner_id, child_id, total_xp, updated_at")
+        .eq("owner_id", currentUser.id)
+        .eq("child_id", child.id)
+        .maybeSingle();
+
+      if (error){
+        console.warn("child_xp load failed:", error);
+        return;
+      }
+
+      if (data?.id){
+        xpRow = data;
+        const dbXp = Number(data.total_xp || 0);
+        if (Number.isFinite(dbXp) && dbXp >= 0){
+          // If local is higher (offline play), keep local and push later.
+          if (totalXp < dbXp) totalXp = dbXp;
+          updateProgressUI();
+        }
+      } else {
+        // no row yet: keep local totalXp and create on first persist
+        xpRow = null;
+      }
+    }
+
+    async function persistXpToSupabase(){
+      if (!sb || !currentUser?.id || !child?.id) return;
+
+      // Prevent overlap
+      if (xpPersistInFlight){
+        xpPersistPending = true;
+        return;
+      }
+
+      xpPersistInFlight = true;
+      xpPersistPending = false;
+
+      try{
+        const payload = {
+          owner_id: currentUser.id,
+          child_id: child.id,
+          total_xp: Math.round(Number(totalXp) || 0),
+          updated_at: new Date().toISOString()
+        };
+
+        // Upsert row (id optional; conflict on owner_id+child_id recommended)
+        const { data, error } = await sb
+          .from("child_xp")
+          .upsert(payload, { onConflict: "owner_id,child_id" })
+          .select("id, owner_id, child_id, total_xp, updated_at")
+          .single();
+
+        if (error){
+          console.warn("child_xp upsert failed:", error);
+          return;
+        }
+
+        xpRow = data || xpRow;
+
+      } finally {
+        xpPersistInFlight = false;
+        if (xpPersistPending){
+          // run one more time for latest XP
+          xpPersistPending = false;
+          persistXpToSupabase().catch(console.warn);
+        }
+      }
+    }
+
+    function scheduleXpPersist(){
+      // Debounce: persist shortly after XP changes
+      if (xpPersistTimer) clearTimeout(xpPersistTimer);
+      xpPersistTimer = setTimeout(() => {
+        persistXpToSupabase().catch(console.warn);
+      }, 900);
+    }
+
+    // Ensure we flush XP on page unload (best-effort)
+    window.addEventListener("beforeunload", () => {
+      try{
+        // Trigger immediate persist (may not always finish before unload, but helps)
+        if (totalXp && currentUser?.id && child?.id){
+          persistXpToSupabase();
+        }
+      } catch {}
+    });
 
     // ---------- Maths ----------
     function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -1486,7 +1679,6 @@
       }
       return null;
     }
-
     function parseChildNumber(text){
       const m = String(text || "").match(/-?\d+(\.\d+)?/);
       if (!m) return null;
@@ -1772,6 +1964,9 @@ Short lines.
 
       await updateSessionRollups();
 
+      // Persist XP at end of session (reliable point)
+      scheduleXpPersist();
+
       addBotMessage(`✅ That’s the end for today, ${childName}.\n\nYou did really well.\n\nIf you want, you can start a new session any time.`);
     }
 
@@ -1854,7 +2049,10 @@ Short lines.
         streakCorrect = 0;
       }
 
+      // Add XP locally + schedule DB persist
       addXp(correct ? 10 : 4, correct ? "Brilliant!" : "Good try — keep going!");
+      scheduleXpPersist();
+
       maybeAwardBadge();
       updateProgressUI();
 
@@ -1945,7 +2143,19 @@ Short lines.
       childName = child.child_name || "Child";
       childAge = computeAgeFromDob(child.child_dob);
 
-      loadXpAndRewards();
+      // Rewards still local
+      try {
+        const rawR = localStorage.getItem(rewardsKey());
+        unlockedRewards = rawR ? JSON.parse(rawR) : [];
+        if (!Array.isArray(unlockedRewards)) unlockedRewards = [];
+      } catch { unlockedRewards = []; }
+
+      // Load XP from Supabase (source of truth), then merge any local XP if higher
+      loadXpAndRewards(); // keeps local fallback in case DB fails
+      await loadXpFromSupabase();
+      // If we had local XP higher, push it up
+      scheduleXpPersist();
+
       clearError();
       disableInput(false);
 
@@ -2004,6 +2214,8 @@ Short lines.
 
     // ---------- Events ----------
     logoutBtn.addEventListener("click", async () => {
+      // best-effort flush XP before sign out
+      try { await persistXpToSupabase(); } catch {}
       await sb.auth.signOut();
       localStorage.removeItem("selectedChild");
       window.location.href = "/login.html";
