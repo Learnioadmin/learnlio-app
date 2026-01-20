@@ -3,6 +3,10 @@ export async function onRequest(context) {
   const url = new URL(req.url);
   const host = (url.hostname || "").toLowerCase();
 
+  if (url.pathname === "/account/delete") {
+    return handleAccountDelete(context);
+  }
+
   const isAppHost =
     host === "app.learnlio.co.uk" ||
     host.startsWith("app.learnlio-app.pages.dev"); // optional safety for preview
@@ -45,4 +49,251 @@ export async function onRequest(context) {
 
   // If someone hits "/" on public, serve homepage normally
   return context.next();
+}
+
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store"
+    }
+  });
+}
+
+async function handleAccountDelete(context) {
+  const req = context.request;
+
+  if (req.method !== "POST") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+  }
+
+  let payload;
+  try {
+    payload = await req.json();
+  } catch {
+    return jsonResponse({ ok: false, error: "Invalid JSON body" }, 400);
+  }
+
+  const password = String(payload?.password || "").trim();
+  if (!password) {
+    return jsonResponse({ ok: false, error: "Password required" }, 400);
+  }
+
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!token) {
+    return jsonResponse({ ok: false, error: "Missing auth token" }, 401);
+  }
+
+  const {
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    SUPABASE_SERVICE_ROLE_KEY,
+    STRIPE_SECRET_KEY
+  } = context.env;
+
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+    return jsonResponse({ ok: false, error: "Server not configured" }, 500);
+  }
+
+  const user = await getSupabaseUser(SUPABASE_URL, SUPABASE_ANON_KEY, token);
+  if (!user?.id || !user?.email) {
+    return jsonResponse({ ok: false, error: "Unable to load user" }, 401);
+  }
+
+  const verified = await verifySupabasePassword(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    user.email,
+    password
+  );
+
+  if (!verified) {
+    return jsonResponse({ ok: false, error: "Incorrect password" }, 400);
+  }
+
+  if (!STRIPE_SECRET_KEY) {
+    return jsonResponse({ ok: false, error: "Stripe not configured" }, 500);
+  }
+
+  try {
+    await cancelStripeSubscriptions(STRIPE_SECRET_KEY, user.email);
+    await deleteSupabaseData(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
+    await deleteSupabaseUser(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
+    return jsonResponse({ ok: true });
+  } catch (err) {
+    const message = String(err?.message || err || "Account deletion failed");
+    return jsonResponse({ ok: false, error: message }, 500);
+  }
+}
+
+async function getSupabaseUser(supabaseUrl, anonKey, accessToken) {
+  const res = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "apikey": anonKey
+    }
+  });
+
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data?.user || data;
+}
+
+async function verifySupabasePassword(supabaseUrl, anonKey, email, password) {
+  const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": anonKey
+    },
+    body: JSON.stringify({ email, password })
+  });
+
+  return res.ok;
+}
+
+async function cancelStripeSubscriptions(stripeKey, email) {
+  const customerRes = await stripeFetch(
+    stripeKey,
+    `https://api.stripe.com/v1/customers?${new URLSearchParams({ email, limit: "1" })}`
+  );
+
+  const customer = customerRes?.data?.[0];
+  if (!customer?.id) return;
+
+  const subsRes = await stripeFetch(
+    stripeKey,
+    `https://api.stripe.com/v1/subscriptions?${new URLSearchParams({
+      customer: customer.id,
+      status: "all",
+      limit: "100"
+    })}`
+  );
+
+  const cancelable = new Set([
+    "active",
+    "trialing",
+    "past_due",
+    "unpaid",
+    "incomplete"
+  ]);
+
+  for (const sub of subsRes?.data || []) {
+    if (!sub?.id || !cancelable.has(sub.status)) continue;
+    const params = new URLSearchParams({ invoice_now: "true", prorate: "true" });
+    await stripeFetch(
+      stripeKey,
+      `https://api.stripe.com/v1/subscriptions/${sub.id}?${params}`,
+      "DELETE",
+      null,
+      true
+    );
+  }
+}
+
+async function stripeFetch(stripeKey, url, method = "GET", body = null, allowMissing = false) {
+  const res = await fetch(url, {
+    method,
+    headers: {
+      "Authorization": `Bearer ${stripeKey}`,
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body
+  });
+
+  const text = await res.text();
+  let json = null;
+  try { json = text ? JSON.parse(text) : null; } catch {}
+
+  if (!res.ok) {
+    const code = json?.error?.code;
+    const msg = json?.error?.message || text || `Stripe ${res.status}`;
+    if (allowMissing && code === "resource_missing") return null;
+    throw new Error(msg);
+  }
+  return json;
+}
+
+async function deleteSupabaseData(supabaseUrl, serviceKey, userId) {
+  const restBase = `${supabaseUrl}/rest/v1`;
+  const headers = {
+    "Authorization": `Bearer ${serviceKey}`,
+    "apikey": serviceKey,
+    "Content-Type": "application/json"
+  };
+
+  const children = await sbSelect(
+    restBase,
+    headers,
+    "children",
+    new URLSearchParams({ select: "id", parent_user_id: `eq.${userId}` })
+  );
+  const childIds = Array.isArray(children) ? children.map(c => c.id).filter(Boolean) : [];
+
+  await sbDelete(restBase, headers, "session_items", new URLSearchParams({ owner_id: `eq.${userId}` }));
+  await sbDelete(restBase, headers, "sessions", new URLSearchParams({ owner_id: `eq.${userId}` }));
+  await sbDelete(restBase, headers, "child_skill_progress", new URLSearchParams({ owner_id: `eq.${userId}` }));
+  await sbDelete(restBase, headers, "child_xp", new URLSearchParams({ owner_id: `eq.${userId}` }));
+  await sbDelete(restBase, headers, "lesson_attempts", new URLSearchParams({ owner_id: `eq.${userId}` }));
+  await sbDelete(restBase, headers, "weekly_report_settings", new URLSearchParams({ parent_user_id: `eq.${userId}` }));
+  await sbDelete(restBase, headers, "weekly_reports", new URLSearchParams({ parent_user_id: `eq.${userId}` }));
+
+  if (childIds.length) {
+    const childFilter = new URLSearchParams({ child_id: `in.(${childIds.join(",")})` });
+    await sbDelete(restBase, headers, "child_progress", childFilter);
+    await sbDelete(restBase, headers, "progress", childFilter);
+  }
+
+  await sbDelete(restBase, headers, "children", new URLSearchParams({ parent_user_id: `eq.${userId}` }));
+  await sbDelete(restBase, headers, "profiles", new URLSearchParams({ id: `eq.${userId}` }), true);
+  await sbDelete(restBase, headers, "screeners", new URLSearchParams({ owner_id: `eq.${userId}` }), true);
+  await sbDelete(restBase, headers, "screener_results", new URLSearchParams({ parent_user_id: `eq.${userId}` }), true);
+}
+
+async function sbSelect(restBase, headers, table, params) {
+  const res = await fetch(`${restBase}/${table}?${params.toString()}`, {
+    method: "GET",
+    headers
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    if (isMissingTable(text)) return [];
+    throw new Error(text || `Supabase ${table} select failed`);
+  }
+  return res.json();
+}
+
+async function sbDelete(restBase, headers, table, params, allowMissing = false) {
+  const res = await fetch(`${restBase}/${table}?${params.toString()}`, {
+    method: "DELETE",
+    headers
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    if (allowMissing && isMissingTable(text)) return;
+    throw new Error(text || `Supabase ${table} delete failed`);
+  }
+}
+
+function isMissingTable(text) {
+  const msg = String(text || "");
+  return msg.includes("does not exist") || msg.includes("relation") || msg.includes("not found");
+}
+
+async function deleteSupabaseUser(supabaseUrl, serviceKey, userId) {
+  const res = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${serviceKey}`,
+      "apikey": serviceKey
+    }
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to delete auth user");
+  }
 }

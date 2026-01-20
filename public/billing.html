@@ -40,6 +40,10 @@
     .small { font-size:12px; color:#6b7280; line-height:1.55; }
     .stack { display:flex; flex-direction:column; gap:10px; }
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .modal { position:fixed; inset:0; background:rgba(2,6,23,.45); display:none; align-items:center; justify-content:center; padding:18px; z-index:9999; }
+    .modal-card { background:#fff; border-radius:16px; padding:16px; width:min(520px, 100%); box-shadow: 0 10px 30px rgba(0,0,0,.18); border:1px solid #ececf4; }
+    .label { font-size:13px; font-weight:800; margin-bottom:6px; display:block; }
+    .input { width:100%; padding:12px 12px; border-radius:12px; border:1px solid #d1d5db; font-size:15px; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -130,6 +134,7 @@
           <div class="row">
             <button id="manageBtnB" class="btn light" type="button">Manage billing</button>
             <button id="cancelBtn" class="btn danger" type="button">Cancel subscription</button>
+            <button id="deleteAccountBtn" class="btn danger" type="button">Delete account permanently</button>
           </div>
 
           <div class="small" style="margin-top:10px;" id="cancelHint">
@@ -138,6 +143,23 @@
 
           <div id="manageMsgB" class="status" aria-live="polite"></div>
           <div class="hr"></div>
+        </div>
+
+        <div id="deleteModal" class="modal" aria-hidden="true">
+          <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
+            <h3 id="deleteTitle" style="margin:0 0 6px;">Delete account permanently</h3>
+            <p class="muted" style="margin:0 0 12px;">
+              This will cancel your subscription immediately and permanently delete all data, including children, progress, sessions, and reports.
+              This cannot be undone.
+            </p>
+            <label class="label" for="deletePassword">Confirm password</label>
+            <input id="deletePassword" class="input" type="password" placeholder="Enter your password" autocomplete="current-password" />
+            <div id="deleteMsg" class="status" aria-live="polite"></div>
+            <div class="row" style="margin-top:10px;">
+              <button id="deleteConfirmBtn" class="btn danger" type="button" disabled>Confirm delete</button>
+              <button id="deleteCancelBtn" class="btn light" type="button">Cancel</button>
+            </div>
+          </div>
         </div>
 
         <div class="callout">
@@ -211,6 +233,13 @@
     const cancelBtn = document.getElementById("cancelBtn");
     const manageMsgB = document.getElementById("manageMsgB");
     const cancelHint = document.getElementById("cancelHint");
+
+    const deleteAccountBtn = document.getElementById("deleteAccountBtn");
+    const deleteModal = document.getElementById("deleteModal");
+    const deletePassword = document.getElementById("deletePassword");
+    const deleteConfirmBtn = document.getElementById("deleteConfirmBtn");
+    const deleteCancelBtn = document.getElementById("deleteCancelBtn");
+    const deleteMsg = document.getElementById("deleteMsg");
 
     const debugWrap = document.getElementById("debugWrap");
     const debugBox = document.getElementById("debugBox");
@@ -297,6 +326,53 @@
       return parsed.json;
     }
 
+    async function callLocalApi(path, opts={}) {
+      const accessToken = await getAccessTokenOrThrow();
+      const res = await fetch(`${window.location.origin}${path}`, {
+        method: opts.method || "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+          ...(opts.headers || {})
+        },
+        body: opts.body ? JSON.stringify(opts.body) : undefined
+      });
+
+      const parsed = await safeJson(res);
+      setDebug(
+        `REQUEST: ${opts.method || "GET"} ${path}\n` +
+        `HTTP: ${res.status}\n` +
+        `BODY:\n${parsed.ok ? JSON.stringify(parsed.json, null, 2) : (parsed.raw || "").slice(0, 800)}`
+      );
+
+      if (!parsed.ok) {
+        const snippet = (parsed.raw || "").slice(0, 140);
+        throw new Error(`API did not return JSON (starts with): ${snippet}`);
+      }
+      if (!res.ok || parsed.json?.ok === false) {
+        throw new Error(parsed.json?.error || `HTTP ${res.status}`);
+      }
+      return parsed.json;
+    }
+
+    function openDeleteModal() {
+      deletePassword.value = "";
+      deleteConfirmBtn.disabled = true;
+      deletePassword.disabled = false;
+      deleteCancelBtn.disabled = false;
+      deleteConfirmBtn.textContent = "Confirm delete";
+      setMsg(deleteMsg, "");
+      deleteModal.style.display = "flex";
+      deleteModal.setAttribute("aria-hidden", "false");
+      deletePassword.focus();
+    }
+
+    function closeDeleteModal() {
+      deleteModal.style.display = "none";
+      deleteModal.setAttribute("aria-hidden", "true");
+    }
+
     function formatDateDDMMYYYY(isoLike) {
       if (!isoLike) return "";
       const d = new Date(isoLike);
@@ -341,6 +417,8 @@
       manageBtnA.disabled = false;
       manageBtnB.disabled = false;
       cancelBtn.disabled = false;
+      if (deleteConfirmBtn) deleteConfirmBtn.disabled = true;
+      if (deleteAccountBtn) deleteAccountBtn.disabled = false;
 
       planValue.textContent = "—";
       nextPayValue.textContent = "—";
@@ -554,6 +632,48 @@
       // Cancellation should happen in Stripe portal (best practice)
       await goPortal(manageMsgB);
       cancelBtn.disabled = false;
+    });
+
+    deleteAccountBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openDeleteModal();
+    });
+
+    deleteModal?.addEventListener("click", (e) => {
+      if (e.target === deleteModal) closeDeleteModal();
+    });
+
+    deleteCancelBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeDeleteModal();
+    });
+
+    deletePassword?.addEventListener("input", () => {
+      const hasValue = !!deletePassword.value.trim();
+      deleteConfirmBtn.disabled = !hasValue;
+    });
+
+    deleteConfirmBtn?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (!deletePassword.value.trim()) return;
+      setMsg(deleteMsg, "");
+      deleteConfirmBtn.disabled = true;
+      deleteCancelBtn.disabled = true;
+      deletePassword.disabled = true;
+      deleteConfirmBtn.textContent = "Deleting...";
+
+      try {
+        await callLocalApi("/account/delete", { method: "POST", body: { password: deletePassword.value } });
+        await sb.auth.signOut();
+        window.location.href = "https://learnlio.co.uk/?account_deleted=1";
+      } catch (err) {
+        setMsg(deleteMsg, String(err.message || err), false);
+        deleteConfirmBtn.textContent = "Confirm delete";
+        deleteCancelBtn.disabled = false;
+        deletePassword.disabled = false;
+        deleteConfirmBtn.disabled = !deletePassword.value.trim();
+      }
     });
 
     logoutBtn.addEventListener("click", async () => {
