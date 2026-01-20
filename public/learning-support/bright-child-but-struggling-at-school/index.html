@@ -26,24 +26,56 @@
     .muted { color:#6b7280; }
     .hr { height:1px; background:#ececf4; margin:20px 0; }
   </style>
-</head>
+  <style>
+    /* Nav (index) */
+    .nav{
+      background:#fff;
+      border-bottom:1px solid rgba(15,23,42,.08);
+      position:sticky; top:0; z-index:50;
+    }
+    .nav-inner{
+      max-width:1100px;
+      margin:0 auto;
+      padding:12px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      font-weight:950; letter-spacing:.2px;
+    }
+    .brand img{ height:34px; width:auto; display:block; }
+    .links{
+      display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end;
+    }
+    .links a{
+      padding:9px 10px;
+      border-radius:12px;
+      font-size:14px;
+      color:var(--ink);
+    }
+    .links a:hover{ background: rgba(15,23,42,.04); }
+  </style></head>
 
 <body>
-<header class="nav">
-  <div class="nav-inner">
-    <a class="brand" href="/">
-      <img src="/assets/img/logo.webp" alt="Learnlio">
-      <span>Learnlio</span>
-    </a>
-    <nav class="links">
-      <a href="/">Home</a>
-      <a href="/why-learnlio">Why Learnlio</a>
-      <a href="/pricing">Pricing</a>
-      <a class="btn light" href="/login.html">Log in</a>
-      <a class="btn" href="/billing.html">Start free trial</a>
-    </nav>
-  </div>
-</header>
+  <header class="nav" role="banner">
+    <div class="nav-inner">
+      <a class="brand" href="/" aria-label="Learnlio home">
+        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <span>Learnlio</span>
+      </a>
+
+      <nav class="links" aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/why-learnlio.html">Why Learnlio</a>
+        <a href="/pricing.html">Pricing</a>
+        <a class="btn light" href="/login.html" aria-label="Log in">Log in</a>
+        <a class="btn" href="/pricing.html" aria-label="Start free trial">Start free trial</a>
+      </nav>
+    </div>
+  </header>
 
 <main class="container">
   <article class="card">
@@ -131,4 +163,5 @@
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
+
 
