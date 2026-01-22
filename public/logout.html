@@ -51,7 +51,7 @@
 
         status.textContent = "Signed out. Redirecting to homepage";
         // Short pause so parents see confirmation
-        setTimeout(() => { window.location.href = "/"; }, 650);
+        setTimeout(() => { window.location.href = "/index.html?loggedout=1"; }, 650);
       }catch(e){
         console.warn(e);
         status.textContent = "Signed out. If youre not redirected, tap Return to Learnlio.";
