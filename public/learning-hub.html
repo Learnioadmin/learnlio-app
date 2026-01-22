@@ -250,6 +250,14 @@
       } catch { return null; }
     }
 
+    function formatHubTitle(name){
+      if (!name) return "Learning Hub";
+      const trimmed = String(name).trim();
+      if (!trimmed) return "Learning Hub";
+      const last = trimmed.slice(-1).toLowerCase();
+      return last === "s" ? `${trimmed} Learning Hub` : `${trimmed}s Learning Hub`;
+    }
+
     function nextRewardAt(xp){
       const n = Math.max(0, Number(xp||0));
       return (Math.floor(n / 100) + 1) * 100;
@@ -501,8 +509,8 @@
       const selected = getSelectedChildFromLocalStorage();
       const selectedChild = JSON.parse(localStorage.getItem("selectedChild") || "{}");
       const titleEl = document.getElementById("learningHubTitle");
-      if (titleEl && selectedChild?.name) {
-        titleEl.textContent = `${selectedChild.name}s Learning Hub`;
+      if (titleEl) {
+        titleEl.textContent = formatHubTitle(selectedChild?.child_name);
       }
       if (!selected?.id){
         childLine.textContent = "Please choose a child from the Dashboard.";
@@ -519,6 +527,9 @@
 
       hideErrorCard();
       childLine.textContent = `For ${res.child.child_name || "your child"}`;
+      if (titleEl) {
+        titleEl.textContent = formatHubTitle(res.child.child_name);
+      }
 
       const xp = await loadOrCreateChildXp(user.id, res.child.id);
       const todayXp = loadTodayXp(res.child.id);
