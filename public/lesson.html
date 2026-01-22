@@ -475,7 +475,8 @@
     const TTS_URL = "https://learnlio-tts.falling-grass-34ab.workers.dev/speak";
     // =========================
 
-    const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = window.sb || window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.sb = sb || window.sb;
 
     // UI
     const pageError = document.getElementById("pageError");

@@ -413,7 +413,8 @@
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
     // =========================
 
-    const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = window.sb || window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.sb = sb || window.sb;
 
     const logoutBtn = document.getElementById("logoutBtn");
     const refreshBtn = document.getElementById("refreshBtn");

@@ -39,11 +39,8 @@
   // =========================
   // HELPERS
   // =========================
-  const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  if (!sb) {
-    console.error("[layout-app] Supabase not loaded.");
-    return;
-  }
+  const sb = window.sb || window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (sb && !window.sb) window.sb = sb;
 
   function now() { return Date.now(); }
 
@@ -58,11 +55,13 @@
   }
 
   async function getAccessToken() {
-    let { data: sessionData } = await sb.auth.getSession();
+    const client = window.sb;
+    if (!client) return null;
+    let { data: sessionData } = await client.auth.getSession();
     let accessToken = sessionData?.session?.access_token;
 
     if (!accessToken) {
-      const refreshed = await sb.auth.refreshSession();
+      const refreshed = await client.auth.refreshSession();
       accessToken = refreshed?.data?.session?.access_token;
     }
 
@@ -71,7 +70,7 @@
 
   async function authedFetch(path, options = {}) {
     const accessToken = await getAccessToken();
-    if (!accessToken) throw new Error("No session");
+    if (!accessToken) return null;
 
     const headers = {
       "Authorization": `Bearer ${accessToken}`,
@@ -217,7 +216,8 @@
   // AUTH GUARD
   // =========================
   async function requireAuthOrRedirect() {
-    const { data, error } = await sb.auth.getUser();
+    if (!window.sb) return false;
+    const { data, error } = await window.sb.auth.getUser();
 
     if (error || !data?.user) {
       // Not logged in
@@ -245,7 +245,9 @@
       localStorage.removeItem(LS_LAST_ACTIVITY);
       localStorage.removeItem(LS_SESSION_START);
 
-      await sb.auth.signOut();
+      if (window.sb) {
+        await window.sb.auth.signOut();
+      }
     } catch (e) {
       console.warn("[layout-app] signOut error:", e);
     } finally {
