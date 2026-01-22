@@ -2138,12 +2138,6 @@ Short lines.
     m_finishBtn.addEventListener("click", async () => { progressModal.style.display="none"; await endSessionUI(); });
 
     // ---------- Events ----------
-    logoutBtn.addEventListener("click", async () => {
-      await sb.auth.signOut();
-      localStorage.removeItem("selectedChild");
-      window.location.href = "/login.html";
-    });
-
     helpBtn.addEventListener("click", () => {
       addBotMessage("Quick help:\n\n• Tap a subject\n• Tap an area\n• For English: tap a choice\n• For Maths: type an answer\n• Tap Listen if you want it read out loud\n\nYou earn XP for effort — just keep trying.");
     });

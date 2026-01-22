@@ -273,6 +273,9 @@
     try {
       // Clear app-local state too
       localStorage.removeItem("selectedChild");
+      localStorage.removeItem("learnlio_child_mode");
+      localStorage.removeItem("learnlio_parent_unlocked");
+      localStorage.removeItem("learnlio_last_ctx");
       localStorage.removeItem(LS_LAST_ACTIVITY);
       localStorage.removeItem(LS_SESSION_START);
 
@@ -282,13 +285,17 @@
     } catch (e) {
       console.warn("[layout-app] signOut error:", e);
     } finally {
-      // Always send them to public home (best customer journey)
-      // Reason is useful if you want later debugging:
-      // e.g. https://learnlio.co.uk/?signed_out=idle
-      const u = new URL(PUBLIC_HOME_URL);
-      u.searchParams.set("signed_out", reason);
-      window.location.href = u.toString();
+      window.location.href = "/?logged_out=1";
     }
+  }
+
+  function bindLogoutHandler() {
+    document.addEventListener("click", (event) => {
+      const btn = event.target.closest("#logoutBtn");
+      if (!btn) return;
+      event.preventDefault();
+      doLogout("user");
+    });
   }
 
   // =========================
@@ -792,6 +799,7 @@
       mountAppFooter();
       ensureDebugBadge();
     });
+    bindLogoutHandler();
 
     // Only run guard/timers on app pages
     const APP =

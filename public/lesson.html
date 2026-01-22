@@ -1564,12 +1564,6 @@
 
     speakBtn.addEventListener("click", speakCurrent);
 
-    logoutBtn.addEventListener("click", async () => {
-      await sb.auth.signOut();
-      localStorage.removeItem("selectedChild");
-      window.location.href = "/login.html";
-    });
-
     // -------------------------
     // Boot
     // -------------------------

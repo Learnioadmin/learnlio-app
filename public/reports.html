@@ -1416,12 +1416,6 @@
     // -------------------------
     // EVENTS
     // -------------------------
-    logoutBtn.addEventListener("click", async () => {
-      await sb.auth.signOut();
-      localStorage.removeItem("selectedChild");
-      window.location.href = "/login.html";
-    });
-
     refreshBtn.addEventListener("click", async () => {
       await loadEverything();
     });

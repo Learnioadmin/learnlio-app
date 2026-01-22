@@ -703,6 +703,40 @@
   </main>
 
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <script>
+  (() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("logged_out") !== "1") return;
+
+    const toast = document.createElement("div");
+    toast.textContent = "Youve been logged out safely.";
+    toast.style.position = "fixed";
+    toast.style.left = "50%";
+    toast.style.bottom = "24px";
+    toast.style.transform = "translateX(-50%)";
+    toast.style.background = "#fff";
+    toast.style.border = "1px solid rgba(15,23,42,.12)";
+    toast.style.boxShadow = "0 12px 24px rgba(2,6,23,.12)";
+    toast.style.borderRadius = "12px";
+    toast.style.padding = "10px 14px";
+    toast.style.fontSize = "14px";
+    toast.style.fontWeight = "700";
+    toast.style.color = "#0f172a";
+    toast.style.opacity = "0";
+    toast.style.transition = "opacity .2s ease";
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => { toast.style.opacity = "1"; });
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      setTimeout(() => { toast.remove(); }, 300);
+    }, 2200);
+
+    try {
+      history.replaceState({}, "", window.location.pathname);
+    } catch {}
+  })();
+  </script>
 </body>
 </html>
 
