@@ -216,11 +216,7 @@
     const grownupBtn = document.getElementById("grownupModeBtn");
     if (grownupBtn) {
       grownupBtn.addEventListener("click", async () => {
-        try {
-          const statusRes = await authedFetch("/child-mode/status", { method: "GET" });
-          if (!statusRes) return;
-          openGrownupModeModal({ pinSet: !!statusRes.json?.pin_set });
-        } catch {}
+        openGrownupModeModal({ pinSet: window.__learnlioPinSet === true });
       });
     }
   }
@@ -451,8 +447,23 @@
     const childMode = window.__learnlioChildMode === true;
     const reportsLink = document.getElementById("navReportsLink");
     const grownupBtn = document.getElementById("grownupModeBtn");
-    if (reportsLink) reportsLink.style.display = childMode ? "none" : "";
-    if (grownupBtn) grownupBtn.style.display = childMode ? "" : "none";
+    if (reportsLink) reportsLink.style.setProperty("display", childMode ? "none" : "", "important");
+    document.querySelectorAll("header.nav.app-nav a").forEach((a) => {
+      if (a.textContent?.trim() === "Reports") {
+        a.style.setProperty("display", childMode ? "none" : "", "important");
+      }
+    });
+    if (grownupBtn) grownupBtn.style.setProperty("display", childMode ? "inline-flex" : "none", "important");
+  }
+
+  async function refreshChildModeState() {
+    try {
+      const statusRes = await authedFetch("/child-mode/status", { method: "GET" });
+      if (!statusRes) return;
+      window.__learnlioChildMode = !!statusRes.json?.child_mode;
+      window.__learnlioPinSet = !!statusRes.json?.pin_set;
+      applyNavForChildMode();
+    } catch {}
   }
 
   function openGrownupModeModal({ pinSet } = {}) {
@@ -741,6 +752,7 @@
       const childMode = !!statusRes.json?.child_mode;
       window.__learnlioChildMode = childMode;
       const pinSet = !!statusRes.json?.pin_set;
+      window.__learnlioPinSet = pinSet;
       updateDebugBadge({ childMode, pinSet });
       applyNavForChildMode();
       const header = document.querySelector("header.nav.app-nav");
@@ -793,6 +805,7 @@
     const ok = await requireAuthOrRedirect();
     if (!ok) return;
 
+    await refreshChildModeState();
     if ((PATH === "/dash" || PATH.endsWith("/dash.html")) && localStorage.getItem("learnlio_just_logged_in") === "1") {
       try {
         await authedFetch("/child-mode/off", { method: "POST", body: {} });
@@ -801,6 +814,7 @@
     }
 
     await maybeEnableChildMode();
+    await refreshChildModeState();
     await maybeGateParentPages();
     if (IS_PARENT_AREA) {
       document.addEventListener("DOMContentLoaded", () => {
