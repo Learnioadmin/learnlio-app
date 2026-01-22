@@ -22,6 +22,9 @@
   const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
 
+  function normPath(p){ return (p||"").replace(/\/+$/,""); }
+  const PATH = normPath(window.location.pathname);
+
   // Where to send users after sign out (public site)
   const PUBLIC_HOME_URL = "https://learnlio.co.uk/";
 
@@ -102,12 +105,10 @@
     return candidates.some((c) => path === c || path.endsWith(c));
   }
 
-  function normPath(p) { return (p || "").replace(/\/+$/,""); }
-
   function isAppPage() {
     // We only run the auth guard + session timers on app pages (not public pages).
     // If you accidentally include layout-app.js on public pages, this protects you.
-    const path = normPath(window.location.pathname);
+    const path = PATH;
     return (
       path === "/dash" || path.endsWith("/dash.html") ||
       path === "/chat" || path.endsWith("/chat.html") ||
@@ -346,11 +347,12 @@
   const DEBUG = new URLSearchParams(window.location.search).get("debug") === "1";
   const debugState = {
     loaded: true,
-    pathname: normPath(window.location.pathname),
+    pathname: PATH,
     sbReady: "unknown",
     statusHttp: "none",
     childMode: "unknown",
     gateRendered: false,
+    isAppPage: "unknown",
     lastError: ""
   };
 
@@ -379,6 +381,7 @@
       `statusHttp: ${debugState.statusHttp}<br>` +
       `childMode: ${debugState.childMode}<br>` +
       `gateRendered: ${debugState.gateRendered}<br>` +
+      `isAppPage: ${debugState.isAppPage}<br>` +
       `lastError: ${escapeHtml(debugState.lastError || "")}`;
   }
 
@@ -404,7 +407,7 @@
   }
 
   async function maybeEnableChildMode() {
-    const path = normPath(window.location.pathname);
+    const path = PATH;
     const isChildArea =
       path === "/chat" || path.endsWith("/chat.html") ||
       path === "/lessons" || path.endsWith("/lessons.html") ||
@@ -501,7 +504,7 @@
   }
 
   async function maybeGateParentPages() {
-    const path = normPath(window.location.pathname);
+    const path = PATH;
     const isParentArea =
       path === "/reports" || path.endsWith("/reports.html") ||
       path === "/billing" || path.endsWith("/billing.html");
@@ -556,18 +559,25 @@
     });
 
     // Only run guard/timers on app pages
-    if (!isAppPage()) return;
+    const APP =
+      PATH === "/dash" || PATH.endsWith("/dash.html") ||
+      PATH === "/chat" || PATH.endsWith("/chat.html") ||
+      PATH === "/reports" || PATH.endsWith("/reports.html") ||
+      PATH === "/billing" || PATH.endsWith("/billing.html") ||
+      PATH === "/lesson" || PATH.endsWith("/lesson.html") ||
+      PATH === "/lessons" || PATH.endsWith("/lessons.html");
+    updateDebugBadge({ isAppPage: APP });
+    if (!APP) return;
 
     const ok = await requireAuthOrRedirect();
     if (!ok) return;
 
     await maybeEnableChildMode();
     await maybeGateParentPages();
-    const path = normPath(window.location.pathname);
-    const isParentArea =
-      path === "/reports" || path.endsWith("/reports.html") ||
-      path === "/billing" || path.endsWith("/billing.html");
-    if (isParentArea) {
+    const PARENT =
+      PATH === "/reports" || PATH.endsWith("/reports.html") ||
+      PATH === "/billing" || PATH.endsWith("/billing.html");
+    if (PARENT) {
       document.addEventListener("DOMContentLoaded", () => {
         if (!window.__learnlioGateRendered) maybeGateParentPages();
       }, { once: true });
