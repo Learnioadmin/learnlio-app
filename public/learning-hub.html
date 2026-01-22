@@ -54,7 +54,7 @@
     .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
     @media (min-width: 900px){ .grid { grid-template-columns: 1.1fr .9fr; } }
 
-    .hero-today h1 { margin:0 0 6px; font-size:22px; letter-spacing:-.4px; }
+    .hero-today h2 { margin:0 0 6px; font-size:22px; letter-spacing:-.4px; }
     .tile-row { display:grid; gap:10px; grid-template-columns: 1fr; }
     @media (min-width: 700px){ .tile-row { grid-template-columns: repeat(3, 1fr); } }
     .tile-btn {
@@ -106,26 +106,26 @@
   <div id="navMount"></div>
 
   <main class="container">
-    <section class="card hero hero-today" aria-label="Todays learning">
-      <h1>Todays learning</h1>
-      <div class="muted dys-text">Small steps. Big confidence.</div>
-      <div class="tile-row" style="margin-top:14px;">
-        <a id="continueBtn" class="tile-btn primary" href="/lessons.html">Continue</a>
-        <a id="startLessonBtn" class="tile-btn secondary" href="/lessons.html">📘 Start a lesson</a>
-        <a id="continueTutorBtn" class="tile-btn secondary" href="/chat.html">💬 Continue Tutor</a>
-      </div>
-      <div id="continueLine" class="muted dys-text" style="margin-top:10px;">Start your first lesson to unlock Continue.</div>
-    </section>
-
     <section class="card hero" aria-label="Learning Hub hero">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <h1 id="learningHubTitle">Learning Hub</h1>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:8px;">
         <div class="pill">🎒 Learning Hub</div>
         <a id="parentDashBtn" class="btn light" href="/dash.html">👨👩👧 Parent Dashboard</a>
       </div>
-      <h1 id="learningHubTitle">Learning Hub</h1>
       <div class="muted dys-text">Small steps. Big confidence.</div>
       <div id="childLine" class="muted small" style="margin-top:6px;">Loading child…</div>
       <div id="hubError" class="status warn" style="display:none; margin-top:8px;"></div>
+    </section>
+
+    <section id="todayLearning" class="card hero hero-today" aria-label="Todays learning">
+      <h2>Todays learning</h2>
+      <div class="muted dys-text">Small steps. Big confidence.</div>
+      <div class="tile-row" style="margin-top:14px;">
+        <a id="continueBtn" class="tile-btn primary" href="/lessons.html">Continue</a>
+        <a id="startLessonBtn" class="tile-btn secondary" href="/lessons.html">Start a lesson</a>
+        <a id="continueTutorBtn" class="tile-btn secondary" href="/chat.html">Continue Tutor</a>
+      </div>
+      <div id="continueLine" class="muted dys-text" style="margin-top:10px;">Start your first lesson to unlock Continue.</div>
     </section>
 
     <section class="card" style="margin-top:14px;">
@@ -537,5 +537,6 @@
   </script>
 </body>
 </html>
+
 
 
