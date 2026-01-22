@@ -167,6 +167,10 @@
       }
       .links a:hover{ background: rgba(15,23,42,.04); }
       .links a.active{ background: rgba(15,23,42,.04); }
+      header.app-nav.child-mode a[href*="dash"],
+      header.app-nav.child-mode a[href*="reports"] {
+        display: none !important;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -203,6 +207,10 @@
       document.body.insertBefore(navEl, document.body.firstChild);
     }
 
+    const header = document.querySelector("header.nav.app-nav");
+    if (header) {
+      header.classList.toggle("child-mode", window.__learnlioChildMode === true);
+    }
   }
 
   function mountAppFooter() {
@@ -589,8 +597,11 @@
       updateDebugBadge({ statusHttp: statusRes.status });
       debugLog("status", statusRes.json);
       const childMode = !!statusRes.json?.child_mode;
+      window.__learnlioChildMode = childMode;
       const pinSet = !!statusRes.json?.pin_set;
       updateDebugBadge({ childMode, pinSet });
+      const header = document.querySelector("header.nav.app-nav");
+      if (header) header.classList.toggle("child-mode", childMode);
       if (childMode && IS_PARENT_AREA) {
         const bodyReady = await waitForBody();
         if (!bodyReady) return;
