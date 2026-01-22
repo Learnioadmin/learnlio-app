@@ -122,7 +122,7 @@
         <div class="pill">🎒 Learning Hub</div>
         <a id="parentDashBtn" class="btn light" href="/dash.html">👨👩👧 Parent Dashboard</a>
       </div>
-      <h1>Learning Hub</h1>
+      <h1 id="learningHubTitle">Learning Hub</h1>
       <div class="muted dys-text">Small steps. Big confidence.</div>
       <div id="childLine" class="muted small" style="margin-top:6px;">Loading child…</div>
       <div id="hubError" class="status warn" style="display:none; margin-top:8px;"></div>
@@ -499,6 +499,11 @@
       if (!user) return;
 
       const selected = getSelectedChildFromLocalStorage();
+      const selectedChild = JSON.parse(localStorage.getItem("selectedChild") || "{}");
+      const titleEl = document.getElementById("learningHubTitle");
+      if (titleEl && selectedChild?.name) {
+        titleEl.textContent = `${selectedChild.name}s Learning Hub`;
+      }
       if (!selected?.id){
         childLine.textContent = "Please choose a child from the Dashboard.";
         showErrorCard("Choose a child to personalise this page.");
