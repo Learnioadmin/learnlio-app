@@ -66,7 +66,8 @@
       path.endsWith("/chat.html") ||
       path.endsWith("/reports.html") ||
       path.endsWith("/billing.html") ||
-      path.endsWith("/screener.html") // your screener is inside app nav currently
+      path.endsWith("/lesson.html") ||
+      path.endsWith("/lessons.html")
     );
   }
 
@@ -79,38 +80,77 @@
   // =========================
   // NAV + FOOTER (APP)
   // =========================
-  function mountAppNav() {
-    const mount = document.getElementById("navMount");
-    if (!mount) return;
+  function ensureNavStyles() {
+    if (document.getElementById("appNavStyles")) return;
+    const style = document.createElement("style");
+    style.id = "appNavStyles";
+    style.textContent = `
+      .nav{
+        background:#fff;
+        border-bottom:1px solid rgba(15,23,42,.08);
+        position:sticky; top:0; z-index:50;
+      }
+      .nav-inner{
+        max-width:1100px;
+        margin:0 auto;
+        padding:12px 18px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+      }
+      .brand{
+        display:flex; align-items:center; gap:10px;
+        font-weight:950; letter-spacing:.2px;
+      }
+      .brand img{ height:34px; width:auto; display:block; }
+      .links{
+        display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end;
+      }
+      .links a{
+        padding:9px 10px;
+        border-radius:12px;
+        font-size:14px;
+        color:var(--ink);
+      }
+      .links a:hover{ background: rgba(15,23,42,.04); }
+      .links a.active{ background: rgba(15,23,42,.04); }
+    `;
+    document.head.appendChild(style);
+  }
 
+  function mountAppNav() {
+    if (document.querySelector("header.nav.app-nav")) return;
     const path = window.location.pathname || "";
     const isActive = (p) => path.endsWith(p);
 
-    mount.innerHTML = `
-      <header class="nav">
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = `
+      <header class="nav app-nav" role="banner">
         <div class="nav-inner">
           <a class="brand" href="/dash.html" aria-label="Learnlio dashboard">
             <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
             <span>Learnlio</span>
           </a>
-          <nav class="links">
+          <nav class="links" aria-label="Primary">
             <a href="/dash.html" class="${isActive("/dash.html") ? "active" : ""}">Dashboard</a>
-            <a href="/chat.html" class="${isActive("/chat.html") ? "active" : ""}">Tutor</a>
-            <a href="/screener.html" class="${isActive("/screener.html") ? "active" : ""}">Screener</a>
+            <a href="/chat.html" class="${isActive("/chat.html") ? "active" : ""}">Learnlio Tutor</a>
             <a href="/reports.html" class="${isActive("/reports.html") ? "active" : ""}">Reports</a>
-            <a href="/billing.html" class="${isActive("/billing.html") ? "active" : ""}">Billing</a>
-            <button id="appLogoutBtn" class="btn light" type="button">Log out</button>
+            <button id="logoutBtn" class="btn light" type="button">Logout</button>
           </nav>
         </div>
       </header>
     `;
 
-    const btn = document.getElementById("appLogoutBtn");
-    if (btn) {
-      btn.addEventListener("click", async () => {
-        await doLogout("manual");
-      });
+    const navEl = wrapper.firstElementChild;
+    const mount = document.getElementById("navMount");
+    if (mount) {
+      mount.innerHTML = "";
+      mount.appendChild(navEl);
+    } else if (document.body) {
+      document.body.insertBefore(navEl, document.body.firstChild);
     }
+
   }
 
   function mountAppFooter() {
@@ -245,10 +285,21 @@
   // =========================
   // INIT
   // =========================
+  function runWithBody(fn) {
+    if (document.body) {
+      fn();
+    } else {
+      document.addEventListener("DOMContentLoaded", fn, { once: true });
+    }
+  }
+
   (async () => {
     // Always mount UI if mounts exist (safe)
-    mountAppNav();
-    mountAppFooter();
+    runWithBody(() => {
+      ensureNavStyles();
+      mountAppNav();
+      mountAppFooter();
+    });
 
     // Only run guard/timers on app pages
     if (!isAppPage()) return;

@@ -59,22 +59,7 @@
 </head>
 
 <body>
-  <header class="nav">
-    <div class="nav-inner">
-      <a class="brand" href="/dash.html" aria-label="Learnlio home">
-        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
-        <span>Learnlio</span>
-      </a>
-      <nav class="links">
-        <a class="active" href="/dash.html">Dashboard</a>
-        <a id="navTutor" href="/chat.html">Learnlio Tutor</a>
-        <a id="navScreener" href="/screener.html">Dyslexia Screener</a>
-        <a id="navReports" href="/reports.html">Reports</a>
-        <a id="navBilling" href="/billing.html">Billing</a>
-        <button id="logoutBtn" class="btn light" type="button">Log out</button>
-      </nav>
-    </div>
-  </header>
+  <div id="navMount"></div>
 
   <main class="container">
     <div class="grid">
@@ -200,6 +185,7 @@
     </footer>
   </main>
 
+  <script src="/assets/js/layout-app.js"></script>
   <script>
   (() => {
     // =========================

@@ -345,20 +345,7 @@
 </head>
 
 <body>
-  <header class="nav">
-    <div class="nav-inner">
-      <a class="brand" href="/dash.html" aria-label="Learnlio home">
-        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
-        <span>Learnlio</span>
-      </a>
-      <nav class="links">
-        <a href="/dash.html">Dashboard</a>
-        <a href="/chat.html">Tutor</a>
-        <a class="active" href="/lessons.html">Lessons</a>
-        <a class="btn light" id="logoutBtn" href="javascript:void(0)">Log out</a>
-      </nav>
-    </div>
-  </header>
+  <div id="navMount"></div>
 
   <main class="container">
     <div class="shell">
@@ -467,6 +454,7 @@
       </div>
     </footer>
   </main>
+  <script src="/assets/js/layout-app.js"></script>
   <script>
   (() => {
     // iOS vh fix
