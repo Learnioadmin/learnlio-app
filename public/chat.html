@@ -1051,6 +1051,9 @@
 
     // XP (child-friendly progress)
     let totalXp = 0;
+    let xp_lifetime = 0;
+    let xp_today = 0;
+    let xp_today_date = null; // YYYY-MM-DD
     let sessionXp = 0;
     let unlockedRewards = [];
 
@@ -1065,16 +1068,9 @@
     let currentQuestion = null;
     let hintUsedForCurrent = false;
 
-    function xpKey(){ return child?.id ? `learnlio_xp_${child.id}` : "learnlio_xp"; }
     function rewardsKey(){ return child?.id ? `learnlio_rewards_${child.id}` : "learnlio_rewards"; }
 
     function loadXpAndRewards(){
-      try {
-        const raw = localStorage.getItem(xpKey());
-        totalXp = raw ? Number(raw) : 0;
-        if (!Number.isFinite(totalXp) || totalXp < 0) totalXp = 0;
-      } catch { totalXp = 0; }
-
       try {
         const rawR = localStorage.getItem(rewardsKey());
         unlockedRewards = rawR ? JSON.parse(rawR) : [];
@@ -1083,7 +1079,6 @@
     }
 
     function saveXpAndRewards(){
-      try { localStorage.setItem(xpKey(), String(totalXp)); } catch {}
       try { localStorage.setItem(rewardsKey(), JSON.stringify(unlockedRewards)); } catch {}
     }
 
@@ -1120,10 +1115,28 @@
       if (!p) return;
       sessionXp += p;
       totalXp += p;
+      xp_lifetime += p;
+
+      const tk = `learnlio_xp_today_${child.id}`;
+      xp_today = Number(localStorage.getItem(tk) || 0) + p;
+      localStorage.setItem(tk, String(xp_today));
+
       saveXpAndRewards();
       checkRewardUnlocks();
       if (reasonText) showRewardToast(`+${p} XP`, reasonText);
       updateProgressUI();
+
+      sb.from("child_xp")
+        .upsert({
+          owner_id: currentUser.id,
+          child_id: child.id,
+          xp_total: totalXp,
+          xp_lifetime,
+          updated_at: new Date().toISOString()
+        }, { onConflict: "owner_id,child_id" })
+        .catch((e) => {
+          console.warn("child_xp upsert failed (safe)", e);
+        });
     }
 
     function friendlyPracticeLabel(){
@@ -1248,6 +1261,14 @@
       return Math.max(4, Math.min(18, age));
     }
 
+    function todayKey(){
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
     function computeMaxQuestions(){
       const a = childAge;
       if (a <= 7) return 6;
@@ -1352,6 +1373,62 @@
       if (row.band === "medium") return 2;
       if (row.band === "low") return 3;
       return null;
+    }
+
+    async function loadChildXp(){
+      const { data: existing, error } = await sb
+        .from("child_xp")
+        .select("id, owner_id, child_id, xp_total, xp_lifetime, updated_at")
+        .eq("owner_id", currentUser.id)
+        .eq("child_id", child.id)
+        .maybeSingle();
+
+      if (error){
+        console.warn("child_xp load failed", error);
+        totalXp = 0; xp_lifetime = 0;
+        xp_today = 0; xp_today_date = todayKey();
+        updateProgressUI();
+        return;
+      }
+
+      if (!existing?.id){
+        const payload = {
+          owner_id: currentUser.id,
+          child_id: child.id,
+          xp_total: 0,
+          xp_lifetime: 0,
+          updated_at: new Date().toISOString()
+        };
+        const { data: created, error: cErr } = await sb
+          .from("child_xp")
+          .insert(payload)
+          .select("id, xp_total, xp_lifetime, updated_at")
+          .single();
+
+        if (cErr){
+          console.warn("child_xp create failed", cErr);
+          totalXp = 0; xp_lifetime = 0;
+        } else {
+          totalXp = Number(created.xp_total || 0);
+          xp_lifetime = Number(created.xp_lifetime || 0);
+        }
+      } else {
+        totalXp = Number(existing.xp_total || 0);
+        xp_lifetime = Number(existing.xp_lifetime || 0);
+      }
+
+      const tk = `learnlio_xp_today_${child.id}`;
+      const dk = `learnlio_xp_today_date_${child.id}`;
+      const storedDate = localStorage.getItem(dk);
+      const today = todayKey();
+      if (storedDate !== today){
+        localStorage.setItem(dk, today);
+        localStorage.setItem(tk, "0");
+      }
+      xp_today_date = today;
+      xp_today = Number(localStorage.getItem(tk) || 0);
+
+      updateProgressUI();
     }
 
     async function updateSessionRollups(){
@@ -1997,6 +2074,7 @@ Short lines.
         }
       } catch {}
 
+      await loadChildXp();
       loadXpAndRewards();
       clearError();
       disableInput(false);
