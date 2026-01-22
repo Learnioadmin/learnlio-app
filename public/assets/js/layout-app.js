@@ -114,6 +114,7 @@
     // If you accidentally include layout-app.js on public pages, this protects you.
     const path = PATH;
     return (
+      path === "/learning-hub" || path.endsWith("/learning-hub.html") ||
       path === "/dash" || path.endsWith("/dash.html") ||
       path === "/chat" || path.endsWith("/chat.html") ||
       path === "/reports" || path.endsWith("/reports.html") ||
@@ -177,17 +178,18 @@
   function mountAppNav() {
     if (document.querySelector("header.nav.app-nav")) return;
     const path = normPath(window.location.pathname);
-    const isActive = (p) => path.endsWith(p);
+    const isActive = (p) => path === p.replace(".html", "") || path.endsWith(p);
 
     const wrapper = document.createElement("div");
     wrapper.innerHTML = `
       <header class="nav app-nav" role="banner">
         <div class="nav-inner">
-          <a class="brand" href="/dash.html" aria-label="Learnlio dashboard">
+          <a class="brand" href="/learning-hub.html" aria-label="Learnlio home">
             <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
             <span>Learnlio</span>
           </a>
           <nav class="links" aria-label="Primary">
+            <a href="/learning-hub.html" class="${isActive("/learning-hub.html") ? "active" : ""}">Learning Hub</a>
             <a href="/dash.html" class="${isActive("/dash.html") ? "active" : ""}">Dashboard</a>
             <a href="/chat.html" class="${isActive("/chat.html") ? "active" : ""}">Learnlio Tutor</a>
             <a id="navReportsLink" href="/reports.html" class="${isActive("/reports.html") ? "active" : ""}">Reports</a>

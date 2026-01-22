@@ -140,6 +140,41 @@
     }
   }
 
+  async function routeAfterLogin(){
+    const { data: userData } = await sb.auth.getUser();
+    const u = userData?.user;
+    if (!u){ window.location.href = "/login.html"; return; }
+
+    const { data: kids, error } = await sb
+      .from("children")
+      .select("id, child_name, created_at")
+      .eq("parent_user_id", u.id)
+      .order("created_at", { ascending: true });
+
+    if (error){
+      window.location.href = "/dash.html";
+      return;
+    }
+
+    const children = kids || [];
+
+    if (children.length === 0){
+      localStorage.removeItem("selectedChild");
+      window.location.href = "/dash.html";
+      return;
+    }
+
+    if (children.length === 1){
+      const c = children[0];
+      localStorage.setItem("selectedChild", JSON.stringify({ id: c.id, child_name: c.child_name || "Child" }));
+      window.location.href = "/learning-hub.html";
+      return;
+    }
+
+    localStorage.removeItem("selectedChild");
+    window.location.href = "/dash.html?chooseChild=1";
+  }
+
   form.addEventListener("submit", async e => {
     e.preventDefault();
     clearStatus();
@@ -152,7 +187,7 @@
         });
         if (error) throw error;
         localStorage.setItem("learnlio_just_logged_in", "1");
-        window.location.href = DASH_URL;
+        await routeAfterLogin();
       } else {
         const { error } = await sb.auth.signUp({
           email: emailEl.value,
