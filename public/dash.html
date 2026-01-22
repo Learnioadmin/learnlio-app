@@ -93,6 +93,12 @@
 
         <div class="hr"></div>
 
+        <div id="chooseChildCard" class="card" style="display:none; margin-bottom:14px; padding:14px; border:1px dashed #d6d6e3; background:#fff;">
+          <div style="font-weight:900; font-size:16px; margin-bottom:6px;">Who is learning today?</div>
+          <div class="muted" style="margin-bottom:10px;">Choose a child to open their Learning Hub.</div>
+          <div id="chooseChildList" class="row" style="gap:10px; flex-wrap:wrap; border-bottom:none; padding:0;"></div>
+        </div>
+
         <h2 style="margin:0 0 6px; font-size:18px;">Your children</h2>
         <p class="muted" style="margin:0 0 14px;">
           Select a child for the Tutor. If you only have one child, Learnlio will select them automatically.
@@ -283,6 +289,8 @@
     const listEl = document.getElementById("childrenList");
     const msgEl = document.getElementById("formMessage");
     const selectedChildLabel = document.getElementById("selectedChildLabel");
+    const chooseChildCard = document.getElementById("chooseChildCard");
+    const chooseChildList = document.getElementById("chooseChildList");
 
     // Parental Lock
     const pinStatusPill = document.getElementById("pinStatusPill");
@@ -337,6 +345,15 @@
     function setAccessPill(kind, text) {
       accessPill.className = "pill" + (kind ? " " + kind : "");
       accessPill.textContent = text;
+    }
+
+    function shouldForceChooseChild() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        return params.get("chooseChild") === "1";
+      } catch {
+        return false;
+      }
     }
 
     function disablePaidNav(disabled) {
@@ -840,6 +857,7 @@
             No children added yet. Add one below, then you can start the Tutor.
           </div>
         `;
+        if (chooseChildCard) chooseChildCard.style.display = "none";
         return;
       }
 
@@ -849,12 +867,36 @@
       const selectedId = getSelectedChildId();
       const selectedExists = selectedId ? rows.some(r => r.id === selectedId) : false;
 
-      if (rows.length === 1 && !selectedId) {
+      const forceChoose = shouldForceChooseChild();
+
+      if (rows.length === 1) {
         setSelectedChild(rows[0]);
-        setFormMsg(`Selected child: ${rows[0].child_name}`, "good");
+        window.location.href = "/learning-hub.html";
+        return;
       } else if (selectedId && !selectedExists) {
         localStorage.removeItem("selectedChild");
         setSelectedChildUI();
+      }
+
+      if (chooseChildCard) {
+        if (rows.length >= 2 && (forceChoose || !selectedId || !selectedExists)) {
+          chooseChildCard.style.display = "block";
+          chooseChildList.innerHTML = "";
+          rows.forEach(ch => {
+            const btn = document.createElement("button");
+            btn.className = "btn";
+            btn.type = "button";
+            btn.textContent = ch.child_name || "Child";
+            btn.addEventListener("click", () => {
+              setSelectedChild(ch);
+              window.location.href = "/learning-hub.html";
+            });
+            chooseChildList.appendChild(btn);
+          });
+        } else {
+          chooseChildCard.style.display = "none";
+          chooseChildList.innerHTML = "";
+        }
       }
 
       // Render list
@@ -928,8 +970,7 @@
         selectBtn.addEventListener("click", async () => {
           setSelectedChild(ch);
           setFormMsg(`Selected child: ${name}`, "good");
-          await loadChildren();
-          await loadNextStep();
+          window.location.href = "/learning-hub.html";
         });
 
         editBtn.addEventListener("click", () => {
