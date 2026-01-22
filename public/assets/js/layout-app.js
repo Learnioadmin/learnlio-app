@@ -98,34 +98,23 @@
     return { status: res.status, json };
   }
 
-  function normPath() {
-    return (location.pathname || "").replace(/\/+$/,"");
-  }
-
   function pathIs(path, ...candidates) {
     return candidates.some((c) => path === c || path.endsWith(c));
   }
 
+  function normPath(p) { return (p || "").replace(/\/+$/,""); }
+
   function isAppPage() {
     // We only run the auth guard + session timers on app pages (not public pages).
     // If you accidentally include layout-app.js on public pages, this protects you.
-    const path = normPath();
+    const path = normPath(window.location.pathname);
     return (
-      pathIs(
-        path,
-        "/dash",
-        "/dash.html",
-        "/chat",
-        "/chat.html",
-        "/reports",
-        "/reports.html",
-        "/billing",
-        "/billing.html",
-        "/lesson",
-        "/lesson.html",
-        "/lessons",
-        "/lessons.html"
-      )
+      path === "/dash" || path.endsWith("/dash.html") ||
+      path === "/chat" || path.endsWith("/chat.html") ||
+      path === "/reports" || path.endsWith("/reports.html") ||
+      path === "/billing" || path.endsWith("/billing.html") ||
+      path === "/lesson" || path.endsWith("/lesson.html") ||
+      path === "/lessons" || path.endsWith("/lessons.html")
     );
   }
 
@@ -179,7 +168,7 @@
 
   function mountAppNav() {
     if (document.querySelector("header.nav.app-nav")) return;
-    const path = normPath();
+    const path = normPath(window.location.pathname);
     const isActive = (p) => path.endsWith(p);
 
     const wrapper = document.createElement("div");
@@ -357,7 +346,7 @@
   const DEBUG = new URLSearchParams(window.location.search).get("debug") === "1";
   const debugState = {
     loaded: true,
-    pathname: normPath(),
+    pathname: normPath(window.location.pathname),
     sbReady: "unknown",
     statusHttp: "none",
     childMode: "unknown",
@@ -415,9 +404,11 @@
   }
 
   async function maybeEnableChildMode() {
-    const path = normPath();
+    const path = normPath(window.location.pathname);
     const isChildArea =
-      pathIs(path, "/chat", "/chat.html", "/lessons", "/lessons.html", "/lesson", "/lesson.html");
+      path === "/chat" || path.endsWith("/chat.html") ||
+      path === "/lessons" || path.endsWith("/lessons.html") ||
+      path === "/lesson" || path.endsWith("/lesson.html");
 
     if (!isChildArea) return;
     try {
@@ -510,9 +501,10 @@
   }
 
   async function maybeGateParentPages() {
-    const path = normPath();
+    const path = normPath(window.location.pathname);
     const isParentArea =
-      pathIs(path, "/reports", "/reports.html", "/billing", "/billing.html");
+      path === "/reports" || path.endsWith("/reports.html") ||
+      path === "/billing" || path.endsWith("/billing.html");
 
     debugLog("pathname", path, "parentArea", isParentArea);
     updateDebugBadge({ pathname: path });
@@ -571,9 +563,10 @@
 
     await maybeEnableChildMode();
     await maybeGateParentPages();
-    const path = normPath();
+    const path = normPath(window.location.pathname);
     const isParentArea =
-      pathIs(path, "/reports", "/reports.html", "/billing", "/billing.html");
+      path === "/reports" || path.endsWith("/reports.html") ||
+      path === "/billing" || path.endsWith("/billing.html");
     if (isParentArea) {
       document.addEventListener("DOMContentLoaded", () => {
         if (!window.__learnlioGateRendered) maybeGateParentPages();
