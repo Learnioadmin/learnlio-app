@@ -21,6 +21,9 @@ export async function onRequest(context) {
   if (url.pathname === "/parent/pin/clear") {
     return handleParentPinClear(context);
   }
+  if (url.pathname === "/child-mode/off") {
+    return handleChildModeOff(context);
+  }
   if (url.pathname === "/account/delete") {
     return handleAccountDelete(context);
   }
@@ -407,6 +410,37 @@ async function handleParentPinClear(context) {
     await ensureProfile(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
     await setParentPinHash(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, null);
     return jsonResponse({ ok: true });
+  } catch (err) {
+    return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
+  }
+}
+
+async function handleChildModeOff(context) {
+  const req = context.request;
+  if (req.method !== "POST") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+  }
+
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!token) {
+    return jsonResponse({ ok: false, error: "Missing auth token" }, 401);
+  }
+
+  const { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY } = context.env;
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+    return jsonResponse({ ok: false, error: "Server not configured" }, 500);
+  }
+
+  const user = await getSupabaseUser(SUPABASE_URL, SUPABASE_ANON_KEY, token);
+  if (!user?.id) {
+    return jsonResponse({ ok: false, error: "Unable to load user" }, 401);
+  }
+
+  try {
+    await ensureProfile(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
+    await updateChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, false);
+    return jsonResponse({ ok: true, child_mode: false });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
   }

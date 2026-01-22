@@ -650,6 +650,13 @@
     const ok = await requireAuthOrRedirect();
     if (!ok) return;
 
+    if ((PATH === "/dash" || PATH.endsWith("/dash.html")) && localStorage.getItem("learnlio_just_logged_in") === "1") {
+      try {
+        await authedFetch("/child-mode/off", { method: "POST", body: {} });
+      } catch {}
+      localStorage.removeItem("learnlio_just_logged_in");
+    }
+
     await maybeEnableChildMode();
     await maybeGateParentPages();
     if (IS_PARENT_AREA) {
