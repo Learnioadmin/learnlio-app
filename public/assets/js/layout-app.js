@@ -194,7 +194,7 @@
             <a href="/chat.html" class="${isActive("/chat.html") ? "active" : ""}">Learnlio Tutor</a>
             <a id="navReportsLink" href="/reports.html" class="${isActive("/reports.html") ? "active" : ""}">Parent Insight</a>
             <button id="grownupModeBtn" class="btn light" type="button" style="display:none;">Grown-up mode</button>
-            <button id="logoutBtn" class="btn light" type="button">Logout</button>
+            <button id="logoutBtn" class="btn light" type="button" data-action="logout">Log out</button>
           </nav>
         </div>
       </header>
@@ -806,60 +806,64 @@
     scheduleTimers();
   })();
 
-  (function () {
-    // Prevent double-binding if layout-app.js is loaded twice
-    if (window.__learnlioLogoutBound) return;
-    window.__learnlioLogoutBound = true;
+;(() => {
+  if (window.__learnlioLogoutBound) return;
+  window.__learnlioLogoutBound = true;
 
-    async function learnlioLogoutAndRedirect(btn) {
-      try {
-        // UX: disable button quickly to show it worked
-        if (btn) {
-          btn.disabled = true;
-          btn.style.opacity = "0.7";
-        }
-
-        // sign out (safe)
-        if (window.sb?.auth?.signOut) {
-          await window.sb.auth.signOut();
-        }
-      } catch (e) {
-        // even if signOut fails, still clear local state + redirect
-        console.warn("Logout signOut failed (continuing)", e);
+  async function doLogout(btn){
+    // Debug: add ?debug=1 to URL to prove this runs
+    try{
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("debug") === "1"){
+        console.log("[Learnlio] Logout handler fired");
       }
+    }catch{}
 
-      try {
-        // clear local state
-        localStorage.removeItem("selectedChild");
-        localStorage.removeItem("learnlio_child_mode");
-        localStorage.removeItem("learnlio_parent_unlocked");
-        localStorage.removeItem("learnlio_last_ctx");
-      } catch (e) {
-        console.warn("Logout localStorage clear failed (continuing)", e);
+    try{
+      if (btn){
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
       }
+    }catch{}
 
-      // Redirect to public homepage with toast param
-      window.location.href = "/?logged_out=1";
+    // Attempt Supabase sign out (if available)
+    try{
+      if (window.sb?.auth?.signOut){
+        await window.sb.auth.signOut();
+      } else if (window.supabase?.createClient) {
+        // If sb wasn't attached globally for some reason, create a client from existing constants if present
+        // (This is safe: if constants don't exist, we just skip and still redirect.)
+        const SUPABASE_URL = window.SUPABASE_URL;
+        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
+        if (SUPABASE_URL && SUPABASE_ANON_KEY){
+          const tmp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          await tmp.auth.signOut();
+        }
+      }
+    }catch(e){
+      console.warn("[Learnlio] signOut failed (continuing)", e);
     }
 
-    // Delegated click handler: works even if #logoutBtn is injected later
-    document.addEventListener("click", (e) => {
-      const btn = e.target && e.target.closest ? e.target.closest("#logoutBtn") : null;
-      if (!btn) return;
-      e.preventDefault();
-      e.stopPropagation();
-      learnlioLogoutAndRedirect(btn);
-    }, true);
+    // Clear local state regardless
+    try{
+      localStorage.removeItem("selectedChild");
+      // leave other keys alone unless you KNOW they exist; keep it minimal + safe
+    }catch{}
 
-    // Also support keyboard activation if logout is not a <button>
-    document.addEventListener("keydown", (e) => {
-      if (e.key !== "Enter" && e.key !== " ") return;
-      const el = document.activeElement;
-      if (!el) return;
-      const btn = el.closest ? el.closest("#logoutBtn") : null;
-      if (!btn) return;
-      e.preventDefault();
-      learnlioLogoutAndRedirect(btn);
-    });
-  })();
+    // Redirect to homepage with logged out hint
+    window.location.href = "/?logged_out=1";
+
+  }
+
+  // Delegated listener works even if nav is injected after load
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    const el = t && t.closest ? t.closest('#logoutBtn, [data-action="logout"]') : null;
+    if (!el) return;
+    e.preventDefault();
+    e.stopPropagation();
+    doLogout(el);
+  }, true);
+
+})();
 })();
