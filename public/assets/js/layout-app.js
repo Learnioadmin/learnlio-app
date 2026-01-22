@@ -24,6 +24,10 @@
 
   function normPath(p){ return (p||"").replace(/\/+$/,""); }
   const PATH = normPath(window.location.pathname);
+  const IS_PARENT_AREA =
+    PATH === "/dash" || PATH.endsWith("/dash.html") ||
+    PATH === "/reports" || PATH.endsWith("/reports.html") ||
+    PATH === "/billing" || PATH.endsWith("/billing.html");
 
   // Where to send users after sign out (public site)
   const PUBLIC_HOME_URL = "https://learnlio.co.uk/";
@@ -454,6 +458,7 @@
           <button id="childUnlockModeToggle" class="btn light" type="button" style="margin-top:10px; display:none;">Use password instead</button>
           <div id="childUnlockMsg" class="status" aria-live="polite"></div>
           <div class="row" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button id="childUnlockPinConfirm" class="btn" type="button" disabled>Unlock</button>
             <button id="childUnlockConfirm" class="btn" type="button" disabled>Unlock</button>
             <button id="childUnlockCancel" class="btn light" type="button">Cancel</button>
           </div>
@@ -467,7 +472,8 @@
     const modal = document.getElementById("childUnlockModal");
     const openBtn = document.getElementById("childUnlockBtn");
     const cancelBtn = document.getElementById("childUnlockCancel");
-    const confirmBtn = document.getElementById("childUnlockConfirm");
+    const pinConfirmBtn = document.getElementById("childUnlockPinConfirm");
+    const passwordConfirmBtn = document.getElementById("childUnlockConfirm");
     const passwordInput = document.getElementById("childUnlockPassword");
     const pinInput = document.getElementById("childUnlockPin");
     const pinWrap = document.getElementById("pinModeWrap");
@@ -487,6 +493,8 @@
       mode = nextMode;
       if (pinWrap) pinWrap.style.display = mode === "pin" ? "block" : "none";
       if (passwordWrap) passwordWrap.style.display = mode === "password" ? "block" : "none";
+      if (pinConfirmBtn) pinConfirmBtn.style.display = mode === "pin" ? "inline-flex" : "none";
+      if (passwordConfirmBtn) passwordConfirmBtn.style.display = mode === "password" ? "inline-flex" : "none";
       if (hintEl) {
         hintEl.textContent = mode === "pin" ? "Enter your PIN to continue." : "Enter your password to continue.";
       }
@@ -496,7 +504,8 @@
       }
       if (pinInput) pinInput.value = "";
       if (passwordInput) passwordInput.value = "";
-      confirmBtn.disabled = true;
+      if (pinConfirmBtn) pinConfirmBtn.disabled = true;
+      if (passwordConfirmBtn) passwordConfirmBtn.disabled = true;
       setMsg("");
     }
 
@@ -516,45 +525,54 @@
     modal?.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
 
     passwordInput?.addEventListener("input", () => {
-      if (mode === "password") confirmBtn.disabled = !passwordInput.value.trim();
+      if (mode === "password" && passwordConfirmBtn) {
+        passwordConfirmBtn.disabled = !passwordInput.value.trim();
+      }
     });
     pinInput?.addEventListener("input", () => {
-      if (mode === "pin") confirmBtn.disabled = !/^\d{4}$/.test(pinInput.value.trim());
+      if (mode === "pin" && pinConfirmBtn) {
+        pinConfirmBtn.disabled = !/^\d{4}$/.test(pinInput.value.trim());
+      }
     });
     toggleBtn?.addEventListener("click", () => {
       applyMode(mode === "pin" ? "password" : "pin");
     });
 
-    confirmBtn?.addEventListener("click", async () => {
-      const password = passwordInput?.value.trim() || "";
+    pinConfirmBtn?.addEventListener("click", async () => {
       const pin = pinInput?.value.trim() || "";
-      if (mode === "password" && !password) return;
-      if (mode === "pin" && !/^\d{4}$/.test(pin)) {
+      if (!/^\d{4}$/.test(pin)) {
         setMsg("PIN must be exactly 4 digits.");
         return;
       }
-      confirmBtn.disabled = true;
+      pinConfirmBtn.disabled = true;
       setMsg("");
       try {
-        if (mode === "pin") {
-          await authedFetch("/parent/pin/verify", { method: "POST", body: { pin } });
-        } else {
-          await authedFetch("/parent/unlock", { method: "POST", body: { password } });
-        }
+        await authedFetch("/parent/pin/verify", { method: "POST", body: { pin } });
         window.location.reload();
       } catch (err) {
         setMsg(String(err.message || err));
-        confirmBtn.disabled = false;
+        pinConfirmBtn.disabled = false;
+      }
+    });
+
+    passwordConfirmBtn?.addEventListener("click", async () => {
+      const password = passwordInput?.value.trim() || "";
+      if (mode === "password" && !password) return;
+      passwordConfirmBtn.disabled = true;
+      setMsg("");
+      try {
+        await authedFetch("/parent/unlock", { method: "POST", body: { password } });
+        window.location.reload();
+      } catch (err) {
+        setMsg(String(err.message || err));
+        passwordConfirmBtn.disabled = false;
       }
     });
   }
 
   async function maybeGateParentPages() {
     const path = PATH;
-    const isParentArea =
-      path === "/dash" || path.endsWith("/dash.html") ||
-      path === "/reports" || path.endsWith("/reports.html") ||
-      path === "/billing" || path.endsWith("/billing.html");
+    const isParentArea = IS_PARENT_AREA;
 
     debugLog("pathname", path, "parentArea", isParentArea);
     updateDebugBadge({ pathname: path });
@@ -570,15 +588,14 @@
       if (!statusRes) return;
       updateDebugBadge({ statusHttp: statusRes.status });
       debugLog("status", statusRes.json);
-      updateDebugBadge({
-        childMode: statusRes.json?.child_mode ?? "unknown",
-        pinSet: statusRes.json?.pin_set ?? "unknown"
-      });
-      if (statusRes.json?.child_mode) {
+      const childMode = !!statusRes.json?.child_mode;
+      const pinSet = !!statusRes.json?.pin_set;
+      updateDebugBadge({ childMode, pinSet });
+      if (childMode && IS_PARENT_AREA) {
         const bodyReady = await waitForBody();
         if (!bodyReady) return;
         try {
-          renderChildGate({ pinSet: !!statusRes.json?.pin_set });
+          renderChildGate({ pinSet });
           window.__learnlioGateRendered = true;
           debugLog("gate", "rendered");
           updateDebugBadge({ gateRendered: true });
@@ -624,11 +641,7 @@
 
     await maybeEnableChildMode();
     await maybeGateParentPages();
-    const PARENT =
-      PATH === "/dash" || PATH.endsWith("/dash.html") ||
-      PATH === "/reports" || PATH.endsWith("/reports.html") ||
-      PATH === "/billing" || PATH.endsWith("/billing.html");
-    if (PARENT) {
+    if (IS_PARENT_AREA) {
       document.addEventListener("DOMContentLoaded", () => {
         if (!window.__learnlioGateRendered) maybeGateParentPages();
       }, { once: true });
