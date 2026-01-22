@@ -14,6 +14,8 @@
 */
 
 (() => {
+  window.__learnlioLayoutLoaded = true;
+  window.__learnlioGateRendered = false;
   // =========================
   // CONFIG
   // =========================
@@ -93,7 +95,7 @@
       const message = json?.error || `HTTP ${res.status}`;
       throw new Error(message);
     }
-    return json;
+    return { status: res.status, json };
   }
 
   function isAppPage() {
@@ -336,8 +338,42 @@
   }
 
   const DEBUG = new URLSearchParams(window.location.search).get("debug") === "1";
+  const debugState = {
+    loaded: true,
+    pathname: window.location.pathname || "",
+    sbReady: "unknown",
+    statusHttp: "none",
+    childMode: "unknown",
+    gateRendered: false,
+    lastError: ""
+  };
+
   function debugLog(...args) {
     if (DEBUG) console.log("[child-mode]", ...args);
+  }
+
+  function ensureDebugBadge() {
+    if (!DEBUG || document.getElementById("childModeDebugBadge")) return;
+    const badge = document.createElement("div");
+    badge.id = "childModeDebugBadge";
+    badge.style.cssText = "position:fixed; top:12px; right:12px; z-index:20000; font-size:12px; background:#fff; border:1px solid rgba(15,23,42,.12); border-radius:10px; padding:8px 10px; color:#111; line-height:1.4; max-width:260px; box-shadow:0 6px 16px rgba(15,23,42,.08);";
+    document.body.appendChild(badge);
+    updateDebugBadge();
+  }
+
+  function updateDebugBadge(patch = {}) {
+    if (!DEBUG) return;
+    Object.assign(debugState, patch);
+    const badge = document.getElementById("childModeDebugBadge");
+    if (!badge) return;
+    badge.innerHTML =
+      `loaded: ${debugState.loaded}<br>` +
+      `pathname: ${debugState.pathname}<br>` +
+      `sbReady: ${debugState.sbReady}<br>` +
+      `statusHttp: ${debugState.statusHttp}<br>` +
+      `childMode: ${debugState.childMode}<br>` +
+      `gateRendered: ${debugState.gateRendered}<br>` +
+      `lastError: ${escapeHtml(debugState.lastError || "")}`;
   }
 
   async function waitForSupabaseClient(timeoutMs = 5000) {
@@ -465,29 +501,42 @@
       path.endsWith("/billing.html");
 
     debugLog("pathname", path, "parentArea", isParentArea);
+    updateDebugBadge({ pathname: path });
 
     if (!isParentArea) return;
+    if (window.__learnlioGateRendered) return;
     const sbReady = await waitForSupabaseClient();
     debugLog("sbReady", sbReady);
+    updateDebugBadge({ sbReady });
     if (!sbReady) return;
     try {
-      const status = await authedFetch("/child-mode/status", { method: "GET" });
-      debugLog("status", status);
-      if (status?.child_mode) {
+      const statusRes = await authedFetch("/child-mode/status", { method: "GET" });
+      if (!statusRes) return;
+      updateDebugBadge({ statusHttp: statusRes.status });
+      debugLog("status", statusRes.json);
+      updateDebugBadge({ childMode: statusRes.json?.child_mode ?? "unknown" });
+      if (statusRes.json?.child_mode) {
         const bodyReady = await waitForBody();
         if (!bodyReady) return;
         try {
           renderChildGate();
+          window.__learnlioGateRendered = true;
           debugLog("gate", "rendered");
+          updateDebugBadge({ gateRendered: true });
         } catch (err) {
+          updateDebugBadge({ lastError: String(err?.message || err) });
           debugLog("gate", "error", err);
+          if (DEBUG) console.error(err);
         }
       } else {
         debugLog("gate", "skipped");
+        updateDebugBadge({ gateRendered: false });
       }
-    } catch {
+    } catch (err) {
       // Silent: if not logged in or API fails, don't block page
+      updateDebugBadge({ lastError: String(err?.message || err) });
       debugLog("gate", "failed");
+      if (DEBUG) console.error(err);
     }
   }
 
@@ -497,6 +546,7 @@
       ensureNavStyles();
       mountAppNav();
       mountAppFooter();
+      ensureDebugBadge();
     });
 
     // Only run guard/timers on app pages
@@ -507,6 +557,18 @@
 
     await maybeEnableChildMode();
     await maybeGateParentPages();
+    const path = window.location.pathname || "";
+    const isParentArea =
+      path.endsWith("/reports.html") ||
+      path.endsWith("/billing.html");
+    if (isParentArea) {
+      document.addEventListener("DOMContentLoaded", () => {
+        if (!window.__learnlioGateRendered) maybeGateParentPages();
+      }, { once: true });
+      setTimeout(() => {
+        if (!window.__learnlioGateRendered) maybeGateParentPages();
+      }, 1000);
+    }
 
     wireActivityListeners();
     scheduleTimers();
