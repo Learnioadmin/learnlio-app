@@ -267,38 +267,6 @@
   }
 
   // =========================
-  // LOGOUT
-  // =========================
-  async function doLogout(reason = "unknown") {
-    try {
-      // Clear app-local state too
-      localStorage.removeItem("selectedChild");
-      localStorage.removeItem("learnlio_child_mode");
-      localStorage.removeItem("learnlio_parent_unlocked");
-      localStorage.removeItem("learnlio_last_ctx");
-      localStorage.removeItem(LS_LAST_ACTIVITY);
-      localStorage.removeItem(LS_SESSION_START);
-
-      if (window.sb) {
-        await window.sb.auth.signOut();
-      }
-    } catch (e) {
-      console.warn("[layout-app] signOut error:", e);
-    } finally {
-      window.location.href = "/?logged_out=1";
-    }
-  }
-
-  function bindLogoutHandler() {
-    document.addEventListener("click", (event) => {
-      const btn = event.target.closest("#logoutBtn");
-      if (!btn) return;
-      event.preventDefault();
-      doLogout("user");
-    });
-  }
-
-  // =========================
   // SESSION SECURITY
   // =========================
   let idleTimer = null;
@@ -799,7 +767,6 @@
       mountAppFooter();
       ensureDebugBadge();
     });
-    bindLogoutHandler();
 
     // Only run guard/timers on app pages
     const APP =
@@ -837,5 +804,62 @@
 
     wireActivityListeners();
     scheduleTimers();
+  })();
+
+  (function () {
+    // Prevent double-binding if layout-app.js is loaded twice
+    if (window.__learnlioLogoutBound) return;
+    window.__learnlioLogoutBound = true;
+
+    async function learnlioLogoutAndRedirect(btn) {
+      try {
+        // UX: disable button quickly to show it worked
+        if (btn) {
+          btn.disabled = true;
+          btn.style.opacity = "0.7";
+        }
+
+        // sign out (safe)
+        if (window.sb?.auth?.signOut) {
+          await window.sb.auth.signOut();
+        }
+      } catch (e) {
+        // even if signOut fails, still clear local state + redirect
+        console.warn("Logout signOut failed (continuing)", e);
+      }
+
+      try {
+        // clear local state
+        localStorage.removeItem("selectedChild");
+        localStorage.removeItem("learnlio_child_mode");
+        localStorage.removeItem("learnlio_parent_unlocked");
+        localStorage.removeItem("learnlio_last_ctx");
+      } catch (e) {
+        console.warn("Logout localStorage clear failed (continuing)", e);
+      }
+
+      // Redirect to public homepage with toast param
+      window.location.href = "/?logged_out=1";
+    }
+
+    // Delegated click handler: works even if #logoutBtn is injected later
+    document.addEventListener("click", (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest("#logoutBtn") : null;
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      learnlioLogoutAndRedirect(btn);
+    }, true);
+
+    // Also support keyboard activation if logout is not a <button>
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const el = document.activeElement;
+      if (!el) return;
+      const btn = el.closest ? el.closest("#logoutBtn") : null;
+      if (!btn) return;
+      e.preventDefault();
+      learnlioLogoutAndRedirect(btn);
+    });
   })();
 })();
