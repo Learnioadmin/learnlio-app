@@ -194,7 +194,9 @@ async function handleChildModeStatus(context) {
     await ensureProfile(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
     const profile = await getProfile(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
     const childMode = !!profile?.child_mode;
-    const pinSet = !!profile?.pin_hash;
+    const pinSet = typeof profile?.parent_pin_hash === "string"
+      ? profile.parent_pin_hash.trim().length > 0
+      : !!profile?.parent_pin_hash;
     return jsonResponse({ ok: true, child_mode: childMode, pin_set: pinSet });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
@@ -372,7 +374,7 @@ async function getProfile(supabaseUrl, serviceKey, userId) {
   };
 
   const params = new URLSearchParams({
-    select: "child_mode,pin_hash",
+    select: "child_mode,parent_pin_hash",
     user_id: `eq.${userId}`
   });
 
