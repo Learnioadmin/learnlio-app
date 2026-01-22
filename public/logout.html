@@ -36,29 +36,31 @@
   </main>
 
   <script>
-    (async () => {
-      // Same config as your pages
-      const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
-      const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-      const status = document.getElementById("status");
 
-      try{
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        await sb.auth.signOut();
+(async () => {
 
-        // Clear child selection so next login flows correctly
-        try{ localStorage.removeItem("selectedChild"); }catch{}
+  try {
 
-        status.textContent = "Signed out. Redirecting to homepage";
-        // Short pause so parents see confirmation
-        setTimeout(() => { window.location.href = "/index.html?loggedout=1"; }, 650);
-      }catch(e){
-        console.warn(e);
-        status.textContent = "Signed out. If youre not redirected, tap Return to Learnlio.";
-      }
+    if (window.sb) {
 
-    })();
+      await window.sb.auth.signOut();
 
-  </script>
+    }
+
+  } catch (e) {
+
+    console.warn("Logout signout error (safe to ignore):", e);
+
+  }
+
+
+
+  // 🔴 IMPORTANT: absolute URL to PUBLIC site
+
+  window.location.replace("https://learnlio.co.uk/?loggedout=1");
+
+})();
+
+</script>
 </body>
 </html>
