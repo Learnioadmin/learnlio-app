@@ -86,10 +86,12 @@
         <div class="row" style="margin-top:12px;">
           <a id="lessonsBtn" class="btn" href="/lessons.html" style="text-decoration:none;">📘 Start a lesson</a>
           <a id="continueTutorBtn" class="btn" href="/chat.html" style="text-decoration:none;">💬 Continue to tutor</a>
+          <a id="learningHubBtn" class="btn light" href="/learning-hub.html" style="text-decoration:none;">🧠 Learning Hub</a>
           <a id="reportsBtn" class="btn light" href="/reports.html" style="text-decoration:none;">📊 Parent Insight</a>
           <a id="billingBtn" class="btn ghost" href="/billing.html" style="text-decoration:none;">💳 Billing</a>
           <a id="upgradeBtn" class="btn" href="/billing.html" style="text-decoration:none; display:none;">Upgrade</a>
         </div>
+        <div id="learningHubNotice" class="status warn" style="display:none; margin-top:8px;">Please select a child first.</div>
 
         <div class="hr"></div>
 
@@ -272,8 +274,10 @@
     const navReports = document.getElementById("navReports");
 
     const continueTutorBtn = document.getElementById("continueTutorBtn");
+    const learningHubBtn = document.getElementById("learningHubBtn");
     const reportsBtn = document.getElementById("reportsBtn");
     const upgradeBtn = document.getElementById("upgradeBtn");
+    const learningHubNotice = document.getElementById("learningHubNotice");
 
     // Header status
     const welcomeLine = document.getElementById("welcomeLine");
@@ -480,6 +484,7 @@
       } catch {
         selectedChildLabel.textContent = "None selected";
       }
+      updateLearningHubNotice();
     }
 
     function getSelectedChildId() {
@@ -503,9 +508,27 @@
       refreshScreenerPanel();
     }
 
+    function updateLearningHubNotice() {
+      if (!learningHubNotice) return;
+      if (getSelectedChildId()) {
+        learningHubNotice.style.display = "none";
+      }
+    }
+
     async function updateSelectedChildLocalStorageIfMatches(ch) {
       const selectedId = getSelectedChildId();
       if (selectedId && selectedId === ch.id) setSelectedChild(ch);
+    }
+
+    if (learningHubBtn) {
+      learningHubBtn.addEventListener("click", (event) => {
+        const selectedId = getSelectedChildId();
+        if (selectedId) return;
+        event.preventDefault();
+        if (learningHubNotice) {
+          learningHubNotice.style.display = "block";
+        }
+      });
     }
 
     // ---------------------------
