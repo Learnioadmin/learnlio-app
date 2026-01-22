@@ -250,7 +250,7 @@ async function handleParentUnlock(context) {
 
   try {
     await ensureProfile(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
-    await updateChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, false, true);
+    await updateChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, false);
     return jsonResponse({ ok: true, child_mode: false });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
@@ -392,7 +392,7 @@ async function getProfile(supabaseUrl, serviceKey, userId) {
   return Array.isArray(rows) ? rows[0] : rows;
 }
 
-async function updateChildMode(supabaseUrl, serviceKey, userId, enabled, setUpdatedAt = false) {
+async function updateChildMode(supabaseUrl, serviceKey, userId, enabled) {
   const restBase = `${supabaseUrl}/rest/v1`;
   const headers = {
     "Authorization": `Bearer ${serviceKey}`,
@@ -404,8 +404,6 @@ async function updateChildMode(supabaseUrl, serviceKey, userId, enabled, setUpda
     child_mode: !!enabled,
     child_mode_updated_at: new Date().toISOString()
   };
-  if (setUpdatedAt) payload.updated_at = new Date().toISOString();
-
   const params = new URLSearchParams({ user_id: `eq.${userId}` });
   const res = await fetch(`${restBase}/profiles?${params.toString()}`, {
     method: "PATCH",
