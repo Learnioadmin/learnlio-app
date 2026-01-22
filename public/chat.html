@@ -529,22 +529,7 @@
 </head>
 
 <body>
-  <header class="nav">
-    <div class="nav-inner">
-      <a class="brand" href="/dash.html" aria-label="Learnlio home">
-        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
-        <span>Learnlio</span>
-      </a>
-      <nav class="links">
-        <a href="/dash.html">Dashboard</a>
-        <a class="active" href="/chat.html">Learnlio Tutor</a>
-        <a href="/screener.html">Dyslexia Screener</a>
-        <a href="/reports.html">Reports</a>
-        <a href="/billing.html">Billing</a>
-        <button id="logoutBtn" class="btn light" type="button">Log out</button>
-      </nav>
-    </div>
-  </header>
+  <div id="navMount"></div>
 
   <main class="container">
     <div class="shell">
@@ -741,6 +726,7 @@
     </div>
   </div>
 
+  <script src="/assets/js/layout-app.js"></script>
   <script>
   (() => {
     // --- Mobile viewport fix (iOS address bar) ---
