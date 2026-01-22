@@ -5,7 +5,7 @@
   <link rel="shortcut icon" type="image/x-icon" href="/assets/img/flavicon.ico">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Learnlio — Reports</title>
+  <title>Learnlio — Parent Insight</title>
 
   <!-- App CSS -->
   <link rel="stylesheet" href="/assets/css/app.css" />
@@ -256,7 +256,7 @@
             </svg>
             Calm, dyslexia-aware learning — with clear parent insight
           </div>
-          <h1 class="hero-title" style="margin-top:10px;">Reports</h1>
+          <h1 class="hero-title" style="margin-top:10px;">Parent Insight</h1>
           <div id="childHeader" class="muted">Loading child…</div>
         </div>
 
@@ -275,7 +275,7 @@
             </select>
           </div>
 
-          <button id="downloadBtn" class="btn" type="button">Download report (PDF)</button>
+          <button id="downloadBtn" class="btn" type="button">Download parent insight (PDF)</button>
           <button id="refreshBtn" class="btn light" type="button">Refresh</button>
         </div>
       </div>
@@ -301,7 +301,7 @@
     <section id="weeklySection" class="card box" style="margin-top:14px;">
       <div class="toggle">
         <div>
-          <h2 style="margin:0 0 6px; font-size:16px;">Weekly summary</h2>
+          <h2 style="margin:0 0 6px; font-size:16px;">Weekly Parent Insight</h2>
           <div class="muted">Save a weekly snapshot here. (Email delivery can be added later.)</div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
@@ -355,7 +355,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
         <div>
           <h2 style="margin:0; font-size:16px;">Skills</h2>
-          <div class="muted">Skills reflect Tutor + Lessons combined (confidence and accuracy).</div>
+          <div class="muted">Skills reflect Tutor + Lessons combined (confidence signals).</div>
         </div>
         <span class="pill">Skills</span>
       </div>
@@ -734,7 +734,7 @@
       }
 
       setWeeklySwitchUI(enabled);
-      setWeeklyMsg(enabled ? "Weekly summary is on ✅" : "Weekly summary is off.", "good");
+      setWeeklyMsg(enabled ? "Weekly Parent Insight is on ✅" : "Weekly Parent Insight is off.", "good");
       return true;
     }
 
@@ -796,7 +796,7 @@
         const summary = r.summary || {};
         const stats = summary.stats || {};
 
-        const headline = summary.headline || summary.title || "Weekly summary";
+        const headline = summary.headline || summary.title || "Weekly Parent Insight";
         const bullets = Array.isArray(summary.bullets) ? summary.bullets : [];
         const next = summary.next_steps || summary.next || "";
         const focus = stats.focus_subject && stats.focus_area ? `${stats.focus_subject} — ${stats.focus_area}` : "—";
@@ -1023,7 +1023,7 @@
       if (baseline){
         const baseText = baseline.subject ? `${baseline.subject}${baseline.area ? " — " + baseline.area : ""}` : "Setup check";
         if (baseline.level) {
-          nextSteps.push(`Starting point was ${baseText} (baseline level ${baseline.level}).`);
+          nextSteps.push(`Starting point was ${baseText} (baseline current understanding ${baseline.level}).`);
         } else {
           nextSteps.push(`Starting point was ${baseText}.`);
         }
@@ -1117,8 +1117,8 @@
           <tr>
             <th>Skill</th>
             <th class="num">Attempts</th>
-            <th class="num">Accuracy</th>
             <th class="num">Confidence</th>
+            <th class="num">Confidence feel</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1196,11 +1196,11 @@
       if (report.highlightSupport && report.highlightSupport !== "—") bullets.push(`Needs support: ${report.highlightSupport}.`);
       if (report.baseline){
         const baseText = report.baseline.subject ? `${report.baseline.subject}${report.baseline.area ? " — " + report.baseline.area : ""}` : "Setup check";
-        bullets.push(`Starting point was ${baseText}${report.baseline.level ? " (baseline level " + report.baseline.level + ")" : ""}.`);
+        bullets.push(`Starting point was ${baseText}${report.baseline.level ? " (baseline current understanding " + report.baseline.level + ")" : ""}.`);
       }
 
       return {
-        headline: `Weekly summary for ${child?.child_name || "your child"}`,
+        headline: `Weekly Parent Insight for ${child?.child_name || "your child"}`,
         bullets: bullets.slice(0,6),
         next_steps: report.nextSteps[0] || "Keep sessions short and calm.",
         stats: {
@@ -1243,7 +1243,7 @@
       }
 
       await autoGenerateWeekly();
-      showOk("Reports refreshed");
+      showOk("Parent Insight refreshed");
     }
 
     // -------------------------
@@ -1291,7 +1291,7 @@
       const summary = snapshot.summary || {};
       const stats = summary.stats || {};
       return {
-        headline: summary.headline || `Weekly summary for ${child?.child_name || "Child"}`,
+        headline: summary.headline || `Weekly Parent Insight for ${child?.child_name || "Child"}`,
         subtitle: "Calm, dyslexia-aware learning — with clear parent insight",
         highlights: Array.isArray(summary.bullets) ? summary.bullets : [],
         stats: {
@@ -1323,7 +1323,7 @@
         doc.setTextColor(255,255,255);
         doc.setFontSize(16);
         doc.setFont(undefined, "bold");
-        doc.text("Learnlio — Parent Report", 14, 12);
+        doc.text("Learnlio — Parent Insight", 14, 12);
 
         doc.setFontSize(10);
         doc.setFont(undefined, "normal");
@@ -1471,3 +1471,6 @@
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
+
+
+
