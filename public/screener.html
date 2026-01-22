@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Learnlio Dyslexia Screener</title>
+  <title>Learnlio Setup check</title>
 
   <!-- Dyslexia-friendly font -->
   <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
@@ -222,83 +222,19 @@
       .nav a{ padding: 9px 10px; }
     }
   </style>
-  <style>
-    /* Nav (index) */
-    .nav{
-      background:#fff;
-      border-bottom:1px solid rgba(15,23,42,.08);
-      position:sticky; top:0; z-index:50;
-    }
-    .nav-inner{
-      max-width:1100px;
-      margin:0 auto;
-      padding:12px 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .brand{
-      display:flex; align-items:center; gap:10px;
-      font-weight:950; letter-spacing:.2px;
-    }
-    .brand img{ height:34px; width:auto; display:block; }
-    .links{
-      display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end;
-    }
-    .links a{
-      padding:9px 10px;
-      border-radius:12px;
-      font-size:14px;
-      color:var(--ink);
-    }
-    .links a:hover{ background: rgba(15,23,42,.04); }
-  </style></head>
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
 
 <body>
-  <header class="nav" role="banner">
-    <div class="nav-inner">
-      <a class="brand" href="/" aria-label="Learnlio home">
-        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
-        <span>Learnlio</span>
-      </a>
-
-      <nav class="links" aria-label="Primary">
-        <a href="/">Home</a>
-        <a href="/why-learnlio.html">Why Learnlio</a>
-        <a href="/pricing.html">Pricing</a>
-        <a class="btn light" href="/login.html" aria-label="Log in">Log in</a>
-        <a class="btn" href="/pricing.html" aria-label="Start free trial">Start free trial</a>
-      </nav>
-    </div>
-  </header>
-
-  <!-- ✅ Top menu matches Dash/Tutor style -->
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <img
-          src="https://assets.softr-files.com/applications/67a2863a-6210-4748-a054-0d80961b8e92/assets/383bd953-a636-47a6-8894-3e7e90d6c00c.webp"
-          alt="Learnlio"
-        />
-        <div class="title">Learnlio • Beta</div>
-      </div>
-
-      <nav class="nav">
-        <a href="/dash.html">🏠 Dash</a>
-        <a href="/tutor.html">💬 Learnlio Tutor</a>
-        <a class="active" href="/screener.html">🧠 Dyslexia Screener</a>
-      </nav>
-    </div>
-  </header>
+  <div id="navMount"></div>
 
   <main class="wrap">
     <div class="page-head">
       <div>
-        <h1>Dyslexia Screener</h1>
+        <h1>Setup check</h1>
         <p class="subtitle">
-          This is a short, child-friendly check. It is not a diagnosis.
-          It can help you decide if you may want extra support.
+          This is a short, child-friendly check to help get things ready.
         </p>
       </div>
 
@@ -317,35 +253,15 @@
       <div class="answers" id="answers"></div>
 
       <div class="note" id="note">
-        Tip: If you’re not sure, pick the closest answer. There are no “perfect” scores.
+        Tip: If you’re not sure, pick the closest answer.
       </div>
 
       <div class="result" id="result" style="display:none;"></div>
     </section>
-    <footer class="footer" role="contentinfo">
-      <div class="footer-inner">
-        <div>
-          <div style="font-weight:950; color:var(--ink); margin-bottom:6px;">Learnlio</div>
-          <div style="max-width:560px; line-height:1.7;">
-            Calm, dyslexia-friendly learning support for UK children who feel pressured, anxious, or stuck.
-          </div>
-          <div style="margin-top:10px; font-size:13px;">
-            © <span id="year"></span> Learnlio. All rights reserved.
-          </div>
-        </div>
-
-        <div class="footer-links" aria-label="Footer links">
-          <a href="/contact.html">Contact us</a>
-          <a href="/privacy.html">Privacy</a>
-          <a href="/terms.html">Terms &amp; Conditions</a>
-          <a href="/cookies.html">Cookies</a>
-          <a href="/ethics.html">Ethics</a>
-          <a href="/safeguarding.html">Safeguarding</a>
-        </div>
-      </div>
-    </footer>
   </main>
+  <div id="footerMount"></div>
 
+  <script src="/assets/js/layout-app.js?v=20260122-pin2"></script>
 <script>
 (function(){
   // Very lightweight “option 1” screener (no backend needed).
@@ -396,6 +312,7 @@
 
   let i = 0;
   let total = 0;
+  const answers = [];
 
   const questionEl = document.getElementById("question");
   const answersEl = document.getElementById("answers");
@@ -426,6 +343,11 @@
 
   function choose(idx){
     total += questions[i].score[idx];
+    answers.push({
+      question: questions[i].q,
+      answer: questions[i].a[idx],
+      score: questions[i].score[idx]
+    });
     i++;
 
     if(i < questions.length){
@@ -443,53 +365,47 @@
 
     answersEl.innerHTML = "";
 
-    // Simple banding (not a diagnosis)
-    let band = "";
-    let advice = "";
-
-    if(total <= 4){
-      band = "Low indicators";
-      advice = "This suggests fewer signs. If learning still feels hard, ask a teacher or parent for support.";
-    } else if(total <= 9){
-      band = "Some indicators";
-      advice = "This suggests some signs. It may help to try dyslexia-friendly support and speak to school.";
-    } else {
-      band = "Higher indicators";
-      advice = "This suggests more signs. Consider speaking to school/SENCO or a professional for advice.";
-    }
-
     resultEl.style.display = "block";
-    resultEl.textContent =
-`✅ Screener complete
+    resultEl.textContent = "✅ Setup check complete. You’re ready to continue.";
 
-Result: ${band}
+    let band = "";
+    if (total <= 4) band = "low";
+    else if (total <= 9) band = "medium";
+    else band = "high";
 
-What this means:
-${advice}
-
-Next step:
-Tell a parent or teacher how reading and spelling feels for you.`;
+    const takenAt = new Date().toISOString();
+    const payload = { totalScore: total, band, answers, takenAt, version: "v1" };
 
     // Optional: save locally so Dash can show “completed”
     try {
-      localStorage.setItem("learnlio_screener_score", String(total));
-      localStorage.setItem("learnlio_screener_done", "true");
-      localStorage.setItem("learnlio_screener_date", new Date().toLocaleString("en-GB"));
+      const selected = JSON.parse(localStorage.getItem("selectedChild") || "{}");
+      const childId = selected?.id || "unknown";
+      localStorage.setItem(`learnlio_screener_score_${childId}`, String(payload.totalScore));
+      localStorage.setItem(`learnlio_screener_done_${childId}`, "true");
+      localStorage.setItem(`learnlio_screener_date_${childId}`, new Date().toLocaleString("en-GB"));
+      localStorage.setItem(`learnlio_screener_band_${childId}`, String(payload.band || ""));
     } catch(e){}
 
     // Buttons
-    const download = document.createElement("button");
-    download.className = "btn primary";
-    download.textContent = "Back to Dash";
-    download.onclick = () => window.location.href = "/dash.html";
-    answersEl.appendChild(download);
+    const maths = document.createElement("a");
+    maths.className = "btn primary";
+    maths.textContent = "Start a Maths session";
+    maths.href = "/lessons.html";
+    maths.style.textDecoration = "none";
+    answersEl.appendChild(maths);
+
+    const tutor = document.createElement("a");
+    tutor.className = "btn";
+    tutor.textContent = "Start Learnlio Tutor";
+    tutor.href = "/chat.html";
+    tutor.style.textDecoration = "none";
+    answersEl.appendChild(tutor);
   }
 
   render();
 })();
 </script>
 
-  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
 
