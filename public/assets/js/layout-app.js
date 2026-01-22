@@ -194,7 +194,7 @@
             <a href="/chat.html" class="${isActive("/chat.html") ? "active" : ""}">Learnlio Tutor</a>
             <a id="navReportsLink" href="/reports.html" class="${isActive("/reports.html") ? "active" : ""}">Parent Insight</a>
             <button id="grownupModeBtn" class="btn light" type="button" style="display:none;">Grown-up mode</button>
-            <a class="btn light" href="/logout.html">Log out</a>
+            <a href="/logout.html" id="logoutBtn" class="btn light">Log out</a>
           </nav>
         </div>
       </header>
@@ -806,64 +806,15 @@
     scheduleTimers();
   })();
 
-;(() => {
-  if (window.__learnlioLogoutBound) return;
-  window.__learnlioLogoutBound = true;
+  ;(() => {
+    if (window.__learnlioLogoutBound) return;
+    window.__learnlioLogoutBound = true;
 
-  async function doLogout(btn){
-    // Debug: add ?debug=1 to URL to prove this runs
-    try{
-      const url = new URL(window.location.href);
-      if (url.searchParams.get("debug") === "1"){
-        console.log("[Learnlio] Logout handler fired");
-      }
-    }catch{}
-
-    try{
-      if (btn){
-        btn.disabled = true;
-        btn.style.opacity = "0.7";
-      }
-    }catch{}
-
-    // Attempt Supabase sign out (if available)
-    try{
-      if (window.sb?.auth?.signOut){
-        await window.sb.auth.signOut();
-      } else if (window.supabase?.createClient) {
-        // If sb wasn't attached globally for some reason, create a client from existing constants if present
-        // (This is safe: if constants don't exist, we just skip and still redirect.)
-        const SUPABASE_URL = window.SUPABASE_URL;
-        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
-        if (SUPABASE_URL && SUPABASE_ANON_KEY){
-          const tmp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-          await tmp.auth.signOut();
-        }
-      }
-    }catch(e){
-      console.warn("[Learnlio] signOut failed (continuing)", e);
-    }
-
-    // Clear local state regardless
-    try{
-      localStorage.removeItem("selectedChild");
-      // leave other keys alone unless you KNOW they exist; keep it minimal + safe
-    }catch{}
-
-    // Redirect to homepage with logged out hint
-    window.location.href = "/?logged_out=1";
-
-  }
-
-  // Delegated listener works even if nav is injected after load
-  document.addEventListener("click", (e) => {
-    const t = e.target;
-    const el = t && t.closest ? t.closest('#logoutBtn, [data-action="logout"]') : null;
-    if (!el) return;
-    e.preventDefault();
-    e.stopPropagation();
-    doLogout(el);
-  }, true);
-
-})();
+    document.addEventListener("click", (e) => {
+      const el = e.target && e.target.closest ? e.target.closest("#logoutBtn") : null;
+      if (!el) return;
+      e.preventDefault();
+      window.location.href = "/logout.html";
+    });
+  })();
 })();
