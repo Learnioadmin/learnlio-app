@@ -1150,12 +1150,6 @@
       }
     }
 
-    logoutBtn.addEventListener("click", async () => {
-      await sb.auth.signOut();
-      localStorage.removeItem("selectedChild");
-      window.location.href = LOGIN_URL;
-    });
-
     addBtn.addEventListener("click", addChild);
     refreshBtn.addEventListener("click", async () => {
       await loadChildren();
