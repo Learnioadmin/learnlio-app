@@ -173,7 +173,7 @@ async function handleChildModeOn(context) {
 
   try {
     await ensureProfile(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
-    await updateChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, true);
+    await setChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, true);
     return jsonResponse({ ok: true, child_mode: true });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
@@ -262,7 +262,7 @@ async function handleParentUnlock(context) {
 
   try {
     await ensureProfile(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
-    await updateChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, false);
+    await setChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, false);
     return jsonResponse({ ok: true, child_mode: false });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
@@ -355,8 +355,8 @@ async function handleParentPinVerify(context) {
     if (!ok) {
       return jsonResponse({ ok: false, error: "Invalid PIN" }, 401);
     }
-    await updateChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, false);
-    return jsonResponse({ ok: true, child_mode: false });
+    await setChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, false);
+    return jsonResponse({ ok: true, child_mode: false, updated_user_id: user.id });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
   }
@@ -439,7 +439,7 @@ async function handleChildModeOff(context) {
 
   try {
     await ensureProfile(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
-    await updateChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, false);
+    await setChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, false);
     return jsonResponse({ ok: true, child_mode: false });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
@@ -657,12 +657,13 @@ async function getProfile(supabaseUrl, serviceKey, userId) {
   return Array.isArray(rows) ? rows[0] : rows;
 }
 
-async function updateChildMode(supabaseUrl, serviceKey, userId, enabled) {
+async function setChildMode(supabaseUrl, serviceKey, userId, enabled) {
   const restBase = `${supabaseUrl}/rest/v1`;
   const headers = {
     "Authorization": `Bearer ${serviceKey}`,
     "apikey": serviceKey,
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    "Prefer": "return=representation"
   };
 
   const payload = {
@@ -676,10 +677,16 @@ async function updateChildMode(supabaseUrl, serviceKey, userId, enabled) {
     body: JSON.stringify(payload)
   });
 
+  const text = await res.text();
   if (!res.ok) {
-    const text = await res.text();
     throw new Error(text || "Profile update failed");
   }
+  let rows = [];
+  try { rows = text ? JSON.parse(text) : []; } catch {}
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error("No profile row updated for user_id");
+  }
+  return rows[0];
 }
 
 async function deleteSupabaseData(supabaseUrl, serviceKey, userId) {
