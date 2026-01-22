@@ -95,7 +95,10 @@
 
   <main class="container">
     <section class="card hero" aria-label="Learning Hub hero">
-      <div class="pill">🎒 Learning Hub</div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <div class="pill">🎒 Learning Hub</div>
+        <a id="parentDashBtn" class="btn light" href="/dash.html">👨👩👧 Parent Dashboard</a>
+      </div>
       <h1>Learning Hub</h1>
       <div class="muted dys-text">Small steps. Big confidence.</div>
       <div id="childLine" class="muted small" style="margin-top:6px;">Loading child…</div>
@@ -195,6 +198,7 @@
     const xpNextSmall = document.getElementById("xpNextSmall");
     const xpBarFill = document.getElementById("xpBarFill");
     const rewardBadge = document.getElementById("rewardBadge");
+    const parentDashBtn = document.getElementById("parentDashBtn");
     const practiceLine = document.getElementById("practiceLine");
     const practiceActions = document.getElementById("practiceActions");
     const activityList = document.getElementById("activityList");
@@ -426,6 +430,18 @@
       });
       activityList.innerHTML = "";
       activityList.appendChild(list);
+    }
+
+    if (parentDashBtn) {
+      parentDashBtn.addEventListener("click", (event) => {
+        if (window.__learnlioChildMode === true) {
+          const grownupBtn = document.getElementById("grownupModeBtn");
+          if (grownupBtn) {
+            event.preventDefault();
+            grownupBtn.click();
+          }
+        }
+      });
     }
 
     (async () => {
