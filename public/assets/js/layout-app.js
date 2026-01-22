@@ -599,7 +599,7 @@
       <div class="card" style="max-width:520px; width:100%; text-align:left;">
         <div style="font-weight:900; font-size:20px; margin-bottom:8px;">This area is for grown-ups</div>
         <div class="muted" style="margin-bottom:14px;">
-          Reports and account settings are for parents and carers. If a grown-up wants to see this, they can unlock it below.
+          Parent Insight and account settings are for parents and carers. If a grown-up wants to see this, they can unlock it below.
         </div>
         <div class="row" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
           <button id="childUnlockBtn" class="btn" type="button">Ask a grown-up to unlock</button>
