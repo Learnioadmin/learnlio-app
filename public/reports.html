@@ -1,1553 +1,1207 @@
 <!doctype html>
-  <html lang="en-GB">                                                                         
-  <head>                                                                                      
-    <meta charset="utf-8" />                                                                  
-    <meta name="viewport" content="width=device-width,initial-scale=1" />                     
-    <title>Learnlio — Reports</title>                                                         
-                                                                                              
-    <!-- App CSS -->                                                                          
-    <link rel="stylesheet" href="/assets/css/app.css" />                                      
-                                                                                              
-    <!-- Polished fallback styles (keeps branding even if app.css breaks) -->                 
-    <style>                                                                                   
-      :root{                                                                                  
-        --bg:#f7f7fb;                                                                         
-        --card:#ffffff;                                                                       
-        --text:#0b1220;                                                                       
-        --muted:#5b6475;                                                                      
-        --line:#e8eaf2;                                                                       
-                                                                                              
-        --brand:#0b5cff;                                                                      
-        --brand-2:#5b7cff;                                                                    
-        --brand-soft:#eef3ff;                                                                 
-                                                                                              
-        --ok:#16a34a;                                                                         
-        --warn:#b45309;                                                                       
-        --bad:#dc2626;                                                                        
-                                                                                              
-        --shadow: 0 12px 32px rgba(12, 18, 32, .08);                                          
-        --radius: 18px;                                                                       
-                                                                                              
-        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",     
-  "Courier New", monospace;                                                                   
-      }                                                                                       
-                                                                                              
-      *{ box-sizing:border-box; }                                                             
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;      
-  margin:0; background:var(--bg); color:var(--text); }                                        
-      .container { max-width: 1020px; margin: 0 auto; padding: 18px; }                        
-                                                                                              
-      /* Top Nav */                                                                           
-      .nav { background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z- 
-  index:10; }                                                                                 
-      .nav-inner { max-width:1020px; margin:0 auto; padding:12px 18px; display:flex; align-   
-  items:center; justify-content:space-between; gap:12px; }                                    
-      .brand { display:flex; align-items:center; gap:10px; text-decoration:none;              
-  color:var(--text); font-weight:900; letter-spacing:-.2px; }                                 
-      .brand img { height:34px; width:auto; display:block; }                                  
-      .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }                  
-      .links a { text-decoration:none; color:var(--text); padding:10px 12px; border-          
-  radius:12px; font-weight:600; }                                                             
-      .links a.active { background:var(--brand-soft); color:var(--brand); }                   
-                                                                                              
-      /* Buttons */                                                                           
-      .btn {                                                                                  
-        background:linear-gradient(180deg, var(--brand), #0846d8);                            
-        border:none; color:#fff; padding:10px 12px; border-radius:14px;                       
-        cursor:pointer; font-size:14px; font-weight:900;                                      
-        box-shadow: 0 10px 18px rgba(11,92,255,.18);                                          
-      }                                                                                       
-      .btn:disabled { opacity:.6; cursor:not-allowed; box-shadow:none; }                      
-      .btn.light {                                                                            
-        background:#eef2f7; color:var(--text);                                                
-        box-shadow:none; border:1px solid #dde3ef;                                            
-      }                                                                                       
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio — Reports</title>
 
-      /* Cards / layout */                                                                    
-      .card {                                                                                 
-        background:var(--card);                                                               
-        border-radius:var(--radius);                                                          
-        padding:16px;                                                                         
-        box-shadow: var(--shadow);                                                            
-        border:1px solid rgba(232,234,242,.8);                                                
-      }                                                                                       
-      .box { box-shadow:none; border:1px solid var(--line); }                                 
-      .muted { color:var(--muted); font-size: 14px; line-height:1.6; }                        
-      .small { font-size:13px; }                                                              
-      .hr { height:1px; background:var(--line); margin:14px 0; }                              
-                                                                                              
-      .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
-      @media(min-width: 980px){ .grid { grid-template-columns: 1fr 1fr; } }                   
-                                                                                              
-      .top-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-     
-  content:flex-end; }                                                                         
-                                                                                              
-      /* Page header */                                                                       
-      .hero {                                                                                 
-        background: radial-gradient(1200px 420px at 20% -10%, rgba(11,92,255,.22), transparent  55%),                                                                                       
-                    radial-gradient(900px 420px at 90% -10%, rgba(124,58,237,.16), transparent  52%),                                                                                       
-                    #fff;                                                                     
-        border:1px solid var(--line);                                                         
-        box-shadow: var(--shadow);                                                            
-        border-radius: calc(var(--radius) + 2px);                                             
-      }                                                                                       
-      .hero-title { margin:0; font-size:22px; letter-spacing:-.4px; }                         
-      .strap {                                                                                
-        display:inline-flex; align-items:center; gap:8px;                                     
-        padding:8px 10px; border-radius:999px;
-        background:rgba(11,92,255,.08);                                                       
-        border:1px solid rgba(11,92,255,.16);                                                 
-        color:var(--brand);                                                                   
-        font-weight:900;                                                                      
-        font-size:12px;                                                                       
-      }                                                                                       
-      .strap svg{ width:16px; height:16px; }                                                  
-                                                                                              
-      /* Pills / tags */                                                                      
-      .pill {                                                                                 
-        display:inline-flex; align-items:center; gap:8px;                                     
-        padding:7px 10px;                                                                     
-        border-radius:999px;                                                                  
-        background:var(--brand-soft);                                                         
-        border:1px solid rgba(11,92,255,.14);                                                 
-        font-size:12px; font-weight:900; color:var(--brand);                                  
-      }                                                                                       
-      .pill.soft { background:#f3f5fb; border-color:#e6eaf6; color:var(--text); font-         
-  weight:800; }                                                                               
-      .pill.ok { background:#ecfdf5; border-color:#a7f3d0; color:var(--ok); }                 
-      .pill.warn { background:#fffbeb; border-color:#fde68a; color:var(--warn); }             
-      .pill.bad { background:#fef2f2; border-color:#fecaca; color:var(--bad); }               
-                                                                                              
-      /* Status text */                                                                       
-      .status { margin-top:10px; font-size:14px; }                                            
-      .status.bad { color:var(--bad); font-weight:800; }                                      
-      .status.good { color:var(--ok); font-weight:800; }                                      
-      .status.warn { color:var(--warn); font-weight:800; }                                    
-                                                                                              
-      /* Key-value rows */                                                                    
-      .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px;   
-  padding:10px 0; border-bottom:1px solid #f1f2f7; }                                          
-      .row:last-child { border-bottom:none; }                                                 
-      .k { color:var(--muted); font-size:13px; }                                              
-      .v { font-weight:900; text-align:right; }                                               
-                                                                                              
-      /* Select */                                                                            
-      .select {                                                                               
-        border:1px solid #dde3ef; border-radius:14px; padding:10px 12px; background:#fff;     
-        font-size:14px; color:var(--text); cursor:pointer; font-weight:800;                   
-        box-shadow: 0 8px 16px rgba(12,18,32,.06);                                            
-      }                                                                                       
-      .select-wrap { display:flex; gap:8px; align-items:center; }                             
-      .label { font-size:13px; color:var(--muted); font-weight:800; }                         
+  <!-- App CSS -->
+  <link rel="stylesheet" href="/assets/css/app.css" />
 
-      /* Weekly toggle */                                                                     
-      .toggle {                                                                               
-        display:flex; align-items:center; justify-content:space-between; gap:12px;            
-  padding:12px;                                                                               
-        border-radius:16px; border:1px solid #eef2f7; background:#fbfcff;                     
-      }                                                                                       
-      .switch {                                                                               
-        position:relative; width:54px; height:32px; background:#e8ecf6; border-radius:999px;  
-  cursor:pointer; flex:0 0 auto;                                                              
-        border:1px solid #d5dbec;                                                             
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);                                    
-      }                                                                                       
-      .switch::after{                                                                         
-        content:""; position:absolute; top:3px; left:3px; width:26px; height:26px; border-    
-  radius:999px; background:#fff;                                                              
-        transition: all .15s ease;                                                            
-        box-shadow: 0 10px 18px rgba(12,18,32,.16);                                           
-      }                                                                                       
-      .switch.on{                                                                             
-        background: rgba(11,92,255,.25);                                                      
-        border-color: rgba(11,92,255,.35);                                                    
-      }                                                                                       
-      .switch.on::after{                                                                      
-        left:25px;                                                                            
-        background: linear-gradient(180deg, var(--brand), #0846d8);
-      }                                                                                       
-                                                                                              
-      /* Skills table */                                                                      
-      .skills {                                                                               
-        width:100%;                                                                           
-        border-collapse:separate;                                                             
-        border-spacing:0;                                                                     
-        overflow:hidden;                                                                      
-        border:1px solid var(--line);                                                         
-        border-radius:16px;                                                                   
-        background:#fff;                                                                      
-      }                                                                                       
-      .skills th, .skills td{                                                                 
-        padding:12px 12px;                                                                    
-        font-size:13px;                                                                       
-        border-bottom:1px solid #f1f2f7;                                                      
-        vertical-align:middle;                                                                
-        text-align:left;                                                                      
-        font-variant-numeric: tabular-nums;                                                   
-      }                                                                                       
-      .skills th{                                                                             
-        background: linear-gradient(180deg, #fbfcff, #f5f7ff);                                
-        color:var(--muted);                                                                   
-        font-weight:900;                                                                      
-        letter-spacing:.2px;                                                                  
-      }                                                                                       
-      .skills tr:last-child td{ border-bottom:none; }
-      .skills td.num, .skills th.num{                                                         
-        text-align:center;                                                                    
-        width:96px;                                                                           
+  <!-- Polished fallback styles (keeps branding even if app.css breaks) -->
+  <style>
+    :root{
+      --bg:#f7f7fb;
+      --card:#ffffff;
+      --text:#0b1220;
+      --muted:#5b6475;
+      --line:#e8eaf2;
+
+      --brand:#0b5cff;
+      --brand-2:#5b7cff;
+      --brand-soft:#eef3ff;
+
+      --ok:#16a34a;
+      --warn:#b45309;
+      --bad:#dc2626;
+
+      --shadow: 0 12px 32px rgba(12, 18, 32, .08);
+      --radius: 18px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    *{ box-sizing:border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:var(--bg); color:var(--text); }
+    .container { max-width: 1020px; margin: 0 auto; padding: 18px; }
+
+    /* Top Nav */
+    .nav { background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:10; }
+    .nav-inner { max-width:1020px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); font-weight:900; letter-spacing:-.2px; }
+    .brand img { height:34px; width:auto; display:block; }
+    .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .links a { text-decoration:none; color:var(--text); padding:10px 12px; border-radius:12px; font-weight:800; }
+    .links a.active { background:var(--brand-soft); color:var(--brand); }
+
+    /* Buttons */
+    .btn {
+      background:linear-gradient(180deg, var(--brand), #0846d8);
+      border:none; color:#fff; padding:10px 12px; border-radius:14px;
+      cursor:pointer; font-size:14px; font-weight:900;
+      box-shadow: 0 10px 18px rgba(11,92,255,.18);
+    }
+    .btn:disabled { opacity:.6; cursor:not-allowed; box-shadow:none; }
+    .btn.light {
+      background:#eef2f7; color:var(--text);
+      box-shadow:none; border:1px solid #dde3ef;
+    }
+
+    /* Cards / layout */
+    .card {
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:16px;
+      box-shadow: var(--shadow);
+      border:1px solid rgba(232,234,242,.8);
+    }
+    .box { box-shadow:none; border:1px solid var(--line); }
+    .muted { color:var(--muted); font-size: 14px; line-height:1.6; }
+    .small { font-size:13px; }
+    .hr { height:1px; background:var(--line); margin:14px 0; }
+
+    .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
+    @media(min-width: 980px){ .grid { grid-template-columns: 1fr 1fr; } }
+
+    .top-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+
+    /* Page header */
+    .hero {
+      background: radial-gradient(1200px 420px at 20% -10%, rgba(11,92,255,.22), transparent 55%),
+                  radial-gradient(900px 420px at 90% -10%, rgba(124,58,237,.16), transparent 52%),
+                  #fff;
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: calc(var(--radius) + 2px);
+    }
+    .hero-title { margin:0; font-size:22px; letter-spacing:-.4px; }
+    .strap {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      background:rgba(11,92,255,.08);
+      border:1px solid rgba(11,92,255,.16);
+      color:var(--brand);
+      font-weight:900;
+      font-size:12px;
+    }
+    .strap svg{ width:16px; height:16px; }
+
+    /* Pills / tags */
+    .pill {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      background:var(--brand-soft);
+      border:1px solid rgba(11,92,255,.14);
+      font-size:12px; font-weight:900; color:var(--brand);
+    }
+    .pill.soft { background:#f3f5fb; border-color:#e6eaf6; color:var(--text); font-weight:800; }
+    .pill.ok { background:#ecfdf5; border-color:#a7f3d0; color:var(--ok); }
+    .pill.warn { background:#fffbeb; border-color:#fde68a; color:var(--warn); }
+    .pill.bad { background:#fef2f2; border-color:#fecaca; color:var(--bad); }
+
+    /* Status text */
+    .status { margin-top:10px; font-size:14px; }
+    .status.bad { color:var(--bad); font-weight:800; }
+    .status.good { color:var(--ok); font-weight:800; }
+    .status.warn { color:var(--warn); font-weight:800; }
+
+    /* Key-value rows */
+    .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid #f1f2f7; }
+    .row:last-child { border-bottom:none; }
+    .k { color:var(--muted); font-size:13px; }
+    .v { font-weight:900; text-align:right; }
+
+    /* Select */
+    .select {
+      border:1px solid #dde3ef; border-radius:14px; padding:10px 12px; background:#fff;
+      font-size:14px; color:var(--text); cursor:pointer; font-weight:800;
+      box-shadow: 0 8px 16px rgba(12,18,32,.06);
+    }
+    .select-wrap { display:none; gap:8px; align-items:center; }
+    .label { font-size:13px; color:var(--muted); font-weight:800; }
+
+    /* Weekly toggle */
+    .toggle {
+      display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px;
+      border-radius:16px; border:1px solid #eef2f7; background:#fbfcff;
+    }
+    .switch {
+      position:relative; width:54px; height:32px; background:#e8ecf6; border-radius:999px; cursor:pointer; flex:0 0 auto;
+      border:1px solid #d5dbec;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
+    }
+    .switch::after{
+      content:""; position:absolute; top:3px; left:3px; width:26px; height:26px; border-radius:999px; background:#fff;
+      transition: all .15s ease;
+      box-shadow: 0 10px 18px rgba(12,18,32,.16);
+    }
+    .switch.on{
+      background: rgba(11,92,255,.25);
+      border-color: rgba(11,92,255,.35);
+    }
+    .switch.on::after{
+      left:25px;
+      background: linear-gradient(180deg, var(--brand), #0846d8);
+    }
+
+    /* Skills table */
+    .skills {
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+    }
+    .skills th, .skills td{
+      padding:12px 12px;
+      font-size:13px;
+      border-bottom:1px solid #f1f2f7;
+      vertical-align:middle;
+      text-align:left;
+      font-variant-numeric: tabular-nums;
+    }
+    .skills th{
+      background: linear-gradient(180deg, #fbfcff, #f5f7ff);
+      color:var(--muted);
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    .skills tr:last-child td{ border-bottom:none; }
+    .skills td.num, .skills th.num{
+      text-align:center;
+      width:96px;
+    }
+
+    .tag {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      background:#f3f5fb; border:1px solid #e6eaf6;
+      font-size:12px; font-weight:900;
+      white-space:nowrap;
+    }
+    .tag.good { background:#ecfdf5; border-color:#a7f3d0; color:var(--ok); }
+    .tag.warn { background:#fffbeb; border-color:#fde68a; color:var(--warn); }
+    .tag.bad  { background:#fef2f2; border-color:#fecaca; color:var(--bad); }
+
+    /* Next steps blocks */
+    .callout {
+      border-radius:16px;
+      padding:12px;
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #fbfcff);
+    }
+    .callout h3 { margin:0 0 8px; font-size:14px; letter-spacing:-.2px; }
+    .bullets { margin:0; padding-left:18px; }
+    .bullets li{ margin: 6px 0; line-height:1.55; }
+
+    .hint-box{
+      background: radial-gradient(600px 240px at 0% 0%, rgba(11,92,255,.10), transparent 65%),
+                  #fbfcff;
+      border:1px solid rgba(11,92,255,.16);
+    }
+
+    /* Weekly list item */
+    .weekly-item{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+    }
+
+    /* Empty dashed box */
+    .dashed { border-style:dashed !important; background:#fff; }
+
+    /* Small code-like text */
+    .mono { font-family: var(--mono); font-size:12px; color:var(--muted); }
+
+    /* Print niceties */
+    @media print{
+      .nav, .top-actions, #downloadBtn, #refreshBtn { display:none !important; }
+      body{ background:#fff; }
+      .card{ box-shadow:none; }
+      .hero{ box-shadow:none; }
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+  <div id="navMount"></div>
+
+  <main class="container">
+    <div class="card hero">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+        <div>
+          <div class="strap" aria-label="strapline">
+            <!-- simple sparkle icon -->
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2l1.4 6.2L20 10l-6.6 1.8L12 18l-1.4-6.2L4 10l6.6-1.8L12 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+            Calm, dyslexia-aware learning — with clear parent insight
+          </div>
+          <h1 class="hero-title" style="margin-top:10px;">Reports</h1>
+          <div id="childHeader" class="muted">Loading child…</div>
+        </div>
+
+        <div class="top-actions">
+          <!-- Change child (only shows if 2+ children) -->
+          <div id="childSwitcher" class="select-wrap">
+            <span class="label">Child:</span>
+            <select id="childSelect" class="select" aria-label="Select child"></select>
+          </div>
+
+          <button id="downloadBtn" class="btn" type="button">Download report (PDF)</button>
+          <button id="refreshBtn" class="btn light" type="button">Refresh</button>
+        </div>
+      </div>
+
+      <div id="pageError" class="status bad" style="display:none;"></div>
+      <div id="pageOk" class="status good" style="display:none;"></div>
+
+      <!-- Quick summary strip -->
+      <div id="quickStrip" style="display:none; margin-top:14px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <span id="pillMaths" class="pill soft">Maths: —</span>
+          <span id="pillEnglish" class="pill soft">English: —</span>
+          <span id="pillStreak" class="pill soft">Streak: —</span>
+          <span id="pillFocus" class="pill soft">Focus: —</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly reports toggle -->
+    <section class="card box" style="margin-top:14px;">
+      <div class="toggle">
+        <div>
+          <h2 style="margin:0 0 6px; font-size:16px;">Weekly summary</h2>
+          <div class="muted">Save a weekly snapshot here. (Email delivery can be added later.)</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span id="weeklyState" class="pill soft">Checking…</span>
+          <div id="weeklySwitch" class="switch" role="switch" aria-checked="false" tabindex="0" title="Toggle weekly summary"></div>
+        </div>
+      </div>
+
+      <div id="weeklyMsg" class="status" aria-live="polite"></div>
+
+      <div class="hr"></div>
+
+      <div id="weeklyList" class="callout hint-box">
+        <div class="muted">Loading…</div>
+      </div>
+    </section>
+
+    <div class="grid" style="margin-top:14px;">
+      <!-- Overall -->
+      <section class="card box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0; font-size:16px;">Overall progress</h2>
+          <span class="pill">Summary</span>
+        </div>
+        <div id="overallBox" style="margin-top:10px;">
+          <div class="muted">Loading…</div>
+        </div>
+      </section>
+
+      <!-- Tutor signals -->
+      <section class="card box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0; font-size:16px;">Tutor signals</h2>
+          <span class="pill">Recent learning</span>
+        </div>
+        <div class="muted small" style="margin-top:6px;">
+          A quick view of what the Tutor has worked on most recently.
+        </div>
+        <div id="signalsBox" style="margin-top:10px;">
+          <div class="muted">Loading…</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Skills -->
+    <section class="card box" style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h2 style="margin:0; font-size:16px;">Skills</h2>
+          <div class="muted">Attempts + accuracy per subject and area (from Tutor sessions).</div>
+        </div>
+        <span class="pill">Skills</span>
+      </div>
+
+      <div id="skillsBox" style="margin-top:10px;">
+        <div class="muted">Loading…</div>
+      </div>
+    </section>
+
+    <!-- What to do next -->
+    <section class="card box" style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h2 style="margin:0; font-size:16px;">What to do next</h2>
+          <div class="muted">Clear next steps based on the last few sessions.</div>
+        </div>
+        <span class="pill">Next steps</span>
+      </div>
+
+      <div id="nextBox" style="margin-top:10px;">
+        <div class="muted">Loading…</div>
+      </div>
+    </section>
+
+    <section id="noDataBox" class="card box dashed" style="margin-top:14px; display:none;">
+      <h2 style="margin:0 0 8px; font-size:16px;">No tutor data yet</h2>
+      <div class="muted" style="line-height:1.6;">
+        I can’t see any saved Tutor sessions for this child yet.<br>
+        Do a short Tutor session, then come back and press <b>Refresh</b>.
+      </div>
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn" href="/chat.html" style="text-decoration:none; display:inline-block;">Go to Tutor</a>
+        <a class="btn light" href="/dash.html" style="text-decoration:none; display:inline-block;">Go to Dashboard</a>
+      </div>
+    </section>
+
+    <!-- Tiny footer note (professional) -->
+    <div class="muted small" style="margin-top:14px; text-align:center;">
+      Learnlio helps children learn calmly and confidently — and keeps parents informed with simple, clear insight.
+    </div>
+    <footer class="footer" role="contentinfo">
+      <div class="footer-inner">
+        <div>
+          <div style="font-weight:950; color:var(--ink); margin-bottom:6px;">Learnlio</div>
+          <div style="max-width:560px; line-height:1.7;">
+            Calm, dyslexia-friendly learning support for UK children who feel pressured, anxious, or stuck.
+          </div>
+          <div style="margin-top:10px; font-size:13px;">
+            © <span id="year"></span> Learnlio. All rights reserved.
+          </div>
+        </div>
+
+        <div class="footer-links" aria-label="Footer links">
+          <a href="/contact.html">Contact us</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms &amp; Conditions</a>
+          <a href="/cookies.html">Cookies</a>
+          <a href="/ethics.html">Ethics</a>
+          <a href="/safeguarding.html">Safeguarding</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script src="/assets/js/layout-app.js?v=20260122-pin2"></script>
+  <script>
+  (() => {
+    // =========================
+    // CONFIG
+    // =========================
+    const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+    // =========================
+
+    const sb = window.sb || window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.sb = sb || window.sb;
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    const pageError = document.getElementById("pageError");
+    const pageOk = document.getElementById("pageOk");
+    const childHeader = document.getElementById("childHeader");
+
+    const quickStrip = document.getElementById("quickStrip");
+    const pillMaths = document.getElementById("pillMaths");
+    const pillEnglish = document.getElementById("pillEnglish");
+    const pillStreak = document.getElementById("pillStreak");
+    const pillFocus = document.getElementById("pillFocus");
+
+    const overallBox = document.getElementById("overallBox");
+    const signalsBox = document.getElementById("signalsBox");
+    const skillsBox = document.getElementById("skillsBox");
+    const nextBox = document.getElementById("nextBox");
+    const noDataBox = document.getElementById("noDataBox");
+
+    // Child switcher
+    const childSwitcher = document.getElementById("childSwitcher");
+    const childSelect = document.getElementById("childSelect");
+
+    // Weekly
+    const weeklyState = document.getElementById("weeklyState");
+    const weeklySwitch = document.getElementById("weeklySwitch");
+    const weeklyMsg = document.getElementById("weeklyMsg");
+    const weeklyList = document.getElementById("weeklyList");
+
+    let currentUser = null;
+    let child = null;
+
+    // cached for PDF
+    let lastOverall = null;
+    let lastSignals = null;
+    let lastSkills = null;
+    let lastNext = null;
+    let lastWeekly = null;
+    let weeklyEnabled = false;
+
+    function showError(msg){
+      pageError.style.display = "block";
+      pageError.textContent = msg;
+    }
+    function clearError(){
+      pageError.style.display = "none";
+      pageError.textContent = "";
+    }
+    function showOk(msg){
+      pageOk.style.display = "block";
+      pageOk.textContent = msg;
+      setTimeout(() => { pageOk.style.display="none"; }, 1600);
+    }
+    function setWeeklyMsg(text, kind=""){
+      weeklyMsg.textContent = text || "";
+      weeklyMsg.className = "status" + (kind ? " " + kind : "");
+    }
+    function safe(v, fallback="—"){
+      if (v === null || v === undefined || v === "") return fallback;
+      return String(v);
+    }
+    function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+
+    function formatDateOnly(value){
+      if (!value) return "—";
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return "—";
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
+
+    function prettySubject(s){
+      const t = String(s||"").toLowerCase();
+      if (t.includes("math")) return "Maths";
+      if (t.includes("eng")) return "English";
+      return s || "—";
+    }
+
+    function prettyArea(s){
+      const t = String(s||"").trim();
+      if (!t) return "—";
+      return t;
+    }
+
+    function escapeHtml(str){
+      return String(str ?? "").replace(/[&<>"']/g, s => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[s]));
+    }
+
+    function confidenceTag(attempts, accuracy){
+      // accuracy: 0..1
+      if (!attempts || attempts < 3) return { label:"Getting started", cls:"warn" };
+      if (accuracy >= 0.8) return { label:"Confident", cls:"good" };
+      if (accuracy >= 0.55) return { label:"Improving", cls:"warn" };
+      return { label:"Needs support", cls:"bad" };
+    }
+
+    function renderRows(targetEl, rows){
+      targetEl.innerHTML = "";
+      rows.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "row";
+        div.innerHTML = `<div class="k">${r.k}</div><div class="v">${r.v}</div>`;
+        targetEl.appendChild(div);
+      });
+    }
+
+    function getSelectedChild(){
+      try {
+        const raw = localStorage.getItem("selectedChild");
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch { return null; }
+    }
+
+    function setSelectedChild(id, name){
+      localStorage.setItem("selectedChild", JSON.stringify({ id, child_name: name }));
+    }
+
+    async function requireAuth(){
+      const { data, error } = await sb.auth.getUser();
+      if (error || !data?.user){
+        window.location.href = "/login.html";
+        return false;
       }
-                                                                                              
-      .tag {                                                                                  
-        display:inline-flex; align-items:center; gap:8px;                                     
-        padding:6px 10px; border-radius:999px;                                                
-        background:#f3f5fb; border:1px solid #e6eaf6;                                         
-        font-size:12px; font-weight:900;
-        white-space:nowrap;                                                                   
-      }                                                                                       
-      .tag.good { background:#ecfdf5; border-color:#a7f3d0; color:var(--ok); }                
-      .tag.warn { background:#fffbeb; border-color:#fde68a; color:var(--warn); }              
-      .tag.bad  { background:#fef2f2; border-color:#fecaca; color:var(--bad); }               
-                                                                                              
-      /* Next steps blocks */                                                                 
-      .callout {
-        border-radius:16px;                                                                   
-        padding:12px;                                                                         
-        border:1px solid var(--line);                                                         
-        background: linear-gradient(180deg, #ffffff, #fbfcff);                                
-      }                                                                                       
-      .callout h3 { margin:0 0 8px; font-size:14px; letter-spacing:-.2px; }                   
-      .bullets { margin:0; padding-left:18px; }                                               
-      .bullets li{ margin: 6px 0; line-height:1.55; }                                         
-                                                                                              
-      .hint-box{                                                                              
-        background: radial-gradient(600px 240px at 0% 0%, rgba(11,92,255,.10), transparent    
-  65%),                                                                                       
-                    #fbfcff;                                                                  
-        border:1px solid rgba(11,92,255,.16);                                                 
-      }                                                                                       
-                                                                                              
-      /* Weekly list item */                                                                  
-      .weekly-item{                                                                           
-        background:#fff;                                                                      
-        border:1px solid var(--line);                                                         
-        border-radius:16px;                                                                   
-        padding:12px;                                                                         
-      }                                                                                       
-                                                                                              
-      /* Empty dashed box */                                                                  
-      .dashed { border-style:dashed !important; background:#fff; }                            
-                                                                                              
-      /* Small code-like text */                                                              
-      .mono { font-family: var(--mono); font-size:12px; color:var(--muted); }                 
-                                                                                              
-      /* Print niceties */                                                                    
-      @media print{                                                                           
-        .nav, .top-actions, #downloadBtn, #refreshBtn { display:none !important; }            
-        body{ background:#fff; }                                                              
-        .card{ box-shadow:none; }                                                             
-        .hero{ box-shadow:none; }                                                             
-      }                                                                                       
-    </style>                                                                                  
-                                                                                              
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>              
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></      
-  script>                                                                                     
-  </head>                                                                                     
-                                                                                              
-  <body>                                                                                      
-    <div id="navMount"></div>
-                                                                                              
-    <main class="container">                                                                  
-      <div class="card hero">                                                                 
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;      
-  gap:12px; flex-wrap:wrap;">                                                                 
-          <div>
-            <div class="strap" aria-label="strapline">                                        
-              <!-- simple sparkle icon -->                                                    
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">                        
-                <path d="M12 2l1.4 6.2L20 10l-6.6 1.8L12 18l-1.4-6.2L4 10l6.6-1.8L12 2z"      
-  stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>                          
-              </svg>                                                                          
-              Calm, dyslexia-aware learning — with clear parent insight                       
-            </div>                                                                            
-            <h1 class="hero-title" style="margin-top:10px;">Reports</h1>                      
-            <div id="childHeader" class="muted">Loading child…</div>                          
-          </div>                                                                              
-                                                                                              
-          <div class="top-actions">                                                           
-            <!-- Change child (only shows if 2+ children) -->                                 
-            <div id="childSwitcher" class="select-wrap" style="display:none;">                
-              <span class="label">Child:</span>                                               
-              <select id="childSelect" class="select" aria-label="Select child"></select>     
-            </div>                                                                            
-                                                                                              
-            <div class="select-wrap" id="pdfSourceWrap">                                      
-              <span class="label">PDF source:</span>                                          
-              <select id="pdfSource" class="select" aria-label="PDF source">                  
-                <option value="weekly">Latest weekly snapshot</option>                        
-                <option value="live">Live report</option>                                     
-              </select>                                                                       
-            </div>
-                                                                                              
-            <button id="downloadBtn" class="btn" type="button">Download report (PDF)</button> 
-            <button id="refreshBtn" class="btn light" type="button">Refresh</button>          
-          </div>                                                                              
-        </div>                                                                                
-                                                                                              
-        <div id="pageError" class="status bad" style="display:none;"></div>                   
-        <div id="pageOk" class="status good" style="display:none;"></div>                     
-      </div>                                                                                  
-                                                                                              
-      <section id="highlightsCard" class="card box" style="margin-top:14px;">                 
-        <div style="display:flex; justify-content:space-between; align-items:center;">        
-          <h2 style="margin:0; font-size:16px;">Highlights</h2>                               
-          <span class="pill">This week</span>                                                 
-        </div>                                                                                
-        <div id="highlightsBox" style="margin-top:10px; display:flex; gap:10px; flex-         
-  wrap:wrap;">                                                                                
-          <span id="highlightFocus" class="pill soft">Focus this week: —</span>               
-          <span id="highlightConfidence" class="pill soft">Confidence building in: —</span>   
-          <span id="highlightWin" class="pill soft">Best win: —</span>                        
-          <span id="highlightSupport" class="pill soft">Needs support: —</span>               
-        </div>                                                                                
-      </section>                                                                              
-                                                                                              
-      <!-- Weekly reports toggle -->                                                          
-      <section id="weeklySection" class="card box" style="margin-top:14px;">                  
-        <div class="toggle">                                                                  
-          <div>                                                                               
-            <h2 style="margin:0 0 6px; font-size:16px;">Weekly summary</h2>                   
-            <div class="muted">Save a weekly snapshot here. (Email delivery can be added      
-  later.)</div>                                                                               
-          </div>                                                                              
-          <div style="display:flex; align-items:center; gap:10px;">                           
-            <span id="weeklyState" class="pill soft">Checking…</span>                         
-            <div id="weeklySwitch" class="switch" role="switch" aria-checked="false"          
-  tabindex="0" title="Toggle weekly summary"></div>                                           
-          </div>                                                                              
-        </div>                                                                                
-                                                                                              
-        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">                
-          <button id="runWeeklyBtn" class="btn light" type="button">Run weekly report now</   
-  button>                                                                                     
-        </div>                                                                                
-                                                                                              
-        <div id="weeklyMsg" class="status" aria-live="polite"></div>                          
-                                                                                              
-        <div class="hr"></div>                                                                
-                                                                                              
-        <div id="weeklyList" class="callout hint-box">                                        
-          <div class="muted">Loading…</div>                                                   
-        </div>                                                                                
-      </section>                                                                              
-                                                                                              
-      <div class="grid" style="margin-top:14px;">                                             
-        <!-- Overall -->                                                                      
-        <section id="overallCard" class="card box">                                           
-          <div style="display:flex; justify-content:space-between; align-items:center;">      
-            <h2 style="margin:0; font-size:16px;">This week summary</h2>                      
-            <span class="pill">Summary</span>
-          </div>                                                                              
-          <div id="overallBox" style="margin-top:10px;">                                      
-            <div class="muted">Loading…</div>                                                 
-          </div>                                                                              
-        </section>                                                                            
-                                                                                              
-        <!-- Tutor signals -->                                                                
-        <section id="signalsCard" class="card box">
-          <div style="display:flex; justify-content:space-between; align-items:center;">      
-            <h2 style="margin:0; font-size:16px;">Tutor signals</h2>                          
-            <span class="pill">Recent learning</span>                                         
-          </div>                                                                              
-          <div class="muted small" style="margin-top:6px;">                                   
-            A quick view of recent Tutor activity, based on skills and sessions.              
-          </div>                                                                              
-          <div id="signalsBox" style="margin-top:10px;">                                      
-            <div class="muted">Loading…</div>                                                 
-          </div>                                                                              
-        </section>                                                                            
-      </div>                                                                                  
-                                                                                              
-      <!-- Skills -->                                                                         
-      <section id="skillsCard" class="card box" style="margin-top:14px;">                     
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;  flex-wrap:wrap;">
-          <div>                                                                               
-            <h2 style="margin:0; font-size:16px;">Skills</h2>                                 
-            <div class="muted">Skills reflect Tutor + Lessons combined (confidence and        
-  accuracy).</div>                                                                            
-          </div>                                                                              
-          <span class="pill">Skills</span>                                                    
-        </div>                                                                                
-                                                                                              
-        <div id="skillsBox" style="margin-top:10px;">                                         
-          <div class="muted">Loading…</div>                                                   
-        </div>                                                                                
-      </section>                                                                              
-                                                                                              
-      <!-- What to do next -->                                                                
-      <section id="nextCard" class="card box" style="margin-top:14px;">                       
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;  flex-wrap:wrap;">                                                                           
-          <div>                                                                               
-            <h2 style="margin:0; font-size:16px;">What to do next</h2>                        
-            <div class="muted">Clear next steps based on recent Tutor + Lessons activity.</   
-  div>                                                                                        
-          </div>                                                                              
-          <span class="pill">Next steps</span>                                                
-        </div>                                                                                
-                                                                                              
-        <div id="nextBox" style="margin-top:10px;">                                           
-          <div class="muted">Loading…</div>                                                   
-        </div>                                                                                
-      </section>                                                                              
-                                                                                              
-      <section id="noDataBox" class="card box dashed" style="margin-top:14px; display:none;"> 
-        <h2 style="margin:0 0 8px; font-size:16px;">No learning data yet</h2>                 
-        <div class="muted" style="line-height:1.6;">                                          
-          I can’t see any saved Tutor or Lessons activity for this child yet.<br>             
-          Do a short session, then come back and press <b>Refresh</b>.                        
-        </div>                                                                                
-        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">                
-          <a class="btn" href="/chat.html" style="text-decoration:none; display:inline-       
-  block;">Go to Tutor</a>                                                                     
-          <a class="btn light" href="/lessons.html" style="text-decoration:none;              
-  display:inline-block;">Go to Lessons</a>                                                    
-        </div>                                                                                
-      </section>                                                                              
-                                                                                              
-      <!-- Tiny footer note (professional) -->                                                
-      <div class="muted small" style="margin-top:14px; text-align:center;">                   
-        Learnlio helps children learn calmly and confidently — and keeps parents informed with  simple, clear insight.                                                                      
-      </div>                                                                                  
-      <footer class="footer" role="contentinfo">                                              
-        <div class="footer-inner">                                                            
-          <div>                                                                               
-            <div style="font-weight:950; color:var(--ink); margin-bottom:6px;">Learnlio</div> 
-            <div style="max-width:560px; line-height:1.7;">                                   
-              Calm, dyslexia-friendly learning support for UK children who feel pressured,    
-  anxious, or stuck.                                                                          
-            </div>                                                                            
-            <div style="margin-top:10px; font-size:13px;">                                    
-              © <span id="year"></span> Learnlio. All rights reserved.                        
-            </div>                                                                            
-          </div>                                                                              
-                                                                                              
-          <div class="footer-links" aria-label="Footer links">                                
-            <a href="/contact.html">Contact us</a>                                            
-            <a href="/privacy.html">Privacy</a>                                               
-            <a href="/terms.html">Terms &amp; Conditions</a>
-            <a href="/cookies.html">Cookies</a>                                               
-            <a href="/ethics.html">Ethics</a>                                                 
-            <a href="/safeguarding.html">Safeguarding</a>                                     
-          </div>                                                                              
-        </div>                                                                                
-      </footer>                                                                               
-    </main>                                                                                   
-                                                                                              
-    <script src="/assets/js/layout-app.js?v=20260122-pin2"></script>                          
-    <script>                                                                                  
-    (() => {                                                                                  
-      // =========================                                                            
-      // CONFIG                                                                               
-      // =========================                                                            
-      const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";                        
-      const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";             
-      // =========================                                                            
-                                                                                              
-      const sb = window.sb || window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); 
-      window.sb = sb || window.sb;                                                            
-                                                                                              
-      const logoutBtn = document.getElementById("logoutBtn");                                 
-      const refreshBtn = document.getElementById("refreshBtn");                               
-      const downloadBtn = document.getElementById("downloadBtn");                             
-      const pdfSource = document.getElementById("pdfSource");                                 
-                                                                                              
-      const pageError = document.getElementById("pageError");                                 
-      const pageOk = document.getElementById("pageOk");                                       
-      const childHeader = document.getElementById("childHeader");                             
-                                                                                              
-      const highlightsCard = document.getElementById("highlightsCard");                       
-      const highlightFocus = document.getElementById("highlightFocus");                       
-      const highlightConfidence = document.getElementById("highlightConfidence");             
-      const highlightWin = document.getElementById("highlightWin");                           
-      const highlightSupport = document.getElementById("highlightSupport");                   
-                                                                                              
-      const overallCard = document.getElementById("overallCard");                             
-      const signalsCard = document.getElementById("signalsCard");                             
-      const skillsCard = document.getElementById("skillsCard");                               
-      const nextCard = document.getElementById("nextCard");                                   
-                                                                                              
-      const overallBox = document.getElementById("overallBox");                               
-      const signalsBox = document.getElementById("signalsBox");                               
-      const skillsBox = document.getElementById("skillsBox");                                 
-      const nextBox = document.getElementById("nextBox");                                     
-      const noDataBox = document.getElementById("noDataBox");                                 
-                                                                                              
-      // Child switcher                                                                       
-      const childSwitcher = document.getElementById("childSwitcher");                         
-      const childSelect = document.getElementById("childSelect");                             
-                                                                                              
-      // Weekly                                                                               
-      const weeklyState = document.getElementById("weeklyState");                             
-      const weeklySwitch = document.getElementById("weeklySwitch");                           
-      const weeklyMsg = document.getElementById("weeklyMsg");                                 
-      const weeklyList = document.getElementById("weeklyList");                               
-      const runWeeklyBtn = document.getElementById("runWeeklyBtn");                           
-                                                                                              
-      let currentUser = null;
-      let child = null;                                                                       
-                                                                                              
-      // cached for PDF                                                                       
-      let unifiedData = null;                                                                 
-      let derivedReport = null;                                                               
-      let lastWeekly = null;                                                                  
-      let weeklyEnabled = false;                                                              
-                                                                                              
-      function showError(msg){                                                                
-        pageError.style.display = "block";                                                    
-        pageError.textContent = msg;                                                          
-      }                                                                                       
-      function clearError(){
-        pageError.style.display = "none";                                                     
-        pageError.textContent = "";                                                           
-      }                                                                                       
-      function showOk(msg){                                                                   
-        pageOk.style.display = "block";                                                       
-        pageOk.textContent = msg;
-        setTimeout(() => { pageOk.style.display="none"; }, 1600);                             
-      }                                                                                       
-      function setWeeklyMsg(text, kind=""){                                                   
-        weeklyMsg.textContent = text || "";                                                   
-        weeklyMsg.className = "status" + (kind ? " " + kind : "");                            
-      }                                                                                       
-      function safe(v, fallback="—"){                                                         
-        if (v === null || v === undefined || v === "") return fallback;                       
-        return String(v);
-      }                                                                                       
-      function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }                    
-                                                                                              
-      function formatDateOnly(value){                                                         
-        if (!value) return "—";
-        const d = new Date(value);                                                            
-        if (isNaN(d.getTime())) return "—";                                                   
-        const dd = String(d.getDate()).padStart(2, "0");                                      
-        const mm = String(d.getMonth() + 1).padStart(2, "0");                                 
-        const yyyy = d.getFullYear();                                                         
-        return `${dd}/${mm}/${yyyy}`;                                                         
-      }                                                                                       
-                                                                                              
-      function formatDateTime(value){                                                         
-        if (!value) return "—";                                                               
-        const d = new Date(value);                                                            
-        if (isNaN(d.getTime())) return "—";                                                   
-        return d.toLocaleString("en-GB", { year:"numeric", month:"short", day:"2-digit",      
-  hour:"2-digit", minute:"2-digit" });                                                        
-      }                                                                                       
-                                                                                              
-      function prettySubject(s){                                                              
-        const t = String(s||"").toLowerCase();                                                
-        if (t.includes("math")) return "Maths";                                               
-        if (t.includes("eng")) return "English";                                              
-        return s || "—";                                                                      
-      }                                                                                       
-                                                                                              
-      function prettyArea(s){                                                                 
-        const t = String(s||"").trim();
-        if (!t) return "—";                                                                   
-        return t;
-      }                                                                                       
-                                                                                              
-      function escapeHtml(str){                                                               
-        return String(str ?? "").replace(/[&<>"']/g, s => ({                                  
-          "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"                         
-        }[s]));                                                                               
-      }                                                                                       
-                                                                                              
-      function confidenceTag(confidence, attempts){                                           
-        if (!attempts || attempts < 3) return { label:"Getting started", cls:"warn" };        
-        if (confidence >= 0.75) return { label:"Confident", cls:"good" };                     
-        if (confidence >= 0.55) return { label:"Building", cls:"warn" };                      
-        return { label:"Needs support", cls:"bad" };                                          
-      }                                                                                       
-                                                                                              
-      function getWeekStartMonday(date){                                                      
-        const d = new Date(date);                                                             
-        if (isNaN(d.getTime())) return null;                                                  
-        const day = (d.getDay() + 6) % 7; // Monday = 0                                       
-        d.setHours(0,0,0,0);                                                                  
-        d.setDate(d.getDate() - day);                                                         
-        const yyyy = d.getFullYear();                                                         
-        const mm = String(d.getMonth() + 1).padStart(2, "0");                                 
-        const dd = String(d.getDate()).padStart(2, "0");                                      
-        return `${yyyy}-${mm}-${dd}`;                                                         
-      }                                                                                       
-                                                                                              
-      function inCurrentWeek(date){                                                           
-        if (!date) return false;                                                              
-        const wk = getWeekStartMonday(date);                                                  
-        const now = getWeekStartMonday(new Date());                                           
-        return wk && now && wk === now;                                                       
-      }                                                                                       
-                                                                                              
-      async function safeSelect(table, queryFn){                                              
-        try {                                                                                 
-          return await queryFn(sb.from(table));                                               
-        } catch (error) {                                                                     
-          return { data: null, error };                                                       
-        }                                                                                     
-      }                                                                                       
-                                                                                              
-      function renderRows(target, rows){                                                      
-        const wrap = document.createElement("div");                                           
-        rows.forEach(r => {                                                                   
-          const row = document.createElement("div");                                          
-          row.className = "row";                                                              
-          row.innerHTML = `<div class="k">${escapeHtml(r.k)}</div><div                        
-  class="v">${escapeHtml(r.v)}</div>`;                                                        
-          wrap.appendChild(row);                                                              
-        });                                                                                   
-        target.innerHTML = "";                                                                
-        target.appendChild(wrap);                                                             
-      }                                                                                       
-                                                                                              
-      function setCardVisibility(show){                                                       
-        const display = show ? "block" : "none";                                              
-        highlightsCard.style.display = display;                                               
-        overallCard.style.display = display;                                                  
-        signalsCard.style.display = display;                                                  
-        skillsCard.style.display = display;                                                   
-        nextCard.style.display = display;
-      }                                                                                       
-                                                                                              
-      // -------------------------                                                            
-      // AUTH + CHILD                                                                         
-      // -------------------------                                                            
-      async function requireAuth(){                                                           
-        const { data, error } = await sb.auth.getUser();                                      
-        if (error || !data?.user){                                                            
-          window.location.href = "/login.html";                                               
-          return false;                                                                       
-        }                                                                                     
-        currentUser = data.user;                                                              
-        return true;                                                                          
-      }                                                                                       
-                                                                                              
-      function getSelectedChildFromLocalStorage(){                                            
-        try {                                                                                 
-          const raw = localStorage.getItem("selectedChild");                                  
-          if (!raw) return null;                                                              
-          return JSON.parse(raw);                                                             
-        } catch { return null; }                                                              
-      }                                                                                       
-                                                                                              
-      async function loadChildProfile(){                                                      
-        const selected = getSelectedChildFromLocalStorage();                                  
-        if (!selected?.id){                                                                   
-          showError("No child selected. Go to Dashboard and click Select on a child.");       
-          return false;                                                                       
-        }                                                                                     
-                                                                                              
-        const { data, error } = await sb                                                      
-          .from("children")                                                                   
-          .select("id, parent_user_id, child_name, child_dob")                                
-          .eq("id", selected.id)                                                              
-          .single();                                                                          
-                                                                                              
-        if (error || !data){                                                                  
-          showError("Could not load child profile. Please re-select the child on Dashboard.");          return false;                                                                       
-        }                                                                                     
-                                                                                              
-        if (data.parent_user_id !== currentUser.id){                                          
-          showError("This child profile does not belong to this account. Please re-select a   
-  child.");                                                                                   
-          return false;                                                                       
-        }                                                                                     
-                                                                                              
-        child = data;                                                                         
-        childHeader.textContent = `${child.child_name || "Child"} • DOB ${child.child_dob ?   
-  formatDateOnly(child.child_dob) : "—"}`;                                                    
-        return true;
-      }                                                                                       
-                                                                                              
-      async function loadChildSwitcher(){                                                     
-        const { data, error } = await sb                                                      
-          .from("children")                                                                   
-          .select("id, child_name")                                                           
-          .eq("parent_user_id", currentUser.id)                                               
-          .order("created_at", { ascending: true });                                          
-                                                                                              
-        if (error) {                                                                          
-          console.error("children read error", error);                                        
-          return;                                                                             
-        }                                                                                     
-                                                                                              
-        const rows = data || [];                                                              
-        if (rows.length < 2) {                                                                
-          childSwitcher.style.display = "none";                                               
-          return;                                                                             
-        }                                                                                     
-                                                                                              
-        childSelect.innerHTML = "";                                                           
-        rows.forEach(c => {
-          const opt = document.createElement("option");                                       
-          opt.value = c.id;                                                                   
-          opt.textContent = c.child_name || "Child";                                          
-          childSelect.appendChild(opt);                                                       
-        });                                                                                   
-        childSelect.value = getSelectedChildFromLocalStorage()?.id || rows[0].id;             
-        childSwitcher.style.display = "flex";                                                 
-                                                                                              
-        childSelect.onchange = async () => {                                                  
-          const id = childSelect.value;
-          const chosen = rows.find(r => r.id === id);                                         
-          if (chosen) localStorage.setItem("selectedChild", JSON.stringify(chosen));          
-          await loadChildProfile();                                                           
-          await loadEverything();
-        };                                                                                    
-      }                                                                                       
+      currentUser = data.user;
+      return true;
+    }
 
-      // -------------------------                                                            
-      // WEEKLY SETTINGS + REPORTS                                                            
-      // -------------------------                                                            
-      function setWeeklySwitchUI(on){                                                         
-        weeklyEnabled = !!on;                                                                 
-        weeklySwitch.classList.toggle("on", !!on);                                            
-        weeklySwitch.setAttribute("aria-checked", on ? "true" : "false");                     
-        weeklyState.textContent = on ? "On" : "Off";                                          
-      }                                                                                       
-                                                                                              
-      async function loadWeeklySetting(){                                                     
-        weeklyState.textContent = "Checking…";                                                
-        setWeeklySwitchUI(false);                                                             
-                                                                                              
-        const { data, error } = await sb                                                      
-          .from("weekly_report_settings")                                                     
-          .select("enabled")                                                                  
-          .eq("parent_user_id", currentUser.id)                                               
-          .eq("child_id", child.id)                                                           
-          .maybeSingle();                                                                     
-                                                                                              
-        if (error) {                                                                          
-          console.error("weekly_report_settings read error", error);                          
-          setWeeklySwitchUI(false);                                                           
-          return;                                                                             
-        }                                                                                     
-                                                                                              
-        setWeeklySwitchUI(!!data?.enabled);                                                   
-      }                                                                                       
-                                                                                              
-      async function saveWeeklySetting(enabled){                                              
-        setWeeklyMsg("");
-        weeklySwitch.style.pointerEvents = "none";                                            
-                                                                                              
-        const payload = {                                                                     
-          parent_user_id: currentUser.id,                                                     
-          child_id: child.id,                                                                 
-          enabled: !!enabled,
-          updated_at: new Date().toISOString()                                                
-        };                                                                                    
-                                                                                              
-        const { error } = await sb                                                            
-          .from("weekly_report_settings")                                                     
-          .upsert(payload, { onConflict: "parent_user_id,child_id" });                        
-                                                                                              
-        weeklySwitch.style.pointerEvents = "auto";                                            
-                                                                                              
-        if (error) {                                                                          
-          console.error("weekly_report_settings upsert error", error);                        
-          setWeeklySwitchUI(!enabled);                                                        
-          setWeeklyMsg("Couldn’t save that setting yet. Please try again.", "bad");           
-          return false;                                                                       
-        }                                                                                     
-                                                                                              
-        setWeeklySwitchUI(enabled);                                                           
-        setWeeklyMsg(enabled ? "Weekly summary is on ✅" : "Weekly summary is off.", "good"); 
-        return true;                                                                          
-      }                                                                                       
-                                                                                              
-      function getLatestWeekly(){                                                             
-        if (!lastWeekly || !lastWeekly.length) return null;                                   
-        return lastWeekly[0];                                                                 
-      }                                                                                       
-                                                                                              
-      function updatePdfSourceDefault(){                                                      
-        const latest = getLatestWeekly();                                                     
-        if (latest) {                                                                         
-          pdfSource.value = "weekly";                                                         
-        } else {                                                                              
-          pdfSource.value = "live";                                                           
-        }                                                                                     
-      }                                                                                       
-                                                                                              
-      async function loadWeeklyReports(){                                                     
-        weeklyList.innerHTML = `<div class="muted">Loading…</div>`;                           
-                                                                                              
-        const { data, error } = await sb                                                      
-          .from("weekly_reports")                                                             
-          .select("id, week_start, created_at, summary")                                      
-          .eq("parent_user_id", currentUser.id)                                               
-          .eq("child_id", child.id)                                                           
-          .order("week_start", { ascending: false })                                          
-          .limit(8);                                                                          
-                                                                                              
-        if (error) {                                                                          
-          console.error("weekly_reports read error", error);                                  
-          weeklyList.innerHTML = `<div class="status bad">Could not load weekly summaries.</  
-  div>`;                                                                                      
-          lastWeekly = null;                                                                  
-          updatePdfSourceDefault();                                                           
-          return;                                                                             
-        }                                                                                     
-                                                                                              
-        lastWeekly = data || [];                                                              
-        updatePdfSourceDefault();                                                             
-                                                                                              
-        if (!lastWeekly.length) {                                                             
-          weeklyList.innerHTML = `                                                            
-            <div class="muted" style="line-height:1.6;">                                      
-              No weekly summaries stored yet.<br>                                             
-              Once enabled, you’ll see a short weekly summary appear here.                    
-            </div>`;                                                                          
-          return;                                                                             
-        }                                                                                     
-                                                                                              
-        const wrap = document.createElement("div");                                           
-        wrap.style.display = "grid";                                                          
-        wrap.style.gap = "10px";                                                              
-                                                                                              
-        lastWeekly.forEach(r => {                                                             
-          const box = document.createElement("div");                                          
-          box.className = "weekly-item";                                                      
-                                                                                              
-          const week = r.week_start ? formatDateOnly(r.week_start) : "—";                     
-          const created = r.created_at ? formatDateOnly(r.created_at) : "—";                  
-          const summary = r.summary || {};                                                    
-          const stats = summary.stats || {};                                                  
-                                                                                              
-          const headline = summary.headline || summary.title || "Weekly summary";             
-          const bullets = Array.isArray(summary.bullets) ? summary.bullets : [];              
-          const next = summary.next_steps || summary.next || "";                              
-          const focus = stats.focus_subject && stats.focus_area ? `${stats.focus_subject} —   
-  ${stats.focus_area}` : "—";                                                                 
-          const sessions = Number(stats.sessions_this_week || 0);                             
-          const xpTotal = stats.xp_total !== undefined ? stats.xp_total : "—";                
-                                                                                              
-          box.innerHTML = `                                                                   
-            <div style="display:flex; justify-content:space-between; gap:10px; flex-          
-  wrap:wrap;">                                                                                
-              <div style="font-weight:950; letter-                                            
-  spacing:-.2px;">${escapeHtml(String(headline))}</div>                                       
-              <span class="pill soft">Week starting: ${week}</span>                           
-            </div>                                                                            
-            <div class="muted small" style="margin-top:6px;">Stored: ${created}</div>         
-            <div class="muted small" style="margin-top:8px;">Sessions: ${sessions} • Focus:   
-  ${escapeHtml(focus)} • XP total: ${escapeHtml(String(xpTotal))}</div>                       
-            ${bullets.length ? `<ul style="margin:10px 0 0; padding-                          
-  left:18px;">${bullets.slice(0,6).map(b => `<li>${escapeHtml(String(b))}</li>`).join("")}</  
-  ul>` : ``}                                                                                  
-            ${next ? `<div class="hr"></div><div class="small"><b>Next steps:</b>             
-  ${escapeHtml(String(next))}</div>` : ``}                                                    
-          `;                                                                                  
-                                                                                              
-          wrap.appendChild(box);                                                              
-        });                                                                                   
-                                                                                              
-        weeklyList.innerHTML = "";
-        weeklyList.appendChild(wrap);                                                         
-      }                                                                                       
+    async function loadChildSwitcher(){
+      const { data, error } = await sb
+        .from("children")
+        .select("id, child_name, child_dob, parent_user_id, created_at")
+        .eq("parent_user_id", currentUser.id)
+        .order("created_at", { ascending: true });
 
-      async function saveWeeklyReport(summary){                                               
-        const weekStart = getWeekStartMonday(new Date());                                     
-        const payload = {
-          parent_user_id: currentUser.id,                                                     
-          child_id: child.id,                                                                 
-          week_start: weekStart,                                                              
-          summary,                                                                            
-          created_at: new Date().toISOString(),                                               
-          updated_at: new Date().toISOString()                                                
-        };                                                                                    
-                                                                                              
-        const { error } = await sb                                                            
-          .from("weekly_reports")                                                             
-          .upsert(payload, { onConflict: "parent_user_id,child_id,week_start" });             
-                                                                                              
-        if (error){                                                                           
-          console.error("weekly_reports upsert error", error);                                
-          throw error;                                                                        
-        }                                                                                     
-      }                                                                                       
-                                                                                              
-      async function runWeeklySnapshot({ silent=false } = {}){                                
-        if (!derivedReport) return;                                                           
-        const summary = buildWeeklySummary(derivedReport);                                    
-                                                                                              
-        try {                                                                                 
-          await saveWeeklyReport(summary);
-          await loadWeeklyReports();                                                          
-          if (!silent) setWeeklyMsg("Weekly report saved ✅", "good");                        
-        } catch {                                                                             
-          if (!silent) setWeeklyMsg("Couldn’t save the weekly report yet.", "bad");           
-        }                                                                                     
-      }                                                                                       
-                                                                                              
-      async function autoGenerateWeekly(){                                                    
-        if (!weeklyEnabled) return;                                                           
-        const weekStart = getWeekStartMonday(new Date());                                     
-        const exists = (lastWeekly || []).some(r => r.week_start === weekStart);              
-        if (!exists) {                                                                        
-          await runWeeklySnapshot({ silent:true });                                           
-        }                                                                                     
-      }                                                                                       
-                                                                                              
-      // -------------------------                                                            
-      // UNIFIED REPORT DATA                                                                  
-      // -------------------------                                                            
-      async function loadUnifiedData(){                                                       
-        const xpQuery = sb                                                                    
-          .from("child_xp")                                                                   
-          .select("owner_id, child_id, xp_total, xp_lifetime, updated_at")                    
-          .eq("owner_id", currentUser.id)                                                     
-          .eq("child_id", child.id)                                                           
-          .maybeSingle();                                                                     
-                                                                                              
-        const skillsQuery = sb                                                                
-          .from("child_skill_progress")                                                       
-          .select("subject, area, level, confidence, accuracy, total_attempts,                
-  correct_attempts, streak_correct, streak_wrong, last_seen_at, updated_at")                  
-          .eq("owner_id", currentUser.id)                                                     
-          .eq("child_id", child.id)                                                           
-          .order("last_seen_at", { ascending:false })                                         
-          .limit(60);                                                                         
-                                                                                              
-        const sessionsQuery = sb                                                              
-          .from("sessions")                                                                   
-          .select("subject, area, questions_done, correct_count, created_at")                 
-          .eq("parent_user_id", currentUser.id)                                               
-          .eq("child_id", child.id)                                                           
-          .order("created_at", { ascending:false })                                           
-          .limit(80);                                                                         
+      if (error) {
+        console.error("children list error", error);
+        childSwitcher.style.display = "none";
+        return;
+      }
 
-        const [xpRes, skillsRes, sessionsRes] = await Promise.all([xpQuery, skillsQuery,      
-  sessionsQuery]);                                                                            
-                                                                                              
-        const xp = xpRes?.data || null;                                                       
-        const skills = skillsRes?.data || [];                                                 
-        const sessions = sessionsRes?.data || [];                                             
-                                                                                              
-        let screener = null;                                                                  
-        let screenerSource = null;                                                            
-                                                                                              
-        const screenerPrimary = await safeSelect("child_screener_results", q => q             
-          .select("baseline_subject, baseline_area, baseline_level, created_at, summary")     
-          .eq("child_id", child.id)                                                           
-          .order("created_at", { ascending:false })                                           
-          .limit(1)                                                                           
-        );                                                                                    
-                                                                                              
-        if (screenerPrimary?.error) {                                                         
-          const fallback = await safeSelect("screener_results", q => q                        
-            .select("band, created_at, details")                                              
-            .eq("child_id", child.id)                                                         
-            .order("created_at", { ascending:false })                                         
-            .limit(1)                                                                         
-          );                                                                                  
-          if (fallback?.data?.[0]) {                                                          
-            screenerSource = "screener_results";                                              
-            screener = fallback.data[0];                                                      
-          }                                                                                   
-        } else if (screenerPrimary?.data?.[0]) {                                              
-          screenerSource = "child_screener_results";                                          
-          screener = screenerPrimary.data[0];                                                 
-        }                                                                                     
-                                                                                              
-        return { xp, skills, sessions, screener, screenerSource };                            
-      }                                                                                       
-                                                                                              
-      function pickFocusSkill(skills, sessions){                                              
-        if (skills && skills.length){                                                         
-          return skills.slice().sort((a,b) => (b.total_attempts || 0) - (a.total_attempts ||  
-  0))[0];                                                                                     
-        }                                                                                     
-        if (sessions && sessions.length){                                                     
-          const map = new Map();                                                              
-          sessions.forEach(s => {                                                             
-            const subj = prettySubject(s.subject);                                            
-            const area = prettyArea(s.area);                                                  
-            const key = subj + "||" + area;                                                   
-            const count = map.get(key) || 0;                                                  
-            map.set(key, count + 1);                                                          
-          });                                                                                 
-          const sorted = Array.from(map.entries()).sort((a,b) => b[1] - a[1]);                
-          if (sorted.length){                                                                 
-            const parts = sorted[0][0].split("||");                                           
-            return { subject: parts[0], area: parts[1] };                                     
-          }                                                                                   
-        }                                                                                     
-        return null;                                                                          
-      }                                                                                       
-                                                                                              
-      function deriveScreenerBaseline(screener, source){                                      
-        if (!screener) return null;                                                           
-        if (source === "child_screener_results"){                                             
-          const subj = screener.baseline_subject ? prettySubject(screener.baseline_subject) : 
-  "";                                                                                         
-          const area = screener.baseline_area ? prettyArea(screener.baseline_area) : "";      
-          const level = screener.baseline_level !== undefined && screener.baseline_level !==  
-  null ? String(screener.baseline_level) : "";
-          return { subject: subj, area, level, created_at: screener.created_at, summary:      
-  screener.summary || null };                                                                 
-        }                                                                                     
-        if (source === "screener_results"){                                                   
-          const band = screener.band ? String(screener.band) : "";                            
-          const level = band === "high" ? "1" : band === "medium" ? "2" : band === "low" ?    
-  "3" : "";                                                                                   
-          return { subject: "", area: "", level, created_at: screener.created_at, summary:    
-  null, band };                                                                               
-        }                                                                                     
-        return null;                                                                          
-      }                                                                                       
-                                                                                              
-      function computeDerivedReport(data){
-        const skills = data.skills || [];                                                     
-        const sessions = data.sessions || [];                                                 
-        const xpTotal = Number(data.xp?.xp_total || 0);                                       
-        const xpLifetime = Number(data.xp?.xp_lifetime || 0);                                 
-                                                                                              
-        const sessionsThisWeek = sessions.filter(s => inCurrentWeek(s.created_at));           
-        const focusSkill = pickFocusSkill(skills, sessions);                                  
-        const baseline = deriveScreenerBaseline(data.screener, data.screenerSource);          
-                                                                                              
-        const scored = skills.map(s => {                                                      
-          const attempts = Number(s.total_attempts || 0);                                     
-          const accuracy = (typeof s.accuracy === "number") ? s.accuracy : (attempts ?        
-  (Number(s.correct_attempts || 0) / attempts) : null);                                       
-          return {                                                                            
-            ...s,                                                                             
-            attempts,                                                                         
-            accuracy,                                                                         
-            confidence: Number(s.confidence || 0)
-          };                                                                                  
-        });                                                                                   
-                                                                                              
-        const enough = scored.filter(s => s.attempts >= 6 && s.accuracy !== null);            
-        const strongest = enough                                                              
-          .filter(s => s.accuracy >= 0.75 || s.streak_correct >= 3)                           
-          .sort((a,b) => (b.accuracy - a.accuracy) || (b.attempts - a.attempts))              
-          .slice(0, 3);                                                                       
+      const children = data || [];
+      if (children.length <= 1) {
+        childSwitcher.style.display = "none";
+        return;
+      }
 
-        const needsSupport = enough                                                           
-          .filter(s => s.accuracy < 0.6 || s.streak_wrong >= 3 || s.confidence < 0.5)         
-          .sort((a,b) => (a.accuracy - b.accuracy) || (b.streak_wrong - a.streak_wrong))      
-          .slice(0, 3);                                                                       
-                                                                                              
-        const confidenceBuilding = scored                                                     
-          .filter(s => s.attempts >= 4)                                                       
-          .sort((a,b) => Math.abs(0.6 - a.confidence) - Math.abs(0.6 - b.confidence))[0];     
-                                                                                              
-        const highlightFocus = focusSkill ? `${prettySubject(focusSkill.subject)} —           
-  ${prettyArea(focusSkill.area)}` : "—";                                                      
-        const highlightWin = strongest[0] ? `${prettySubject(strongest[0].subject)} —         
-  ${prettyArea(strongest[0].area)}` : "—";
-        const highlightSupport = needsSupport[0] ? `${prettySubject(needsSupport[0].subject)} 
-  — ${prettyArea(needsSupport[0].area)}` : "—";                                               
-        const highlightConfidence = confidenceBuilding ?                                      
-  `${prettySubject(confidenceBuilding.subject)} — ${prettyArea(confidenceBuilding.area)}` :   
-  "—";                                                                                        
-                                                                                              
-        const nextSteps = [];                                                                 
-        if (needsSupport.length){                                                             
-          const worst = needsSupport[0];                                                      
-          nextSteps.push(`Try 5–7 minutes on ${prettySubject(worst.subject)} —                
-  ${prettyArea(worst.area)} with calm, easy questions first.`);                               
-          nextSteps.push("Use hints early so confidence stays high.");                        
-          nextSteps.push("Finish with one easy win so the session ends positive.");           
-        } else if (strongest.length){                                                         
-          const best = strongest[0];                                                          
-          nextSteps.push(`Keep momentum with ${prettySubject(best.subject)} —                 
-  ${prettyArea(best.area)} for a short session.`);                                            
-          nextSteps.push("Add one new area for variety, then return to what feels             
-  comfortable.");                                                                             
-        } else {                                                                              
-          nextSteps.push("Do a short Tutor or Lessons session (5–10 minutes). Focus on one    
-  area only.");                                                                               
-          nextSteps.push("Afterwards, come back here and press Refresh.");
-        }                                                                                     
-                                                                                              
-        if (baseline){                                                                        
-          const baseText = baseline.subject ? `${baseline.subject}${baseline.area ? " — " +   
-  baseline.area : ""}` : "Setup check";                                                       
-          if (baseline.level) {                                                               
-            nextSteps.push(`Starting point was ${baseText} (baseline level                    
-  ${baseline.level}).`);                                                                      
-          } else {                                                                            
-            nextSteps.push(`Starting point was ${baseText}.`);                                
-          }
-        }                                                                                     
-                                                                                              
-        return {                                                                              
-          xpTotal,                                                                            
-          xpLifetime,                                                                         
-          sessionsThisWeek,                                                                   
-          focusSkill,                                                                         
-          strongest,                                                                          
-          needsSupport,                                                                       
-          baseline,                                                                           
-          highlightFocus,                                                                     
-          highlightWin,                                                                       
-          highlightSupport,                                                                   
-          highlightConfidence,                                                                
-          skills: scored,                                                                     
-          recentSignals: scored                                                               
-            .slice()                                                                          
-            .sort((a,b) => {                                                                  
-              const ad = new Date(a.last_seen_at || a.updated_at || 0).getTime();             
-              const bd = new Date(b.last_seen_at || b.updated_at || 0).getTime();             
-              return bd - ad;                                                                 
-            })                                                                                
-            .slice(0, 6),                                                                     
-          nextSteps                                                                           
-        };
-      }                                                                                       
+      childSwitcher.style.display = "flex";
+      childSelect.innerHTML = "";
 
-      function estimateXpThisWeek(xpTotal){                                                   
-        const latest = getLatestWeekly();                                                     
-        const weekStart = getWeekStartMonday(new Date());                                     
-        if (latest && latest.week_start === weekStart){                                       
-          const base = Number(latest.summary?.stats?.xp_total || 0);                          
-          return Math.max(0, Math.round(xpTotal - base));                                     
-        }                                                                                     
-        return null;                                                                          
-      }                                                                                       
-                                                                                              
-      function renderHighlights(report){                                                      
-        highlightFocus.textContent = `Focus this week: ${report.highlightFocus}`;             
-        highlightConfidence.textContent = `Confidence building in:                            
-  ${report.highlightConfidence}`;                                                             
-        highlightWin.textContent = `Best win: ${report.highlightWin}`;                        
-        highlightSupport.textContent = `Needs support: ${report.highlightSupport}`;           
-      }                                                                                       
-                                                                                              
-      function renderOverall(report){                                                         
-        const sessionsCount = report.sessionsThisWeek.length;                                 
-        const xpWeek = estimateXpThisWeek(report.xpTotal);                                    
-        const focus = report.focusSkill ? `${prettySubject(report.focusSkill.subject)} —      
-  ${prettyArea(report.focusSkill.area)}` : "—";                                               
-        const lastActivity = report.recentSignals[0] ?
-  formatDateOnly(report.recentSignals[0].last_seen_at || report.recentSignals[0].updated_at) :  "—";                                                                                        
-                                                                                              
-        renderRows(overallBox, [
-          { k: "Sessions this week", v: String(sessionsCount) },                              
-          { k: "XP total", v: String(report.xpTotal) },
-          { k: "XP gained this week (estimate)", v: xpWeek === null ? "—" : String(xpWeek) }, 
-          { k: "Top focus area", v: focus },                                                  
-          { k: "Last activity", v: lastActivity }                                             
-        ]);                                                                                   
-      }                                                                                       
-                                                                                              
-      function renderSignals(report){
-        if (!report.recentSignals.length){                                                    
-          signalsBox.innerHTML = `<div class="muted">No tutor signals saved yet.</div>`;      
-          return;                                                                             
-        }                                                                                     
+      children.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.child_name || "Child";
+        childSelect.appendChild(opt);
+      });
 
-        const rows = report.recentSignals.map(s => {                                          
-          const subj = prettySubject(s.subject);                                              
-          const ar = prettyArea(s.area);                                                      
-          const when = formatDateOnly(s.last_seen_at || s.updated_at);                        
-          const signal = (s.streak_wrong >= 3) ? "Needs support" : (s.streak_correct >= 3) ?  
-  "Doing well" : (s.confidence >= 0.7) ? "Building confidence" : "Steady progress";           
-          return { k: `${subj} — ${ar}`, v: `${signal} • ${when}` };                          
-        });                                                                                   
-                                                                                              
-        renderRows(signalsBox, rows);                                                         
-      }                                                                                       
-                                                                                              
-      function renderSkills(report){                                                          
-        const skills = report.skills || [];                                                   
-        if (!skills.length){                                                                  
-          skillsBox.innerHTML = `<div class="muted">No skills yet.</div>`;                    
-          return;                                                                             
-        }                                                                                     
-                                                                                              
-        const table = document.createElement("table");                                        
-        table.className = "skills";                                                           
-        table.innerHTML = `                                                                   
-          <thead>                                                                             
-            <tr>                                                                              
-              <th>Skill</th>
-              <th class="num">Attempts</th>                                                   
-              <th class="num">Accuracy</th>                                                   
-              <th class="num">Confidence</th>                                                 
-            </tr>                                                                             
-          </thead>                                                                            
-          <tbody></tbody>                                                                     
-        `;                                                                                    
-                                                                                              
-        const tbody = table.querySelector("tbody");                                           
-                                                                                              
-        skills                                                                                
-          .slice()                                                                            
-          .sort((a,b) => (b.attempts - a.attempts) || (b.accuracy - a.accuracy))              
-          .forEach(it => {                                                                    
-            const accPct = (it.accuracy === null || it.accuracy === undefined) ? "—" :        
-  (Math.round(it.accuracy * 100) + "%");                                                      
-            const conf = confidenceTag(it.confidence || 0, it.attempts || 0);
-                                                                                              
-            const tr = document.createElement("tr");                                          
-            tr.innerHTML = `                                                                  
-              <td><b>${escapeHtml(prettySubject(it.subject))}</b> —                           
-  ${escapeHtml(prettyArea(it.area))}</td>                                                     
-              <td class="num">${it.attempts}</td>                                             
-              <td class="num">${accPct}</td>                                                  
-              <td class="num"><span class="tag ${conf.cls}">${conf.label}</span></td>         
-            `;                                                                                
-            tbody.appendChild(tr);                                                            
-          });                                                                                 
-                                                                                              
-        skillsBox.innerHTML = "";                                                             
-        skillsBox.appendChild(table);                                                         
-      }                                                                                       
-                                                                                              
-      function renderNextSteps(report){                                                       
-        const doingWell = report.strongest.map(s => `${prettySubject(s.subject)} —            
-  ${prettyArea(s.area)} is feeling more confident.`);                                         
-        const needsSupport = report.needsSupport.map(s => `${prettySubject(s.subject)} —      
-  ${prettyArea(s.area)} needs a little extra practice.`);                                     
-                                                                                              
-        const wrap = document.createElement("div");                                           
-        wrap.style.display = "grid";                                                          
-        wrap.style.gap = "10px";                                                              
-                                                                                              
-        if (doingWell.length){                                                                
-          const box = document.createElement("div");                                          
-          box.className = "callout";                                                          
-          box.innerHTML = `                                                                   
-            <h3>Doing well ✅</h3>                                                            
-            <ul class="bullets">${doingWell.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ 
-  ul>                                                                                         
-          `;                                                                                  
-          wrap.appendChild(box);                                                              
-        }                                                                                     
-                                                                                              
-        if (needsSupport.length){                                                             
-          const box = document.createElement("div");                                          
-          box.className = "callout";                                                          
-          box.innerHTML = `                                                                   
-            <h3>Needs support 💛</h3>                                                         
-            <ul class="bullets">${needsSupport.map(x => `<li>${escapeHtml(x)}</li>`).join("")}  </ul>                                                                                       
-          `;                                                                                  
-          wrap.appendChild(box);                                                              
-        }                                                                                     
-                                                                                              
-        const boxSteps = document.createElement("div");                                       
-        boxSteps.className = "callout hint-box";                                              
-        boxSteps.innerHTML = `                                                                
-          <h3>Next steps 🎯</h3>                                                              
-          <ul class="bullets">${report.nextSteps.map(s => `<li>${escapeHtml(s)}</             
-  li>`).join("")}</ul>                                                                        
-        `;
-        wrap.appendChild(boxSteps);                                                           
-                                                                                              
-        nextBox.innerHTML = "";                                                               
-        nextBox.appendChild(wrap);                                                            
-      }                                                                                       
-                                                                                              
-      function buildWeeklySummary(report){                                                    
-        const focus = report.focusSkill ? `${prettySubject(report.focusSkill.subject)} —      
-  ${prettyArea(report.focusSkill.area)}` : "—";                                               
-        const bullets = [];                                                                   
-        bullets.push(`${report.sessionsThisWeek.length} sessions this week.`);                
-        if (focus !== "—") bullets.push(`Focus this week: ${focus}.`);                        
-        if (report.highlightWin && report.highlightWin !== "—") bullets.push(`Best win:       
-  ${report.highlightWin}.`);                                                                  
-        if (report.highlightSupport && report.highlightSupport !== "—") bullets.push(`Needs   
-  support: ${report.highlightSupport}.`);                                                     
-        if (report.baseline){                                                                 
-          const baseText = report.baseline.subject ?                                          
-  `${report.baseline.subject}${report.baseline.area ? " — " + report.baseline.area : ""}` :   
-  "Setup check";                                                                              
-          bullets.push(`Starting point was ${baseText}${report.baseline.level ? " (baseline   
-  level " + report.baseline.level + ")" : ""}.`);                                             
-        }                                                                                     
-                                                                                              
-        return {                                                                              
-          headline: `Weekly summary for ${child?.child_name || "your child"}`,                
-          bullets: bullets.slice(0,6),                                                        
-          next_steps: report.nextSteps[0] || "Keep sessions short and calm.",                 
-          stats: {                                                                            
-            sessions_this_week: report.sessionsThisWeek.length,                               
-            focus_subject: report.focusSkill ? prettySubject(report.focusSkill.subject) : "", 
-            focus_area: report.focusSkill ? prettyArea(report.focusSkill.area) : "",          
-            xp_total: report.xpTotal,                                                         
-            strongest: report.strongest.map(s => `${prettySubject(s.subject)} —
-  ${prettyArea(s.area)}`),                                                                    
-            needs_support: report.needsSupport.map(s => `${prettySubject(s.subject)} —        
-  ${prettyArea(s.area)}`)                                                                     
-          },                                                                                  
-          snapshot_at: new Date().toISOString()                                               
-        };                                                                                    
-      }                                                                                       
-                                                                                              
-      async function loadEverything(){                                                        
-        clearError();                                                                         
-                                                                                              
-        overallBox.innerHTML = `<div class="muted">Loading…</div>`;                           
-        signalsBox.innerHTML = `<div class="muted">Loading…</div>`;                           
-        skillsBox.innerHTML = `<div class="muted">Loading…</div>`;                            
-        nextBox.innerHTML = `<div class="muted">Loading…</div>`;                              
-        noDataBox.style.display = "none";                                                     
-                                                                                              
-        await loadWeeklySetting();                                                            
-        await loadWeeklyReports();                                                            
-                                                                                              
-        unifiedData = await loadUnifiedData();                                                
-        derivedReport = computeDerivedReport(unifiedData);                                    
-                                                                                              
-        const hasData = (unifiedData.skills && unifiedData.skills.length) ||                  
-  (unifiedData.sessions && unifiedData.sessions.length);                                      
-        noDataBox.style.display = hasData ? "none" : "block";                                 
-        setCardVisibility(hasData);                                                           
-                                                                                              
-        if (hasData){                                                                         
-          renderHighlights(derivedReport);                                                    
-          renderOverall(derivedReport);                                                       
-          renderSignals(derivedReport);                                                       
-          renderSkills(derivedReport);                                                        
-          renderNextSteps(derivedReport);                                                     
-        }
-                                                                                              
-        await autoGenerateWeekly();                                                           
-        showOk("Reports refreshed");                                                          
-      }                                                                                       
+      const selected = getSelectedChild();
+      if (selected?.id) childSelect.value = selected.id;
 
-      // -------------------------
-      // PDF (premium + parent-friendly)                                                      
-      // -------------------------                                                            
-      function pdfWriteLine(doc, text, x, y, maxWidth){                                       
-        const lines = doc.splitTextToSize(String(text), maxWidth);                            
-        lines.forEach((ln, i) => doc.text(ln, x, y + (i * 6)));                               
-        return y + (lines.length * 6);                                                        
-      }                                                                                       
-                                                                                              
-      function drawBadge(doc, text, x, y){                                                    
-        doc.setFillColor(238, 243, 255);                                                      
-        doc.roundedRect(x, y-6, doc.getTextWidth(text) + 10, 8, 3, 3, "F");                   
-        doc.setTextColor(11, 92, 255);                                                        
-        doc.setFont(undefined, "bold");                                                       
-        doc.text(text, x+5, y);                                                               
-        doc.setTextColor(20, 20, 24);                                                         
-        doc.setFont(undefined, "normal");                                                     
-      }                                                                                       
-                                                                                              
-      function buildPdfFromLive(report){                                                      
-        const focus = report.focusSkill ? `${prettySubject(report.focusSkill.subject)} —      
-  ${prettyArea(report.focusSkill.area)}` : "—";                                               
-        return {                                                                              
-          headline: `Parent report for ${child?.child_name || "Child"}`,                      
-          subtitle: "Calm, dyslexia-aware learning — with clear parent insight",              
-          highlights: [                                                                       
-            `Focus this week: ${report.highlightFocus}`,                                      
-            `Confidence building in: ${report.highlightConfidence}`,
-            `Best win: ${report.highlightWin}`,
-            `Needs support: ${report.highlightSupport}`                                       
-          ],                                                                                  
-          stats: {                                                                            
-            sessions: report.sessionsThisWeek.length,                                         
-            focus,                                                                            
-            xpTotal: report.xpTotal                                                           
-          },                                                                                  
-          strongest: report.strongest.map(s => `${prettySubject(s.subject)} —                 
-  ${prettyArea(s.area)}`),                                                                    
-          needsSupport: report.needsSupport.map(s => `${prettySubject(s.subject)} —           
-  ${prettyArea(s.area)}`),                                                                    
-          nextSteps: report.nextSteps                                                         
-        };                                                                                    
-      }                                                                                       
-                                                                                              
-      function buildPdfFromWeekly(snapshot){                                                  
-        const summary = snapshot.summary || {};
-        const stats = summary.stats || {};                                                    
-        return {                                                                              
-          headline: summary.headline || `Weekly summary for ${child?.child_name || "Child"}`, 
-          subtitle: "Calm, dyslexia-aware learning — with clear parent insight",              
-          highlights: Array.isArray(summary.bullets) ? summary.bullets : [],                  
-          stats: {                                                                            
-            sessions: stats.sessions_this_week || 0,                                          
-            focus: stats.focus_subject && stats.focus_area ? `${stats.focus_subject} —        
-  ${stats.focus_area}` : "—",                                                                 
-            xpTotal: stats.xp_total !== undefined ? stats.xp_total : "—"                      
-          },                                                                                  
-          strongest: Array.isArray(stats.strongest) ? stats.strongest : [],
-          needsSupport: Array.isArray(stats.needs_support) ? stats.needs_support : [],        
-          nextSteps: summary.next_steps ? [summary.next_steps] : []                           
-        };                                                                                    
-      }                                                                                       
-                                                                                              
-      function downloadPDF(){                                                                 
-        try {
-          const latest = getLatestWeekly();                                                   
-          const wantWeekly = pdfSource.value === "weekly" && latest;                          
-          const source = wantWeekly ? buildPdfFromWeekly(latest) :                            
-  buildPdfFromLive(derivedReport || computeDerivedReport(unifiedData || { skills:[], sessions:  [] }));                                                                                     
-                                                                                              
-          const { jsPDF } = window.jspdf;                                                     
-          const doc = new jsPDF();                                                            
-                                                                                              
-          const pageW = doc.internal.pageSize.getWidth();                                     
-          let y = 14;                                                                         
-                                                                                              
-          doc.setFillColor(11, 92, 255);                                                      
-          doc.rect(0, 0, pageW, 18, "F");
-                                                                                              
-          doc.setTextColor(255,255,255);                                                      
-          doc.setFontSize(16);                                                                
-          doc.setFont(undefined, "bold");                                                     
-          doc.text("Learnlio — Parent Report", 14, 12);                                       
-                                                                                              
-          doc.setFontSize(10);                                                                
-          doc.setFont(undefined, "normal");                                                   
-          doc.text(source.subtitle, 14, 16);                                                  
-                                                                                              
-          doc.setTextColor(20,20,24);                                                         
-          y = 28;                                                                             
-                                                                                              
-          doc.setFontSize(12);                                                                
-          doc.setFont(undefined, "bold");                                                     
-          doc.text(`Child: ${safe(child?.child_name)}`, 14, y); y += 7;                       
-                                                                                              
-          doc.setFont(undefined, "normal");                                                   
-          doc.text(`DOB: ${safe(child?.child_dob ? formatDateOnly(child.child_dob) : "—")}`,  
-  14, y); y += 7;                                                                             
-          doc.text(`Generated: ${formatDateOnly(new Date())}`, 14, y); y += 10;               
-                                                                                              
-          drawBadge(doc, `Sessions: ${safe(source.stats.sessions)}`, 14, y);                  
-          drawBadge(doc, `Focus: ${safe(source.stats.focus)}`, 58, y);                        
-          drawBadge(doc, `XP total: ${safe(source.stats.xpTotal)}`, 122, y);                  
-          y += 14;                                                                            
-                                                                                              
-          doc.setFont(undefined, "bold");                                                     
-          doc.setFontSize(13);                                                                
-          doc.text("Highlights", 14, y); y += 8;                                              
-          doc.setFont(undefined, "normal");                                                   
-          doc.setFontSize(11);                                                                
-          const highlights = source.highlights.length ? source.highlights : ["No highlights   
-  yet."];                                                                                     
-          highlights.slice(0,6).forEach((h) => {                                              
-            y = pdfWriteLine(doc, "• " + String(h), 14, y, 180);                              
-            y += 1;                                                                           
-            if (y > 270) { doc.addPage(); y = 16; }                                           
-          });                                                                                 
-          y += 4;                                                                             
-                                                                                              
-          doc.setFont(undefined, "bold");                                                     
-          doc.setFontSize(13);                                                                
-          doc.text("Strongest areas", 14, y); y += 8;                                         
-          doc.setFont(undefined, "normal");                                                   
-          doc.setFontSize(11);                                                                
-          if (!source.strongest.length) {                                                     
-            doc.text("No standout areas yet.", 14, y); y += 8;                                
-          } else {                                                                            
-            source.strongest.slice(0,6).forEach((s) => {                                      
-              y = pdfWriteLine(doc, "• " + String(s), 14, y, 180);                            
-              y += 1;                                                                         
-              if (y > 270) { doc.addPage(); y = 16; }                                         
-            });                                                                               
-          }                                                                                   
-          y += 4;                                                                             
-                                                                                              
-          doc.setFont(undefined, "bold");                                                     
-          doc.setFontSize(13);                                                                
-          doc.text("Needs support", 14, y); y += 8;                                           
-          doc.setFont(undefined, "normal");                                                   
-          doc.setFontSize(11);                                                                
-          if (!source.needsSupport.length) {                                                  
-            doc.text("No areas flagged right now.", 14, y); y += 8;                           
-          } else {                                                                            
-            source.needsSupport.slice(0,6).forEach((s) => {
-              y = pdfWriteLine(doc, "• " + String(s), 14, y, 180);                            
-              y += 1;                                                                         
-              if (y > 270) { doc.addPage(); y = 16; }                                         
-            });                                                                               
-          }                                                                                   
-          y += 4;
-                                                                                              
-          doc.setFont(undefined, "bold");                                                     
-          doc.setFontSize(13);                                                                
-          doc.text("Next steps", 14, y); y += 8;                                              
-          doc.setFont(undefined, "normal");                                                   
-          doc.setFontSize(11);                                                                
-          const steps = source.nextSteps.length ? source.nextSteps : ["Keep sessions short and  calm."];                                                                                    
-          steps.slice(0,6).forEach((s) => {                                                   
-            y = pdfWriteLine(doc, "• " + String(s), 14, y, 180);                              
-            y += 1;                                                                           
-            if (y > 270) { doc.addPage(); y = 16; }                                           
-          });                                                                                 
-                                                                                              
-          doc.setFontSize(9);                                                                 
-          doc.setTextColor(90, 100, 120);                                                     
-          doc.text("Learnlio — calm learning, clear insight for parents.", 14, 290);          
-
-          doc.save(`Learnlio-Report-${safe(child?.child_name,"Child")}.pdf`);                 
-        } catch (e) {                                                                         
-          showError("Could not create PDF on this device/browser. Try Chrome or Edge.");      
-          console.error(e);                                                                   
-        }                                                                                     
-      }                                                                                       
-                                                                                              
-      // -------------------------                                                            
-      // EVENTS                                                                               
-      // -------------------------                                                            
-      logoutBtn.addEventListener("click", async () => {                                       
-        await sb.auth.signOut();                                                              
-        localStorage.removeItem("selectedChild");                                             
-        window.location.href = "/login.html";                                                 
-      });                                                                                     
-                                                                                              
-      refreshBtn.addEventListener("click", async () => {                                      
-        await loadEverything();                                                               
-      });                                                                                     
-                                                                                              
-      downloadBtn.addEventListener("click", () => {                                           
-        downloadPDF();                                                                        
-      });                                                                                     
-                                                                                              
-      runWeeklyBtn.addEventListener("click", async () => {                                    
-        await runWeeklySnapshot();                                                            
-      });                                                                                     
-                                                                                              
-      async function toggleWeekly(){                                                          
-        const next = !weeklyEnabled;                                                          
-        setWeeklySwitchUI(next);                                                              
-        weeklyState.textContent = next ? "On" : "Off";                                        
-        const ok = await saveWeeklySetting(next);                                             
-        if (ok) await loadWeeklyReports();                                                    
-      }                                                                                       
-                                                                                              
-      weeklySwitch.addEventListener("click", toggleWeekly);
-      weeklySwitch.addEventListener("keydown", (e) => {                                       
-        if (e.key === "Enter" || e.key === " ") {                                             
-          e.preventDefault();                                                                 
-          toggleWeekly();                                                                     
-        }                                                                                     
-      });                                                                                     
-                                                                                              
-      // -------------------------                                                            
-      // INIT                                                                                 
-      // -------------------------                                                            
-      (async () => {                                                                          
-        if (!sb) { showError("Supabase did not load."); return; }                             
-                                                                                              
-        const okAuth = await requireAuth();                                                   
-        if (!okAuth) return;                                                                  
-                                                                                              
-        await loadChildSwitcher();                                                            
-                                                                                              
-
+      childSelect.addEventListener("change", async () => {
+        const id = childSelect.value;
+        const name = childSelect.options[childSelect.selectedIndex]?.textContent || "Child";
+        setSelectedChild(id, name);
+        await loadChildProfile();
         await loadEverything();
-      })();
+        showOk("Child changed");
+      });
+    }
+
+    async function loadChildProfile(){
+      const selected = getSelectedChild();
+      if (!selected?.id){
+        showError("No child selected. Please go to Dashboard and select a child.");
+        childHeader.textContent = "No child selected";
+        downloadBtn.disabled = true;
+        downloadBtn.style.opacity = "0.6";
+        return false;
+      }
+
+      const { data, error } = await sb
+        .from("children")
+        .select("id, parent_user_id, child_name, child_dob")
+        .eq("id", selected.id)
+        .single();
+
+      if (error || !data){
+        showError("Could not load child profile. Please re-select the child on Dashboard.");
+        downloadBtn.disabled = true;
+        downloadBtn.style.opacity = "0.6";
+        return false;
+      }
+
+      if (data.parent_user_id !== currentUser.id){
+        showError("This child profile does not belong to this account.");
+        downloadBtn.disabled = true;
+        downloadBtn.style.opacity = "0.6";
+        return false;
+      }
+
+      child = data;
+
+      const dobNice = data.child_dob ? formatDateOnly(data.child_dob) : "—";
+      childHeader.textContent = `Child: ${safe(data.child_name)} • DOB: ${dobNice}`;
+
+      clearError();
+      downloadBtn.disabled = false;
+      downloadBtn.style.opacity = "1";
+      return true;
+    }
+
+    // -------------------------
+    // WEEKLY SETTINGS + LIST
+    // -------------------------
+    function setWeeklySwitchUI(enabled){
+      weeklyEnabled = !!enabled;
+      weeklyState.textContent = enabled ? "On" : "Off";
+      weeklySwitch.classList.toggle("on", enabled);
+      weeklySwitch.setAttribute("aria-checked", enabled ? "true" : "false");
+    }
+
+    async function loadWeeklySetting(){
+      weeklyState.textContent = "Checking…";
+      setWeeklyMsg("");
+
+      const { data, error } = await sb
+        .from("weekly_report_settings")
+        .select("enabled")
+        .eq("parent_user_id", currentUser.id)
+        .eq("child_id", child.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("weekly_report_settings read error", error);
+        setWeeklySwitchUI(false);
+        weeklyState.textContent = "Off";
+        return;
+      }
+
+      setWeeklySwitchUI(!!data?.enabled);
+    }
+
+    async function saveWeeklySetting(enabled){
+      setWeeklyMsg("");
+      weeklySwitch.style.pointerEvents = "none";
+
+      const payload = {
+        parent_user_id: currentUser.id,
+        child_id: child.id,
+        enabled: !!enabled,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await sb
+        .from("weekly_report_settings")
+        .upsert(payload, { onConflict: "parent_user_id,child_id" });
+
+      weeklySwitch.style.pointerEvents = "auto";
+
+      if (error) {
+        console.error("weekly_report_settings upsert error", error);
+        setWeeklySwitchUI(!enabled); // revert
+        setWeeklyMsg("Couldn’t save that setting yet. Please try again.", "bad");
+        return false;
+      }
+
+      setWeeklySwitchUI(enabled);
+      setWeeklyMsg(enabled ? "Weekly summary is on ✅" : "Weekly summary is off.", "good");
+      return true;
+    }
+
+    async function loadWeeklyReports(){
+      weeklyList.innerHTML = `<div class="muted">Loading…</div>`;
+
+      const { data, error } = await sb
+        .from("weekly_reports")
+        .select("id, week_start, created_at, summary")
+        .eq("parent_user_id", currentUser.id)
+        .eq("child_id", child.id)
+        .order("week_start", { ascending: false })
+        .limit(8);
+
+      if (error) {
+        console.error("weekly_reports read error", error);
+        weeklyList.innerHTML = `<div class="status bad">Could not load weekly summaries.</div>`;
+        lastWeekly = null;
+        return;
+      }
+
+      lastWeekly = data || [];
+
+      if (!lastWeekly.length) {
+        weeklyList.innerHTML = `
+          <div class="muted" style="line-height:1.6;">
+            No weekly summaries stored yet.<br>
+            Once enabled, you’ll see a short weekly summary appear here.
+          </div>`;
+        return;
+      }
+
+      const wrap = document.createElement("div");
+      wrap.style.display = "grid";
+      wrap.style.gap = "10px";
+
+      lastWeekly.forEach(r => {
+        const box = document.createElement("div");
+        box.className = "weekly-item";
+
+        const week = r.week_start ? formatDateOnly(r.week_start) : "—";
+        const created = r.created_at ? formatDateOnly(r.created_at) : "—";
+        const summary = r.summary || {};
+
+        const headline = summary.headline || summary.title || "Weekly summary";
+        const bullets = Array.isArray(summary.bullets) ? summary.bullets : [];
+        const next = summary.next_steps || summary.next || "";
+
+        box.innerHTML = `
+          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div style="font-weight:950; letter-spacing:-.2px;">${escapeHtml(String(headline))}</div>
+            <span class="pill soft">Week starting: ${week}</span>
+          </div>
+          <div class="muted small" style="margin-top:6px;">Stored: ${created}</div>
+          ${bullets.length ? `<ul style="margin:10px 0 0; padding-left:18px;">${bullets.slice(0,6).map(b => `<li>${escapeHtml(String(b))}</li>`).join("")}</ul>` : ``}
+          ${next ? `<div class="hr"></div><div class="small"><b>Next steps:</b> ${escapeHtml(String(next))}</div>` : ``}
+        `;
+
+        wrap.appendChild(box);
+      });
+
+      weeklyList.innerHTML = "";
+      weeklyList.appendChild(wrap);
+    }
+
+    // -------------------------
+    // OVERALL / SIGNALS / SKILLS / NEXT
+    // -------------------------
+    async function loadOverallAndSignals(){
+      lastOverall = null;
+      lastSignals = null;
+
+      const { data: overall, error: overallErr } = await sb
+        .from("progress")
+        .select("id, parent_user_id, child_id, maths_level, english_level, streak, updated_at")
+        .eq("child_id", child.id)
+        .maybeSingle();
+
+      if (overallErr) console.error("progress read error", overallErr);
+      lastOverall = overall || null;
+
+      const { data: signals, error: signalsErr } = await sb
+        .from("child_progress")
+        .select("subject, area, difficulty, streak_correct, streak_wrong, last_seen_at")
+        .eq("child_id", child.id)
+        .eq("owner_id", currentUser.id)
+        .order("last_seen_at", { ascending:false })
+        .limit(6);
+
+      if (signalsErr) console.error("child_progress read error", signalsErr);
+      lastSignals = signals || [];
+
+      // Render overall
+      if (!lastOverall) {
+        overallBox.innerHTML = `<div class="muted">No overall progress saved yet.</div>`;
+        quickStrip.style.display = "none";
+      } else {
+        renderRows(overallBox, [
+          { k: "Maths level",   v: safe(lastOverall.maths_level) },
+          { k: "English level", v: safe(lastOverall.english_level) },
+          { k: "Streak",        v: safe(lastOverall.streak) },
+          { k: "Last updated",  v: formatDateOnly(lastOverall.updated_at) }
+        ]);
+
+        // quick strip
+        quickStrip.style.display = "block";
+        pillMaths.textContent = `Maths: ${safe(lastOverall.maths_level)}`;
+        pillEnglish.textContent = `English: ${safe(lastOverall.english_level)}`;
+        pillStreak.textContent = `Streak: ${safe(lastOverall.streak)}`;
+      }
+
+      // Render tutor signals (mixed)
+      if (!lastSignals.length) {
+        signalsBox.innerHTML = `<div class="muted">No tutor signals saved yet.</div>`;
+      } else {
+        const rows = [];
+        lastSignals.forEach(s => {
+          const subj = prettySubject(s.subject);
+          const ar = prettyArea(s.area);
+          const diff = safe(s.difficulty);
+          const when = formatDateOnly(s.last_seen_at);
+
+          // Human-friendly signal sentence
+          const sc = Number(s.streak_correct || 0);
+          const sw = Number(s.streak_wrong || 0);
+          const signal = (sc >= 2) ? "Doing well" : (sw >= 2) ? "Needs support" : "In progress";
+
+          rows.push({ k: `${subj} • ${ar}`, v: `${signal} • Difficulty ${diff} • ${when}` });
+        });
+        renderRows(signalsBox, rows);
+      }
+    }
+
+    async function loadSkills(){
+      skillsBox.innerHTML = `<div class="muted">Loading…</div>`;
+      lastSkills = null;
+
+      const { data: sess, error } = await sb
+        .from("sessions")
+        .select("subject, area, questions_done, correct_count, created_at")
+        .eq("parent_user_id", currentUser.id)
+        .eq("child_id", child.id)
+        .order("created_at", { ascending:false })
+        .limit(80);
+
+      if (error) {
+        console.error("sessions read error", error);
+        skillsBox.innerHTML = `<div class="status bad">Could not load skills right now.</div>`;
+        return;
+      }
+
+      const rows = sess || [];
+      if (!rows.length) {
+        skillsBox.innerHTML = `<div class="muted">No tutor sessions yet.</div>`;
+        lastSkills = [];
+        return;
+      }
+
+      // Aggregate by subject+area
+      const map = new Map(); // key -> {subject, area, attempts, correct, questions}
+      rows.forEach(r => {
+        const subj = prettySubject(r.subject);
+        const ar = prettyArea(r.area);
+        const key = subj + "||" + ar;
+
+        const attempts = 1;
+        const questions = Number(r.questions_done || 0);
+        const correct = Number(r.correct_count || 0);
+
+        if (!map.has(key)) map.set(key, { subject: subj, area: ar, attempts:0, questions:0, correct:0 });
+        const obj = map.get(key);
+        obj.attempts += attempts;
+        obj.questions += questions;
+        obj.correct += correct;
+      });
+
+      const items = Array.from(map.values())
+        .sort((a,b) => (b.questions - a.questions) || (b.attempts - a.attempts));
+
+      lastSkills = items;
+
+      // pick a reasonable focus for quick strip
+      const focus = pickFocusSkill(items);
+      if (focus) pillFocus.textContent = `Focus: ${focus.subject} — ${focus.area}`;
+      else pillFocus.textContent = `Focus: —`;
+
+      const table = document.createElement("table");
+      table.className = "skills";
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Skill</th>
+            <th class="num">Attempts</th>
+            <th class="num">Accuracy</th>
+            <th class="num">Confidence</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      const tbody = table.querySelector("tbody");
+
+      items.forEach(it => {
+        const accuracy = it.questions > 0 ? (it.correct / it.questions) : null;
+        const accPct = (accuracy === null) ? "—" : (Math.round(accuracy * 100) + "%");
+        const conf = confidenceTag(it.attempts, accuracy ?? 0);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><b>${escapeHtml(it.subject)}</b> — ${escapeHtml(it.area)}</td>
+          <td class="num">${it.attempts}</td>
+          <td class="num">${accPct}</td>
+          <td class="num"><span class="tag ${conf.cls}">${conf.label}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      skillsBox.innerHTML = "";
+      skillsBox.appendChild(table);
+    }
+
+    function pickFocusSkill(items){
+      // Focus = enough questions + lowish accuracy, else null
+      const scored = (items || []).map(s => {
+        const accuracy = s.questions > 0 ? (s.correct / s.questions) : null;
+        return { ...s, accuracy };
+      }).filter(s => s.accuracy !== null);
+
+      const enough = scored.filter(s => s.questions >= 6);
+      if (!enough.length) return null;
+
+      // choose worst accuracy but also practiced
+      return enough.sort((a,b) => (a.accuracy - b.accuracy) || (b.questions - a.questions))[0] || null;
+    }
+
+    function buildNextSteps(){
+      const skills = lastSkills || [];
+      const scored = skills
+        .map(s => {
+          const accuracy = s.questions > 0 ? (s.correct / s.questions) : null;
+          return { ...s, accuracy };
+        })
+        .filter(s => s.accuracy !== null);
+
+      const enough = scored.filter(s => s.questions >= 6); // reduce noise
+      const best = enough.slice().sort((a,b) => b.accuracy - a.accuracy)[0];
+      const worst = enough.slice().sort((a,b) => a.accuracy - b.accuracy)[0];
+
+      const doingWell = [];
+      const needsSupport = [];
+      const steps = [];
+
+      if (best && best.accuracy >= 0.8) {
+        doingWell.push(`${best.subject} — ${best.area} is looking strong.`);
+      }
+      if (worst && worst.accuracy < 0.6) {
+        needsSupport.push(`${worst.subject} — ${worst.area} needs a little more practice.`);
+      }
+
+      // Always: concrete steps
+      if (needsSupport.length) {
+        steps.push(`Do <b>5 minutes</b> on <b>${escapeHtml(worst.subject)} — ${escapeHtml(worst.area)}</b> using easy questions first.`);
+        steps.push(`If your child gets stuck: encourage <b>one small step</b> at a time (no rushing).`);
+        steps.push(`Finish with <b>one easy win</b> so they end confident.`);
+      } else if (doingWell.length) {
+        steps.push(`Keep momentum with <b>${escapeHtml(best.subject)} — ${escapeHtml(best.area)}</b> for 5 minutes, then try one new area.`);
+        steps.push(`Aim for short sessions (5–10 minutes) more often, instead of long sessions.`);
+      } else {
+        steps.push(`Do a short Tutor session (5–10 minutes). Focus on one area only.`);
+        steps.push(`After the session, come back here and press <b>Refresh</b>.`);
+      }
+
+      // Balance suggestion based on recent signals
+      if (lastSignals && lastSignals.length >= 2) {
+        const recentSubjects = Array.from(new Set(lastSignals.map(s => prettySubject(s.subject))));
+        if (recentSubjects.length === 1) {
+          const other = recentSubjects[0] === "Maths" ? "English" : "Maths";
+          steps.push(`Balance the week: add one short <b>${other}</b> session too.`);
+        }
+      }
+
+      // Render professionally with clear sections
+      const wrap = document.createElement("div");
+      wrap.style.display = "grid";
+      wrap.style.gap = "10px";
+
+      if (doingWell.length) {
+        const box = document.createElement("div");
+        box.className = "callout";
+        box.innerHTML = `
+          <h3>Doing well ✅</h3>
+          <ul class="bullets">${doingWell.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+        `;
+        wrap.appendChild(box);
+      }
+
+      if (needsSupport.length) {
+        const box = document.createElement("div");
+        box.className = "callout";
+        box.innerHTML = `
+          <h3>Needs support 💛</h3>
+          <ul class="bullets">${needsSupport.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+        `;
+        wrap.appendChild(box);
+      }
+
+      const boxSteps = document.createElement("div");
+      boxSteps.className = "callout hint-box";
+      boxSteps.innerHTML = `
+        <h3>Next steps 🎯</h3>
+        <ul class="bullets">${steps.map(s => `<li>${s}</li>`).join("")}</ul>
+      `;
+      wrap.appendChild(boxSteps);
+
+      nextBox.innerHTML = "";
+      nextBox.appendChild(wrap);
+
+      lastNext = { doingWell, needsSupport, steps };
+    }
+
+    async function loadEverything(){
+      clearError();
+
+      overallBox.innerHTML = `<div class="muted">Loading…</div>`;
+      signalsBox.innerHTML = `<div class="muted">Loading…</div>`;
+      skillsBox.innerHTML = `<div class="muted">Loading…</div>`;
+      nextBox.innerHTML = `<div class="muted">Loading…</div>`;
+      noDataBox.style.display = "none";
+
+      // Load core blocks
+      await loadOverallAndSignals();
+      await loadSkills();
+
+      // Weekly
+      await loadWeeklySetting();
+      await loadWeeklyReports();
+
+      const hasTutorData = (lastSkills && lastSkills.length) || (lastSignals && lastSignals.length);
+      noDataBox.style.display = hasTutorData ? "none" : "block";
+
+      buildNextSteps();
+      showOk("Reports refreshed");
+    }
+
+    // -------------------------
+    // PDF (professional styling + branding strapline)
+    // -------------------------
+    function pdfWriteLine(doc, text, x, y, maxWidth){
+      const lines = doc.splitTextToSize(String(text), maxWidth);
+      lines.forEach((ln, i) => doc.text(ln, x, y + (i * 6)));
+      return y + (lines.length * 6);
+    }
+
+    function drawBadge(doc, text, x, y){
+      // simple pill badge in PDF
+      doc.setFillColor(238, 243, 255);
+      doc.roundedRect(x, y-6, doc.getTextWidth(text) + 10, 8, 3, 3, "F");
+      doc.setTextColor(11, 92, 255);
+      doc.setFont(undefined, "bold");
+      doc.text(text, x+5, y);
+      doc.setTextColor(20, 20, 24);
+      doc.setFont(undefined, "normal");
+    }
+
+    function downloadPDF(){
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const pageW = doc.internal.pageSize.getWidth();
+        let y = 14;
+
+        // Header
+        doc.setFillColor(11, 92, 255);
+        doc.rect(0, 0, pageW, 18, "F");
+
+        doc.setTextColor(255,255,255);
+        doc.setFontSize(16);
+        doc.setFont(undefined, "bold");
+        doc.text("Learnlio — Parent Report", 14, 12);
+
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+        doc.text("Calm, dyslexia-aware learning — with clear parent insight", 14, 16);
+
+        doc.setTextColor(20,20,24);
+        y = 28;
+
+        // Child + date
+        doc.setFontSize(12);
+        doc.setFont(undefined, "bold");
+        doc.text(`Child: ${safe(child?.child_name)}`, 14, y); y += 7;
+
+        doc.setFont(undefined, "normal");
+        doc.text(`DOB: ${safe(child?.child_dob ? formatDateOnly(child.child_dob) : "—")}`, 14, y); y += 7;
+        doc.text(`Generated: ${formatDateOnly(new Date())}`, 14, y); y += 10;
+
+        // Quick badges
+        const m = safe(lastOverall?.maths_level);
+        const e = safe(lastOverall?.english_level);
+        const s = safe(lastOverall?.streak);
+        drawBadge(doc, `Maths: ${m}`, 14, y);
+        drawBadge(doc, `English: ${e}`, 55, y);
+        drawBadge(doc, `Streak: ${s}`, 104, y);
+        y += 14;
+
+        // Section: Skills (top 8)
+        doc.setFont(undefined, "bold");
+        doc.setFontSize(13);
+        doc.text("Skills", 14, y); y += 8;
+        doc.setFont(undefined, "normal");
+        doc.setFontSize(11);
+
+        if (!lastSkills || !lastSkills.length) {
+          doc.text("No skill data yet.", 14, y); y += 10;
+        } else {
+          const top = lastSkills.slice(0, 8);
+          top.forEach((it) => {
+            const acc = it.questions ? Math.round((it.correct / it.questions) * 100) + "%" : "—";
+            const line = `${it.subject} — ${it.area} | Attempts: ${it.attempts} | Accuracy: ${acc}`;
+            y = pdfWriteLine(doc, line, 14, y, 180);
+            y += 2;
+            if (y > 270) { doc.addPage(); y = 16; }
+          });
+          y += 6;
+        }
+
+        // Section: What to do next
+        doc.setFont(undefined, "bold");
+        doc.setFontSize(13);
+        doc.text("What to do next", 14, y); y += 8;
+        doc.setFont(undefined, "normal");
+        doc.setFontSize(11);
+
+        const steps = lastNext?.steps || [];
+        if (!steps.length) {
+          doc.text("No next steps yet.", 14, y); y += 8;
+        } else {
+          steps.slice(0, 8).forEach((s) => {
+            const plain = String(s).replace(/<[^>]+>/g, "");
+            y = pdfWriteLine(doc, "• " + plain, 14, y, 180);
+            y += 1;
+            if (y > 270) { doc.addPage(); y = 16; }
+          });
+          y += 4;
+        }
+
+        // Footer
+        doc.setFontSize(9);
+        doc.setTextColor(90, 100, 120);
+        doc.text("Learnlio — calm learning, clear insight for parents.", 14, 290);
+
+        doc.save(`Learnlio-Report-${safe(child?.child_name,"Child")}.pdf`);
+      } catch (e) {
+        showError("Could not create PDF on this device/browser. Try Chrome or Edge.");
+        console.error(e);
+      }
+    }
+
+    // -------------------------
+    // EVENTS
+    // -------------------------
+    logoutBtn.addEventListener("click", async () => {
+      await sb.auth.signOut();
+      localStorage.removeItem("selectedChild");
+      window.location.href = "/login.html";
+    });
+
+    refreshBtn.addEventListener("click", async () => {
+      await loadEverything();
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      downloadPDF();
+    });
+
+    async function toggleWeekly(){
+      const next = !weeklyEnabled;
+      // optimistic UI
+      setWeeklySwitchUI(next);
+      weeklyState.textContent = next ? "On" : "Off";
+      const ok = await saveWeeklySetting(next);
+      if (ok) await loadWeeklyReports();
+    }
+
+    weeklySwitch.addEventListener("click", toggleWeekly);
+    weeklySwitch.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleWeekly();
+      }
+    });
+
+    // -------------------------
+    // INIT
+    // -------------------------
+    (async () => {
+      if (!sb) { showError("Supabase did not load."); return; }
+
+      const okAuth = await requireAuth();
+      if (!okAuth) return;
+
+      await loadChildSwitcher();
+
+      const childOk = await loadChildProfile();
+      if (!childOk) return;
+
+      await loadEverything();
     })();
-    </script>
-    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>  
-  </body>
-  </html>
+  })();
+  </script>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
 
 
