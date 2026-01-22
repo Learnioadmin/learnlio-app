@@ -149,6 +149,7 @@
           password: passEl.value
         });
         if (error) throw error;
+        localStorage.setItem("learnlio_just_logged_in", "1");
         window.location.href = DASH_URL;
       } else {
         const { error } = await sb.auth.signUp({
