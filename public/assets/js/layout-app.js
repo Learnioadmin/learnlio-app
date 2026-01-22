@@ -348,6 +348,19 @@
     return !!window.sb;
   }
 
+  async function waitForBody(timeoutMs = 5000) {
+    if (document.body) return true;
+    const start = Date.now();
+    await new Promise(resolve => {
+      const timer = setTimeout(resolve, timeoutMs);
+      document.addEventListener("DOMContentLoaded", () => {
+        clearTimeout(timer);
+        resolve();
+      }, { once: true });
+    });
+    return !!document.body;
+  }
+
   async function maybeEnableChildMode() {
     const path = window.location.pathname || "";
     const isChildArea =
@@ -461,8 +474,14 @@
       const status = await authedFetch("/child-mode/status", { method: "GET" });
       debugLog("status", status);
       if (status?.child_mode) {
-        renderChildGate();
-        debugLog("gate", "rendered");
+        const bodyReady = await waitForBody();
+        if (!bodyReady) return;
+        try {
+          renderChildGate();
+          debugLog("gate", "rendered");
+        } catch (err) {
+          debugLog("gate", "error", err);
+        }
       } else {
         debugLog("gate", "skipped");
       }
