@@ -54,6 +54,18 @@
     .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
     @media (min-width: 900px){ .grid { grid-template-columns: 1.1fr .9fr; } }
 
+    .hero-today h1 { margin:0 0 6px; font-size:22px; letter-spacing:-.4px; }
+    .tile-row { display:grid; gap:10px; grid-template-columns: 1fr; }
+    @media (min-width: 700px){ .tile-row { grid-template-columns: repeat(3, 1fr); } }
+    .tile-btn {
+      display:flex; align-items:center; justify-content:center;
+      min-height:64px; padding:14px 16px; border-radius:16px;
+      font-weight:900; font-size:16px; text-decoration:none; text-align:center;
+    }
+    .tile-btn.primary { background:linear-gradient(180deg, var(--brand), #0846d8); color:#fff; box-shadow: 0 12px 20px rgba(11,92,255,.2); }
+    .tile-btn.secondary { background:#f1f5f9; color:#0f172a; border:1px solid rgba(15,23,42,.12); }
+    .tile-btn.disabled { opacity:.55; pointer-events:none; }
+
     .hero {
       background: radial-gradient(1000px 360px at 10% -10%, rgba(11,92,255,.18), transparent 55%),
                   #fff;
@@ -94,6 +106,17 @@
   <div id="navMount"></div>
 
   <main class="container">
+    <section class="card hero hero-today" aria-label="Todays learning">
+      <h1>Todays learning</h1>
+      <div class="muted dys-text">Small steps. Big confidence.</div>
+      <div class="tile-row" style="margin-top:14px;">
+        <a id="continueBtn" class="tile-btn primary" href="/lessons.html">Continue</a>
+        <a id="startLessonBtn" class="tile-btn secondary" href="/lessons.html">📘 Start a lesson</a>
+        <a id="continueTutorBtn" class="tile-btn secondary" href="/chat.html">💬 Continue Tutor</a>
+      </div>
+      <div id="continueLine" class="muted dys-text" style="margin-top:10px;">Start your first lesson to unlock Continue.</div>
+    </section>
+
     <section class="card hero" aria-label="Learning Hub hero">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
         <div class="pill">🎒 Learning Hub</div>
@@ -134,11 +157,9 @@
       </section>
 
       <section class="card">
-        <h2 style="margin:0 0 8px; font-size:16px;">What we're practising</h2>
-        <div id="practiceLine" class="muted dys-text">We'll pick the best next step automatically.</div>
-        <div class="hr"></div>
-        <div class="muted small dys-text">You can start with Tutor or a short lesson at any time.</div>
-        <div id="practiceActions" style="margin-top:10px;"></div>
+        <h2 style="margin:0 0 8px; font-size:16px;">What were practising</h2>
+        <div id="practiceLine" class="muted dys-text">Pick a lesson to begin. I’ll remember what we practised.</div>
+        <div id="practicePills" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
       </section>
     </div>
 
@@ -199,8 +220,10 @@
     const xpBarFill = document.getElementById("xpBarFill");
     const rewardBadge = document.getElementById("rewardBadge");
     const parentDashBtn = document.getElementById("parentDashBtn");
+    const continueBtn = document.getElementById("continueBtn");
+    const continueLine = document.getElementById("continueLine");
     const practiceLine = document.getElementById("practiceLine");
-    const practiceActions = document.getElementById("practiceActions");
+    const practicePills = document.getElementById("practicePills");
     const activityList = document.getElementById("activityList");
 
     function showErrorCard(message){
@@ -327,20 +350,21 @@
       return existing;
     }
 
-    async function loadLatestPractice(userId, childId){
+    async function loadRecentPractice(userId, childId){
       const { data, error } = await sb
         .from("child_skill_progress")
         .select("subject, area, last_seen_at, confidence, updated_at")
         .eq("owner_id", userId)
         .eq("child_id", childId)
         .order("last_seen_at", { ascending:false })
-        .limit(1);
+        .order("updated_at", { ascending:false })
+        .limit(3);
 
       if (error) {
         console.warn("child_skill_progress load failed", error);
-        return null;
+        return [];
       }
-      return data?.[0] || null;
+      return data || [];
     }
 
     async function loadRecentActivity(userId, childId){
@@ -393,17 +417,41 @@
       return area ? `${subj} — ${area}` : subj;
     }
 
-    function renderPractice(item){
-      if (!practiceLine) return;
+    function renderContinue(item){
+      if (!continueBtn || !continueLine) return;
       if (!item){
-        practiceLine.textContent = "Choose a lesson to begin.";
-        if (practiceActions) {
-          practiceActions.innerHTML = `<a class="btn" href="/lessons.html">📘 Start a lesson</a>`;
-        }
+        continueBtn.classList.add("disabled");
+        continueBtn.removeAttribute("href");
+        continueLine.textContent = "Start your first lesson to unlock Continue.";
         return;
       }
-      practiceLine.textContent = `We’re practising ${formatPracticeLine(item)}.`;
-      if (practiceActions) practiceActions.innerHTML = "";
+      const subj = item.subject ? String(item.subject) : "";
+      const area = item.area ? String(item.area) : "";
+      const params = new URLSearchParams();
+      if (subj) params.set("subject", subj);
+      if (area) params.set("area", area);
+      continueBtn.classList.remove("disabled");
+      continueBtn.setAttribute("href", `/lessons.html?${params.toString()}`);
+      continueLine.textContent = `You were practising: ${formatPracticeLine(item)}`;
+    }
+
+    function renderPractice(items){
+      if (!practiceLine) return;
+      if (!items || !items.length){
+        practiceLine.textContent = "Pick a lesson to begin. I'll remember what we practised.";
+        if (practicePills) practicePills.innerHTML = "";
+        return;
+      }
+      practiceLine.textContent = "Here's what we've been practising lately.";
+      if (practicePills){
+        practicePills.innerHTML = "";
+        items.forEach((item) => {
+          const pill = document.createElement("span");
+          pill.className = "pill";
+          pill.textContent = formatPracticeLine(item);
+          practicePills.appendChild(pill);
+        });
+      }
     }
 
     function renderActivity(items){
@@ -471,8 +519,9 @@
       const todayXp = loadTodayXp(res.child.id);
       renderXp(xp?.xp_total || 0, todayXp);
 
-      const practice = await loadLatestPractice(user.id, res.child.id);
-      renderPractice(practice);
+      const practiceItems = await loadRecentPractice(user.id, res.child.id);
+      renderContinue(practiceItems?.[0] || null);
+      renderPractice(practiceItems);
 
       const activity = await loadRecentActivity(user.id, res.child.id);
       renderActivity(activity);
@@ -483,3 +532,5 @@
   </script>
 </body>
 </html>
+
+
