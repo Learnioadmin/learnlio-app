@@ -7,6 +7,7 @@
   <title>Learnlio - Learning Hub</title>
 
   <link rel="stylesheet" href="/assets/css/app.css" />
+  <link href="https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/open-dyslexic.css" rel="stylesheet">
 
   <style>
     :root{
@@ -35,6 +36,9 @@
     .muted { color:var(--muted); font-size: 14px; line-height:1.6; }
     .small { font-size:13px; }
     .hr { height:1px; background:var(--line); margin:14px 0; }
+    .dys-text { font-family: "OpenDyslexic", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height:1.7; }
+    .status { margin-top:10px; font-size:14px; }
+    .status.warn { color:#b45309; font-weight:800; }
 
     .btn {
       background:linear-gradient(180deg, var(--brand), #0846d8);
@@ -93,20 +97,22 @@
     <section class="card hero" aria-label="Learning Hub hero">
       <div class="pill">🎒 Learning Hub</div>
       <h1>Learning Hub</h1>
-      <div class="muted">Small steps. Big confidence.</div>
+      <div class="muted dys-text">Small steps. Big confidence.</div>
       <div id="childLine" class="muted small" style="margin-top:6px;">Loading child…</div>
+      <div id="hubError" class="status warn" style="display:none; margin-top:8px;"></div>
     </section>
 
     <section class="card" style="margin-top:14px;">
       <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
         <h2 style="margin:0; font-size:16px;">XP progress</h2>
-        <span class="pill" id="xpBadge">Starter</span>
+        <span class="pill" id="rewardBadge">Starter badge</span>
       </div>
       <div style="margin-top:12px;">
-        <div style="font-weight:900; font-size:28px;" id="xpTotal">0 XP</div>
-        <div class="muted small" id="xpNext">Next reward: 100 XP to go</div>
+        <div style="font-weight:900; font-size:28px;" id="xpTotalBig">0 XP</div>
+        <div class="muted small" id="xpTodaySmall">Today: 0 XP</div>
+        <div class="muted small" id="xpNextSmall">Next reward: 100 XP to go</div>
         <div class="progress" style="margin-top:10px;">
-          <div id="xpBar"></div>
+          <div id="xpBarFill"></div>
         </div>
       </div>
     </section>
@@ -126,20 +132,21 @@
 
       <section class="card">
         <h2 style="margin:0 0 8px; font-size:16px;">What we're practising</h2>
-        <div class="muted">We'll pick the best next step automatically.</div>
+        <div id="practiceLine" class="muted dys-text">We'll pick the best next step automatically.</div>
         <div class="hr"></div>
-        <div class="muted small">You can start with Tutor or a short lesson at any time.</div>
+        <div class="muted small dys-text">You can start with Tutor or a short lesson at any time.</div>
+        <div id="practiceActions" style="margin-top:10px;"></div>
       </section>
     </div>
 
     <section class="card" style="margin-top:14px;">
       <h2 style="margin:0 0 8px; font-size:16px;">Recent activity</h2>
-      <div class="muted">No activity yet - try a lesson.</div>
+      <div id="activityList" class="muted dys-text">No activity yet - try a lesson. 💛</div>
     </section>
 
     <section id="errorBox" class="card error-card" style="margin-top:14px; display:none;">
       <h2 style="margin:0 0 8px; font-size:16px;">We need a child selected</h2>
-      <div class="muted" style="line-height:1.6;">
+      <div class="muted dys-text" style="line-height:1.6;">
         Choose a child from your Dashboard so we can personalise the learning hub.
       </div>
       <div style="margin-top:10px;">
@@ -182,16 +189,29 @@
 
     const childLine = document.getElementById("childLine");
     const errorBox = document.getElementById("errorBox");
-    const xpTotal = document.getElementById("xpTotal");
-    const xpNext = document.getElementById("xpNext");
-    const xpBar = document.getElementById("xpBar");
-    const xpBadge = document.getElementById("xpBadge");
+    const hubError = document.getElementById("hubError");
+    const xpTotalBig = document.getElementById("xpTotalBig");
+    const xpTodaySmall = document.getElementById("xpTodaySmall");
+    const xpNextSmall = document.getElementById("xpNextSmall");
+    const xpBarFill = document.getElementById("xpBarFill");
+    const rewardBadge = document.getElementById("rewardBadge");
+    const practiceLine = document.getElementById("practiceLine");
+    const practiceActions = document.getElementById("practiceActions");
+    const activityList = document.getElementById("activityList");
 
-    function showErrorCard(){
+    function showErrorCard(message){
+      if (hubError && message){
+        hubError.style.display = "block";
+        hubError.textContent = message;
+      }
       errorBox.style.display = "block";
     }
 
     function hideErrorCard(){
+      if (hubError){
+        hubError.style.display = "none";
+        hubError.textContent = "";
+      }
       errorBox.style.display = "none";
     }
 
@@ -218,15 +238,16 @@
       return "Legend";
     }
 
-    function renderXp(total){
+    function renderXp(total, today){
       const totalNum = Math.max(0, Number(total || 0));
       const next = nextRewardAt(totalNum);
       const toGo = Math.max(0, next - totalNum);
       const pct = next ? Math.min(100, Math.max(0, Math.round((totalNum / next) * 100))) : 0;
-      xpTotal.textContent = `${totalNum} XP`;
-      xpNext.textContent = `Next reward: ${toGo} XP to go`;
-      xpBar.style.width = pct + "%";
-      xpBadge.textContent = rewardLabel(totalNum);
+      xpTotalBig.textContent = `${totalNum} XP`;
+      xpTodaySmall.textContent = `Today: ${Math.max(0, Number(today || 0))} XP`;
+      xpNextSmall.textContent = `Next reward: ${toGo} XP to go`;
+      xpBarFill.style.width = pct + "%";
+      rewardBadge.textContent = `${rewardLabel(totalNum)} badge`;
     }
 
     async function requireAuth(){
@@ -250,7 +271,27 @@
       return { ok:true, child:data };
     }
 
-    async function loadChildXp(userId, childId){
+    function todayKey(){
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function loadTodayXp(childId){
+      const tk = `learnlio_xp_today_${childId}`;
+      const dk = `learnlio_xp_today_date_${childId}`;
+      const storedDate = localStorage.getItem(dk);
+      const today = todayKey();
+      if (storedDate !== today){
+        localStorage.setItem(dk, today);
+        localStorage.setItem(tk, "0");
+      }
+      return Number(localStorage.getItem(tk) || 0);
+    }
+
+    async function loadOrCreateChildXp(userId, childId){
       const { data: existing, error } = await sb
         .from("child_xp")
         .select("xp_total, xp_lifetime, updated_at")
@@ -263,7 +304,7 @@
         return { xp_total: 0, xp_lifetime: 0 };
       }
 
-      if (!existing?.xp_total && !existing?.xp_lifetime) {
+      if (!existing) {
         const payload = {
           owner_id: userId,
           child_id: childId,
@@ -282,6 +323,111 @@
       return existing;
     }
 
+    async function loadLatestPractice(userId, childId){
+      const { data, error } = await sb
+        .from("child_skill_progress")
+        .select("subject, area, last_seen_at, confidence, updated_at")
+        .eq("owner_id", userId)
+        .eq("child_id", childId)
+        .order("last_seen_at", { ascending:false })
+        .limit(1);
+
+      if (error) {
+        console.warn("child_skill_progress load failed", error);
+        return null;
+      }
+      return data?.[0] || null;
+    }
+
+    async function loadRecentActivity(userId, childId){
+      const sessionsQuery = sb
+        .from("sessions")
+        .select("subject, area, questions_done, created_at")
+        .eq("parent_user_id", userId)
+        .eq("child_id", childId)
+        .order("created_at", { ascending:false })
+        .limit(5);
+
+      const skillsQuery = sb
+        .from("child_skill_progress")
+        .select("subject, area, last_seen_at")
+        .eq("owner_id", userId)
+        .eq("child_id", childId)
+        .order("last_seen_at", { ascending:false })
+        .limit(5);
+
+      const [sessionsRes, skillsRes] = await Promise.all([sessionsQuery, skillsQuery]);
+
+      const sessions = sessionsRes?.data || [];
+      const skills = skillsRes?.data || [];
+
+      const sessionItems = sessions.map(s => ({
+        kind: "session",
+        at: new Date(s.created_at || 0).getTime(),
+        subject: s.subject,
+        area: s.area,
+        questions: Number(s.questions_done || 0)
+      }));
+      const skillItems = skills.map(s => ({
+        kind: "skill",
+        at: new Date(s.last_seen_at || 0).getTime(),
+        subject: s.subject,
+        area: s.area
+      }));
+
+      const merged = sessionItems.concat(skillItems)
+        .sort((a,b) => b.at - a.at)
+        .slice(0, 6);
+
+      return merged;
+    }
+
+    function formatPracticeLine(item){
+      if (!item) return null;
+      const subj = item.subject ? String(item.subject) : "Learning";
+      const area = item.area ? String(item.area) : "";
+      return area ? `${subj} — ${area}` : subj;
+    }
+
+    function renderPractice(item){
+      if (!practiceLine) return;
+      if (!item){
+        practiceLine.textContent = "Choose a lesson to begin.";
+        if (practiceActions) {
+          practiceActions.innerHTML = `<a class="btn" href="/lessons.html">📘 Start a lesson</a>`;
+        }
+        return;
+      }
+      practiceLine.textContent = `We’re practising ${formatPracticeLine(item)}.`;
+      if (practiceActions) practiceActions.innerHTML = "";
+    }
+
+    function renderActivity(items){
+      if (!activityList) return;
+      if (!items || !items.length){
+        activityList.textContent = "No activity yet - start with a 5-minute lesson. 💛";
+        return;
+      }
+      const list = document.createElement("ul");
+      list.style.margin = "0";
+      list.style.paddingLeft = "18px";
+      items.forEach(item => {
+        const li = document.createElement("li");
+        const subj = item.subject ? String(item.subject) : "Learning";
+        const area = item.area ? String(item.area) : "";
+        if (item.kind === "session") {
+          const mins = Math.max(3, Math.round((item.questions || 0) / 2));
+          const minsText = item.questions ? `about ${mins} mins` : "a short session";
+          li.textContent = `💬 Tutor: ${subj}${area ? " — " + area : ""} (${minsText})`;
+        } else {
+          li.textContent = `📘 Lesson practice: ${subj}${area ? " — " + area : ""}`;
+        }
+        list.appendChild(li);
+      });
+      activityList.innerHTML = "";
+      activityList.appendChild(list);
+    }
+
     (async () => {
       if (!sb) { window.location.href = "/login.html"; return; }
 
@@ -291,22 +437,29 @@
       const selected = getSelectedChildFromLocalStorage();
       if (!selected?.id){
         childLine.textContent = "Please choose a child from the Dashboard.";
-        showErrorCard();
+        showErrorCard("Choose a child to personalise this page.");
         return;
       }
 
       const res = await loadChild(selected.id, user.id);
       if (!res.ok){
         childLine.textContent = res.error;
-        showErrorCard();
+        showErrorCard(res.error);
         return;
       }
 
       hideErrorCard();
       childLine.textContent = `For ${res.child.child_name || "your child"}`;
 
-      const xp = await loadChildXp(user.id, res.child.id);
-      renderXp(xp?.xp_total || 0);
+      const xp = await loadOrCreateChildXp(user.id, res.child.id);
+      const todayXp = loadTodayXp(res.child.id);
+      renderXp(xp?.xp_total || 0, todayXp);
+
+      const practice = await loadLatestPractice(user.id, res.child.id);
+      renderPractice(practice);
+
+      const activity = await loadRecentActivity(user.id, res.child.id);
+      renderActivity(activity);
     })();
 
     document.getElementById('year').textContent = new Date().getFullYear();
