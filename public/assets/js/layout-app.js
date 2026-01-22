@@ -190,7 +190,7 @@
           </a>
           <nav class="links" aria-label="Primary">
             <a href="/learning-hub.html" class="${isActive("/learning-hub.html") ? "active" : ""}">Learning Hub</a>
-            <a href="/dash.html" class="${isActive("/dash.html") ? "active" : ""}">👨👩👧 Parent Dashboard</a>
+            <a href="/dash.html" class="${isActive("/dash.html") ? "active" : ""}">Parent Dashboard</a>
             <a href="/chat.html" class="${isActive("/chat.html") ? "active" : ""}">Learnlio Tutor</a>
             <a id="navReportsLink" href="/reports.html" class="${isActive("/reports.html") ? "active" : ""}">Parent Insight</a>
             <button id="grownupModeBtn" class="btn light" type="button" style="display:none;">Grown-up mode</button>
