@@ -353,6 +353,7 @@
     childMode: "unknown",
     gateRendered: false,
     isAppPage: "unknown",
+    pinSet: "unknown",
     lastError: ""
   };
 
@@ -382,6 +383,7 @@
       `childMode: ${debugState.childMode}<br>` +
       `gateRendered: ${debugState.gateRendered}<br>` +
       `isAppPage: ${debugState.isAppPage}<br>` +
+      `pinSet: ${debugState.pinSet}<br>` +
       `lastError: ${escapeHtml(debugState.lastError || "")}`;
   }
 
@@ -421,7 +423,7 @@
     }
   }
 
-  function renderChildGate(pinSet = false) {
+  function renderChildGate({ pinSet } = {}) {
     if (document.getElementById("childModeGate")) return;
     const gate = document.createElement("div");
     gate.id = "childModeGate";
@@ -449,7 +451,7 @@
             <label style="display:block; font-size:13px; font-weight:800; margin-bottom:6px;" for="childUnlockPassword">Password</label>
             <input id="childUnlockPassword" class="input" type="password" autocomplete="current-password" placeholder="Enter password" />
           </div>
-          <button id="childUnlockToggle" class="btn light" type="button" style="margin-top:10px; display:none;">Use password instead</button>
+          <button id="childUnlockModeToggle" class="btn light" type="button" style="margin-top:10px; display:none;">Use password instead</button>
           <div id="childUnlockMsg" class="status" aria-live="polite"></div>
           <div class="row" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
             <button id="childUnlockConfirm" class="btn" type="button" disabled>Unlock</button>
@@ -470,7 +472,7 @@
     const pinInput = document.getElementById("childUnlockPin");
     const pinWrap = document.getElementById("pinModeWrap");
     const passwordWrap = document.getElementById("passwordModeWrap");
-    const toggleBtn = document.getElementById("childUnlockToggle");
+    const toggleBtn = document.getElementById("childUnlockModeToggle");
     const hintEl = document.getElementById("childUnlockHint");
     const msgEl = document.getElementById("childUnlockMsg");
     let mode = pinSet ? "pin" : "password";
@@ -517,7 +519,7 @@
       if (mode === "password") confirmBtn.disabled = !passwordInput.value.trim();
     });
     pinInput?.addEventListener("input", () => {
-      if (mode === "pin") confirmBtn.disabled = !pinInput.value.trim();
+      if (mode === "pin") confirmBtn.disabled = !/^\d{4}$/.test(pinInput.value.trim());
     });
     toggleBtn?.addEventListener("click", () => {
       applyMode(mode === "pin" ? "password" : "pin");
@@ -527,7 +529,10 @@
       const password = passwordInput?.value.trim() || "";
       const pin = pinInput?.value.trim() || "";
       if (mode === "password" && !password) return;
-      if (mode === "pin" && !pin) return;
+      if (mode === "pin" && !/^\d{4}$/.test(pin)) {
+        setMsg("PIN must be exactly 4 digits.");
+        return;
+      }
       confirmBtn.disabled = true;
       setMsg("");
       try {
@@ -565,12 +570,15 @@
       if (!statusRes) return;
       updateDebugBadge({ statusHttp: statusRes.status });
       debugLog("status", statusRes.json);
-      updateDebugBadge({ childMode: statusRes.json?.child_mode ?? "unknown" });
+      updateDebugBadge({
+        childMode: statusRes.json?.child_mode ?? "unknown",
+        pinSet: statusRes.json?.pin_set ?? "unknown"
+      });
       if (statusRes.json?.child_mode) {
         const bodyReady = await waitForBody();
         if (!bodyReady) return;
         try {
-          renderChildGate(!!statusRes.json?.pin_set);
+          renderChildGate({ pinSet: !!statusRes.json?.pin_set });
           window.__learnlioGateRendered = true;
           debugLog("gate", "rendered");
           updateDebugBadge({ gateRendered: true });
