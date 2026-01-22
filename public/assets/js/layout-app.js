@@ -194,7 +194,7 @@
             <a href="/chat.html" class="${isActive("/chat.html") ? "active" : ""}">Learnlio Tutor</a>
             <a id="navReportsLink" href="/reports.html" class="${isActive("/reports.html") ? "active" : ""}">Parent Insight</a>
             <button id="grownupModeBtn" class="btn light" type="button" style="display:none;">Grown-up mode</button>
-            <a href="/logout.html" id="logoutBtn" class="btn light">Log out</a>
+            <button id="logoutBtn" class="btn light" type="button" onclick="window.location.href='/logout.html'">Log out</button>
           </nav>
         </div>
       </header>
