@@ -98,6 +98,10 @@
     return { status: res.status, json };
   }
 
+  function normPath() {
+    return (location.pathname || "").replace(/\/+$/,"");
+  }
+
   function pathIs(path, ...candidates) {
     return candidates.some((c) => path === c || path.endsWith(c));
   }
@@ -105,7 +109,7 @@
   function isAppPage() {
     // We only run the auth guard + session timers on app pages (not public pages).
     // If you accidentally include layout-app.js on public pages, this protects you.
-    const path = window.location.pathname || "";
+    const path = normPath();
     return (
       pathIs(
         path,
@@ -175,7 +179,7 @@
 
   function mountAppNav() {
     if (document.querySelector("header.nav.app-nav")) return;
-    const path = window.location.pathname || "";
+    const path = normPath();
     const isActive = (p) => path.endsWith(p);
 
     const wrapper = document.createElement("div");
@@ -353,7 +357,7 @@
   const DEBUG = new URLSearchParams(window.location.search).get("debug") === "1";
   const debugState = {
     loaded: true,
-    pathname: window.location.pathname || "",
+    pathname: normPath(),
     sbReady: "unknown",
     statusHttp: "none",
     childMode: "unknown",
@@ -411,7 +415,7 @@
   }
 
   async function maybeEnableChildMode() {
-    const path = window.location.pathname || "";
+    const path = normPath();
     const isChildArea =
       pathIs(path, "/chat", "/chat.html", "/lessons", "/lessons.html", "/lesson", "/lesson.html");
 
@@ -506,7 +510,7 @@
   }
 
   async function maybeGateParentPages() {
-    const path = window.location.pathname || "";
+    const path = normPath();
     const isParentArea =
       pathIs(path, "/reports", "/reports.html", "/billing", "/billing.html");
 
@@ -567,7 +571,7 @@
 
     await maybeEnableChildMode();
     await maybeGateParentPages();
-    const path = window.location.pathname || "";
+    const path = normPath();
     const isParentArea =
       pathIs(path, "/reports", "/reports.html", "/billing", "/billing.html");
     if (isParentArea) {
