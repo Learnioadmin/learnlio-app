@@ -534,7 +534,7 @@ async function pbkdf2(pin, salt, iterations) {
 }
 
 async function hashPin(pin) {
-  const iterations = 150000;
+  const iterations = 100000;
   const salt = new Uint8Array(16);
   crypto.getRandomValues(salt);
   const hash = await pbkdf2(pin, salt, iterations);
