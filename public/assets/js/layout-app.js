@@ -167,7 +167,6 @@
       }
       .links a:hover{ background: rgba(15,23,42,.04); }
       .links a.active{ background: rgba(15,23,42,.04); }
-      header.app-nav.child-mode a[href*="dash"],
       header.app-nav.child-mode a[href*="reports"] {
         display: none !important;
       }
@@ -191,7 +190,8 @@
           <nav class="links" aria-label="Primary">
             <a href="/dash.html" class="${isActive("/dash.html") ? "active" : ""}">Dashboard</a>
             <a href="/chat.html" class="${isActive("/chat.html") ? "active" : ""}">Learnlio Tutor</a>
-            <a href="/reports.html" class="${isActive("/reports.html") ? "active" : ""}">Reports</a>
+            <a id="navReportsLink" href="/reports.html" class="${isActive("/reports.html") ? "active" : ""}">Reports</a>
+            <button id="grownupModeBtn" class="btn light" type="button" style="display:none;">Grown-up mode</button>
             <button id="logoutBtn" class="btn light" type="button">Logout</button>
           </nav>
         </div>
@@ -210,6 +210,18 @@
     const header = document.querySelector("header.nav.app-nav");
     if (header) {
       header.classList.toggle("child-mode", window.__learnlioChildMode === true);
+    }
+    applyNavForChildMode();
+
+    const grownupBtn = document.getElementById("grownupModeBtn");
+    if (grownupBtn) {
+      grownupBtn.addEventListener("click", async () => {
+        try {
+          const statusRes = await authedFetch("/child-mode/status", { method: "GET" });
+          if (!statusRes) return;
+          openGrownupModeModal({ pinSet: !!statusRes.json?.pin_set });
+        } catch {}
+      });
     }
   }
 
@@ -435,6 +447,136 @@
     }
   }
 
+  function applyNavForChildMode() {
+    const childMode = window.__learnlioChildMode === true;
+    const reportsLink = document.getElementById("navReportsLink");
+    const grownupBtn = document.getElementById("grownupModeBtn");
+    if (reportsLink) reportsLink.style.display = childMode ? "none" : "";
+    if (grownupBtn) grownupBtn.style.display = childMode ? "" : "none";
+  }
+
+  function openGrownupModeModal({ pinSet } = {}) {
+    if (document.getElementById("grownupModeModal")) return;
+    const modal = document.createElement("div");
+    modal.id = "grownupModeModal";
+    modal.style.cssText = "position:fixed; inset:0; z-index:10000; background:rgba(2,6,23,.45); padding:18px; display:flex; align-items:center; justify-content:center;";
+    modal.innerHTML = `
+      <div class="card" style="max-width:520px; width:100%;">
+        <div style="font-weight:900; font-size:18px; margin-bottom:6px;">Switch to grown-up mode</div>
+        <div class="muted" style="margin-bottom:12px;">To change settings and view reports, a grown-up needs to unlock.</div>
+        <div id="grownupPinWrap">
+          <label style="display:block; font-size:13px; font-weight:800; margin-bottom:6px;" for="grownupPinInput">PIN (4 digits)</label>
+          <input id="grownupPinInput" class="input" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN" />
+        </div>
+        <div id="grownupPasswordWrap">
+          <label style="display:block; font-size:13px; font-weight:800; margin-bottom:6px;" for="grownupPasswordInput">Password</label>
+          <input id="grownupPasswordInput" class="input" type="password" autocomplete="current-password" placeholder="Enter password" />
+        </div>
+        <button id="grownupModeToggle" class="btn light" type="button" style="margin-top:10px; display:none;">Use password instead</button>
+        <div id="grownupMsg" class="status" aria-live="polite"></div>
+        <div class="row" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button id="grownupPinConfirm" class="btn" type="button" disabled>Unlock</button>
+          <button id="grownupPasswordConfirm" class="btn" type="button" disabled>Unlock</button>
+          <button id="grownupCancel" class="btn light" type="button">Cancel</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const pinWrap = document.getElementById("grownupPinWrap");
+    const passwordWrap = document.getElementById("grownupPasswordWrap");
+    const pinInput = document.getElementById("grownupPinInput");
+    const passwordInput = document.getElementById("grownupPasswordInput");
+    const pinConfirm = document.getElementById("grownupPinConfirm");
+    const passwordConfirm = document.getElementById("grownupPasswordConfirm");
+    const toggleBtn = document.getElementById("grownupModeToggle");
+    const cancelBtn = document.getElementById("grownupCancel");
+    const msgEl = document.getElementById("grownupMsg");
+    let mode = pinSet ? "pin" : "password";
+
+    function setMsg(text) {
+      msgEl.textContent = text || "";
+      msgEl.className = text ? "status bad" : "status";
+    }
+
+    function applyMode(nextMode) {
+      mode = nextMode;
+      if (pinWrap) pinWrap.style.display = mode === "pin" ? "block" : "none";
+      if (passwordWrap) passwordWrap.style.display = mode === "password" ? "block" : "none";
+      if (pinConfirm) pinConfirm.style.display = mode === "pin" ? "inline-flex" : "none";
+      if (passwordConfirm) passwordConfirm.style.display = mode === "password" ? "inline-flex" : "none";
+      if (toggleBtn) {
+        toggleBtn.style.display = pinSet ? "inline-flex" : "none";
+        toggleBtn.textContent = mode === "pin" ? "Use password instead" : "Use PIN instead";
+      }
+      if (pinInput) pinInput.value = "";
+      if (passwordInput) passwordInput.value = "";
+      if (pinConfirm) pinConfirm.disabled = true;
+      if (passwordConfirm) passwordConfirm.disabled = true;
+      setMsg("");
+      if (mode === "pin" && pinInput) pinInput.focus();
+      if (mode === "password" && passwordInput) passwordInput.focus();
+    }
+
+    applyMode(pinSet ? "pin" : "password");
+
+    pinInput?.addEventListener("input", () => {
+      if (mode === "pin" && pinConfirm) {
+        pinConfirm.disabled = !/^\d{4}$/.test(pinInput.value.trim());
+      }
+    });
+
+    passwordInput?.addEventListener("input", () => {
+      if (mode === "password" && passwordConfirm) {
+        passwordConfirm.disabled = !passwordInput.value.trim();
+      }
+    });
+
+    toggleBtn?.addEventListener("click", () => {
+      applyMode(mode === "pin" ? "password" : "pin");
+    });
+
+    cancelBtn?.addEventListener("click", () => {
+      modal.remove();
+    });
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.remove();
+    });
+
+    pinConfirm?.addEventListener("click", async () => {
+      const pin = pinInput?.value.trim() || "";
+      if (!/^\d{4}$/.test(pin)) {
+        setMsg("PIN must be exactly 4 digits.");
+        return;
+      }
+      pinConfirm.disabled = true;
+      setMsg("");
+      try {
+        await authedFetch("/parent/pin/verify", { method: "POST", body: { pin } });
+        window.location.reload();
+      } catch (err) {
+        setMsg(String(err.message || err));
+        pinConfirm.disabled = false;
+      }
+    });
+
+    passwordConfirm?.addEventListener("click", async () => {
+      const password = passwordInput?.value.trim() || "";
+      if (!password) return;
+      passwordConfirm.disabled = true;
+      setMsg("");
+      try {
+        await authedFetch("/parent/unlock", { method: "POST", body: { password } });
+        window.location.reload();
+      } catch (err) {
+        setMsg(String(err.message || err));
+        passwordConfirm.disabled = false;
+      }
+    });
+  }
+
   function renderChildGate({ pinSet } = {}) {
     if (document.getElementById("childModeGate")) return;
     const gate = document.createElement("div");
@@ -600,6 +742,7 @@
       window.__learnlioChildMode = childMode;
       const pinSet = !!statusRes.json?.pin_set;
       updateDebugBadge({ childMode, pinSet });
+      applyNavForChildMode();
       const header = document.querySelector("header.nav.app-nav");
       if (header) header.classList.toggle("child-mode", childMode);
       if (childMode && IS_PARENT_AREA) {
