@@ -119,6 +119,21 @@
         </div>
 
         <div id="formMessage" class="status" aria-live="polite"></div>
+
+        <div class="hr"></div>
+
+        <h3 style="margin:0 0 6px; font-size:16px;">Setup check (parents)</h3>
+        <p class="muted" style="margin:0 0 12px;">See the latest setup check result for the selected child.</p>
+
+        <div id="screenerPanel" class="card" style="background:#fafafa; border:1px solid #ececf4; padding:12px;">
+          <div class="row" style="margin-bottom:10px;">
+            <span class="pill" id="screenerBandPill">Setup check</span>
+            <span class="muted" id="screenerStatusText">Loading…</span>
+          </div>
+          <div class="row">
+            <a class="btn light" href="/screener.html" style="text-decoration:none;">Open setup check</a>
+          </div>
+        </div>
       </section>
 
       <!-- RIGHT: Progress / Next step -->
@@ -276,6 +291,11 @@
     const pinClearMsg = document.getElementById("pinClearMsg");
     const pinClearConfirm = document.getElementById("pinClearConfirm");
     const pinClearCancel = document.getElementById("pinClearCancel");
+
+    // Screener Results
+    const screenerPanel = document.getElementById("screenerPanel");
+    const screenerBandPill = document.getElementById("screenerBandPill");
+    const screenerStatusText = document.getElementById("screenerStatusText");
 
     // Next step UI
     const nextStepTag = document.getElementById("nextStepTag");
@@ -452,6 +472,7 @@
         dob: ch.child_dob
       }));
       setSelectedChildUI();
+      refreshScreenerPanel();
     }
 
     async function updateSelectedChildLocalStorageIfMatches(ch) {
@@ -469,6 +490,70 @@
     }
 
     function sentence(s){ return String(s || "").trim(); }
+
+    function formatUKDateTime(iso) {
+      if (!iso) return "";
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return String(iso);
+      return d.toLocaleString("en-GB", {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function setScreenerPanel(text, pillText = "Setup check", pillKind = "") {
+      if (!screenerPanel) return;
+      screenerStatusText.textContent = text || "";
+      screenerBandPill.textContent = pillText;
+      screenerBandPill.className = "pill" + (pillKind ? " " + pillKind : "");
+    }
+
+    async function refreshScreenerPanel() {
+      if (!screenerPanel) return;
+      try {
+        const status = await callAppApi("/child-mode/status", { method: "GET" });
+        if (status?.child_mode) {
+          screenerPanel.style.display = "none";
+          return;
+        }
+      } catch {
+        // If auth fails, keep quiet
+      }
+
+      screenerPanel.style.display = "block";
+
+      const selectedId = getSelectedChildId();
+      if (!selectedId) {
+        setScreenerPanel("Choose a child to see setup status.");
+        return;
+      }
+
+      try {
+        const { data, error } = await sb
+          .from("screener_results")
+          .select("score, band, created_at")
+          .eq("child_id", selectedId)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (error) throw error;
+        const row = data?.[0];
+        if (!row) {
+          setScreenerPanel("Not completed yet.");
+          return;
+        }
+
+        let label = "Setup check";
+        if (row.band === "low") label = "Low indicators";
+        else if (row.band === "medium") label = "Some indicators";
+        else if (row.band === "high") label = "Higher indicators";
+        setScreenerPanel(`Completed: ${formatUKDateTime(row.created_at)}`, label, "good");
+      } catch {
+        setScreenerPanel("Not completed yet.");
+      }
+    }
 
     function setPinStatus(pinSet) {
       if (!pinStatusPill) return;
@@ -891,6 +976,7 @@
     refreshBtn.addEventListener("click", async () => {
       await loadChildren();
       await loadNextStep();
+      await refreshScreenerPanel();
     });
 
     setPinBtn.addEventListener("click", async () => {
@@ -970,6 +1056,7 @@
       await refreshAccess();
       await loadChildren();
       await loadNextStep();
+      await refreshScreenerPanel();
       await refreshPinStatus();
     })();
   })();
