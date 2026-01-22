@@ -194,7 +194,7 @@
             <a href="/chat.html" class="${isActive("/chat.html") ? "active" : ""}">Learnlio Tutor</a>
             <a id="navReportsLink" href="/reports.html" class="${isActive("/reports.html") ? "active" : ""}">Parent Insight</a>
             <button id="grownupModeBtn" class="btn light" type="button" style="display:none;">Grown-up mode</button>
-            <button id="logoutBtn" class="btn light" type="button">Log out</button>
+            <a class="btn light" href="/logout.html">Log out</a>
           </nav>
         </div>
       </header>
@@ -806,21 +806,4 @@
     scheduleTimers();
   })();
 
-  // --- Global Logout handler (works even for injected nav) ---
-  (function bindGlobalLogout(){
-    if (window.__learnlioLogoutBound) return;
-    window.__learnlioLogoutBound = true;
-
-    // Capture phase so it runs even if something stops propagation later
-    document.addEventListener("click", function(e){
-      const btn = e.target && e.target.closest ? e.target.closest("#logoutBtn") : null;
-      if (!btn) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Always route through logout page (which performs sb.auth.signOut)
-      window.location.href = "/logout.html";
-    }, true);
-  })();
 })();

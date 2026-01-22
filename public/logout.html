@@ -7,35 +7,58 @@
   <link rel="stylesheet" href="/assets/css/app.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#f7f7fb; color:#0b1220; }
-    .wrap{ max-width:820px; margin:0 auto; padding:22px 16px; }
-    .card{ background:#fff; border:1px solid rgba(15,23,42,.10); border-radius:18px; padding:16px; box-shadow:0 12px 32px rgba(12,18,32,.08); }
-    .muted{ color:#5b6475; line-height:1.6; }
+    :root{ --bg1:#f6f7ff; --bg2:#f9fafb; --card:#fff; --ink:#0f172a; --muted:#64748b; --border:rgba(15,23,42,.10); --shadow:0 20px 45px rgba(2,6,23,.10); --radius:20px; }
+    body{ margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:18px;
+      background: radial-gradient(1100px 650px at 10% 0%, rgba(47,123,255,.18), transparent 55%),
+                  radial-gradient(900px 600px at 90% 10%, rgba(16,185,129,.12), transparent 55%),
+                  linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+    }
+    .card{ width:min(560px, 100%); background:rgba(255,255,255,.92); backdrop-filter: blur(10px);
+      border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px;
+    }
+    h1{ margin:0; font-size:18px; font-weight:950; letter-spacing:-.2px; }
+    p{ margin:10px 0 0; color:var(--muted); line-height:1.6; font-size:14px; }
+    .btn{ margin-top:14px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:10px 12px; border-radius:12px; border:1px solid rgba(15,23,42,.12); background:#fff;
+      color:var(--ink); cursor:pointer; font-weight:900; text-decoration:none;
+    }
+    .tiny{ margin-top:10px; font-size:12px; color:var(--muted); }
   </style>
 </head>
 <body>
-  <main class="wrap">
-    <div class="card">
-      <div style="font-weight:950; font-size:18px; letter-spacing:-.2px;">Youre logged out </div>
-      <div id="msg" class="muted" style="margin-top:8px;">Finishing up</div>
-    </div>
+  <main class="card" role="main" aria-live="polite">
+    <h1> Youre logged out</h1>
+    <p>Youve been safely signed out.</p>
+    <a class="btn" href="/">🏠 Return to Learnlio</a>
+    <div class="tiny" id="status">Signing you out</div>
   </main>
 
   <script>
-  (async () => {
-    const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    (async () => {
+      // Same config as your pages
+      const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
+      const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+      const status = document.getElementById("status");
 
-    const msg = document.getElementById("msg");
-    if (msg) msg.textContent = "Logging you out";
+      try{
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        await sb.auth.signOut();
 
-    try { await sb.auth.signOut(); } catch (e) { console.warn("signOut failed (continuing)", e); }
-    try { localStorage.removeItem("selectedChild"); } catch {}
+        // Clear child selection so next login flows correctly
+        try{ localStorage.removeItem("selectedChild"); }catch{}
 
-    // Redirect to homepage with a tiny logged-out hint
-    window.location.replace("/?logged_out=1");
-  })();
+        status.textContent = "Signed out. Redirecting to homepage";
+        // Short pause so parents see confirmation
+        setTimeout(() => { window.location.href = "/"; }, 650);
+      }catch(e){
+        console.warn(e);
+        status.textContent = "Signed out. If youre not redirected, tap Return to Learnlio.";
+      }
+
+    })();
+
   </script>
 </body>
 </html>
