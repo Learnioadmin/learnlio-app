@@ -57,6 +57,46 @@
     localStorage.setItem(key, String(value));
   }
 
+  async function getAccessToken() {
+    let { data: sessionData } = await sb.auth.getSession();
+    let accessToken = sessionData?.session?.access_token;
+
+    if (!accessToken) {
+      const refreshed = await sb.auth.refreshSession();
+      accessToken = refreshed?.data?.session?.access_token;
+    }
+
+    return accessToken || null;
+  }
+
+  async function authedFetch(path, options = {}) {
+    const accessToken = await getAccessToken();
+    if (!accessToken) throw new Error("No session");
+
+    const headers = {
+      "Authorization": `Bearer ${accessToken}`,
+      ...(options.headers || {})
+    };
+
+    if (options.body && !headers["Content-Type"]) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    const res = await fetch(path, {
+      method: options.method || "GET",
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined
+    });
+
+    let json = null;
+    try { json = await res.json(); } catch {}
+    if (!res.ok) {
+      const message = json?.error || `HTTP ${res.status}`;
+      throw new Error(message);
+    }
+    return json;
+  }
+
   function isAppPage() {
     // We only run the auth guard + session timers on app pages (not public pages).
     // If you accidentally include layout-app.js on public pages, this protects you.
@@ -293,6 +333,118 @@
     }
   }
 
+  async function maybeEnableChildMode() {
+    const path = window.location.pathname || "";
+    const isChildArea =
+      path.endsWith("/chat.html") ||
+      path.endsWith("/lessons.html") ||
+      path.endsWith("/lesson.html");
+
+    if (!isChildArea) return;
+    try {
+      await authedFetch("/child-mode/on", { method: "POST", body: {} });
+    } catch {
+      // Silent: user may not be logged in yet
+    }
+  }
+
+  function renderChildGate() {
+    if (document.getElementById("childModeGate")) return;
+    const gate = document.createElement("div");
+    gate.id = "childModeGate";
+    gate.style.cssText = "position:fixed; inset:0; z-index:9999; background:#f7f7fb; display:flex; align-items:center; justify-content:center; padding:18px; overflow:auto;";
+    gate.innerHTML = `
+      <div class="card" style="max-width:520px; width:100%; text-align:left;">
+        <div style="font-weight:900; font-size:20px; margin-bottom:8px;">This area is for grown-ups</div>
+        <div class="muted" style="margin-bottom:14px;">
+          Reports and account settings are for parents and carers. If a grown-up wants to see this, they can unlock it below.
+        </div>
+        <div class="row" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button id="childUnlockBtn" class="btn" type="button">Ask a grown-up to unlock</button>
+          <a class="btn light" href="/chat.html" style="text-decoration:none;">Go back to Learnlio Tutor</a>
+        </div>
+      </div>
+      <div id="childUnlockModal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(2,6,23,.45); padding:18px; align-items:center; justify-content:center;">
+        <div class="card" style="max-width:520px; width:100%;">
+          <div style="font-weight:900; font-size:18px; margin-bottom:6px;">Unlock parent access</div>
+          <div class="muted" style="margin-bottom:12px;">Enter your password to continue.</div>
+          <label style="display:block; font-size:13px; font-weight:800; margin-bottom:6px;" for="childUnlockPassword">Password</label>
+          <input id="childUnlockPassword" class="input" type="password" autocomplete="current-password" placeholder="Enter password" />
+          <div id="childUnlockMsg" class="status" aria-live="polite"></div>
+          <div class="row" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button id="childUnlockConfirm" class="btn" type="button" disabled>Unlock</button>
+            <button id="childUnlockCancel" class="btn light" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(gate);
+    document.body.style.overflow = "hidden";
+
+    const modal = document.getElementById("childUnlockModal");
+    const openBtn = document.getElementById("childUnlockBtn");
+    const cancelBtn = document.getElementById("childUnlockCancel");
+    const confirmBtn = document.getElementById("childUnlockConfirm");
+    const passwordInput = document.getElementById("childUnlockPassword");
+    const msgEl = document.getElementById("childUnlockMsg");
+
+    function setMsg(text, good = false) {
+      msgEl.textContent = text || "";
+      msgEl.className = "status " + (good ? "good" : "bad");
+      if (!text) msgEl.className = "status";
+    }
+
+    function openModal() {
+      modal.style.display = "flex";
+      passwordInput.value = "";
+      confirmBtn.disabled = true;
+      setMsg("");
+      passwordInput.focus();
+    }
+
+    function closeModal() {
+      modal.style.display = "none";
+    }
+
+    openBtn?.addEventListener("click", () => openModal());
+    cancelBtn?.addEventListener("click", () => closeModal());
+    modal?.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+
+    passwordInput?.addEventListener("input", () => {
+      confirmBtn.disabled = !passwordInput.value.trim();
+    });
+
+    confirmBtn?.addEventListener("click", async () => {
+      const password = passwordInput.value.trim();
+      if (!password) return;
+      confirmBtn.disabled = true;
+      setMsg("");
+      try {
+        await authedFetch("/parent/unlock", { method: "POST", body: { password } });
+        window.location.reload();
+      } catch (err) {
+        setMsg(String(err.message || err));
+        confirmBtn.disabled = false;
+      }
+    });
+  }
+
+  async function maybeGateParentPages() {
+    const path = window.location.pathname || "";
+    const isParentArea =
+      path.endsWith("/reports.html") ||
+      path.endsWith("/billing.html");
+
+    if (!isParentArea) return;
+    try {
+      const status = await authedFetch("/child-mode/status", { method: "GET" });
+      if (status?.child_mode) renderChildGate();
+    } catch {
+      // Silent: if not logged in or API fails, don't block page
+    }
+  }
+
   (async () => {
     // Always mount UI if mounts exist (safe)
     runWithBody(() => {
@@ -306,6 +458,9 @@
 
     const ok = await requireAuthOrRedirect();
     if (!ok) return;
+
+    await maybeEnableChildMode();
+    await maybeGateParentPages();
 
     wireActivityListeners();
     scheduleTimers();

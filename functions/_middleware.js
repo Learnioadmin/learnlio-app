@@ -3,6 +3,15 @@ export async function onRequest(context) {
   const url = new URL(req.url);
   const host = (url.hostname || "").toLowerCase();
 
+  if (url.pathname === "/child-mode/on") {
+    return handleChildModeOn(context);
+  }
+  if (url.pathname === "/child-mode/status") {
+    return handleChildModeStatus(context);
+  }
+  if (url.pathname === "/parent/unlock") {
+    return handleParentUnlock(context);
+  }
   if (url.pathname === "/account/delete") {
     return handleAccountDelete(context);
   }
@@ -128,6 +137,124 @@ async function handleAccountDelete(context) {
   }
 }
 
+async function handleChildModeOn(context) {
+  const req = context.request;
+  if (req.method !== "POST") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+  }
+
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!token) {
+    return jsonResponse({ ok: false, error: "Missing auth token" }, 401);
+  }
+
+  const { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY } = context.env;
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+    return jsonResponse({ ok: false, error: "Server not configured" }, 500);
+  }
+
+  const user = await getSupabaseUser(SUPABASE_URL, SUPABASE_ANON_KEY, token);
+  if (!user?.id) {
+    return jsonResponse({ ok: false, error: "Unable to load user" }, 401);
+  }
+
+  try {
+    await ensureProfile(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
+    await updateChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, true);
+    return jsonResponse({ ok: true, child_mode: true });
+  } catch (err) {
+    return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
+  }
+}
+
+async function handleChildModeStatus(context) {
+  const req = context.request;
+  if (req.method !== "GET") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+  }
+
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!token) {
+    return jsonResponse({ ok: false, error: "Missing auth token" }, 401);
+  }
+
+  const { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY } = context.env;
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+    return jsonResponse({ ok: false, error: "Server not configured" }, 500);
+  }
+
+  const user = await getSupabaseUser(SUPABASE_URL, SUPABASE_ANON_KEY, token);
+  if (!user?.id) {
+    return jsonResponse({ ok: false, error: "Unable to load user" }, 401);
+  }
+
+  try {
+    await ensureProfile(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
+    const profile = await getProfile(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
+    const childMode = !!profile?.child_mode;
+    const pinSet = !!profile?.pin_hash;
+    return jsonResponse({ ok: true, child_mode: childMode, pin_set: pinSet });
+  } catch (err) {
+    return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
+  }
+}
+
+async function handleParentUnlock(context) {
+  const req = context.request;
+  if (req.method !== "POST") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+  }
+
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!token) {
+    return jsonResponse({ ok: false, error: "Missing auth token" }, 401);
+  }
+
+  let payload;
+  try {
+    payload = await req.json();
+  } catch {
+    return jsonResponse({ ok: false, error: "Invalid JSON body" }, 400);
+  }
+
+  const password = String(payload?.password || "").trim();
+  if (!password) {
+    return jsonResponse({ ok: false, error: "Password required" }, 400);
+  }
+
+  const { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY } = context.env;
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+    return jsonResponse({ ok: false, error: "Server not configured" }, 500);
+  }
+
+  const user = await getSupabaseUser(SUPABASE_URL, SUPABASE_ANON_KEY, token);
+  if (!user?.id || !user?.email) {
+    return jsonResponse({ ok: false, error: "Unable to load user" }, 401);
+  }
+
+  const ok = await verifySupabasePassword(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    user.email,
+    password
+  );
+
+  if (!ok) {
+    return jsonResponse({ ok: false, error: "Incorrect password" }, 403);
+  }
+
+  try {
+    await ensureProfile(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id);
+    await updateChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, false, true);
+    return jsonResponse({ ok: true, child_mode: false });
+  } catch (err) {
+    return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
+  }
+}
+
 async function getSupabaseUser(supabaseUrl, anonKey, accessToken) {
   const res = await fetch(`${supabaseUrl}/auth/v1/user`, {
     headers: {
@@ -214,6 +341,80 @@ async function stripeFetch(stripeKey, url, method = "GET", body = null, allowMis
     throw new Error(msg);
   }
   return json;
+}
+
+async function ensureProfile(supabaseUrl, serviceKey, userId) {
+  const restBase = `${supabaseUrl}/rest/v1`;
+  const headers = {
+    "Authorization": `Bearer ${serviceKey}`,
+    "apikey": serviceKey,
+    "Content-Type": "application/json",
+    "Prefer": "resolution=merge-duplicates"
+  };
+
+  const res = await fetch(`${restBase}/profiles?on_conflict=user_id`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ user_id: userId })
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Profile upsert failed");
+  }
+}
+
+async function getProfile(supabaseUrl, serviceKey, userId) {
+  const restBase = `${supabaseUrl}/rest/v1`;
+  const headers = {
+    "Authorization": `Bearer ${serviceKey}`,
+    "apikey": serviceKey
+  };
+
+  const params = new URLSearchParams({
+    select: "child_mode,pin_hash",
+    user_id: `eq.${userId}`
+  });
+
+  const res = await fetch(`${restBase}/profiles?${params.toString()}`, {
+    method: "GET",
+    headers
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Profile fetch failed");
+  }
+
+  const rows = await res.json();
+  return Array.isArray(rows) ? rows[0] : rows;
+}
+
+async function updateChildMode(supabaseUrl, serviceKey, userId, enabled, setUpdatedAt = false) {
+  const restBase = `${supabaseUrl}/rest/v1`;
+  const headers = {
+    "Authorization": `Bearer ${serviceKey}`,
+    "apikey": serviceKey,
+    "Content-Type": "application/json"
+  };
+
+  const payload = {
+    child_mode: !!enabled,
+    child_mode_updated_at: new Date().toISOString()
+  };
+  if (setUpdatedAt) payload.updated_at = new Date().toISOString();
+
+  const params = new URLSearchParams({ user_id: `eq.${userId}` });
+  const res = await fetch(`${restBase}/profiles?${params.toString()}`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Profile update failed");
+  }
 }
 
 async function deleteSupabaseData(supabaseUrl, serviceKey, userId) {
