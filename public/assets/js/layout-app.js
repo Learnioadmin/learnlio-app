@@ -421,7 +421,7 @@
     }
   }
 
-  function renderChildGate() {
+  function renderChildGate(pinSet = false) {
     if (document.getElementById("childModeGate")) return;
     const gate = document.createElement("div");
     gate.id = "childModeGate";
@@ -440,9 +440,16 @@
       <div id="childUnlockModal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(2,6,23,.45); padding:18px; align-items:center; justify-content:center;">
         <div class="card" style="max-width:520px; width:100%;">
           <div style="font-weight:900; font-size:18px; margin-bottom:6px;">Unlock parent access</div>
-          <div class="muted" style="margin-bottom:12px;">Enter your password to continue.</div>
-          <label style="display:block; font-size:13px; font-weight:800; margin-bottom:6px;" for="childUnlockPassword">Password</label>
-          <input id="childUnlockPassword" class="input" type="password" autocomplete="current-password" placeholder="Enter password" />
+          <div id="childUnlockHint" class="muted" style="margin-bottom:12px;">Enter your PIN to continue.</div>
+          <div id="pinModeWrap">
+            <label style="display:block; font-size:13px; font-weight:800; margin-bottom:6px;" for="childUnlockPin">PIN (4 digits)</label>
+            <input id="childUnlockPin" class="input" type="password" inputmode="numeric" maxlength="4" placeholder="Enter PIN" />
+          </div>
+          <div id="passwordModeWrap">
+            <label style="display:block; font-size:13px; font-weight:800; margin-bottom:6px;" for="childUnlockPassword">Password</label>
+            <input id="childUnlockPassword" class="input" type="password" autocomplete="current-password" placeholder="Enter password" />
+          </div>
+          <button id="childUnlockToggle" class="btn light" type="button" style="margin-top:10px; display:none;">Use password instead</button>
           <div id="childUnlockMsg" class="status" aria-live="polite"></div>
           <div class="row" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
             <button id="childUnlockConfirm" class="btn" type="button" disabled>Unlock</button>
@@ -460,7 +467,13 @@
     const cancelBtn = document.getElementById("childUnlockCancel");
     const confirmBtn = document.getElementById("childUnlockConfirm");
     const passwordInput = document.getElementById("childUnlockPassword");
+    const pinInput = document.getElementById("childUnlockPin");
+    const pinWrap = document.getElementById("pinModeWrap");
+    const passwordWrap = document.getElementById("passwordModeWrap");
+    const toggleBtn = document.getElementById("childUnlockToggle");
+    const hintEl = document.getElementById("childUnlockHint");
     const msgEl = document.getElementById("childUnlockMsg");
+    let mode = pinSet ? "pin" : "password";
 
     function setMsg(text, good = false) {
       msgEl.textContent = text || "";
@@ -468,12 +481,28 @@
       if (!text) msgEl.className = "status";
     }
 
-    function openModal() {
-      modal.style.display = "flex";
-      passwordInput.value = "";
+    function applyMode(nextMode) {
+      mode = nextMode;
+      if (pinWrap) pinWrap.style.display = mode === "pin" ? "block" : "none";
+      if (passwordWrap) passwordWrap.style.display = mode === "password" ? "block" : "none";
+      if (hintEl) {
+        hintEl.textContent = mode === "pin" ? "Enter your PIN to continue." : "Enter your password to continue.";
+      }
+      if (toggleBtn) {
+        toggleBtn.style.display = pinSet ? "inline-flex" : "none";
+        toggleBtn.textContent = mode === "pin" ? "Use password instead" : "Use PIN instead";
+      }
+      if (pinInput) pinInput.value = "";
+      if (passwordInput) passwordInput.value = "";
       confirmBtn.disabled = true;
       setMsg("");
-      passwordInput.focus();
+    }
+
+    function openModal() {
+      modal.style.display = "flex";
+      applyMode(pinSet ? "pin" : "password");
+      if (mode === "pin" && pinInput) pinInput.focus();
+      if (mode === "password" && passwordInput) passwordInput.focus();
     }
 
     function closeModal() {
@@ -485,16 +514,28 @@
     modal?.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
 
     passwordInput?.addEventListener("input", () => {
-      confirmBtn.disabled = !passwordInput.value.trim();
+      if (mode === "password") confirmBtn.disabled = !passwordInput.value.trim();
+    });
+    pinInput?.addEventListener("input", () => {
+      if (mode === "pin") confirmBtn.disabled = !pinInput.value.trim();
+    });
+    toggleBtn?.addEventListener("click", () => {
+      applyMode(mode === "pin" ? "password" : "pin");
     });
 
     confirmBtn?.addEventListener("click", async () => {
-      const password = passwordInput.value.trim();
-      if (!password) return;
+      const password = passwordInput?.value.trim() || "";
+      const pin = pinInput?.value.trim() || "";
+      if (mode === "password" && !password) return;
+      if (mode === "pin" && !pin) return;
       confirmBtn.disabled = true;
       setMsg("");
       try {
-        await authedFetch("/parent/unlock", { method: "POST", body: { password } });
+        if (mode === "pin") {
+          await authedFetch("/parent/pin/verify", { method: "POST", body: { pin } });
+        } else {
+          await authedFetch("/parent/unlock", { method: "POST", body: { password } });
+        }
         window.location.reload();
       } catch (err) {
         setMsg(String(err.message || err));
@@ -506,6 +547,7 @@
   async function maybeGateParentPages() {
     const path = PATH;
     const isParentArea =
+      path === "/dash" || path.endsWith("/dash.html") ||
       path === "/reports" || path.endsWith("/reports.html") ||
       path === "/billing" || path.endsWith("/billing.html");
 
@@ -528,7 +570,7 @@
         const bodyReady = await waitForBody();
         if (!bodyReady) return;
         try {
-          renderChildGate();
+          renderChildGate(!!statusRes.json?.pin_set);
           window.__learnlioGateRendered = true;
           debugLog("gate", "rendered");
           updateDebugBadge({ gateRendered: true });
@@ -575,6 +617,7 @@
     await maybeEnableChildMode();
     await maybeGateParentPages();
     const PARENT =
+      PATH === "/dash" || PATH.endsWith("/dash.html") ||
       PATH === "/reports" || PATH.endsWith("/reports.html") ||
       PATH === "/billing" || PATH.endsWith("/billing.html");
     if (PARENT) {

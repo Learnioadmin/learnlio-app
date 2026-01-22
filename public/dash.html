@@ -161,6 +161,44 @@
         </div>
       </aside>
     </div>
+    <section class="card" id="parentLockCard" style="margin-top:14px;">
+      <h2 style="margin:0 0 6px; font-size:18px;">Parental Lock</h2>
+      <p class="muted" style="margin:0 0 12px;">
+        Add a 4-digit PIN so parents can unlock reports and billing.
+      </p>
+
+      <div class="row" style="margin-bottom:10px;">
+        <span class="pill" id="pinStatusPill">Checking...</span>
+        <span class="muted" id="pinStatusText"></span>
+      </div>
+
+      <label class="label" for="pinInput">PIN (4 digits)</label>
+      <input id="pinInput" class="input" type="password" inputmode="numeric" maxlength="4" placeholder="Enter PIN" />
+
+      <label class="label" for="pinConfirmInput">Confirm PIN</label>
+      <input id="pinConfirmInput" class="input" type="password" inputmode="numeric" maxlength="4" placeholder="Re-enter PIN" />
+
+      <div class="row" style="margin-top:12px;">
+        <button id="setPinBtn" class="btn" type="button">Set PIN</button>
+        <button id="clearPinBtn" class="btn light" type="button">Remove PIN</button>
+      </div>
+
+      <div id="pinMsg" class="status" aria-live="polite"></div>
+
+      <div id="pinClearModal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(2,6,23,.45); padding:18px; align-items:center; justify-content:center;">
+        <div class="card" style="max-width:520px; width:100%;">
+          <div style="font-weight:900; font-size:18px; margin-bottom:6px;">Remove PIN</div>
+          <div class="muted" style="margin-bottom:12px;">Enter your password to remove the PIN.</div>
+          <label class="label" for="pinClearPassword">Password</label>
+          <input id="pinClearPassword" class="input" type="password" autocomplete="current-password" placeholder="Enter password" />
+          <div id="pinClearMsg" class="status" aria-live="polite"></div>
+          <div class="row" style="margin-top:10px;">
+            <button id="pinClearConfirm" class="btn" type="button">Remove PIN</button>
+            <button id="pinClearCancel" class="btn light" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </section>
     <footer class="footer" role="contentinfo">
       <div class="footer-inner">
         <div>
@@ -224,6 +262,20 @@
     const listEl = document.getElementById("childrenList");
     const msgEl = document.getElementById("formMessage");
     const selectedChildLabel = document.getElementById("selectedChildLabel");
+
+    // Parental Lock
+    const pinStatusPill = document.getElementById("pinStatusPill");
+    const pinStatusText = document.getElementById("pinStatusText");
+    const pinInput = document.getElementById("pinInput");
+    const pinConfirmInput = document.getElementById("pinConfirmInput");
+    const setPinBtn = document.getElementById("setPinBtn");
+    const clearPinBtn = document.getElementById("clearPinBtn");
+    const pinMsg = document.getElementById("pinMsg");
+    const pinClearModal = document.getElementById("pinClearModal");
+    const pinClearPassword = document.getElementById("pinClearPassword");
+    const pinClearMsg = document.getElementById("pinClearMsg");
+    const pinClearConfirm = document.getElementById("pinClearConfirm");
+    const pinClearCancel = document.getElementById("pinClearCancel");
 
     // Next step UI
     const nextStepTag = document.getElementById("nextStepTag");
@@ -306,6 +358,25 @@
       }
       if (!accessToken) throw new Error("No Supabase session token found.");
       return accessToken;
+    }
+
+    async function callAppApi(path, opts = {}) {
+      const token = await getAccessTokenOrThrow();
+      const res = await fetch(path, {
+        method: opts.method || "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: opts.body ? JSON.stringify(opts.body) : undefined
+      });
+      let json = null;
+      try { json = await res.json(); } catch {}
+      if (!res.ok) {
+        throw new Error(json?.error || `HTTP ${res.status}`);
+      }
+      return json;
     }
 
     async function billingMe() {
@@ -398,6 +469,28 @@
     }
 
     function sentence(s){ return String(s || "").trim(); }
+
+    function setPinStatus(pinSet) {
+      if (!pinStatusPill) return;
+      pinStatusPill.textContent = pinSet ? "PIN is set" : "No PIN yet";
+      pinStatusPill.className = "pill " + (pinSet ? "good" : "warn");
+      pinStatusText.textContent = pinSet ? "Parents can unlock using PIN." : "Set a PIN to protect parent areas.";
+      setPinBtn.textContent = pinSet ? "Change PIN" : "Set PIN";
+    }
+
+    function setPinMsg(text, kind="") {
+      pinMsg.textContent = text || "";
+      pinMsg.className = "status" + (kind ? " " + kind : "");
+    }
+
+    async function refreshPinStatus() {
+      try {
+        const out = await callAppApi("/child-mode/status", { method: "GET" });
+        setPinStatus(!!out?.pin_set);
+      } catch (err) {
+        setPinStatus(false);
+      }
+    }
 
     function niceArea(area){
       if (!area) return null;
@@ -800,6 +893,71 @@
       await loadNextStep();
     });
 
+    setPinBtn.addEventListener("click", async () => {
+      const pin = String(pinInput.value || "").trim();
+      const confirm = String(pinConfirmInput.value || "").trim();
+      if (!/^\d{4}$/.test(pin)) {
+        setPinMsg("PIN must be exactly 4 digits.", "bad");
+        return;
+      }
+      if (pin !== confirm) {
+        setPinMsg("PINs do not match.", "bad");
+        return;
+      }
+      setPinMsg("");
+      setPinBtn.disabled = true;
+      try {
+        await callAppApi("/parent/pin/set", { method: "POST", body: { pin } });
+        setPinMsg("PIN saved.", "good");
+        pinInput.value = "";
+        pinConfirmInput.value = "";
+        await refreshPinStatus();
+      } catch (err) {
+        setPinMsg(String(err.message || err), "bad");
+      } finally {
+        setPinBtn.disabled = false;
+      }
+    });
+
+    clearPinBtn.addEventListener("click", () => {
+      pinClearMsg.textContent = "";
+      pinClearMsg.className = "status";
+      pinClearPassword.value = "";
+      pinClearModal.style.display = "flex";
+      pinClearPassword.focus();
+    });
+
+    pinClearCancel.addEventListener("click", () => {
+      pinClearModal.style.display = "none";
+    });
+
+    pinClearModal.addEventListener("click", (e) => {
+      if (e.target === pinClearModal) pinClearModal.style.display = "none";
+    });
+
+    pinClearConfirm.addEventListener("click", async () => {
+      const password = String(pinClearPassword.value || "").trim();
+      if (!password) {
+        pinClearMsg.textContent = "Password required.";
+        pinClearMsg.className = "status bad";
+        return;
+      }
+      pinClearConfirm.disabled = true;
+      pinClearMsg.textContent = "";
+      pinClearMsg.className = "status";
+      try {
+        await callAppApi("/parent/pin/clear", { method: "POST", body: { password } });
+        pinClearModal.style.display = "none";
+        setPinMsg("PIN removed.", "good");
+        await refreshPinStatus();
+      } catch (err) {
+        pinClearMsg.textContent = String(err.message || err);
+        pinClearMsg.className = "status bad";
+      } finally {
+        pinClearConfirm.disabled = false;
+      }
+    });
+
     window.addEventListener("focus", async () => {
       await loadNextStep();
     });
@@ -812,6 +970,7 @@
       await refreshAccess();
       await loadChildren();
       await loadNextStep();
+      await refreshPinStatus();
     })();
   })();
   </script>
