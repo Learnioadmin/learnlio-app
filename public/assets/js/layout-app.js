@@ -98,17 +98,30 @@
     return { status: res.status, json };
   }
 
+  function pathIs(path, ...candidates) {
+    return candidates.some((c) => path === c || path.endsWith(c));
+  }
+
   function isAppPage() {
     // We only run the auth guard + session timers on app pages (not public pages).
     // If you accidentally include layout-app.js on public pages, this protects you.
     const path = window.location.pathname || "";
     return (
-      path.endsWith("/dash.html") ||
-      path.endsWith("/chat.html") ||
-      path.endsWith("/reports.html") ||
-      path.endsWith("/billing.html") ||
-      path.endsWith("/lesson.html") ||
-      path.endsWith("/lessons.html")
+      pathIs(
+        path,
+        "/dash",
+        "/dash.html",
+        "/chat",
+        "/chat.html",
+        "/reports",
+        "/reports.html",
+        "/billing",
+        "/billing.html",
+        "/lesson",
+        "/lesson.html",
+        "/lessons",
+        "/lessons.html"
+      )
     );
   }
 
@@ -400,9 +413,7 @@
   async function maybeEnableChildMode() {
     const path = window.location.pathname || "";
     const isChildArea =
-      path.endsWith("/chat.html") ||
-      path.endsWith("/lessons.html") ||
-      path.endsWith("/lesson.html");
+      pathIs(path, "/chat", "/chat.html", "/lessons", "/lessons.html", "/lesson", "/lesson.html");
 
     if (!isChildArea) return;
     try {
@@ -497,8 +508,7 @@
   async function maybeGateParentPages() {
     const path = window.location.pathname || "";
     const isParentArea =
-      path.endsWith("/reports.html") ||
-      path.endsWith("/billing.html");
+      pathIs(path, "/reports", "/reports.html", "/billing", "/billing.html");
 
     debugLog("pathname", path, "parentArea", isParentArea);
     updateDebugBadge({ pathname: path });
@@ -559,8 +569,7 @@
     await maybeGateParentPages();
     const path = window.location.pathname || "";
     const isParentArea =
-      path.endsWith("/reports.html") ||
-      path.endsWith("/billing.html");
+      pathIs(path, "/reports", "/reports.html", "/billing", "/billing.html");
     if (isParentArea) {
       document.addEventListener("DOMContentLoaded", () => {
         if (!window.__learnlioGateRendered) maybeGateParentPages();
