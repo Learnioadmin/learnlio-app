@@ -335,6 +335,19 @@
     }
   }
 
+  const DEBUG = new URLSearchParams(window.location.search).get("debug") === "1";
+  function debugLog(...args) {
+    if (DEBUG) console.log("[child-mode]", ...args);
+  }
+
+  async function waitForSupabaseClient(timeoutMs = 5000) {
+    const start = Date.now();
+    while (!window.sb && Date.now() - start < timeoutMs) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+    return !!window.sb;
+  }
+
   async function maybeEnableChildMode() {
     const path = window.location.pathname || "";
     const isChildArea =
@@ -354,7 +367,7 @@
     if (document.getElementById("childModeGate")) return;
     const gate = document.createElement("div");
     gate.id = "childModeGate";
-    gate.style.cssText = "position:fixed; inset:0; z-index:9999; background:#f7f7fb; display:flex; align-items:center; justify-content:center; padding:18px; overflow:auto;";
+    gate.style.cssText = "position:fixed; inset:0; z-index:9999; background:#f7f7fb; display:flex; align-items:center; justify-content:center; padding:18px; overflow:auto; pointer-events:auto;";
     gate.innerHTML = `
       <div class="card" style="max-width:520px; width:100%; text-align:left;">
         <div style="font-weight:900; font-size:20px; margin-bottom:8px;">This area is for grown-ups</div>
@@ -438,12 +451,24 @@
       path.endsWith("/reports.html") ||
       path.endsWith("/billing.html");
 
+    debugLog("pathname", path, "parentArea", isParentArea);
+
     if (!isParentArea) return;
+    const sbReady = await waitForSupabaseClient();
+    debugLog("sbReady", sbReady);
+    if (!sbReady) return;
     try {
       const status = await authedFetch("/child-mode/status", { method: "GET" });
-      if (status?.child_mode) renderChildGate();
+      debugLog("status", status);
+      if (status?.child_mode) {
+        renderChildGate();
+        debugLog("gate", "rendered");
+      } else {
+        debugLog("gate", "skipped");
+      }
     } catch {
       // Silent: if not logged in or API fails, don't block page
+      debugLog("gate", "failed");
     }
   }
 
