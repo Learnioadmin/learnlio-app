@@ -341,7 +341,7 @@
     });
   }
 
-  function choose(idx){
+  async function choose(idx){
     total += questions[i].score[idx];
     answers.push({
       question: questions[i].q,
@@ -355,10 +355,10 @@
       return;
     }
 
-    finish();
+    await finish();
   }
 
-  function finish(){
+  async function finish(){
     progressText.textContent = `Progress: ${questions.length} / ${questions.length}`;
     barFill.style.width = "100%";
     statusText.textContent = "Done.";
@@ -376,15 +376,45 @@
     const takenAt = new Date().toISOString();
     const payload = { totalScore: total, band, answers, takenAt, version: "v1" };
 
-    // Optional: save locally so Dash can show “completed”
+    let childId = null;
     try {
-      const selected = JSON.parse(localStorage.getItem("selectedChild") || "{}");
-      const childId = selected?.id || "unknown";
-      localStorage.setItem(`learnlio_screener_score_${childId}`, String(payload.totalScore));
-      localStorage.setItem(`learnlio_screener_done_${childId}`, "true");
-      localStorage.setItem(`learnlio_screener_date_${childId}`, new Date().toLocaleString("en-GB"));
-      localStorage.setItem(`learnlio_screener_band_${childId}`, String(payload.band || ""));
-    } catch(e){}
+      const selectedRaw = localStorage.getItem("selectedChild");
+      const selected = selectedRaw ? JSON.parse(selectedRaw) : null;
+      childId = selected?.id || selectedRaw;
+    } catch {
+      childId = localStorage.getItem("selectedChild");
+    }
+
+    if (!childId) {
+      resultEl.textContent = "Please go back and choose a child profile first.";
+      return;
+    }
+
+    const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+    const sb = window.sb || window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    if (!sb) {
+      resultEl.textContent = "Please try again in a moment.";
+      return;
+    }
+
+    try {
+      const { data, error } = await sb.auth.getUser();
+      if (error || !data?.user) throw error || new Error("Not signed in");
+
+      const { error: insertError } = await sb.from("screener_results").insert({
+        parent_user_id: data.user.id,
+        child_id: childId,
+        score: total,
+        band,
+        details: { version: "v1", answers, taken_at: takenAt }
+      });
+      if (insertError) throw insertError;
+
+      statusText.textContent = "Saved.";
+    } catch (e) {
+      resultEl.textContent = "Please try again in a moment.";
+    }
 
     // Buttons
     const maths = document.createElement("a");
