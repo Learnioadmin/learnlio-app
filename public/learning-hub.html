@@ -226,6 +226,26 @@
     const practicePills = document.getElementById("practicePills");
     const activityList = document.getElementById("activityList");
 
+    document.addEventListener("click", async (e) => {
+      const btn = e.target.closest("#logoutBtn");
+      if (!btn) return;
+
+      try {
+        btn.disabled = true;
+        btn.textContent = "Signing out";
+      } catch {}
+
+      try {
+        await sb.auth.signOut();
+      } catch (err) {
+        console.warn("signOut failed", err);
+      }
+
+      try { localStorage.removeItem("selectedChild"); } catch {}
+
+      window.location.href = "/login.html";
+    });
+
     function showErrorCard(message){
       if (hubError && message){
         hubError.style.display = "block";

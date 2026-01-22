@@ -86,7 +86,7 @@
         <div class="row" style="margin-top:12px;">
           <a id="lessonsBtn" class="btn" href="/lessons.html" style="text-decoration:none;">📘 Start a lesson</a>
           <a id="continueTutorBtn" class="btn" href="/chat.html" style="text-decoration:none;">💬 Continue to tutor</a>
-          <a id="reportsBtn" class="btn light" href="/reports.html" style="text-decoration:none;">📊 Reports</a>
+          <a id="reportsBtn" class="btn light" href="/reports.html" style="text-decoration:none;">📊 Parent Insight</a>
           <a id="billingBtn" class="btn ghost" href="/billing.html" style="text-decoration:none;">💳 Billing</a>
           <a id="upgradeBtn" class="btn" href="/billing.html" style="text-decoration:none; display:none;">Upgrade</a>
         </div>
@@ -1105,11 +1105,11 @@
         if (status === "expired") {
           setAccessPill("bad", "Trial ended");
           accessSub.textContent = "Upgrade to continue";
-          setAccessNotice(true, "Your trial has ended. You can upgrade in Billing to continue using Tutor and Reports.", "bad");
+          setAccessNotice(true, "Your trial has ended. You can upgrade in Billing to continue using Tutor and Parent Insight.", "bad");
         } else {
           setAccessPill("warn", "No access yet");
           accessSub.textContent = "Start trial in Billing";
-          setAccessNotice(true, "Start your 7-day trial in Billing to unlock Tutor and Reports.", "warn");
+          setAccessNotice(true, "Start your 7-day trial in Billing to unlock Tutor and Parent Insight.", "warn");
         }
 
         disablePaidNav(true);
@@ -1120,7 +1120,7 @@
         setAccessPill("warn", "Access: unknown");
         accessSub.textContent = "Couldn’t verify right now";
         setAccessNotice(true,
-          "We couldn’t verify access (billing check failed). You can still manage children here. If Tutor/Reports are blocked unexpectedly, open Billing.",
+          "We couldn’t verify access (billing check failed). You can still manage children here. If Tutor/Parent Insight are blocked unexpectedly, open Billing.",
           "warn"
         );
         disablePaidNav(false);
