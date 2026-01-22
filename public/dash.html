@@ -119,24 +119,24 @@
         </div>
 
         <div id="formMessage" class="status" aria-live="polite"></div>
-
-        <div class="hr"></div>
-
-        <h3 style="margin:0 0 6px; font-size:16px;">Setup check (parents)</h3>
-        <p class="muted" style="margin:0 0 12px;">See the latest setup check result for the selected child.</p>
-
-        <div id="screenerPanel" class="card" style="background:#fafafa; border:1px solid #ececf4; padding:12px;">
-          <div class="row" style="margin-bottom:10px;">
-            <span class="pill" id="screenerBandPill">Setup check</span>
-            <span class="muted" id="screenerStatusText">Loading…</span>
-          </div>
-          <div class="row">
-            <a class="btn light" href="/screener.html" style="text-decoration:none;">Open setup check</a>
-          </div>
-        </div>
       </section>
 
       <!-- RIGHT: Progress / Next step -->
+      <aside class="card" id="screenerCard">
+        <h2 style="margin:0 0 6px; font-size:18px;">Setup check</h2>
+        <p class="muted" style="margin:0 0 12px;">Parent view of the latest setup check.</p>
+
+        <div class="row" style="margin-bottom:10px;">
+          <span class="pill" id="screenerBandPill">Setup check</span>
+          <span class="muted" id="screenerStatusText">Loading…</span>
+        </div>
+
+        <div class="row">
+          <a id="screenerPrimaryBtn" class="btn" href="/screener.html" style="text-decoration:none;">Open setup check</a>
+          <a id="screenerSecondaryBtn" class="btn light" href="/screener.html" style="text-decoration:none; display:none;">Retake setup check</a>
+        </div>
+      </aside>
+
       <aside class="card">
         <h2 style="margin:0 0 6px; font-size:18px;">Next step</h2>
         <p class="muted" style="margin:0 0 14px;">
@@ -293,9 +293,11 @@
     const pinClearCancel = document.getElementById("pinClearCancel");
 
     // Screener Results
-    const screenerPanel = document.getElementById("screenerPanel");
+    const screenerCard = document.getElementById("screenerCard");
     const screenerBandPill = document.getElementById("screenerBandPill");
     const screenerStatusText = document.getElementById("screenerStatusText");
+    const screenerPrimaryBtn = document.getElementById("screenerPrimaryBtn");
+    const screenerSecondaryBtn = document.getElementById("screenerSecondaryBtn");
 
     // Next step UI
     const nextStepTag = document.getElementById("nextStepTag");
@@ -505,30 +507,45 @@
     }
 
     function setScreenerPanel(text, pillText = "Setup check", pillKind = "") {
-      if (!screenerPanel) return;
+      if (!screenerCard) return;
       screenerStatusText.textContent = text || "";
       screenerBandPill.textContent = pillText;
       screenerBandPill.className = "pill" + (pillKind ? " " + pillKind : "");
     }
 
     async function refreshScreenerPanel() {
-      if (!screenerPanel) return;
+      if (!screenerCard) return;
       try {
         const status = await callAppApi("/child-mode/status", { method: "GET" });
         if (status?.child_mode) {
-          screenerPanel.style.display = "none";
+          screenerCard.style.display = "none";
           return;
         }
       } catch {
         // If auth fails, keep quiet
       }
 
-      screenerPanel.style.display = "block";
+      screenerCard.style.display = "block";
 
       const selectedId = getSelectedChildId();
       if (!selectedId) {
         setScreenerPanel("Choose a child to see setup status.");
+        if (screenerPrimaryBtn) {
+          screenerPrimaryBtn.textContent = "Open setup check";
+          screenerPrimaryBtn.classList.add("ghost");
+          screenerPrimaryBtn.setAttribute("aria-disabled", "true");
+          screenerPrimaryBtn.style.pointerEvents = "none";
+          screenerPrimaryBtn.style.opacity = "0.6";
+        }
+        if (screenerSecondaryBtn) screenerSecondaryBtn.style.display = "none";
         return;
+      }
+
+      if (screenerPrimaryBtn) {
+        screenerPrimaryBtn.classList.remove("ghost");
+        screenerPrimaryBtn.removeAttribute("aria-disabled");
+        screenerPrimaryBtn.style.pointerEvents = "";
+        screenerPrimaryBtn.style.opacity = "";
       }
 
       try {
@@ -542,6 +559,8 @@
         const row = data?.[0];
         if (!row) {
           setScreenerPanel("Not completed yet.");
+          if (screenerPrimaryBtn) screenerPrimaryBtn.textContent = "Complete setup check";
+          if (screenerSecondaryBtn) screenerSecondaryBtn.style.display = "none";
           return;
         }
 
@@ -550,8 +569,12 @@
         else if (row.band === "medium") label = "Some indicators";
         else if (row.band === "high") label = "Higher indicators";
         setScreenerPanel(`Completed: ${formatUKDateTime(row.created_at)}`, label, "good");
+        if (screenerPrimaryBtn) screenerPrimaryBtn.textContent = "Open setup check";
+        if (screenerSecondaryBtn) screenerSecondaryBtn.style.display = "inline-flex";
       } catch {
         setScreenerPanel("Not completed yet.");
+        if (screenerPrimaryBtn) screenerPrimaryBtn.textContent = "Complete setup check";
+        if (screenerSecondaryBtn) screenerSecondaryBtn.style.display = "none";
       }
     }
 
