@@ -356,7 +356,7 @@ async function handleParentPinVerify(context) {
       return jsonResponse({ ok: false, error: "Invalid PIN" }, 401);
     }
     await updateChildMode(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, user.id, false);
-    return jsonResponse({ ok: true });
+    return jsonResponse({ ok: true, child_mode: false });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
   }
