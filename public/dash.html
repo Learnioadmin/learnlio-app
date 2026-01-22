@@ -197,7 +197,8 @@
     const LOGIN_URL = "/login.html";
     // =========================
 
-    const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = window.sb || window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.sb = sb || window.sb;
     if (!sb) return;
 
     // Nav + actions

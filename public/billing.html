@@ -210,7 +210,8 @@
     const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
     const BILLING_API_BASE = "https://learnlio-billing.falling-grass-34ab.workers.dev";
 
-    const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = window.sb || window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.sb = sb || window.sb;
 
     const logoutBtn = document.getElementById("logoutBtn");
 
