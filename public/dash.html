@@ -22,6 +22,8 @@
 
     .grid { display:grid; grid-template-columns:1fr; gap:14px; }
     @media (min-width: 860px) { .grid { grid-template-columns: 1.25fr .75fr; } }
+    .rightcol { display:grid; gap:14px; }
+    @media (min-width: 860px) { .rightcol { grid-column: 2; } }
 
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .hr { height:1px; background:#ececf4; margin:14px 0; }
@@ -121,60 +123,61 @@
         <div id="formMessage" class="status" aria-live="polite"></div>
       </section>
 
-      <!-- RIGHT: Progress / Next step -->
-      <aside class="card" id="screenerCard">
-        <h2 style="margin:0 0 6px; font-size:18px;">Setup check</h2>
-        <p class="muted" style="margin:0 0 12px;">Parent view of the latest setup check.</p>
+      <div class="rightcol">
+        <aside class="card" id="screenerCard">
+          <h2 style="margin:0 0 6px; font-size:18px;">Setup check</h2>
+          <div class="pill" id="screenerBandPill" style="margin-bottom:10px;">Support signal</div>
+          <div class="muted" id="screenerStatusText">Loading…</div>
 
-        <div class="row" style="margin-bottom:10px;">
-          <span class="pill" id="screenerBandPill">Setup check</span>
-          <span class="muted" id="screenerStatusText">Loading…</span>
-        </div>
+          <div id="screenerSummary" class="muted" style="margin-top:10px;"></div>
+          <div id="screenerMayAffectWrap" class="muted" style="margin-top:10px;"></div>
+          <div id="screenerNextStep" class="muted" style="margin-top:10px; font-weight:700;"></div>
 
-        <div class="row">
-          <a id="screenerPrimaryBtn" class="btn" href="/screener.html" style="text-decoration:none;">Open setup check</a>
-          <a id="screenerSecondaryBtn" class="btn light" href="/screener.html" style="text-decoration:none; display:none;">Retake setup check</a>
-        </div>
-      </aside>
+          <div class="row" style="margin-top:12px;">
+            <a id="screenerPrimaryBtn" class="btn" href="/screener.html" style="text-decoration:none;">Open setup check</a>
+            <a id="screenerSecondaryBtn" class="btn light" href="/screener.html" style="text-decoration:none; display:none;">Retake setup check</a>
+          </div>
+        </aside>
 
-      <aside class="card">
-        <h2 style="margin:0 0 6px; font-size:18px;">Next step</h2>
-        <p class="muted" style="margin:0 0 14px;">
-          We personalise this using your child’s latest Tutor sessions.
-        </p>
+        <aside class="card">
+          <h2 style="margin:0 0 6px; font-size:18px;">Next step</h2>
+          <p class="muted" style="margin:0 0 14px;">
+            We personalise this using your child’s latest Tutor sessions.
+          </p>
 
-        <div class="hr"></div>
+          <div class="hr"></div>
 
-        <div id="nextStepBox">
-          <div id="nextStepTag" class="pill" style="margin-bottom:10px;">Starter plan</div>
-          <div id="nextStepTitle" style="font-weight:900; margin-bottom:6px;">Try a short warm-up</div>
-          <div id="nextStepBody" class="muted">
-            Start with a 5–7 minute Tutor session. If your child struggles, use hints and go slowly.
-            Progress and reports appear after a couple of sessions.
+          <div id="nextStepBox">
+            <div id="nextStepTag" class="pill" style="margin-bottom:10px;">Starter plan</div>
+            <div id="nextStepTitle" style="font-weight:900; margin-bottom:6px;">Try a short warm-up</div>
+            <div id="nextStepBody" class="muted">
+              Start with a 5–7 minute Tutor session. If your child struggles, use hints and go slowly.
+              Progress and reports appear after a couple of sessions.
+            </div>
+
+            <div class="row" style="margin-top:14px;">
+              <a id="nextStepPrimaryBtn" class="btn" href="/chat.html" style="text-decoration:none;">Start Tutor</a>
+              <a class="btn light" href="/screener.html" style="text-decoration:none;">Run screener</a>
+            </div>
           </div>
 
-          <div class="row" style="margin-top:14px;">
-            <a id="nextStepPrimaryBtn" class="btn" href="/chat.html" style="text-decoration:none;">Start Tutor</a>
-            <a class="btn light" href="/screener.html" style="text-decoration:none;">Run screener</a>
+          <div class="hr"></div>
+
+          <h3 style="margin:0 0 6px; font-size:16px;">What Learnlio does well</h3>
+          <ul style="margin:0; padding-left:18px;" class="muted">
+            <li>Short steps (reduced overwhelm)</li>
+            <li>Hints on demand (no shame)</li>
+            <li>Dyslexia-friendly wording & spacing</li>
+            <li>Parent reports (clear next actions)</li>
+          </ul>
+
+          <div class="hr"></div>
+
+          <div class="muted" style="font-size:13px;">
+            Tip: most parents leave sessions signed in. We’re adding an auto-lock for extra safety soon.
           </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <h3 style="margin:0 0 6px; font-size:16px;">What Learnlio does well</h3>
-        <ul style="margin:0; padding-left:18px;" class="muted">
-          <li>Short steps (reduced overwhelm)</li>
-          <li>Hints on demand (no shame)</li>
-          <li>Dyslexia-friendly wording & spacing</li>
-          <li>Parent reports (clear next actions)</li>
-        </ul>
-
-        <div class="hr"></div>
-
-        <div class="muted" style="font-size:13px;">
-          Tip: most parents leave sessions signed in. We’re adding an auto-lock for extra safety soon.
-        </div>
-      </aside>
+        </aside>
+      </div>
     </div>
     <section class="card" id="parentLockCard" style="margin-top:14px;">
       <h2 style="margin:0 0 6px; font-size:18px;">Parental Lock</h2>
@@ -296,6 +299,9 @@
     const screenerCard = document.getElementById("screenerCard");
     const screenerBandPill = document.getElementById("screenerBandPill");
     const screenerStatusText = document.getElementById("screenerStatusText");
+    const screenerSummary = document.getElementById("screenerSummary");
+    const screenerMayAffectWrap = document.getElementById("screenerMayAffectWrap");
+    const screenerNextStep = document.getElementById("screenerNextStep");
     const screenerPrimaryBtn = document.getElementById("screenerPrimaryBtn");
     const screenerSecondaryBtn = document.getElementById("screenerSecondaryBtn");
 
@@ -506,11 +512,93 @@
       });
     }
 
-    function setScreenerPanel(text, pillText = "Setup check", pillKind = "") {
+    function setScreenerPanel(text, pillText = "Support signal", pillKind = "") {
       if (!screenerCard) return;
       screenerStatusText.textContent = text || "";
       screenerBandPill.textContent = pillText;
       screenerBandPill.className = "pill" + (pillKind ? " " + pillKind : "");
+    }
+
+    function setScreenerDetails(summary, mayAffect, nextStep) {
+      if (screenerSummary) screenerSummary.textContent = summary || "";
+
+      if (screenerMayAffectWrap) {
+        screenerMayAffectWrap.innerHTML = "";
+        if (Array.isArray(mayAffect) && mayAffect.length) {
+          const label = document.createElement("div");
+          label.textContent = "May affect:";
+          label.style.fontWeight = "700";
+          const list = document.createElement("ul");
+          list.style.margin = "6px 0 0 18px";
+          mayAffect.forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = String(item || "");
+            list.appendChild(li);
+          });
+          screenerMayAffectWrap.appendChild(label);
+          screenerMayAffectWrap.appendChild(list);
+        }
+      }
+
+      if (screenerNextStep) {
+        screenerNextStep.textContent = nextStep ? `Next step: ${nextStep}` : "";
+      }
+    }
+
+    function parseScreenerDetails(raw) {
+      if (!raw) return null;
+      if (typeof raw === "string") {
+        try { return JSON.parse(raw); } catch { return null; }
+      }
+      if (typeof raw === "object") return raw;
+      return null;
+    }
+
+    function getFallbackScreenerDetails(band) {
+      if (band === "low") {
+        return {
+          summary: "Fewer signs showed up in this check.",
+          mayAffect: [
+            "Occasional slips under time pressure",
+            "Confidence when tasks are new"
+          ],
+          nextStep: "If learning is still stressful, use short calm practice and build confidence."
+        };
+      }
+      if (band === "medium") {
+        return {
+          summary: "Some signs showed up; extra structure may help.",
+          mayAffect: [
+            "Reading or spelling accuracy",
+            "Working memory on multi-step tasks",
+            "Pace and confidence under time pressure"
+          ],
+          nextStep: "Try short sessions, reduce time pressure, and use read-aloud or hints."
+        };
+      }
+      if (band === "high") {
+        return {
+          summary: "Many signs showed up; consider discussing with school or SENCO.",
+          mayAffect: [
+            "Reading and spelling fluency",
+            "Writing volume and accuracy",
+            "Confidence under pressure"
+          ],
+          nextStep: "Use calm practice, reduce pressure, and ask school about support."
+        };
+      }
+      return { summary: "", mayAffect: [], nextStep: "" };
+    }
+
+    function getScreenerDetails(details, band) {
+      const parsed = parseScreenerDetails(details);
+      const summary = typeof parsed?.summary === "string" ? parsed.summary : "";
+      const mayAffect = Array.isArray(parsed?.may_affect) ? parsed.may_affect : [];
+      const nextStep = typeof parsed?.next_step === "string" ? parsed.next_step : "";
+      if (summary || mayAffect.length || nextStep) {
+        return { summary, mayAffect, nextStep };
+      }
+      return getFallbackScreenerDetails(band);
     }
 
     async function refreshScreenerPanel() {
@@ -530,6 +618,7 @@
       const selectedId = getSelectedChildId();
       if (!selectedId) {
         setScreenerPanel("Choose a child to see setup status.");
+        setScreenerDetails("", [], "");
         if (screenerPrimaryBtn) {
           screenerPrimaryBtn.textContent = "Open setup check";
           screenerPrimaryBtn.classList.add("ghost");
@@ -551,7 +640,7 @@
       try {
         const { data, error } = await sb
           .from("screener_results")
-          .select("score, band, created_at")
+          .select("score, band, created_at, details")
           .eq("child_id", selectedId)
           .order("created_at", { ascending: false })
           .limit(1);
@@ -559,20 +648,25 @@
         const row = data?.[0];
         if (!row) {
           setScreenerPanel("Not completed yet.");
+          setScreenerDetails("", [], "");
           if (screenerPrimaryBtn) screenerPrimaryBtn.textContent = "Complete setup check";
           if (screenerSecondaryBtn) screenerSecondaryBtn.style.display = "none";
           return;
         }
 
-        let label = "Setup check";
-        if (row.band === "low") label = "Low indicators";
-        else if (row.band === "medium") label = "Some indicators";
-        else if (row.band === "high") label = "Higher indicators";
-        setScreenerPanel(`Completed: ${formatUKDateTime(row.created_at)}`, label, "good");
+        let signalText = "Support signal";
+        let signalKind = "";
+        if (row.band === "low") { signalText = "Support signal: low"; signalKind = "good"; }
+        else if (row.band === "medium") { signalText = "Support signal: moderate"; signalKind = "warn"; }
+        else if (row.band === "high") { signalText = "Support signal: strong"; signalKind = "bad"; }
+        setScreenerPanel(`Completed: ${formatUKDateTime(row.created_at)}`, signalText, signalKind);
+        const details = getScreenerDetails(row.details, row.band);
+        setScreenerDetails(details.summary, details.mayAffect, details.nextStep);
         if (screenerPrimaryBtn) screenerPrimaryBtn.textContent = "Open setup check";
         if (screenerSecondaryBtn) screenerSecondaryBtn.style.display = "inline-flex";
       } catch {
         setScreenerPanel("Not completed yet.");
+        setScreenerDetails("", [], "");
         if (screenerPrimaryBtn) screenerPrimaryBtn.textContent = "Complete setup check";
         if (screenerSecondaryBtn) screenerSecondaryBtn.style.display = "none";
       }
