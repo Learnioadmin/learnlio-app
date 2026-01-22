@@ -1028,6 +1028,9 @@
     let child = null;
     let childName = "Child";
     let childAge = 10;
+    let screener = null;
+    let screenerBand = null;
+    let screenerStartLevel = null;
 
     // Tutor state
     let subject = null;
@@ -1327,6 +1330,30 @@
       if (error){ console.error("session_items insert failed:", error); throw error; }
     }
 
+    async function loadLatestScreener(childId){
+      try{
+        const { data, error } = await sb
+          .from("screener_results")
+          .select("band, score, details, created_at")
+          .eq("child_id", childId)
+          .order("created_at", { ascending:false })
+          .limit(1);
+        if (error) throw error;
+        return data?.[0] || null;
+      } catch (e){
+        console.warn("loadLatestScreener failed", e);
+        return null;
+      }
+    }
+
+    function deriveStartLevelFromScreener(row){
+      if (!row) return null;
+      if (row.band === "high") return 1;
+      if (row.band === "medium") return 2;
+      if (row.band === "low") return 3;
+      return null;
+    }
+
     async function updateSessionRollups(){
       if (!sessionDbId) return;
       const { error } = await sb.from("sessions").update({
@@ -1364,7 +1391,7 @@
         child_id: child.id,
         subject,
         area,
-        level: 1,
+        level: (screenerStartLevel ?? 1),
         confidence: 0.5,
         accuracy: 0.0,
         total_attempts: 0,
@@ -1953,6 +1980,22 @@ Short lines.
       child = data;
       childName = child.child_name || "Child";
       childAge = computeAgeFromDob(child.child_dob);
+      try {
+        screener = await loadLatestScreener(child.id);
+        screenerBand = screener?.band || null;
+        screenerStartLevel = deriveStartLevelFromScreener(screener);
+      } catch (e){
+        screener = null;
+        screenerBand = null;
+        screenerStartLevel = null;
+      }
+
+      try {
+        const hasOverlay = !!localStorage.getItem("learnlio_overlay");
+        if (!hasOverlay && (screenerBand === "medium" || screenerBand === "high")) {
+          applyOverlay("paper");
+        }
+      } catch {}
 
       loadXpAndRewards();
       clearError();
@@ -1966,6 +2009,9 @@ Short lines.
         addBotMessage(`👋 Hi ${childName}!\n\nLast time you worked on:\n${last.subject} • ${last.area || "—"}\n\nLet’s choose what you want to do today.`);
       } else {
         addBotMessage(`👋 Hi ${childName}!\n\nI’ll help you in a calm, step-by-step way.\n\nLet’s choose what we’re working on.`);
+      }
+      if (screener) {
+        addBotMessage("Ill keep things calm and step-by-step today.");
       }
 
       // Start inside-chat picker
