@@ -1,1 +1,316 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <link rel="icon" href="/assets/img/flavicon.ico">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio - Learning Hub</title>
 
+  <link rel="stylesheet" href="/assets/css/app.css" />
+
+  <style>
+    :root{
+      --bg:#f7f7fb;
+      --card:#ffffff;
+      --text:#0b1220;
+      --muted:#5b6475;
+      --line:#e8eaf2;
+      --brand:#0b5cff;
+      --brand-soft:#eef3ff;
+      --shadow: 0 12px 32px rgba(12, 18, 32, .08);
+      --radius: 18px;
+    }
+
+    *{ box-sizing:border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:var(--bg); color:var(--text); }
+    .container { max-width: 1020px; margin: 0 auto; padding: 18px; }
+
+    .card {
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:16px;
+      box-shadow: var(--shadow);
+      border:1px solid rgba(232,234,242,.8);
+    }
+    .muted { color:var(--muted); font-size: 14px; line-height:1.6; }
+    .small { font-size:13px; }
+    .hr { height:1px; background:var(--line); margin:14px 0; }
+
+    .btn {
+      background:linear-gradient(180deg, var(--brand), #0846d8);
+      border:none; color:#fff; padding:12px 14px; border-radius:12px;
+      cursor:pointer; font-size:15px; font-weight:900;
+      box-shadow: 0 10px 18px rgba(11,92,255,.18);
+      display:inline-flex; align-items:center; gap:8px;
+      text-decoration:none;
+    }
+    .btn.light { background:#e5e7eb; color:#111; box-shadow:none; }
+    .btn.ghost { background:transparent; border:1px solid #d1d5db; color:#111; box-shadow:none; }
+
+    .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
+    @media (min-width: 900px){ .grid { grid-template-columns: 1.1fr .9fr; } }
+
+    .hero {
+      background: radial-gradient(1000px 360px at 10% -10%, rgba(11,92,255,.18), transparent 55%),
+                  #fff;
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: calc(var(--radius) + 2px);
+    }
+    .hero h1 { margin:0 0 6px; font-size:22px; letter-spacing:-.4px; }
+    .pill {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      background:var(--brand-soft);
+      border:1px solid rgba(11,92,255,.14);
+      font-size:12px; font-weight:900; color:var(--brand);
+    }
+
+    .progress {
+      height:10px; background:#edf0f7; border-radius:999px; overflow:hidden;
+      border:1px solid #e1e6f2;
+    }
+    .progress > div{
+      height:100%;
+      background: linear-gradient(90deg, #2f7bff, #0b5cff);
+      width:0%;
+    }
+
+    .actions .row { display:flex; gap:10px; flex-wrap:wrap; }
+    .actions .row.secondary { margin-top:10px; }
+
+    .error-card { border:1px dashed #d5d9e6; background:#fff; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <div id="navMount"></div>
+
+  <main class="container">
+    <section class="card hero" aria-label="Learning Hub hero">
+      <div class="pill">🎒 Learning Hub</div>
+      <h1>Learning Hub</h1>
+      <div class="muted">Small steps. Big confidence.</div>
+      <div id="childLine" class="muted small" style="margin-top:6px;">Loading child…</div>
+    </section>
+
+    <section class="card" style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <h2 style="margin:0; font-size:16px;">XP progress</h2>
+        <span class="pill" id="xpBadge">Starter</span>
+      </div>
+      <div style="margin-top:12px;">
+        <div style="font-weight:900; font-size:28px;" id="xpTotal">0 XP</div>
+        <div class="muted small" id="xpNext">Next reward: 100 XP to go</div>
+        <div class="progress" style="margin-top:10px;">
+          <div id="xpBar"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid" style="margin-top:14px;">
+      <section class="card actions">
+        <h2 style="margin:0 0 10px; font-size:16px;">Quick actions</h2>
+        <div class="row">
+          <a class="btn" href="/lessons.html">📘 Start a Lesson</a>
+          <a class="btn" href="/chat.html">💬 Continue Tutor</a>
+        </div>
+        <div class="row secondary">
+          <a class="btn light" href="/reports.html">📊 Reports</a>
+          <a class="btn ghost" href="/billing.html">💳 Billing</a>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 style="margin:0 0 8px; font-size:16px;">What we're practising</h2>
+        <div class="muted">We'll pick the best next step automatically.</div>
+        <div class="hr"></div>
+        <div class="muted small">You can start with Tutor or a short lesson at any time.</div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:14px;">
+      <h2 style="margin:0 0 8px; font-size:16px;">Recent activity</h2>
+      <div class="muted">No activity yet - try a lesson.</div>
+    </section>
+
+    <section id="errorBox" class="card error-card" style="margin-top:14px; display:none;">
+      <h2 style="margin:0 0 8px; font-size:16px;">We need a child selected</h2>
+      <div class="muted" style="line-height:1.6;">
+        Choose a child from your Dashboard so we can personalise the learning hub.
+      </div>
+      <div style="margin-top:10px;">
+        <a class="btn" href="/dash.html">Go to Dashboard</a>
+      </div>
+    </section>
+
+    <footer class="footer" role="contentinfo" style="margin-top:18px;">
+      <div class="footer-inner">
+        <div>
+          <div style="font-weight:950; color:var(--ink); margin-bottom:6px;">Learnlio</div>
+          <div style="max-width:560px; line-height:1.7;">
+            Calm, dyslexia-friendly learning support for UK children who feel pressured, anxious, or stuck.
+          </div>
+          <div style="margin-top:10px; font-size:13px;">
+            © <span id="year"></span> Learnlio. All rights reserved.
+          </div>
+        </div>
+
+        <div class="footer-links" aria-label="Footer links">
+          <a href="/contact.html">Contact us</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms &amp; Conditions</a>
+          <a href="/cookies.html">Cookies</a>
+          <a href="/ethics.html">Ethics</a>
+          <a href="/safeguarding.html">Safeguarding</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script src="/assets/js/layout-app.js?v=20260122-pin2"></script>
+  <script>
+  (() => {
+    const SUPABASE_URL = "https://jesuzdpivwsprkmqmoab.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_7y2jcI_sLwLG-8IHMI3WMw_7Y8IFUdL";
+
+    const sb = window.sb || window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.sb = sb || window.sb;
+
+    const childLine = document.getElementById("childLine");
+    const errorBox = document.getElementById("errorBox");
+    const xpTotal = document.getElementById("xpTotal");
+    const xpNext = document.getElementById("xpNext");
+    const xpBar = document.getElementById("xpBar");
+    const xpBadge = document.getElementById("xpBadge");
+
+    function showErrorCard(){
+      errorBox.style.display = "block";
+    }
+
+    function hideErrorCard(){
+      errorBox.style.display = "none";
+    }
+
+    function getSelectedChildFromLocalStorage(){
+      try {
+        const raw = localStorage.getItem("selectedChild");
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch { return null; }
+    }
+
+    function nextRewardAt(xp){
+      const n = Math.max(0, Number(xp||0));
+      return (Math.floor(n / 100) + 1) * 100;
+    }
+
+    function rewardLabel(xp){
+      const tier = Math.floor((Number(xp||0)) / 100);
+      if (tier <= 0) return "Starter";
+      if (tier === 1) return "Bronze";
+      if (tier === 2) return "Silver";
+      if (tier === 3) return "Gold";
+      if (tier === 4) return "Superstar";
+      return "Legend";
+    }
+
+    function renderXp(total){
+      const totalNum = Math.max(0, Number(total || 0));
+      const next = nextRewardAt(totalNum);
+      const toGo = Math.max(0, next - totalNum);
+      const pct = next ? Math.min(100, Math.max(0, Math.round((totalNum / next) * 100))) : 0;
+      xpTotal.textContent = `${totalNum} XP`;
+      xpNext.textContent = `Next reward: ${toGo} XP to go`;
+      xpBar.style.width = pct + "%";
+      xpBadge.textContent = rewardLabel(totalNum);
+    }
+
+    async function requireAuth(){
+      const { data, error } = await sb.auth.getUser();
+      if (error || !data?.user){
+        window.location.href = "/login.html";
+        return null;
+      }
+      return data.user;
+    }
+
+    async function loadChild(childId, userId){
+      const { data, error } = await sb
+        .from("children")
+        .select("id, parent_user_id, child_name, child_dob")
+        .eq("id", childId)
+        .single();
+
+      if (error || !data) return { ok:false, error:"Could not load child profile." };
+      if (data.parent_user_id !== userId) return { ok:false, error:"This child profile does not belong to this account." };
+      return { ok:true, child:data };
+    }
+
+    async function loadChildXp(userId, childId){
+      const { data: existing, error } = await sb
+        .from("child_xp")
+        .select("xp_total, xp_lifetime, updated_at")
+        .eq("owner_id", userId)
+        .eq("child_id", childId)
+        .maybeSingle();
+
+      if (error) {
+        console.warn("child_xp load failed", error);
+        return { xp_total: 0, xp_lifetime: 0 };
+      }
+
+      if (!existing?.xp_total && !existing?.xp_lifetime) {
+        const payload = {
+          owner_id: userId,
+          child_id: childId,
+          xp_total: 0,
+          xp_lifetime: 0,
+          updated_at: new Date().toISOString()
+        };
+        const { data: created } = await sb
+          .from("child_xp")
+          .insert(payload)
+          .select("xp_total, xp_lifetime, updated_at")
+          .single();
+        return created || { xp_total: 0, xp_lifetime: 0 };
+      }
+
+      return existing;
+    }
+
+    (async () => {
+      if (!sb) { window.location.href = "/login.html"; return; }
+
+      const user = await requireAuth();
+      if (!user) return;
+
+      const selected = getSelectedChildFromLocalStorage();
+      if (!selected?.id){
+        childLine.textContent = "Please choose a child from the Dashboard.";
+        showErrorCard();
+        return;
+      }
+
+      const res = await loadChild(selected.id, user.id);
+      if (!res.ok){
+        childLine.textContent = res.error;
+        showErrorCard();
+        return;
+      }
+
+      hideErrorCard();
+      childLine.textContent = `For ${res.child.child_name || "your child"}`;
+
+      const xp = await loadChildXp(user.id, res.child.id);
+      renderXp(xp?.xp_total || 0);
+    })();
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+  })();
+  </script>
+</body>
+</html>
