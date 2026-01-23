@@ -236,6 +236,7 @@
     .speak-btn{ background: linear-gradient(180deg, var(--brand2), var(--brand)); }
     .hint-btn{ background: linear-gradient(180deg, #22c55e, #10b981); }
     .next-btn{ background: linear-gradient(180deg, #8b5cf6, #7c3aed); }
+    .explain-btn{ background: linear-gradient(180deg, #38bdf8, #60a5fa); }
 
     #typing-indicator{
       display:none;
@@ -972,6 +973,22 @@
         controls.appendChild(hintBtn);
       }
 
+      if (opts.showExplain){
+        const explainBtn = document.createElement("button");
+        explainBtn.type = "button";
+        explainBtn.className = "btn-small explain-btn";
+        explainBtn.innerText = "🔄 Explain another way";
+        explainBtn.onclick = async () => {
+          explainBtn.disabled = true;
+          try {
+            await explainAnotherWay();
+          } finally {
+            explainBtn.disabled = false;
+          }
+        };
+        controls.appendChild(explainBtn);
+      }
+
       if (opts.showNext){
         const nextBtn = document.createElement("button");
         nextBtn.type = "button";
@@ -1656,11 +1673,76 @@ Short lines.
       addBotMessage(hintReply);
     }
 
+    async function explainAnotherWay(){
+      if (!currentQuestion){
+        addBotMessage("Tell me which bit feels tricky, and I’ll explain it another way.");
+        return;
+      }
+
+      const isMath = currentQuestion.kind === "math";
+      const styles = isMath ? ["visual", "counting", "story", "short"] : ["example", "chunking", "sound", "short"];
+      currentQuestion.explain_variant = (currentQuestion.explain_variant || 0) + 1;
+      const variant = currentQuestion.explain_variant;
+      const style = styles[(variant - 1) % styles.length];
+
+      try{
+        await insertSessionItem({
+          item_type: "explain_another_way",
+          prompt_text: isMath ? currentQuestion.displayText : currentQuestion.prompt,
+          child_text: null,
+          is_correct: null,
+          meta: { subject, area, difficultyLevel, explain_variant: variant, style }
+        });
+      }catch(e){
+        console.warn("explainAnotherWay log failed (safe)", e);
+      }
+
+      let prompt = "";
+      if (isMath){
+        prompt = `
+You are Learnlio AI, a child-safe UK tutor.
+Child: ${childName}, age ${childAge}
+Maths area: ${area}
+Question: "${currentQuestion.displayText}"
+Style: ${style}
+
+Explain this another way.
+Do NOT give the final answer.
+Short lines. Calm tone. British English.
+End with: "Want to try it now?"
+`;
+      } else {
+        const choices = (currentQuestion.choices || []).map(c => `- ${c}`).join("\n");
+        prompt = `
+You are Learnlio AI, a child-safe UK tutor.
+Child: ${childName}, age ${childAge}
+English area: ${area}
+Prompt: "${currentQuestion.prompt}"
+Choices:
+${choices}
+Style: ${style}
+
+Explain another way to think about this.
+Do NOT tell them which option is correct.
+Short lines. Calm tone. British English.
+End with: "Want to try it now?"
+`;
+      }
+
+      try{
+        const reply = await callBackend(prompt);
+        addBotMessage(reply);
+      }catch(e){
+        console.warn("explainAnotherWay failed", e);
+        addBotMessage("I can try another way. Tell me which bit feels tricky, and I’ll explain it calmly.");
+      }
+    }
+
     function showMathQuestion(q){
       hintUsedForCurrent = false;
       addBotMessage(
         `✏️ Question:\n\n${q.displayText}\n\nTake your time.\nWhat do you think the answer is?`,
-        { showHint:true }
+        { showHint:true, showExplain:true }
       );
 
       insertSessionItem({
@@ -1774,7 +1856,7 @@ Short lines.
         correctIndex: q.correctIndex
       };
 
-      addBotMessage(`📚 ${q.prompt}`, { choices: q.choices });
+      addBotMessage(`📚 ${q.prompt}`, { choices: q.choices, showExplain:true });
 
       insertSessionItem({
         item_type: "prompt",
