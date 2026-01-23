@@ -177,6 +177,7 @@
       border: 1px solid rgba(15,23,42,.10);
       border-radius: var(--radius2);
       padding: 12px;
+      padding-bottom: calc(var(--composerH, 96px) + 12px);
       display:flex;
       flex-direction:column;
       gap:10px;
@@ -494,6 +495,8 @@
       box-shadow: 0 10px 16px rgba(2,6,23,.06);
     }
     .calcBtn:hover{ background:#f3f4f6; }
+    .calcActions{ display:flex; gap:10px; margin-top:10px; }
+    .calcActions .btn{ flex:1; justify-content:center; }
 
     /* Reward toast */
     #rewardToast{
@@ -920,7 +923,6 @@
       padding:14px;">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
         <div style="font-weight:950;">🧮 Calculator</div>
-        <button id="calcCloseBtn" class="btn light" type="button">Close</button>
       </div>
 
       <!-- moved calculator content -->
@@ -930,6 +932,10 @@
           <button type="button" class="calcBtn">4</button><button type="button" class="calcBtn">5</button><button type="button" class="calcBtn">6</button><button type="button" class="calcBtn"></button>
           <button type="button" class="calcBtn">1</button><button type="button" class="calcBtn">2</button><button type="button" class="calcBtn">3</button><button type="button" class="calcBtn"></button>
           <button type="button" class="calcBtn">0</button><button type="button" id="calcClearBtn" class="calcBtn">C</button><button type="button" class="calcBtn">+</button><button type="button" class="calcBtn">=</button>
+        </div>
+        <div class="calcActions">
+          <button type="button" id="calcOkBtn" class="btn">OK</button>
+          <button type="button" id="calcCloseBtn" class="btn light">Close</button>
         </div>
       </div>
 
@@ -948,7 +954,7 @@
       document.documentElement.style.setProperty('--vh', `${vh}px`);
     }
     setVh();
-    window.addEventListener('resize', setVh);
+    window.addEventListener('resize', () => { setVh(); measureComposer(); });
 
     const vv = window.visualViewport || null;
     function updateKeyboardShift(){
@@ -963,7 +969,7 @@
       vv.addEventListener('resize', updateKeyboardShift);
       vv.addEventListener('scroll', updateKeyboardShift);
     }
-    window.addEventListener('orientationchange', () => { setTimeout(() => { setVh(); updateKeyboardShift(); }, 80); });
+    window.addEventListener('orientationchange', () => { setTimeout(() => { setVh(); updateKeyboardShift(); measureComposer(); }, 80); });
     setTimeout(updateKeyboardShift, 0);
 
     // =========================
@@ -1040,14 +1046,14 @@
 
     function measureComposer(){
       if (!composerEl) return;
-      const h = Math.max(56, Math.round(composerEl.getBoundingClientRect().height));
+      const h = Math.max(56, composerEl.offsetHeight || 96);
       document.documentElement.style.setProperty('--composerH', `${h}px`);
     }
     window.addEventListener("resize", () => { measureComposer(); });
     setTimeout(measureComposer, 0);
 
-    input.addEventListener("focus", scrollBottomSoon);
-    input.addEventListener("click", scrollBottomSoon);
+    input.addEventListener("focus", () => scrollBottom(true));
+    input.addEventListener("click", () => scrollBottom(true));
 
     const subjectSelection = document.getElementById("subject-selection"); // hidden now
     const areaSelection = document.getElementById("area-selection");       // hidden now
@@ -1055,6 +1061,7 @@
     const composerTools = document.getElementById("composerTools");
     const calcOpenBtn = document.getElementById("calcOpenBtn");
     const calcSheet = document.getElementById("calcSheet");
+    const calcOkBtn = document.getElementById("calcOkBtn");
     const calcCloseBtn = document.getElementById("calcCloseBtn");
 
     const mathsBtn = document.getElementById("mathsBtn");
@@ -1114,6 +1121,14 @@
       input.style.opacity = disabled ? "0.65" : "1";
     }
     function cleanBotText(t){ return String(t || "").replace(/\*\*/g, ""); }
+    function normalizeLines(text){
+      let t = String(text || "");
+      t = t.replace(/\r\n/g, "\n");
+      t = t.replace(/[ \t]+\n/g, "\n");
+      t = t.replace(/\n{3,}/g, "\n\n");
+      t = t.trim();
+      return t;
+    }
     function escapeHtml(s){
       return String(s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
     }
@@ -1132,19 +1147,12 @@
       if (!jumpLatestBtn) return;
       jumpLatestBtn.style.display = isNearBottom(messagesDiv) ? "none" : "inline-flex";
     }
-    function scrollBottom(){
+    function scrollBottom(force=false){
+      if (!force && !isNearBottom(messagesDiv, 320)) return;
       requestAnimationFrame(() => {
-        if (bottomAnchor && bottomAnchor.scrollIntoView){
-          bottomAnchor.scrollIntoView({ block: "end" });
-        } else {
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
         requestAnimationFrame(() => {
-          if (bottomAnchor && bottomAnchor.scrollIntoView){
-            bottomAnchor.scrollIntoView({ block: "end" });
-          } else {
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-          }
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
         });
       });
     }
@@ -1156,27 +1164,31 @@
       if (!calcSheet) return;
       calcSheet.style.display = "block";
       measureComposer();
+      scrollBottom(true);
     }
 
     function closeCalc(){
       if (!calcSheet) return;
       calcSheet.style.display = "none";
       measureComposer();
+      scrollBottom(true);
     }
     function appendAndMaybeScroll(el){
-      const shouldStick = isNearBottom(messagesDiv, 180);
+      const shouldStick = isNearBottom(messagesDiv, 320);
       if (bottomAnchor && bottomAnchor.parentNode === messagesDiv) {
         messagesDiv.insertBefore(el, bottomAnchor);
       } else {
         messagesDiv.appendChild(el);
       }
       measureComposer();
-      if (shouldStick) scrollBottom();
-      updateJumpButton();
+      requestAnimationFrame(() => {
+        if (shouldStick) scrollBottom(true);
+        updateJumpButton();
+      });
     }
 
     messagesDiv.addEventListener("scroll", updateJumpButton);
-    jumpLatestBtn.addEventListener("click", () => { scrollBottom(); updateJumpButton(); });
+    jumpLatestBtn.addEventListener("click", () => { scrollBottom(true); updateJumpButton(); });
 
     calcOpenBtn?.addEventListener("click", (e) => {
       e.preventDefault();
@@ -1259,7 +1271,7 @@
     }
 
     function addBotMessage(text, opts={}){
-      const safeText = cleanBotText(text);
+      const safeText = normalizeLines(cleanBotText(text));
       const div = document.createElement("div");
       div.className = "msg bot";
 
@@ -1343,7 +1355,7 @@
       div.className = "msg bot";
 
       const content = document.createElement("div");
-      content.innerText = cleanBotText(text);
+      content.innerText = normalizeLines(cleanBotText(text));
       div.appendChild(content);
 
       const grid = document.createElement("div");
@@ -2256,11 +2268,14 @@ End with: "Want to try it now?"
         if (composerTools) composerTools.style.display = "flex";
         currentQuestion = generateMathQuestion();
         showMathQuestion(currentQuestion);
+        measureComposer();
+        scrollBottom(true);
       } else {
         if (composerTools) composerTools.style.display = "none";
         closeCalc();
         englishQueue = [];
         presentEnglishMCQ();
+        measureComposer();
       }
       measureComposer();
     }
@@ -2427,10 +2442,23 @@ End with: "Want to try it now?"
     // ---------- Calculator ----------
     function setupCalculator(){
       const btns = Array.from(document.querySelectorAll(".calcBtn"));
+      const okBtn = document.getElementById("calcOkBtn");
+      const closeBtn = document.getElementById("calcCloseBtn");
+
+      async function submitFromCalculator(){
+        if (!input.value.trim()) return;
+        await handleSend();
+        if (!(subject === "Maths" && area)) {
+          closeCalc();
+        }
+        scrollBottom(true);
+      }
+
       btns.forEach(b => {
-        b.addEventListener("click", () => {
+        b.addEventListener("click", async () => {
           const val = b.textContent;
           if (val === "C") return;
+          if (val === "=") { await submitFromCalculator(); return; }
           const map = { "÷": "/", "×": "*", "−": "-" };
           input.value += (map[val] || val);
           input.focus();
@@ -2438,6 +2466,8 @@ End with: "Want to try it now?"
       });
       const clear = document.getElementById("calcClearBtn");
       clear.addEventListener("click", () => { input.value = ""; setTimeout(() => { input.focus(); scrollBottom(); }, 20); });
+      okBtn?.addEventListener("click", async () => { await submitFromCalculator(); });
+      closeBtn?.addEventListener("click", () => { closeCalc(); });
     }
 
     // ---------- Auth ----------
