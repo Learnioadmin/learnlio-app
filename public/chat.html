@@ -625,6 +625,90 @@
       .btn{ padding: 9px 10px !important; font-size: 13px !important; }
       .brand img{ height: 30px !important; }
     }
+
+    /* =========================
+       MOBILE NATIVE-APP SHELL
+       ========================= */
+
+    @media (max-width: 980px){
+      html, body{
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+      }
+
+      body{
+        height: 100dvh;
+      }
+
+      .container{
+        padding: 10px 10px 14px;
+      }
+
+      .panel[aria-label="Learnlio Tutor"]{
+        min-height: unset !important;
+        height: calc(100dvh - 64px);
+      }
+
+      .chat{
+        padding: 10px;
+        overflow: hidden;
+      }
+
+      #messages{
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: auto;
+        padding-bottom: calc(var(--composerH, 72px) + env(safe-area-inset-bottom) + 14px);
+      }
+
+      .composer{
+        position: fixed !important;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        z-index: 1000;
+        border-radius: 18px;
+        box-shadow: 0 20px 45px rgba(2,6,23,.16);
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+        transform: translateY(var(--kbShift, 0px));
+        will-change: transform;
+      }
+
+      .panel[aria-label="Learnlio Tutor"]{
+        padding-bottom: calc(var(--composerH, 72px) + env(safe-area-inset-bottom) + 18px);
+      }
+
+      .msg{
+        max-width: 94%;
+        font-size: 16px;
+        line-height: 1.8;
+      }
+
+      #sendBtn{
+        width: 100%;
+      }
+
+      .row{
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .nav .links{
+        display: none !important;
+      }
+    }
+
+    #calcSheetCard{
+      transform: translateX(-50%) translateY(var(--kbShift, 0px));
+      will-change: transform;
+    }
+
+    @media (max-width: 980px){
+      .panel-head{
+        padding: 12px 12px 8px;
+      }
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -663,6 +747,7 @@
         <div class="chat">
           <div id="messages">
             <button id="jumpLatest" type="button">⬇︎ Jump to latest</button>
+            <div id="bottomAnchor" aria-hidden="true" style="height:1px;"></div>
           </div>
           <div id="typing-indicator">Learnlio is typing…</div>
         </div>
@@ -676,9 +761,12 @@
 
           <div id="area-selection" class="pillbar" style="display:none;"></div>
 
+          <div id="composerTools" class="pillbar" style="display:none;">
+            <button id="calcOpenBtn" class="pill" type="button">🧮 Calculator</button>
+          </div>
+
           <div class="row">
             <input id="input" placeholder="Type your answer (or tap a choice)" />
-            <button id="calcToggleBtn" type="button" style="display:none;">🧮</button>
             <button id="sendBtn" type="button">Send</button>
           </div>
         </div>
@@ -752,25 +840,6 @@
     </footer>
   </main>
 
-  <!-- Calculator bottom sheet (mobile-friendly) -->
-  <div id="calcSheet" aria-hidden="true">
-    <div id="calcSheetCard" role="dialog" aria-modal="true" aria-label="Calculator">
-      <div class="calcSheetHead">
-        <div class="calcSheetTitle">Calculator</div>
-        <button id="calcCloseBtn" class="btn light" type="button">Close</button>
-      </div>
-
-      <div id="calculator">
-        <div class="calcGrid">
-          <button type="button" class="calcBtn">7</button><button type="button" class="calcBtn">8</button><button type="button" class="calcBtn">9</button><button type="button" class="calcBtn"></button>
-          <button type="button" class="calcBtn">4</button><button type="button" class="calcBtn">5</button><button type="button" class="calcBtn">6</button><button type="button" class="calcBtn"></button>
-          <button type="button" class="calcBtn">1</button><button type="button" class="calcBtn">2</button><button type="button" class="calcBtn">3</button><button type="button" class="calcBtn"></button>
-          <button type="button" class="calcBtn">0</button><button type="button" id="calcClearBtn" class="calcBtn">C</button><button type="button" class="calcBtn">+</button><button type="button" class="calcBtn">=</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div id="rewardToast" role="status" aria-live="polite"></div>
 
   <!-- Overlay chooser modal -->
@@ -839,18 +908,63 @@
     </div>
   </div>
 
+  <!-- Calculator bottom sheet (mobile-friendly, does not reflow chat) -->
+  <div id="calcSheet" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,.45);">
+    <div id="calcSheetCard" style="
+      position:absolute; left:50%; transform:translateX(-50%) translateY(var(--kbShift, 0px));
+      width:min(520px, calc(100vw - 20px));
+      bottom: calc(env(safe-area-inset-bottom) + 10px);
+      background:#fff; border-radius:18px;
+      border:1px solid rgba(15,23,42,.12);
+      box-shadow:0 30px 60px rgba(2,6,23,.22);
+      padding:14px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <div style="font-weight:950;">🧮 Calculator</div>
+        <button id="calcCloseBtn" class="btn light" type="button">Close</button>
+      </div>
+
+      <!-- moved calculator content -->
+      <div id="calculator" style="display:block; margin-top:12px;">
+        <div class="calcGrid">
+          <button type="button" class="calcBtn">7</button><button type="button" class="calcBtn">8</button><button type="button" class="calcBtn">9</button><button type="button" class="calcBtn"></button>
+          <button type="button" class="calcBtn">4</button><button type="button" class="calcBtn">5</button><button type="button" class="calcBtn">6</button><button type="button" class="calcBtn"></button>
+          <button type="button" class="calcBtn">1</button><button type="button" class="calcBtn">2</button><button type="button" class="calcBtn">3</button><button type="button" class="calcBtn"></button>
+          <button type="button" class="calcBtn">0</button><button type="button" id="calcClearBtn" class="calcBtn">C</button><button type="button" class="calcBtn">+</button><button type="button" class="calcBtn">=</button>
+        </div>
+      </div>
+
+      <div class="subtitle" style="margin-top:10px;">
+        Tap buttons to type into the answer box.
+      </div>
+    </div>
+  </div>
+
   <script src="/assets/js/layout-app.js?v=20260122-pin2"></script>
   <script>
   (() => {
-    // --- Mobile viewport fix (iOS address bar) ---
+    // --- Mobile native viewport + keyboard handling ---
     function setVh(){
-      const vv = window.visualViewport;
-      const h = vv ? vv.height : window.innerHeight;
-      document.documentElement.style.setProperty('--vh', (h * 0.01) + 'px');
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
     }
     setVh();
     window.addEventListener('resize', setVh);
-    if (window.visualViewport) window.visualViewport.addEventListener('resize', setVh);
+
+    const vv = window.visualViewport || null;
+    function updateKeyboardShift(){
+      if (!vv) {
+        document.documentElement.style.setProperty('--kbShift', `0px`);
+        return;
+      }
+      const delta = Math.max(0, (window.innerHeight - (vv.height + vv.offsetTop)));
+      document.documentElement.style.setProperty('--kbShift', `${-delta}px`);
+    }
+    if (vv){
+      vv.addEventListener('resize', updateKeyboardShift);
+      vv.addEventListener('scroll', updateKeyboardShift);
+    }
+    window.addEventListener('orientationchange', () => { setTimeout(() => { setVh(); updateKeyboardShift(); }, 80); });
+    setTimeout(updateKeyboardShift, 0);
 
     // =========================
     // CONFIG
@@ -864,6 +978,54 @@
     const sb = window.sb || window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     window.sb = sb || window.sb;
 
+    function ensureMobileMenu(){
+      const nav = document.querySelector(".nav .nav-inner");
+      if (!nav) return;
+      if (nav.querySelector("#mobileMenuBtn")) return;
+
+      const btn = document.createElement("button");
+      btn.id = "mobileMenuBtn";
+      btn.className = "btn ghost";
+      btn.type = "button";
+      btn.textContent = "☰ Menu";
+
+      const modal = document.createElement("div");
+      modal.id = "mobileMenuModal";
+      modal.style.cssText = "display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,.45);";
+      modal.innerHTML = `
+      <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+                  width:min(520px, calc(100vw - 24px)); background:#fff; border-radius:18px;
+                  border:1px solid rgba(15,23,42,.12); box-shadow:0 30px 60px rgba(2,6,23,.22);
+                  padding:14px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div style="font-weight:950;">Menu</div>
+          <button id="mobileMenuClose" class="btn light" type="button">Close</button>
+        </div>
+        <div style="margin-top:12px; display:grid; gap:10px;">
+          <a href="/dash.html" class="pill" style="text-decoration:none; display:block;">Dashboard</a>
+          <a href="/chat.html" class="pill primary" style="text-decoration:none; display:block;">Tutor</a>
+          <a href="/billing.html" class="pill" style="text-decoration:none; display:block;">Billing</a>
+          <a href="/help/" class="pill" style="text-decoration:none; display:block;">Help Centre</a>
+          <button id="mobileMenuLogout" class="pill" type="button">Log out</button>
+        </div>
+      </div>
+      `;
+      document.body.appendChild(modal);
+
+      const isMobile = window.matchMedia("(max-width: 980px)").matches;
+      if (!isMobile) return;
+
+      nav.appendChild(btn);
+
+      btn.addEventListener("click", () => { modal.style.display = "block"; });
+      modal.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
+      modal.querySelector("#mobileMenuClose")?.addEventListener("click", () => { modal.style.display = "none"; });
+      modal.querySelector("#mobileMenuLogout")?.addEventListener("click", async () => {
+        try { await sb.auth.signOut(); } catch {}
+        window.location.href = "/login.html";
+      });
+    }
+
     // Elements
     const pageError = document.getElementById("pageError");
     const messagesDiv = document.getElementById("messages");
@@ -873,6 +1035,16 @@
 
     const input = document.getElementById("input");
     const sendBtn = document.getElementById("sendBtn");
+    const composerEl = document.querySelector(".composer");
+    const bottomAnchor = document.getElementById("bottomAnchor");
+
+    function measureComposer(){
+      if (!composerEl) return;
+      const h = Math.max(56, Math.round(composerEl.getBoundingClientRect().height));
+      document.documentElement.style.setProperty('--composerH', `${h}px`);
+    }
+    window.addEventListener("resize", () => { measureComposer(); });
+    setTimeout(measureComposer, 0);
 
     input.addEventListener("focus", scrollBottomSoon);
     input.addEventListener("click", scrollBottomSoon);
@@ -880,7 +1052,8 @@
     const subjectSelection = document.getElementById("subject-selection"); // hidden now
     const areaSelection = document.getElementById("area-selection");       // hidden now
     const calculator = document.getElementById("calculator");
-    const calcToggleBtn = document.getElementById("calcToggleBtn");
+    const composerTools = document.getElementById("composerTools");
+    const calcOpenBtn = document.getElementById("calcOpenBtn");
     const calcSheet = document.getElementById("calcSheet");
     const calcCloseBtn = document.getElementById("calcCloseBtn");
 
@@ -960,11 +1133,18 @@
       jumpLatestBtn.style.display = isNearBottom(messagesDiv) ? "none" : "inline-flex";
     }
     function scrollBottom(){
-      // iOS needs a double-frame to reliably stick
       requestAnimationFrame(() => {
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        requestAnimationFrame(() => {
+        if (bottomAnchor && bottomAnchor.scrollIntoView){
+          bottomAnchor.scrollIntoView({ block: "end" });
+        } else {
           messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        requestAnimationFrame(() => {
+          if (bottomAnchor && bottomAnchor.scrollIntoView){
+            bottomAnchor.scrollIntoView({ block: "end" });
+          } else {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+          }
         });
       });
     }
@@ -974,25 +1154,23 @@
 
     function openCalc(){
       if (!calcSheet) return;
-      calcSheet.style.display = "flex";
-      calcSheet.setAttribute("aria-hidden", "false");
-      setTimeout(scrollBottom, 40);
+      calcSheet.style.display = "block";
+      measureComposer();
     }
 
     function closeCalc(){
       if (!calcSheet) return;
       calcSheet.style.display = "none";
-      calcSheet.setAttribute("aria-hidden", "true");
-      setTimeout(() => { try{ input.focus(); }catch{} scrollBottom(); }, 40);
-    }
-
-    function setCalcAvailable(on){
-      if (!calcToggleBtn) return;
-      calcToggleBtn.style.display = on ? "inline-flex" : "none";
+      measureComposer();
     }
     function appendAndMaybeScroll(el){
       const shouldStick = isNearBottom(messagesDiv, 180);
-      messagesDiv.appendChild(el);
+      if (bottomAnchor && bottomAnchor.parentNode === messagesDiv) {
+        messagesDiv.insertBefore(el, bottomAnchor);
+      } else {
+        messagesDiv.appendChild(el);
+      }
+      measureComposer();
       if (shouldStick) scrollBottom();
       updateJumpButton();
     }
@@ -1000,7 +1178,7 @@
     messagesDiv.addEventListener("scroll", updateJumpButton);
     jumpLatestBtn.addEventListener("click", () => { scrollBottom(); updateJumpButton(); });
 
-    calcToggleBtn?.addEventListener("click", (e) => {
+    calcOpenBtn?.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
       openCalc();
@@ -1008,6 +1186,7 @@
 
     calcCloseBtn?.addEventListener("click", (e) => {
       e.preventDefault();
+      e.stopPropagation();
       closeCalc();
     });
 
@@ -2074,15 +2253,16 @@ End with: "Want to try it now?"
       updateProgressUI();
 
       if (subject === "Maths"){
-        setCalcAvailable(true);
+        if (composerTools) composerTools.style.display = "flex";
         currentQuestion = generateMathQuestion();
         showMathQuestion(currentQuestion);
       } else {
-        setCalcAvailable(false);
+        if (composerTools) composerTools.style.display = "none";
         closeCalc();
         englishQueue = [];
         presentEnglishMCQ();
       }
+      measureComposer();
     }
 
     function selectSubject(s){
@@ -2092,12 +2272,13 @@ End with: "Want to try it now?"
       hintUsedForCurrent = false;
 
       if (s === "Maths"){
-        setCalcAvailable(true);
+        if (composerTools) composerTools.style.display = "flex";
       } else {
-        setCalcAvailable(false);
+        if (composerTools) composerTools.style.display = "none";
         closeCalc();
       }
       updateProgressUI();
+      measureComposer();
 
       if (s === "Maths"){
         addBotChoicesMessage("Great. Which Maths area would you like to try?", [
@@ -2126,8 +2307,9 @@ End with: "Want to try it now?"
     // ---------- End session ----------
     async function endSessionUI(){
       disableInput(true);
-      setCalcAvailable(false);
+      if (composerTools) composerTools.style.display = "none";
       closeCalc();
+      measureComposer();
 
       await updateSessionRollups();
 
@@ -2144,8 +2326,9 @@ End with: "Want to try it now?"
       englishQueue = [];
 
       disableInput(false);
-      setCalcAvailable(false);
+      if (composerTools) composerTools.style.display = "none";
       closeCalc();
+      measureComposer();
 
       updateProgressUI();
       addBotMessage(`👋 Hi ${childName}!\n\nLet’s do one small step at a time.`);
@@ -2248,9 +2431,9 @@ End with: "Want to try it now?"
         b.addEventListener("click", () => {
           const val = b.textContent;
           if (val === "C") return;
-          if (val === "=") return;
-          input.value += val;
-          setTimeout(() => { input.focus(); scrollBottom(); }, 20);
+          const map = { "÷": "/", "×": "*", "−": "-" };
+          input.value += (map[val] || val);
+          input.focus();
         });
       });
       const clear = document.getElementById("calcClearBtn");
@@ -2401,6 +2584,7 @@ End with: "Want to try it now?"
     // ---------- Init ----------
     (async () => {
       if (!sb){ showError("Supabase did not load."); return; }
+      setTimeout(ensureMobileMenu, 50);
 
       // ensure external pickers are hidden (we use in-chat now)
       subjectSelection.style.display = "none";
