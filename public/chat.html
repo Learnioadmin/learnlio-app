@@ -1002,6 +1002,29 @@
       appendAndMaybeScroll(div);
     }
 
+    let sendInFlight = false;
+    function addBotError(message){
+      const msg = message || "Something went wrong. Please try again.";
+      addBotMessage(msg);
+    }
+    async function safeHandleSend(){
+      if (sendInFlight) return false;
+      sendInFlight = true;
+      let ok = false;
+      try{
+        await handleSend();
+        ok = true;
+      } catch (e){
+        console.error("handleSend failed", e);
+        addBotError("Sorry, something went wrong. Please try again.");
+      } finally {
+        sendInFlight = false;
+        setTyping(false);
+        scrollToLastMessage(true);
+      }
+      return ok;
+    }
+
     // Subject/Area choices INSIDE chat
     function addBotChoicesMessage(text, choices){
       const div = document.createElement("div");
@@ -1144,17 +1167,19 @@
       if (reasonText) showRewardToast(`+${p} XP`, reasonText);
       updateProgressUI();
 
-      sb.from("child_xp")
-        .upsert({
-          owner_id: currentUser.id,
-          child_id: child.id,
-          xp_total: totalXp,
-          xp_lifetime,
-          updated_at: new Date().toISOString()
-        }, { onConflict: "owner_id,child_id" })
-        .catch((e) => {
+      (async () => {
+        try {
+          await sb.from("child_xp").upsert({
+            owner_id: currentUser.id,
+            child_id: child.id,
+            xp_total: totalXp,
+            xp_lifetime,
+            updated_at: new Date().toISOString()
+          }, { onConflict: "owner_id,child_id" });
+        } catch (e) {
           console.warn("child_xp upsert failed (safe)", e);
-        });
+        }
+      })();
     }
 
     function friendlyPracticeLabel(){
@@ -1740,7 +1765,7 @@ End with: "Want to try it now?"
     function showMathQuestion(q){
       hintUsedForCurrent = false;
       addBotMessage(
-        `✏️ Question:\n\n${q.displayText}\n\nTake your time.\nWhat do you think the answer is?`,
+        `Question:\n${q.displayText}\nTake your time.\nWhat do you think the answer is?`,
         { showHint:true, showExplain:true }
       );
 
@@ -2227,8 +2252,8 @@ End with: "Want to try it now?"
     mathsBtn?.addEventListener("click", () => { addUserMessage("Maths"); selectSubject("Maths"); saveLastContext(); });
     englishBtn?.addEventListener("click", () => { addUserMessage("English"); selectSubject("English"); saveLastContext(); });
 
-    sendBtn.addEventListener("click", handleSend);
-    input.addEventListener("keypress", e => { if (e.key === "Enter") handleSend(); });
+    sendBtn.addEventListener("click", safeHandleSend);
+    input.addEventListener("keydown", e => { if (e.key === "Enter") safeHandleSend(); });
 
     newSessionBtn.addEventListener("click", () => startNewSession());
     finishBtn.addEventListener("click", () => endSessionUI());
