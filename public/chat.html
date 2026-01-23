@@ -1046,14 +1046,14 @@
 
     function measureComposer(){
       if (!composerEl) return;
-      const h = Math.max(56, composerEl.offsetHeight || 96);
+      const h = Math.min(240, Math.max(64, composerEl.offsetHeight || 96));
       document.documentElement.style.setProperty('--composerH', `${h}px`);
     }
     window.addEventListener("resize", () => { measureComposer(); });
     setTimeout(measureComposer, 0);
 
-    input.addEventListener("focus", () => scrollBottom(true));
-    input.addEventListener("click", () => scrollBottom(true));
+    input.addEventListener("focus", () => scrollToLastMessage(true));
+    input.addEventListener("click", () => scrollToLastMessage(true));
 
     const subjectSelection = document.getElementById("subject-selection"); // hidden now
     const areaSelection = document.getElementById("area-selection");       // hidden now
@@ -1147,48 +1147,49 @@
       if (!jumpLatestBtn) return;
       jumpLatestBtn.style.display = isNearBottom(messagesDiv) ? "none" : "inline-flex";
     }
-    function scrollBottom(force=false){
-      if (!force && !isNearBottom(messagesDiv, 320)) return;
+    function lastMessageEl(){
+      const nodes = messagesDiv.querySelectorAll(".msg");
+      return nodes.length ? nodes[nodes.length - 1] : null;
+    }
+    function scrollToLastMessage(force=false){
+      const stick = force || isNearBottom(messagesDiv, 320);
+      if (!stick) { updateJumpButton(); return; }
+      const last = lastMessageEl();
+      if (!last) return;
       requestAnimationFrame(() => {
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        last.scrollIntoView({ block: "end", behavior: "auto" });
         requestAnimationFrame(() => {
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+          last.scrollIntoView({ block: "end", behavior: "auto" });
+          updateJumpButton();
         });
       });
-    }
-    function scrollBottomSoon(){
-      setTimeout(scrollBottom, 60);
     }
 
     function openCalc(){
       if (!calcSheet) return;
       calcSheet.style.display = "block";
+      calculator.style.display = "block";
       measureComposer();
-      scrollBottom(true);
+      scrollToLastMessage(true);
     }
 
     function closeCalc(){
       if (!calcSheet) return;
       calcSheet.style.display = "none";
+      calculator.style.display = "none";
       measureComposer();
-      scrollBottom(true);
+      scrollToLastMessage(true);
     }
     function appendAndMaybeScroll(el){
-      const shouldStick = isNearBottom(messagesDiv, 320);
-      if (bottomAnchor && bottomAnchor.parentNode === messagesDiv) {
-        messagesDiv.insertBefore(el, bottomAnchor);
-      } else {
-        messagesDiv.appendChild(el);
-      }
+      const stick = isNearBottom(messagesDiv, 320);
+      messagesDiv.appendChild(el);
       measureComposer();
-      requestAnimationFrame(() => {
-        if (shouldStick) scrollBottom(true);
-        updateJumpButton();
-      });
+      if (stick) scrollToLastMessage(true);
+      else updateJumpButton();
     }
 
     messagesDiv.addEventListener("scroll", updateJumpButton);
-    jumpLatestBtn.addEventListener("click", () => { scrollBottom(true); updateJumpButton(); });
+    jumpLatestBtn.addEventListener("click", () => { scrollToLastMessage(true); updateJumpButton(); });
 
     calcOpenBtn?.addEventListener("click", (e) => {
       e.preventDefault();
@@ -2269,7 +2270,7 @@ End with: "Want to try it now?"
         currentQuestion = generateMathQuestion();
         showMathQuestion(currentQuestion);
         measureComposer();
-        scrollBottom(true);
+        scrollToLastMessage(true);
       } else {
         if (composerTools) composerTools.style.display = "none";
         closeCalc();
@@ -2448,10 +2449,9 @@ End with: "Want to try it now?"
       async function submitFromCalculator(){
         if (!input.value.trim()) return;
         await handleSend();
-        if (!(subject === "Maths" && area)) {
-          closeCalc();
-        }
-        scrollBottom(true);
+        closeCalc();
+        measureComposer();
+        scrollToLastMessage(true);
       }
 
       btns.forEach(b => {
@@ -2465,9 +2465,9 @@ End with: "Want to try it now?"
         });
       });
       const clear = document.getElementById("calcClearBtn");
-      clear.addEventListener("click", () => { input.value = ""; setTimeout(() => { input.focus(); scrollBottom(); }, 20); });
+      clear.addEventListener("click", () => { input.value = ""; setTimeout(() => { input.focus(); scrollToLastMessage(true); }, 20); });
       okBtn?.addEventListener("click", async () => { await submitFromCalculator(); });
-      closeBtn?.addEventListener("click", () => { closeCalc(); });
+      closeBtn?.addEventListener("click", () => { closeCalc(); measureComposer(); scrollToLastMessage(true); });
     }
 
     // ---------- Auth ----------
