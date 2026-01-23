@@ -4,7 +4,7 @@
   <link rel="icon" type="image/x-icon" href="/assets/img/flavicon.ico">
   <link rel="shortcut icon" type="image/x-icon" href="/assets/img/flavicon.ico">
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Learnlio — Tutor</title>
 
   <link rel="stylesheet" href="/assets/css/app.css" />
@@ -89,7 +89,7 @@
       min-height: 0;
     }
     @media (max-width: 980px){
-      body{ overflow:hidden; }
+      body{ overflow:auto; }
       .shell{ grid-template-columns: 1fr; height:auto; min-height: unset; }
     }
 
@@ -177,7 +177,6 @@
       border: 1px solid rgba(15,23,42,.10);
       border-radius: var(--radius2);
       padding: 12px;
-      padding-bottom: calc(var(--composerH, 96px) + 12px);
       display:flex;
       flex-direction:column;
       gap:10px;
@@ -495,8 +494,6 @@
       box-shadow: 0 10px 16px rgba(2,6,23,.06);
     }
     .calcBtn:hover{ background:#f3f4f6; }
-    .calcActions{ display:flex; gap:10px; margin-top:10px; }
-    .calcActions .btn{ flex:1; justify-content:center; }
 
     /* Reward toast */
     #rewardToast{
@@ -527,190 +524,6 @@
       .row{ flex-direction:column; align-items:stretch; }
       #sendBtn{ width:100%; }
       .msg{ max-width: 92%; }
-    }
-
-    /* ========================
-       MOBILE NATIVE OVERRIDES
-       ======================== */
-
-    :root{
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --composer-h: 74px;
-    }
-
-    html, body { height:100%; }
-    body { overflow:hidden; }
-
-    @media (max-width: 980px){
-      .panel-head{
-        padding: 10px 12px 8px;
-        position: sticky;
-        top: 0;
-      }
-      .title{ font-size: 15px; }
-      .subtitle{ font-size: 12px; }
-      #miniProgress{ margin-top: 6px; }
-    }
-
-    .chat{ min-height:0; overflow:hidden; }
-    #messages{
-      min-height:0;
-      overflow-y:auto;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: calc(12px + var(--composer-h) + var(--safe-bottom));
-      scroll-padding-bottom: calc(12px + var(--composer-h) + var(--safe-bottom));
-    }
-
-    .composer{
-      padding: 10px 12px;
-      padding-bottom: calc(10px + var(--safe-bottom));
-    }
-    #input{ font-size:16px; }
-    @media (max-width: 520px){
-      .row{ flex-direction:row; }
-      #sendBtn{ width:auto; }
-    }
-
-    #calcSheet{
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: flex-end;
-      justify-content: center;
-      padding: 12px;
-      padding-bottom: calc(12px + var(--safe-bottom));
-      background: rgba(2,6,23,.45);
-      z-index: 9999;
-    }
-    #calcSheetCard{
-      width: min(520px, 100%);
-      background: #fff;
-      border-radius: 18px;
-      border: 1px solid rgba(15,23,42,.12);
-      box-shadow: 0 30px 60px rgba(2,6,23,.22);
-      padding: 12px;
-    }
-    .calcSheetHead{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom: 10px;
-    }
-    .calcSheetTitle{ font-weight:950; }
-    #calculator{ display:block !important; }
-
-    @media (max-width: 520px){
-      .calcGrid{ gap:10px; }
-      .calcBtn{
-        padding: 16px;
-        font-size: 20px;
-        border-radius: 16px;
-      }
-    }
-
-    #calcToggleBtn{
-      border:none;
-      border-radius: 14px;
-      padding: 12px 12px;
-      background: #111;
-      color:#fff;
-      font-weight:950;
-      cursor:pointer;
-      white-space: nowrap;
-    }
-
-    @media (max-width: 520px){
-      .nav-inner{ padding: 10px 12px !important; }
-      .links{ gap:4px !important; }
-      .links a{ padding: 8px 8px !important; font-size: 13px !important; }
-      .btn{ padding: 9px 10px !important; font-size: 13px !important; }
-      .brand img{ height: 30px !important; }
-    }
-
-    /* =========================
-       MOBILE NATIVE-APP SHELL
-       ========================= */
-
-    @media (max-width: 980px){
-      html, body{
-        height: 100%;
-        overflow: hidden;
-        overscroll-behavior: none;
-      }
-
-      body{
-        height: 100dvh;
-      }
-
-      .container{
-        padding: 10px 10px 14px;
-      }
-
-      .panel[aria-label="Learnlio Tutor"]{
-        min-height: unset !important;
-        height: calc(100dvh - 64px);
-      }
-
-      .chat{
-        padding: 10px;
-        overflow: hidden;
-      }
-
-      #messages{
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: auto;
-        padding-bottom: calc(var(--composerH, 72px) + env(safe-area-inset-bottom) + 14px);
-      }
-
-      .composer{
-        position: fixed !important;
-        left: 10px;
-        right: 10px;
-        bottom: 10px;
-        z-index: 1000;
-        border-radius: 18px;
-        box-shadow: 0 20px 45px rgba(2,6,23,.16);
-        padding-bottom: calc(12px + env(safe-area-inset-bottom));
-        transform: translateY(var(--kbShift, 0px));
-        will-change: transform;
-      }
-
-      .panel[aria-label="Learnlio Tutor"]{
-        padding-bottom: calc(var(--composerH, 72px) + env(safe-area-inset-bottom) + 18px);
-      }
-
-      .msg{
-        max-width: 94%;
-        font-size: 16px;
-        line-height: 1.8;
-      }
-
-      #sendBtn{
-        width: 100%;
-      }
-
-      .row{
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .nav .links{
-        display: none !important;
-      }
-    }
-
-    #calcSheetCard{
-      transform: translateX(-50%) translateY(var(--kbShift, 0px));
-      will-change: transform;
-    }
-
-    @media (max-width: 980px){
-      .panel-head{
-        padding: 12px 12px 8px;
-      }
     }
   </style>
 
@@ -750,7 +563,6 @@
         <div class="chat">
           <div id="messages">
             <button id="jumpLatest" type="button">⬇︎ Jump to latest</button>
-            <div id="bottomAnchor" aria-hidden="true" style="height:1px;"></div>
           </div>
           <div id="typing-indicator">Learnlio is typing…</div>
         </div>
@@ -764,12 +576,17 @@
 
           <div id="area-selection" class="pillbar" style="display:none;"></div>
 
-          <div id="composerTools" class="pillbar" style="display:none;">
-            <button id="calcOpenBtn" class="pill" type="button">🧮 Calculator</button>
+          <div id="calculator" style="display:none;">
+            <div class="calcGrid">
+              <button type="button" class="calcBtn">7</button><button type="button" class="calcBtn">8</button><button type="button" class="calcBtn">9</button><button type="button" class="calcBtn">÷</button>
+              <button type="button" class="calcBtn">4</button><button type="button" class="calcBtn">5</button><button type="button" class="calcBtn">6</button><button type="button" class="calcBtn">×</button>
+              <button type="button" class="calcBtn">1</button><button type="button" class="calcBtn">2</button><button type="button" class="calcBtn">3</button><button type="button" class="calcBtn">−</button>
+              <button type="button" class="calcBtn">0</button><button type="button" id="calcClearBtn" class="calcBtn">C</button><button type="button" class="calcBtn">+</button><button type="button" class="calcBtn">=</button>
+            </div>
           </div>
 
           <div class="row">
-            <input id="input" placeholder="Type your answer (or tap a choice)" />
+            <input id="input" placeholder="Type your answer… (or tap a choice)" />
             <button id="sendBtn" type="button">Send</button>
           </div>
         </div>
@@ -911,66 +728,16 @@
     </div>
   </div>
 
-  <!-- Calculator bottom sheet (mobile-friendly, does not reflow chat) -->
-  <div id="calcSheet" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,.45);">
-    <div id="calcSheetCard" style="
-      position:absolute; left:50%; transform:translateX(-50%) translateY(var(--kbShift, 0px));
-      width:min(520px, calc(100vw - 20px));
-      bottom: calc(env(safe-area-inset-bottom) + 10px);
-      background:#fff; border-radius:18px;
-      border:1px solid rgba(15,23,42,.12);
-      box-shadow:0 30px 60px rgba(2,6,23,.22);
-      padding:14px;">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-        <div style="font-weight:950;">🧮 Calculator</div>
-      </div>
-
-      <!-- moved calculator content -->
-      <div id="calculator" style="display:block; margin-top:12px;">
-        <div class="calcGrid">
-          <button type="button" class="calcBtn">7</button><button type="button" class="calcBtn">8</button><button type="button" class="calcBtn">9</button><button type="button" class="calcBtn"></button>
-          <button type="button" class="calcBtn">4</button><button type="button" class="calcBtn">5</button><button type="button" class="calcBtn">6</button><button type="button" class="calcBtn"></button>
-          <button type="button" class="calcBtn">1</button><button type="button" class="calcBtn">2</button><button type="button" class="calcBtn">3</button><button type="button" class="calcBtn"></button>
-          <button type="button" class="calcBtn">0</button><button type="button" id="calcClearBtn" class="calcBtn">C</button><button type="button" class="calcBtn">+</button><button type="button" id="calcOkBtn" class="calcBtn">OK</button>
-        </div>
-        <div class="calcActions">
-          <button type="button" class="btn" data-action="calcOk">OK</button>
-          <button type="button" id="calcCloseBtn" class="btn light">Close</button>
-        </div>
-      </div>
-
-      <div class="subtitle" style="margin-top:10px;">
-        Tap buttons to type into the answer box.
-      </div>
-    </div>
-  </div>
-
   <script src="/assets/js/layout-app.js?v=20260122-pin2"></script>
   <script>
   (() => {
-    // --- Mobile native viewport + keyboard handling ---
+    // --- Mobile viewport fix (iOS address bar) ---
     function setVh(){
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
     }
     setVh();
-    window.addEventListener('resize', () => { setVh(); measureComposer(); });
-
-    const vv = window.visualViewport || null;
-    function updateKeyboardShift(){
-      if (!vv) {
-        document.documentElement.style.setProperty('--kbShift', `0px`);
-        return;
-      }
-      const delta = Math.max(0, (window.innerHeight - (vv.height + vv.offsetTop)));
-      document.documentElement.style.setProperty('--kbShift', `${-delta}px`);
-    }
-    if (vv){
-      vv.addEventListener('resize', updateKeyboardShift);
-      vv.addEventListener('scroll', updateKeyboardShift);
-    }
-    window.addEventListener('orientationchange', () => { setTimeout(() => { setVh(); updateKeyboardShift(); measureComposer(); }, 80); });
-    setTimeout(updateKeyboardShift, 0);
+    window.addEventListener('resize', setVh);
 
     // =========================
     // CONFIG
@@ -984,54 +751,6 @@
     const sb = window.sb || window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     window.sb = sb || window.sb;
 
-    function ensureMobileMenu(){
-      const nav = document.querySelector(".nav .nav-inner");
-      if (!nav) return;
-      if (nav.querySelector("#mobileMenuBtn")) return;
-
-      const btn = document.createElement("button");
-      btn.id = "mobileMenuBtn";
-      btn.className = "btn ghost";
-      btn.type = "button";
-      btn.textContent = "☰ Menu";
-
-      const modal = document.createElement("div");
-      modal.id = "mobileMenuModal";
-      modal.style.cssText = "display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,.45);";
-      modal.innerHTML = `
-      <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-                  width:min(520px, calc(100vw - 24px)); background:#fff; border-radius:18px;
-                  border:1px solid rgba(15,23,42,.12); box-shadow:0 30px 60px rgba(2,6,23,.22);
-                  padding:14px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-          <div style="font-weight:950;">Menu</div>
-          <button id="mobileMenuClose" class="btn light" type="button">Close</button>
-        </div>
-        <div style="margin-top:12px; display:grid; gap:10px;">
-          <a href="/dash.html" class="pill" style="text-decoration:none; display:block;">Dashboard</a>
-          <a href="/chat.html" class="pill primary" style="text-decoration:none; display:block;">Tutor</a>
-          <a href="/billing.html" class="pill" style="text-decoration:none; display:block;">Billing</a>
-          <a href="/help/" class="pill" style="text-decoration:none; display:block;">Help Centre</a>
-          <button id="mobileMenuLogout" class="pill" type="button">Log out</button>
-        </div>
-      </div>
-      `;
-      document.body.appendChild(modal);
-
-      const isMobile = window.matchMedia("(max-width: 980px)").matches;
-      if (!isMobile) return;
-
-      nav.appendChild(btn);
-
-      btn.addEventListener("click", () => { modal.style.display = "block"; });
-      modal.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
-      modal.querySelector("#mobileMenuClose")?.addEventListener("click", () => { modal.style.display = "none"; });
-      modal.querySelector("#mobileMenuLogout")?.addEventListener("click", async () => {
-        try { await sb.auth.signOut(); } catch {}
-        window.location.href = "/login.html";
-      });
-    }
-
     // Elements
     const pageError = document.getElementById("pageError");
     const messagesDiv = document.getElementById("messages");
@@ -1041,29 +760,10 @@
 
     const input = document.getElementById("input");
     const sendBtn = document.getElementById("sendBtn");
-    const composerEl = document.querySelector(".composer");
-    const bottomAnchor = document.getElementById("bottomAnchor");
-
-    function measureComposer(){
-      if (!composerEl) return;
-      const h = Math.min(240, Math.max(64, composerEl.offsetHeight || 96));
-      document.documentElement.style.setProperty('--composerH', `${h}px`);
-    }
-    window.addEventListener("resize", () => { measureComposer(); });
-    setTimeout(measureComposer, 0);
-
-    input.addEventListener("focus", () => scrollToLastMessage(true));
-    input.addEventListener("click", () => scrollToLastMessage(true));
 
     const subjectSelection = document.getElementById("subject-selection"); // hidden now
     const areaSelection = document.getElementById("area-selection");       // hidden now
     const calculator = document.getElementById("calculator");
-    const composerTools = document.getElementById("composerTools");
-    const calcOpenBtn = document.getElementById("calcOpenBtn");
-    const calcSheet = document.getElementById("calcSheet");
-    const calcOkBtn = document.getElementById("calcOkBtn");
-    const calcCloseBtn = document.getElementById("calcCloseBtn");
-    const calcOkBtns = Array.from(document.querySelectorAll('[data-action="calcOk"]'));
 
     const mathsBtn = document.getElementById("mathsBtn");
     const englishBtn = document.getElementById("englishBtn");
@@ -1122,14 +822,6 @@
       input.style.opacity = disabled ? "0.65" : "1";
     }
     function cleanBotText(t){ return String(t || "").replace(/\*\*/g, ""); }
-    function normalizeLines(text){
-      let t = String(text || "");
-      t = t.replace(/\r\n/g, "\n");
-      t = t.replace(/[ \t]+\n/g, "\n");
-      t = t.replace(/\n{3,}/g, "\n\n");
-      t = t.trim();
-      return t;
-    }
     function escapeHtml(s){
       return String(s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
     }
@@ -1148,67 +840,24 @@
       if (!jumpLatestBtn) return;
       jumpLatestBtn.style.display = isNearBottom(messagesDiv) ? "none" : "inline-flex";
     }
-    function lastMessageEl(){
-      const nodes = messagesDiv.querySelectorAll(".msg");
-      return nodes.length ? nodes[nodes.length - 1] : null;
-    }
-    function scrollToLastMessage(force=true){
-      const stick = force || isNearBottom(messagesDiv, 320);
-      if (!stick) { updateJumpButton(); return; }
-      const last = lastMessageEl();
-      if (!last) return;
+    function scrollBottom(){
+      // iOS needs a double-frame to reliably stick
       requestAnimationFrame(() => {
-        last.scrollIntoView({ block: "end", behavior: "auto" });
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
         requestAnimationFrame(() => {
-          last.scrollIntoView({ block: "end", behavior: "auto" });
-          updateJumpButton();
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
         });
       });
     }
-
-    function openCalc(){
-      if (!calcSheet) return;
-      calcSheet.style.display = "block";
-      calculator.style.display = "block";
-      measureComposer();
-      scrollToLastMessage(true);
-    }
-
-    function closeCalc(){
-      if (!calcSheet) return;
-      calcSheet.style.display = "none";
-      calculator.style.display = "none";
-      measureComposer();
-      scrollToLastMessage(true);
-    }
     function appendAndMaybeScroll(el){
-      const stick = isNearBottom(messagesDiv, 320);
+      const shouldStick = isNearBottom(messagesDiv, 180);
       messagesDiv.appendChild(el);
-      measureComposer();
-      if (stick) scrollToLastMessage(true);
-      else updateJumpButton();
+      if (shouldStick) scrollBottom();
+      updateJumpButton();
     }
 
     messagesDiv.addEventListener("scroll", updateJumpButton);
-    jumpLatestBtn.addEventListener("click", () => { scrollToLastMessage(true); updateJumpButton(); });
-
-    calcOpenBtn?.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      openCalc();
-    });
-
-    calcCloseBtn?.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      closeCalc();
-    });
-
-    calcSheet?.addEventListener("click", (e) => {
-      if (e.target === calcSheet) {
-        closeCalc();
-      }
-    });
+    jumpLatestBtn.addEventListener("click", () => { scrollBottom(); updateJumpButton(); });
 
     // Keep emojis in UI, but strip for speech
     function stripForTTS(text){
@@ -1275,7 +924,7 @@
     }
 
     function addBotMessage(text, opts={}){
-      const safeText = normalizeLines(cleanBotText(text));
+      const safeText = cleanBotText(text);
       const div = document.createElement("div");
       div.className = "msg bot";
 
@@ -1382,7 +1031,7 @@
       div.className = "msg bot";
 
       const content = document.createElement("div");
-      content.innerText = normalizeLines(cleanBotText(text));
+      content.innerText = cleanBotText(text);
       div.appendChild(content);
 
       const grid = document.createElement("div");
@@ -2294,21 +1943,14 @@ End with: "Want to try it now?"
       updateProgressUI();
 
       if (subject === "Maths"){
-        if (composerTools) composerTools.style.display = "flex";
         calculator.style.display = "block";
         currentQuestion = generateMathQuestion();
         showMathQuestion(currentQuestion);
-        measureComposer();
-        scrollToLastMessage(true);
       } else {
-        if (composerTools) composerTools.style.display = "none";
         calculator.style.display = "none";
-        calcSheet.style.display = "none";
         englishQueue = [];
         presentEnglishMCQ();
-        measureComposer();
       }
-      measureComposer();
     }
 
     function selectSubject(s){
@@ -2317,15 +1959,8 @@ End with: "Want to try it now?"
       currentQuestion = null;
       hintUsedForCurrent = false;
 
-      if (s === "Maths"){
-        if (composerTools) composerTools.style.display = "flex";
-      } else {
-        if (composerTools) composerTools.style.display = "none";
-        calculator.style.display = "none";
-        calcSheet.style.display = "none";
-      }
+      calculator.style.display = "none";
       updateProgressUI();
-      measureComposer();
 
       if (s === "Maths"){
         addBotChoicesMessage("Great. Which Maths area would you like to try?", [
@@ -2354,10 +1989,7 @@ End with: "Want to try it now?"
     // ---------- End session ----------
     async function endSessionUI(){
       disableInput(true);
-      if (composerTools) composerTools.style.display = "none";
       calculator.style.display = "none";
-      calcSheet.style.display = "none";
-      measureComposer();
 
       await updateSessionRollups();
 
@@ -2374,10 +2006,7 @@ End with: "Want to try it now?"
       englishQueue = [];
 
       disableInput(false);
-      if (composerTools) composerTools.style.display = "none";
       calculator.style.display = "none";
-      calcSheet.style.display = "none";
-      measureComposer();
 
       updateProgressUI();
       addBotMessage(`👋 Hi ${childName}!\n\nLet’s do one small step at a time.`);
@@ -2476,35 +2105,16 @@ End with: "Want to try it now?"
     // ---------- Calculator ----------
     function setupCalculator(){
       const btns = Array.from(document.querySelectorAll(".calcBtn"));
-      const okBtn = document.getElementById("calcOkBtn");
-      const closeBtn = document.getElementById("calcCloseBtn");
-
-      async function submitFromCalculator(){
-        if (!input.value.trim()) return;
-        const ok = await safeHandleSend();
-        if (ok){
-          calculator.style.display = "none";
-          calcSheet.style.display = "none";
-          measureComposer();
-          scrollToLastMessage(true);
-        }
-      }
-
       btns.forEach(b => {
-        b.addEventListener("click", async () => {
+        b.addEventListener("click", () => {
           const val = b.textContent;
           if (val === "C") return;
-          if (val === "OK") { await submitFromCalculator(); return; }
-          const map = { "÷": "/", "×": "*", "−": "-" };
-          input.value += (map[val] || val);
+          input.value += val;
           input.focus();
         });
       });
       const clear = document.getElementById("calcClearBtn");
-      clear.addEventListener("click", () => { input.value = ""; setTimeout(() => { input.focus(); scrollToLastMessage(true); }, 20); });
-      okBtn?.addEventListener("click", async () => { await submitFromCalculator(); });
-      calcOkBtns.forEach(btn => btn.addEventListener("click", async () => { await submitFromCalculator(); }));
-      closeBtn?.addEventListener("click", () => { calculator.style.display = "none"; calcSheet.style.display = "none"; measureComposer(); scrollToLastMessage(true); });
+      clear.addEventListener("click", () => { input.value = ""; input.focus(); });
     }
 
     // ---------- Auth ----------
@@ -2651,7 +2261,6 @@ End with: "Want to try it now?"
     // ---------- Init ----------
     (async () => {
       if (!sb){ showError("Supabase did not load."); return; }
-      setTimeout(ensureMobileMenu, 50);
 
       // ensure external pickers are hidden (we use in-chat now)
       subjectSelection.style.display = "none";
@@ -2669,4 +2278,5 @@ End with: "Want to try it now?"
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
+
 
