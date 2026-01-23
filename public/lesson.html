@@ -361,6 +361,7 @@
             <button id="speakBtn" class="btn ghost" type="button">🔊 Read aloud</button>
             <button id="helpBtn" class="btn ghost" type="button">Help</button>
             <button id="explainBtn" class="btn ghost" type="button">🔄 Explain another way</button>
+            <button id="newLessonBtn" class="btn ghost" type="button">🔁 New lesson</button>
           </div>
         </div>
 
@@ -498,6 +499,7 @@
     const logoutBtn = document.getElementById("logoutBtn");
     const speakBtn = document.getElementById("speakBtn");
     const explainBtn = document.getElementById("explainBtn");
+    const newLessonBtn = document.getElementById("newLessonBtn");
 
     const stepKpi = document.getElementById("stepKpi");
     const topicKpi = document.getElementById("topicKpi");
@@ -645,6 +647,15 @@ Rules:
 
     function lessonCtxKey(childId){
       return childId ? `learnlio_lesson_ctx_${childId}` : `learnlio_lesson_ctx`;
+    }
+
+    function lessonVariantSeed(childId, subject, area, level, bump=false){
+      const k = `learnlio_lesson_variant_${childId}_${subject}_${area}_${level}`;
+      let n = Number(localStorage.getItem(k) || 0);
+      if (!n) n = 1;
+      if (bump) n += 1;
+      localStorage.setItem(k, String(n));
+      return String(n);
     }
 
     function loadCtxFromLocalStorage(childId){
@@ -1087,6 +1098,7 @@ Rules:
       // We send both owner_id/child_id for caching context (optional)
       // and "level" to adapt difficulty (from skillRow if present).
       const level = clampInt(skillRow?.level ?? 1, 1, 10);
+      const variant_seed = lessonVariantSeed(child.id, SUBJECT, AREA, level, false);
 
       const payload = {
         owner_id: currentUser.id,
@@ -1094,7 +1106,8 @@ Rules:
         subject: SUBJECT,
         area: AREA,
         age: childAge,
-        level
+        level,
+        variant_seed
       };
 
       const r = await fetch(LESSON_GEN_URL, {
@@ -1798,6 +1811,38 @@ Rules:
       } finally {
         explainBtn.disabled = false;
         explainBtn.textContent = "🔄 Explain another way";
+      }
+    });
+    newLessonBtn.addEventListener("click", async () => {
+      try{
+        newLessonBtn.disabled = true;
+        clearError();
+        contextLine.textContent = `Loading a new lesson for ${childName}`;
+        lessonTextEl.textContent = "";
+        resetStepUI();
+
+        // Force seed bump for current level
+        let skillRow = await loadOrCreateSkillRow();
+        const level = clampInt(skillRow?.level ?? 1, 1, 10);
+        lessonVariantSeed(child.id, SUBJECT, AREA, level, true);
+
+        // Fetch again (will send next seed)
+        lesson = await fetchGeneratedLesson(skillRow);
+
+        steps = Array.isArray(lesson.steps) ? lesson.steps : [];
+        idx = 0;
+        stepState = {};
+        sessionXp = 0;
+        renderXpUI();
+
+        const title = lesson.title ? ` — ${lesson.title}` : "";
+        contextLine.textContent = `${SUBJECT} • ${AREA}${title}`;
+        renderStep();
+      }catch(e){
+        console.warn(e);
+        showError("Could not load a new lesson right now.");
+      } finally {
+        newLessonBtn.disabled = false;
       }
     });
 
