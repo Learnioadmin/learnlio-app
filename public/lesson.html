@@ -604,6 +604,8 @@ Rules:
     let lesson = null;     // {title, steps:[]}
     let steps = [];
     let idx = 0;
+    let lessonRequestInFlight = false;
+    let lastLessonFingerprint = null;
 
     // Answers tracking for scoring + auto-advance gating
     let stepState = {}; // stepIndex -> {completed:boolean, correct:boolean}
@@ -656,6 +658,26 @@ Rules:
       if (bump) n += 1;
       localStorage.setItem(k, String(n));
       return String(n);
+    }
+
+    function lastFpKey(){
+      return child?.id && SUBJECT && AREA
+        ? `learnlio_last_lesson_fp_${child.id}_${SUBJECT}_${AREA}`
+        : `learnlio_last_lesson_fp`;
+    }
+
+    function loadLastFp(){
+      try { return localStorage.getItem(lastFpKey()) || null; } catch { return null; }
+    }
+
+    function saveLastFp(fp){
+      if (!fp) return;
+      try { localStorage.setItem(lastFpKey(), fp); } catch {}
+    }
+
+    function makeVariantSeed(){
+      const rnd = Math.random().toString(16).slice(2);
+      return `${Date.now()}_${rnd}`;
     }
 
     function loadCtxFromLocalStorage(childId){
@@ -1094,39 +1116,52 @@ Rules:
       };
     }
 
-    async function fetchGeneratedLesson(skillRow){
-      // We send both owner_id/child_id for caching context (optional)
-      // and "level" to adapt difficulty (from skillRow if present).
+    async function fetchGeneratedLesson(skillRow, opts = {}){
       const level = clampInt(skillRow?.level ?? 1, 1, 10);
-      const variant_seed = lessonVariantSeed(child.id, SUBJECT, AREA, level, false);
 
-      const payload = {
+      const payloadBase = {
         owner_id: currentUser.id,
         child_id: child.id,
         subject: SUBJECT,
         area: AREA,
         age: childAge,
-        level,
-        variant_seed
+        level
       };
 
-      const r = await fetch(LESSON_GEN_URL, {
-        method: "POST",
-        headers: { "Content-Type":"application/json" },
-        body: JSON.stringify(payload)
-      });
+      const attemptOnce = async (variant_seed) => {
+        const payload = { ...payloadBase, variant_seed };
+        const r = await fetch(LESSON_GEN_URL, {
+          method: "POST",
+          headers: { "Content-Type":"application/json" },
+          body: JSON.stringify(payload)
+        });
 
-      const txt = await r.text().catch(()=> "");
-      let json;
-      try{ json = txt ? JSON.parse(txt) : null; }catch{ json = null; }
+        const txt = await r.text().catch(()=> "");
+        let json;
+        try { json = txt ? JSON.parse(txt) : null; } catch { json = null; }
 
-      if (!r.ok){
-        const msg = json?.error || txt || `Lesson generator error (${r.status})`;
-        throw new Error(msg);
+        if (!r.ok){
+          const msg = json?.error || txt || `Lesson generator error (${r.status})`;
+          throw new Error(msg);
+        }
+        if (!json?.ok) throw new Error(json?.error || "Lesson generator returned ok=false");
+        return json;
+      };
+
+      if (lastLessonFingerprint === null){
+        lastLessonFingerprint = loadLastFp();
       }
 
-      if (!json?.ok) throw new Error(json?.error || "Lesson generator returned ok=false");
-      return normaliseLessonFromWorker(json);
+      const firstSeed = opts.variant_seed || makeVariantSeed();
+      let json = await attemptOnce(firstSeed);
+
+      if (json?.fingerprint && lastLessonFingerprint && json.fingerprint === lastLessonFingerprint){
+        const secondSeed = makeVariantSeed();
+        json = await attemptOnce(secondSeed);
+      }
+
+      const safeLesson = normaliseLessonFromWorker(json);
+      return { safeLesson, fingerprint: json?.fingerprint || null, cached: !!json?.cached };
     }
 
     function clampInt(v, min, max){
@@ -1824,10 +1859,15 @@ Rules:
         // Force seed bump for current level
         let skillRow = await loadOrCreateSkillRow();
         const level = clampInt(skillRow?.level ?? 1, 1, 10);
-        lessonVariantSeed(child.id, SUBJECT, AREA, level, true);
+        const variant_seed = makeVariantSeed();
 
         // Fetch again (will send next seed)
-        lesson = await fetchGeneratedLesson(skillRow);
+        const out = await fetchGeneratedLesson(skillRow, { variant_seed });
+        lesson = out.safeLesson;
+        if (out.fingerprint){
+          lastLessonFingerprint = out.fingerprint;
+          saveLastFp(out.fingerprint);
+        }
 
         steps = Array.isArray(lesson.steps) ? lesson.steps : [];
         idx = 0;
@@ -1885,7 +1925,18 @@ Rules:
 
       // Generate lesson from worker
       try{
-        lesson = await fetchGeneratedLesson(skillRow);
+        if (lessonRequestInFlight) return;
+        lessonRequestInFlight = true;
+        nextBtn.disabled = true;
+        backBtn.disabled = true;
+        contextLine.textContent = `Loading a lesson for ${childName}`;
+
+        const out = await fetchGeneratedLesson(skillRow);
+        lesson = out.safeLesson;
+        if (out.fingerprint){
+          lastLessonFingerprint = out.fingerprint;
+          saveLastFp(out.fingerprint);
+        }
       }catch(e){
         console.error(e);
         showError("Could not load a lesson right now.");
@@ -1896,6 +1947,8 @@ Rules:
         nextBtn.disabled = true;
         backBtn.disabled = true;
         return;
+      } finally {
+        lessonRequestInFlight = false;
       }
 
       steps = Array.isArray(lesson.steps) ? lesson.steps : [];
