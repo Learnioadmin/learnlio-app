@@ -536,6 +536,7 @@
     // Answers tracking for scoring + auto-advance gating
     let stepState = {}; // stepIndex -> {completed:boolean, correct:boolean}
     let sessionXp = 0;
+    let sessionDbId = null;
 
     // XP storage (overall)
     let xp_total = 0;
@@ -791,6 +792,67 @@
       xpBarFill.style.width = pct + "%";
       rewardBadge.textContent = `${rewardLabel(total)} badge`;
       sessionXpLine.textContent = `Session XP: ${sessionXp}`;
+    }
+
+    // -------------------------
+    // Session tracking (matches Tutor)
+    // -------------------------
+    async function ensureSessionRow(){
+      if (sessionDbId) return sessionDbId;
+      if (!currentUser?.id || !child?.id || !SUBJECT) return null;
+
+      const payload = {
+        owner_id: currentUser.id,
+        parent_user_id: currentUser.id,
+        child_id: child.id,
+        subject: SUBJECT,
+        area: AREA || null,
+        questions_done: 0,
+        correct_count: 0,
+        badges: [],
+        summary: null,
+        raw_log: null
+      };
+
+      try{
+        const { data, error } = await sb.from("sessions").insert(payload).select("id").single();
+        if (error) throw error;
+        sessionDbId = data.id;
+        return sessionDbId;
+      }catch(e){
+        console.warn("sessions insert failed:", e);
+        return null;
+      }
+    }
+
+    async function insertSessionItem({ item_type, prompt_text=null, child_text=null, is_correct=null, meta=null }){
+      await ensureSessionRow();
+      if (!sessionDbId || !currentUser?.id || !child?.id) return;
+
+      try{
+        const payload = { session_id: sessionDbId, owner_id: currentUser.id, child_id: child.id, item_type, prompt_text, child_text, is_correct, meta: meta || {} };
+        const { error } = await sb.from("session_items").insert(payload);
+        if (error) throw error;
+      }catch(e){
+        console.warn("session_items insert failed:", e);
+      }
+    }
+
+    async function updateSessionRollups({ questions_done, correct_count, summary=null, raw_log=null, badges=[] }){
+      if (!sessionDbId) return;
+      try{
+        const { error } = await sb.from("sessions").update({
+          area: AREA || null,
+          questions_done,
+          correct_count,
+          badges,
+          summary,
+          raw_log
+        }).eq("id", sessionDbId);
+        if (error) throw error;
+      }catch(e){
+        console.warn("sessions update failed:", e);
+      }
     }
 
     // -------------------------
@@ -1128,6 +1190,13 @@
 
           const isCorrect = (i === correctIndex);
           stepState[idx] = { completed:true, correct:isCorrect };
+          await insertSessionItem({
+            item_type: "answer",
+            prompt_text: step.prompt || "",
+            child_text: null,
+            is_correct: isCorrect,
+            meta: { source:"lesson", subject: SUBJECT, area: AREA, step_type: step.type, step_index: idx }
+          });
 
           // Gentle XP: reward effort + a bit more for correct
           await awardXp(isCorrect ? 10 : 6);
@@ -1254,6 +1323,13 @@
 
         const isCorrect = (chosen === target);
         stepState[idx] = { completed:true, correct:isCorrect };
+        await insertSessionItem({
+          item_type: "answer",
+          prompt_text: step.prompt || "",
+          child_text: null,
+          is_correct: isCorrect,
+          meta: { source:"lesson", subject: SUBJECT, area: AREA, step_type: step.type, step_index: idx }
+        });
 
         await awardXp(isCorrect ? 12 : 7);
         hintLine.textContent = isCorrect ? "Yes — you landed on it ✅" : `Nearly. It was ${target}. Keep going 💛`;
@@ -1377,6 +1453,13 @@
 
           if (matched >= cleanPairs.length){
             stepState[idx] = { completed:true, correct:(mistakes === 0) };
+            await insertSessionItem({
+              item_type: "answer",
+              prompt_text: step.prompt || "",
+              child_text: null,
+              is_correct: (mistakes === 0),
+              meta: { source:"lesson", subject: SUBJECT, area: AREA, step_type: step.type, step_index: idx }
+            });
             hintLine.textContent = "All matched ✅";
             scheduleAutoAdvance(900);
           }
@@ -1462,14 +1545,37 @@
 
       // quiet update to child_skill_progress
       try{
+        await ensureSessionRow();
         let skillRow = await loadOrCreateSkillRow();
         const activityIdxs = steps
           .map((s,i) => (["mcq","number_line","match_pairs"].includes(s.type) ? i : null))
           .filter(v => v !== null);
+        let questions_done = 0;
+        let correct_count = 0;
         for (const i of activityIdxs){
           const st = stepState[i];
           if (st?.completed){
+            questions_done += 1;
+            if (st.correct) correct_count += 1;
             skillRow = await recordAttemptToSkill({ skillRow, isCorrect: !!st.correct });
+          }
+        }
+        if (questions_done > 0 && sessionDbId){
+          await updateSessionRollups({
+            questions_done,
+            correct_count,
+            summary: {
+              source: "lessons",
+              lesson_title: lesson?.title || "",
+              session_xp: sessionXp,
+              completed_at: new Date().toISOString()
+            },
+            raw_log: { stepState }
+          });
+          if (skillRow?.id){
+            await sb.from("child_skill_progress")
+              .update({ last_session_id: sessionDbId, updated_at: new Date().toISOString() })
+              .eq("id", skillRow.id);
           }
         }
       }catch(e){
@@ -1693,4 +1799,5 @@
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
+
 
