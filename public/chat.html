@@ -526,59 +526,104 @@
       .msg{ max-width: 92%; }
     }
 
+    /* ========================
+       MOBILE NATIVE OVERRIDES
+       ======================== */
+
     :root{
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --composer-h: 84px;
+      --composer-h: 74px;
     }
 
-    html, body { height: 100%; }
-    body { overflow: hidden !important; }
-
-    .container { height: calc(var(--vh) * 100); }
-
-    .shell{
-      min-height: 0;
-      height: calc((var(--vh) * 100) - 78px - 36px);
-    }
+    html, body { height:100%; }
+    body { overflow:hidden; }
 
     @media (max-width: 980px){
-      .container{ padding-bottom: 10px; }
-      .shell{
-        grid-template-columns: 1fr;
-        height: calc(var(--vh) * 100 - 78px);
-        min-height: 0;
-      }
-      .panel{ min-height: 0 !important; }
       .panel-head{
-        padding-top: calc(14px + var(--safe-top));
+        padding: 10px 12px 8px;
+        position: sticky;
+        top: 0;
       }
+      .title{ font-size: 15px; }
+      .subtitle{ font-size: 12px; }
+      #miniProgress{ margin-top: 6px; }
     }
 
-    .chat{
-      min-height: 0;
-      overflow: hidden;
-    }
-
+    .chat{ min-height:0; overflow:hidden; }
     #messages{
-      min-height: 0;
-      overflow-y: auto;
+      min-height:0;
+      overflow-y:auto;
       -webkit-overflow-scrolling: touch;
       padding-bottom: calc(12px + var(--composer-h) + var(--safe-bottom));
       scroll-padding-bottom: calc(12px + var(--composer-h) + var(--safe-bottom));
     }
 
     .composer{
-      padding-bottom: calc(12px + var(--safe-bottom));
+      padding: 10px 12px;
+      padding-bottom: calc(10px + var(--safe-bottom));
+    }
+    #input{ font-size:16px; }
+    @media (max-width: 520px){
+      .row{ flex-direction:row; }
+      #sendBtn{ width:auto; }
     }
 
-    #input{ font-size: 16px; }
+    #calcSheet{
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 12px;
+      padding-bottom: calc(12px + var(--safe-bottom));
+      background: rgba(2,6,23,.45);
+      z-index: 9999;
+    }
+    #calcSheetCard{
+      width: min(520px, 100%);
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid rgba(15,23,42,.12);
+      box-shadow: 0 30px 60px rgba(2,6,23,.22);
+      padding: 12px;
+    }
+    .calcSheetHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+    .calcSheetTitle{ font-weight:950; }
+    #calculator{ display:block !important; }
 
     @media (max-width: 520px){
-      .chat{ padding: 10px; }
-      #messages{ padding: 10px; padding-bottom: calc(10px + var(--composer-h) + var(--safe-bottom)); }
-      .composer{ padding: 10px; padding-bottom: calc(10px + var(--safe-bottom)); }
-      .msg{ max-width: 94%; }
+      .calcGrid{ gap:10px; }
+      .calcBtn{
+        padding: 16px;
+        font-size: 20px;
+        border-radius: 16px;
+      }
+    }
+
+    #calcToggleBtn{
+      border:none;
+      border-radius: 14px;
+      padding: 12px 12px;
+      background: #111;
+      color:#fff;
+      font-weight:950;
+      cursor:pointer;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 520px){
+      .nav-inner{ padding: 10px 12px !important; }
+      .links{ gap:4px !important; }
+      .links a{ padding: 8px 8px !important; font-size: 13px !important; }
+      .btn{ padding: 9px 10px !important; font-size: 13px !important; }
+      .brand img{ height: 30px !important; }
     }
   </style>
 
@@ -631,17 +676,9 @@
 
           <div id="area-selection" class="pillbar" style="display:none;"></div>
 
-          <div id="calculator" style="display:none;">
-            <div class="calcGrid">
-              <button type="button" class="calcBtn">7</button><button type="button" class="calcBtn">8</button><button type="button" class="calcBtn">9</button><button type="button" class="calcBtn">÷</button>
-              <button type="button" class="calcBtn">4</button><button type="button" class="calcBtn">5</button><button type="button" class="calcBtn">6</button><button type="button" class="calcBtn">×</button>
-              <button type="button" class="calcBtn">1</button><button type="button" class="calcBtn">2</button><button type="button" class="calcBtn">3</button><button type="button" class="calcBtn">−</button>
-              <button type="button" class="calcBtn">0</button><button type="button" id="calcClearBtn" class="calcBtn">C</button><button type="button" class="calcBtn">+</button><button type="button" class="calcBtn">=</button>
-            </div>
-          </div>
-
           <div class="row">
-            <input id="input" placeholder="Type your answer… (or tap a choice)" />
+            <input id="input" placeholder="Type your answer (or tap a choice)" />
+            <button id="calcToggleBtn" type="button" style="display:none;">🧮</button>
             <button id="sendBtn" type="button">Send</button>
           </div>
         </div>
@@ -714,6 +751,25 @@
       </div>
     </footer>
   </main>
+
+  <!-- Calculator bottom sheet (mobile-friendly) -->
+  <div id="calcSheet" aria-hidden="true">
+    <div id="calcSheetCard" role="dialog" aria-modal="true" aria-label="Calculator">
+      <div class="calcSheetHead">
+        <div class="calcSheetTitle">Calculator</div>
+        <button id="calcCloseBtn" class="btn light" type="button">Close</button>
+      </div>
+
+      <div id="calculator">
+        <div class="calcGrid">
+          <button type="button" class="calcBtn">7</button><button type="button" class="calcBtn">8</button><button type="button" class="calcBtn">9</button><button type="button" class="calcBtn"></button>
+          <button type="button" class="calcBtn">4</button><button type="button" class="calcBtn">5</button><button type="button" class="calcBtn">6</button><button type="button" class="calcBtn"></button>
+          <button type="button" class="calcBtn">1</button><button type="button" class="calcBtn">2</button><button type="button" class="calcBtn">3</button><button type="button" class="calcBtn"></button>
+          <button type="button" class="calcBtn">0</button><button type="button" id="calcClearBtn" class="calcBtn">C</button><button type="button" class="calcBtn">+</button><button type="button" class="calcBtn">=</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div id="rewardToast" role="status" aria-live="polite"></div>
 
@@ -824,6 +880,9 @@
     const subjectSelection = document.getElementById("subject-selection"); // hidden now
     const areaSelection = document.getElementById("area-selection");       // hidden now
     const calculator = document.getElementById("calculator");
+    const calcToggleBtn = document.getElementById("calcToggleBtn");
+    const calcSheet = document.getElementById("calcSheet");
+    const calcCloseBtn = document.getElementById("calcCloseBtn");
 
     const mathsBtn = document.getElementById("mathsBtn");
     const englishBtn = document.getElementById("englishBtn");
@@ -912,6 +971,25 @@
     function scrollBottomSoon(){
       setTimeout(scrollBottom, 60);
     }
+
+    function openCalc(){
+      if (!calcSheet) return;
+      calcSheet.style.display = "flex";
+      calcSheet.setAttribute("aria-hidden", "false");
+      setTimeout(scrollBottom, 40);
+    }
+
+    function closeCalc(){
+      if (!calcSheet) return;
+      calcSheet.style.display = "none";
+      calcSheet.setAttribute("aria-hidden", "true");
+      setTimeout(() => { try{ input.focus(); }catch{} scrollBottom(); }, 40);
+    }
+
+    function setCalcAvailable(on){
+      if (!calcToggleBtn) return;
+      calcToggleBtn.style.display = on ? "inline-flex" : "none";
+    }
     function appendAndMaybeScroll(el){
       const shouldStick = isNearBottom(messagesDiv, 180);
       messagesDiv.appendChild(el);
@@ -921,6 +999,21 @@
 
     messagesDiv.addEventListener("scroll", updateJumpButton);
     jumpLatestBtn.addEventListener("click", () => { scrollBottom(); updateJumpButton(); });
+
+    calcToggleBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openCalc();
+    });
+
+    calcCloseBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeCalc();
+    });
+
+    calcSheet?.addEventListener("click", (e) => {
+      if (e.target === calcSheet) closeCalc();
+    });
 
     // Keep emojis in UI, but strip for speech
     function stripForTTS(text){
@@ -1981,11 +2074,12 @@ End with: "Want to try it now?"
       updateProgressUI();
 
       if (subject === "Maths"){
-        calculator.style.display = "block";
+        setCalcAvailable(true);
         currentQuestion = generateMathQuestion();
         showMathQuestion(currentQuestion);
       } else {
-        calculator.style.display = "none";
+        setCalcAvailable(false);
+        closeCalc();
         englishQueue = [];
         presentEnglishMCQ();
       }
@@ -1997,7 +2091,12 @@ End with: "Want to try it now?"
       currentQuestion = null;
       hintUsedForCurrent = false;
 
-      calculator.style.display = "none";
+      if (s === "Maths"){
+        setCalcAvailable(true);
+      } else {
+        setCalcAvailable(false);
+        closeCalc();
+      }
       updateProgressUI();
 
       if (s === "Maths"){
@@ -2027,7 +2126,8 @@ End with: "Want to try it now?"
     // ---------- End session ----------
     async function endSessionUI(){
       disableInput(true);
-      calculator.style.display = "none";
+      setCalcAvailable(false);
+      closeCalc();
 
       await updateSessionRollups();
 
@@ -2044,7 +2144,8 @@ End with: "Want to try it now?"
       englishQueue = [];
 
       disableInput(false);
-      calculator.style.display = "none";
+      setCalcAvailable(false);
+      closeCalc();
 
       updateProgressUI();
       addBotMessage(`👋 Hi ${childName}!\n\nLet’s do one small step at a time.`);
@@ -2147,12 +2248,13 @@ End with: "Want to try it now?"
         b.addEventListener("click", () => {
           const val = b.textContent;
           if (val === "C") return;
+          if (val === "=") return;
           input.value += val;
-          input.focus();
+          setTimeout(() => { input.focus(); scrollBottom(); }, 20);
         });
       });
       const clear = document.getElementById("calcClearBtn");
-      clear.addEventListener("click", () => { input.value = ""; input.focus(); });
+      clear.addEventListener("click", () => { input.value = ""; setTimeout(() => { input.focus(); scrollBottom(); }, 20); });
     }
 
     // ---------- Auth ----------
