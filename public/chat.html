@@ -931,10 +931,10 @@
           <button type="button" class="calcBtn">7</button><button type="button" class="calcBtn">8</button><button type="button" class="calcBtn">9</button><button type="button" class="calcBtn"></button>
           <button type="button" class="calcBtn">4</button><button type="button" class="calcBtn">5</button><button type="button" class="calcBtn">6</button><button type="button" class="calcBtn"></button>
           <button type="button" class="calcBtn">1</button><button type="button" class="calcBtn">2</button><button type="button" class="calcBtn">3</button><button type="button" class="calcBtn"></button>
-          <button type="button" class="calcBtn">0</button><button type="button" id="calcClearBtn" class="calcBtn">C</button><button type="button" class="calcBtn">+</button><button type="button" class="calcBtn">=</button>
+          <button type="button" class="calcBtn">0</button><button type="button" id="calcClearBtn" class="calcBtn">C</button><button type="button" class="calcBtn">+</button><button type="button" id="calcOkBtn" class="calcBtn">OK</button>
         </div>
         <div class="calcActions">
-          <button type="button" id="calcOkBtn" class="btn">OK</button>
+          <button type="button" class="btn" data-action="calcOk">OK</button>
           <button type="button" id="calcCloseBtn" class="btn light">Close</button>
         </div>
       </div>
@@ -1063,6 +1063,7 @@
     const calcSheet = document.getElementById("calcSheet");
     const calcOkBtn = document.getElementById("calcOkBtn");
     const calcCloseBtn = document.getElementById("calcCloseBtn");
+    const calcOkBtns = Array.from(document.querySelectorAll('[data-action="calcOk"]'));
 
     const mathsBtn = document.getElementById("mathsBtn");
     const englishBtn = document.getElementById("englishBtn");
@@ -1151,7 +1152,7 @@
       const nodes = messagesDiv.querySelectorAll(".msg");
       return nodes.length ? nodes[nodes.length - 1] : null;
     }
-    function scrollToLastMessage(force=false){
+    function scrollToLastMessage(force=true){
       const stick = force || isNearBottom(messagesDiv, 320);
       if (!stick) { updateJumpButton(); return; }
       const last = lastMessageEl();
@@ -1204,7 +1205,9 @@
     });
 
     calcSheet?.addEventListener("click", (e) => {
-      if (e.target === calcSheet) closeCalc();
+      if (e.target === calcSheet) {
+        closeCalc();
+      }
     });
 
     // Keep emojis in UI, but strip for speech
@@ -1350,6 +1353,29 @@
       appendAndMaybeScroll(div);
     }
 
+    let sendInFlight = false;
+    function addBotError(message){
+      const msg = message || "Something went wrong. Please try again.";
+      addBotMessage(msg);
+    }
+    async function safeHandleSend(){
+      if (sendInFlight) return false;
+      sendInFlight = true;
+      let ok = false;
+      try{
+        await handleSend();
+        ok = true;
+      } catch (e){
+        console.error("handleSend failed", e);
+        addBotError("Sorry, something went wrong. Please try again.");
+      } finally {
+        sendInFlight = false;
+        setTyping(false);
+        scrollToLastMessage(true);
+      }
+      return ok;
+    }
+
     // Subject/Area choices INSIDE chat
     function addBotChoicesMessage(text, choices){
       const div = document.createElement("div");
@@ -1492,17 +1518,19 @@
       if (reasonText) showRewardToast(`+${p} XP`, reasonText);
       updateProgressUI();
 
-      sb.from("child_xp")
-        .upsert({
-          owner_id: currentUser.id,
-          child_id: child.id,
-          xp_total: totalXp,
-          xp_lifetime,
-          updated_at: new Date().toISOString()
-        }, { onConflict: "owner_id,child_id" })
-        .catch((e) => {
+      (async () => {
+        try {
+          await sb.from("child_xp").upsert({
+            owner_id: currentUser.id,
+            child_id: child.id,
+            xp_total: totalXp,
+            xp_lifetime,
+            updated_at: new Date().toISOString()
+          }, { onConflict: "owner_id,child_id" });
+        } catch (e) {
           console.warn("child_xp upsert failed (safe)", e);
-        });
+        }
+      })();
     }
 
     function friendlyPracticeLabel(){
@@ -2088,7 +2116,7 @@ End with: "Want to try it now?"
     function showMathQuestion(q){
       hintUsedForCurrent = false;
       addBotMessage(
-        `✏️ Question:\n\n${q.displayText}\n\nTake your time.\nWhat do you think the answer is?`,
+        `Question:\n${q.displayText}\nTake your time.\nWhat do you think the answer is?`,
         { showHint:true, showExplain:true }
       );
 
@@ -2267,13 +2295,15 @@ End with: "Want to try it now?"
 
       if (subject === "Maths"){
         if (composerTools) composerTools.style.display = "flex";
+        calculator.style.display = "block";
         currentQuestion = generateMathQuestion();
         showMathQuestion(currentQuestion);
         measureComposer();
         scrollToLastMessage(true);
       } else {
         if (composerTools) composerTools.style.display = "none";
-        closeCalc();
+        calculator.style.display = "none";
+        calcSheet.style.display = "none";
         englishQueue = [];
         presentEnglishMCQ();
         measureComposer();
@@ -2291,7 +2321,8 @@ End with: "Want to try it now?"
         if (composerTools) composerTools.style.display = "flex";
       } else {
         if (composerTools) composerTools.style.display = "none";
-        closeCalc();
+        calculator.style.display = "none";
+        calcSheet.style.display = "none";
       }
       updateProgressUI();
       measureComposer();
@@ -2324,7 +2355,8 @@ End with: "Want to try it now?"
     async function endSessionUI(){
       disableInput(true);
       if (composerTools) composerTools.style.display = "none";
-      closeCalc();
+      calculator.style.display = "none";
+      calcSheet.style.display = "none";
       measureComposer();
 
       await updateSessionRollups();
@@ -2343,7 +2375,8 @@ End with: "Want to try it now?"
 
       disableInput(false);
       if (composerTools) composerTools.style.display = "none";
-      closeCalc();
+      calculator.style.display = "none";
+      calcSheet.style.display = "none";
       measureComposer();
 
       updateProgressUI();
@@ -2448,17 +2481,20 @@ End with: "Want to try it now?"
 
       async function submitFromCalculator(){
         if (!input.value.trim()) return;
-        await handleSend();
-        closeCalc();
-        measureComposer();
-        scrollToLastMessage(true);
+        const ok = await safeHandleSend();
+        if (ok){
+          calculator.style.display = "none";
+          calcSheet.style.display = "none";
+          measureComposer();
+          scrollToLastMessage(true);
+        }
       }
 
       btns.forEach(b => {
         b.addEventListener("click", async () => {
           const val = b.textContent;
           if (val === "C") return;
-          if (val === "=") { await submitFromCalculator(); return; }
+          if (val === "OK") { await submitFromCalculator(); return; }
           const map = { "÷": "/", "×": "*", "−": "-" };
           input.value += (map[val] || val);
           input.focus();
@@ -2467,7 +2503,8 @@ End with: "Want to try it now?"
       const clear = document.getElementById("calcClearBtn");
       clear.addEventListener("click", () => { input.value = ""; setTimeout(() => { input.focus(); scrollToLastMessage(true); }, 20); });
       okBtn?.addEventListener("click", async () => { await submitFromCalculator(); });
-      closeBtn?.addEventListener("click", () => { closeCalc(); measureComposer(); scrollToLastMessage(true); });
+      calcOkBtns.forEach(btn => btn.addEventListener("click", async () => { await submitFromCalculator(); }));
+      closeBtn?.addEventListener("click", () => { calculator.style.display = "none"; calcSheet.style.display = "none"; measureComposer(); scrollToLastMessage(true); });
     }
 
     // ---------- Auth ----------
@@ -2605,8 +2642,8 @@ End with: "Want to try it now?"
     mathsBtn?.addEventListener("click", () => { addUserMessage("Maths"); selectSubject("Maths"); saveLastContext(); });
     englishBtn?.addEventListener("click", () => { addUserMessage("English"); selectSubject("English"); saveLastContext(); });
 
-    sendBtn.addEventListener("click", handleSend);
-    input.addEventListener("keypress", e => { if (e.key === "Enter") handleSend(); });
+    sendBtn.addEventListener("click", safeHandleSend);
+    input.addEventListener("keydown", e => { if (e.key === "Enter") safeHandleSend(); });
 
     newSessionBtn.addEventListener("click", () => startNewSession());
     finishBtn.addEventListener("click", () => endSessionUI());
