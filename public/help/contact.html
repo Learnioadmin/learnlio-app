@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Help Centre - Contact | Learnlio</title>
+  <meta name="description" content="Contact Learnlio support. Email hello@learnlio.co.uk or use the contact page." />
+  <link rel="canonical" href="https://learnlio.co.uk/help/contact.html" />
+  <link rel="icon" type="image/x-icon" href="/assets/img/flavicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/img/flavicon.ico">
+  <link rel="stylesheet" href="/assets/css/app.css" />
+  <style>
+    :root{--bg:#f7f7fb;--card:#fff;--text:#0b0b0f;--muted:#6b7280;--line:#ececf4;--brand:#0b5cff;--shadow:0 10px 30px rgba(0,0,0,.08);--radius:18px;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);}a{color:inherit;text-decoration:none}
+    .container{max-width:900px;margin:0 auto;padding:18px;}
+    .nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;}
+    .nav-inner{max-width:1100px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;letter-spacing:.2px;}
+    .brand img{height:34px;width:auto;display:block;}
+    .links{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+    .links a{text-decoration:none;padding:10px 12px;border-radius:12px;color:#111;}
+    .links a:hover{background:#f3f4f6;}
+    .btn{background:var(--brand);color:#fff;border:none;padding:12px 14px;border-radius:14px;cursor:pointer;font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:10px;}
+    .btn.light{background:#e5e7eb;color:#111;}
+    .breadcrumb{font-size:13px;color:var(--muted);margin-bottom:10px;}
+    .breadcrumb a{color:var(--muted);}
+    .card{background:var(--card);border:1px solid rgba(236,236,244,.8);border-radius:16px;box-shadow:var(--shadow);padding:18px;}
+    .card p{margin:8px 0;color:var(--muted);line-height:1.7;}
+    .list{margin:10px 0 0;padding-left:18px;color:var(--muted);line-height:1.7;}
+    .footer{margin-top:18px;padding:18px 0 40px;color:var(--muted);font-size:14px;}
+    .footer a{color:var(--muted);text-decoration:none;}
+    .footer a:hover{text-decoration:underline;}
+  </style>
+</head>
+<body>
+  <header class="nav" role="banner">
+    <div class="nav-inner">
+      <a class="brand" href="/" aria-label="Learnlio home">
+        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <span>Learnlio</span>
+      </a>
+      <nav class="links" aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/why-learnlio.html">Why Learnlio</a>
+        <a href="/pricing.html">Pricing</a>
+        <a class="btn light" href="/login.html" aria-label="Log in">Log in</a>
+        <a class="btn" href="/pricing.html" aria-label="Start free trial">Start free trial</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="breadcrumb">
+      <a href="/">Home</a> &gt; <a href="/help/">Help Centre</a> &gt; <span>Contact</span>
+    </div>
+
+    <section class="card">
+      <h1 style="margin:0 0 8px;">Contact support</h1>
+      <p>Email us at <a href="mailto:hello@learnlio.co.uk">hello@learnlio.co.uk</a> or use the main <a href="/contact.html">Contact page</a>.</p>
+      <p>To help us respond quickly, include:</p>
+      <ul class="list">
+        <li>The email used for the account</li>
+        <li>The child name or profile</li>
+        <li>Your device and browser</li>
+        <li>A short description of what happened</li>
+      </ul>
+      <div style="margin-top:12px;">
+        <a class="btn" href="mailto:hello@learnlio.co.uk">Email support</a>
+        <a class="btn light" href="/contact.html" style="margin-left:8px;">Open contact page</a>
+      </div>
+    </section>
+
+    <footer class="footer" role="contentinfo">
+      <div class="footer-inner">
+        <div>
+          <div style="font-weight:950; color:var(--ink); margin-bottom:6px;">Learnlio</div>
+          <div style="max-width:560px; line-height:1.7;">
+            Calm, dyslexia-friendly learning support for UK children who feel pressured, anxious, or stuck.
+          </div>
+          <div style="margin-top:10px; font-size:13px;">
+            Copyright <span id="year"></span> Learnlio. All rights reserved.
+          </div>
+        </div>
+        <div class="footer-links" aria-label="Footer links">
+          <a href="/help/">Help Centre</a>
+          <a href="/contact.html">Contact us</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms &amp; Conditions</a>
+          <a href="/cookies.html">Cookies</a>
+          <a href="/ethics.html">Ethics</a>
+          <a href="/safeguarding.html">Safeguarding</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

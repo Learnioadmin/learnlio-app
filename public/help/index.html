@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnlio - Help Centre</title>
+  <meta name="description" content="Help Centre for Learnlio. Find quick answers about lessons, tutor, parent insight, billing, and troubleshooting." />
+  <link rel="canonical" href="https://learnlio.co.uk/help/" />
+  <link rel="icon" type="image/x-icon" href="/assets/img/flavicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/img/flavicon.ico">
+
+  <link rel="stylesheet" href="/assets/css/app.css" />
+
+  <style>
+    :root{
+      --bg:#f7f7fb;
+      --card:#ffffff;
+      --text:#0b0b0f;
+      --muted:#6b7280;
+      --line:#ececf4;
+      --brand:#0b5cff;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text);}
+    a{color:inherit; text-decoration:none;}
+    .container{max-width:1100px; margin:0 auto; padding:18px;}
+
+    .nav{background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:50;}
+    .nav-inner{max-width:1100px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px;}
+    .brand{display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:800; letter-spacing:.2px;}
+    .brand img{height:34px; width:auto; display:block;}
+    .links{display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;}
+    .links a{ text-decoration:none; padding:10px 12px; border-radius:12px; color:#111; }
+    .links a:hover{ background:#f3f4f6; }
+
+    .btn{background:var(--brand); color:#fff; border:none; padding:12px 14px; border-radius:14px; cursor:pointer; font-size:14px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:10px;}
+    .btn.light{background:#e5e7eb; color:#111;}
+
+    .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid rgba(236,236,244,.8);}
+    .hero{padding:22px;}
+    .hero h1{margin:0 0 6px; font-size:36px; letter-spacing:-.5px;}
+    .hero p{margin:0; color:var(--muted); line-height:1.7;}
+    .search-wrap{margin-top:16px; display:grid; gap:10px;}
+    .search-input{width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--line); font-size:16px;}
+
+    .grid{display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:14px; margin-top:18px;}
+    @media(max-width:980px){ .grid{grid-template-columns: repeat(2, minmax(0, 1fr));} }
+    @media(max-width:620px){ .grid{grid-template-columns:1fr;} }
+
+    .help-card{background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; display:block; box-shadow:0 8px 18px rgba(0,0,0,.05);}
+    .help-card:hover{border-color:rgba(11,92,255,.35);}
+    .help-card-title{font-weight:800;}
+    .help-card-meta{font-size:12px; color:var(--muted); margin-top:6px;}
+    .help-card-summary{margin-top:6px; color:var(--muted); line-height:1.6; font-size:14px;}
+
+    .section-title{margin:22px 0 10px; font-size:18px;}
+
+    .popular{display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:12px;}
+    @media(max-width:780px){ .popular{grid-template-columns:1fr;} }
+
+    .breadcrumb{font-size:13px; color:var(--muted); margin-bottom:10px;}
+    .breadcrumb a{color:var(--muted);}
+
+    .search-results{display:none; gap:12px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top:12px;}
+    @media(max-width:780px){ .search-results{grid-template-columns:1fr;} }
+    .no-results{display:none; padding:12px; border:1px dashed var(--line); border-radius:12px; color:var(--muted);}
+
+    .footer{margin-top:18px; padding:18px 0 40px; color:var(--muted); font-size:14px;}
+    .footer a{color:var(--muted); text-decoration:none;}
+    .footer a:hover{text-decoration:underline;}
+
+    .cta{margin-top:18px; padding:16px; border-radius:16px; border:1px solid rgba(11,92,255,.18); background:linear-gradient(135deg, rgba(11,92,255,.08), rgba(16,185,129,.08));}
+    .cta p{margin:0 0 10px; color:var(--muted);}
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Learnlio?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Learnlio is a calm learning support tool for UK children, with structured lessons and a gentle tutor. It is not a diagnosis."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need a card to start a trial?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. You can start a 7-day trial without a card."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do Lessons and Tutor differ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Lessons are structured practice. Tutor is a chat-style guide for short, flexible help."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Where does Parent Insight come from?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Parent Insight combines data from Lessons, Tutor, and the setup check to highlight progress and next steps."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I contact support?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Email hello@learnlio.co.uk and include the email you use, the child name, and the device or browser."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+
+<body>
+  <header class="nav" role="banner">
+    <div class="nav-inner">
+      <a class="brand" href="/" aria-label="Learnlio home">
+        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <span>Learnlio</span>
+      </a>
+
+      <nav class="links" aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/why-learnlio.html">Why Learnlio</a>
+        <a href="/pricing.html">Pricing</a>
+        <a class="btn light" href="/login.html" aria-label="Log in">Log in</a>
+        <a class="btn" href="/pricing.html" aria-label="Start free trial">Start free trial</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="breadcrumb">
+      <a href="/">Home</a> &gt; <span>Help Centre</span>
+    </div>
+
+    <section class="card hero">
+      <h1>Help Centre</h1>
+      <p>Simple answers for calm learning at home.</p>
+
+      <div class="search-wrap">
+        <label for="helpSearchInput" class="muted">Search help articles</label>
+        <input id="helpSearchInput" class="search-input" type="search" placeholder="Search help articles" />
+        <div id="searchCount" class="muted"></div>
+        <div id="searchResults" class="search-results"></div>
+        <div id="noResults" class="no-results">
+          No results yet. Try a different word or visit <a href="/help/contact.html">Contact</a>.
+        </div>
+      </div>
+    </section>
+
+    <h2 class="section-title">Browse by category</h2>
+    <section class="grid">
+      <a class="help-card" href="/help/category-getting-started.html">
+        <div class="help-card-title">Getting started</div>
+        <div class="help-card-summary">Accounts, child profiles, and your first steps.</div>
+      </a>
+      <a class="help-card" href="/help/category-lessons-tutor.html">
+        <div class="help-card-title">Lessons and Tutor</div>
+        <div class="help-card-summary">How practice works and how to use Tutor support.</div>
+      </a>
+      <a class="help-card" href="/help/category-parents-reports.html">
+        <div class="help-card-title">Parents and Parent Insight</div>
+        <div class="help-card-summary">Progress, next steps, and the parent view.</div>
+      </a>
+      <a class="help-card" href="/help/category-billing.html">
+        <div class="help-card-title">Billing and subscription</div>
+        <div class="help-card-summary">Trials, payments, and the billing portal.</div>
+      </a>
+      <a class="help-card" href="/help/category-troubleshooting.html">
+        <div class="help-card-title">Troubleshooting</div>
+        <div class="help-card-summary">Log in, audio, and device tips.</div>
+      </a>
+    </section>
+
+    <h2 class="section-title">Popular articles</h2>
+    <section class="popular">
+      <a class="help-card" href="/help/category-getting-started.html#what-is-learnlio">
+        <div class="help-card-title">What Learnlio is (and is not)</div>
+        <div class="help-card-summary">A calm learning support tool, not a diagnosis.</div>
+      </a>
+      <a class="help-card" href="/help/category-lessons-tutor.html#lessons-vs-tutor">
+        <div class="help-card-title">Lessons vs Tutor</div>
+        <div class="help-card-summary">When to use structured lessons vs chat-style support.</div>
+      </a>
+      <a class="help-card" href="/help/category-billing.html#start-free-trial">
+        <div class="help-card-title">Start a free trial</div>
+        <div class="help-card-summary">No card required for the trial.</div>
+      </a>
+      <a class="help-card" href="/help/category-billing.html#next-payment-due">
+        <div class="help-card-title">Next payment due date</div>
+        <div class="help-card-summary">Where to see the current period end.</div>
+      </a>
+      <a class="help-card" href="/help/category-troubleshooting.html#cant-log-in">
+        <div class="help-card-title">I cannot log in</div>
+        <div class="help-card-summary">Reset your password and check email spelling.</div>
+      </a>
+      <a class="help-card" href="/help/category-parents-reports.html#parent-insight-source">
+        <div class="help-card-title">Where Parent Insight comes from</div>
+        <div class="help-card-summary">Tutor, Lessons, and the setup check combined.</div>
+      </a>
+    </section>
+
+    <section class="cta">
+      <h2 style="margin:0 0 6px; font-size:18px;">Still need help?</h2>
+      <p>We are here to help. Visit Contact for quick support options.</p>
+      <a class="btn" href="/help/contact.html">Contact support</a>
+    </section>
+
+    <footer class="footer" role="contentinfo">
+      <div class="footer-inner">
+        <div>
+          <div style="font-weight:950; color:var(--ink); margin-bottom:6px;">Learnlio</div>
+          <div style="max-width:560px; line-height:1.7;">
+            Calm, dyslexia-friendly learning support for UK children who feel pressured, anxious, or stuck.
+          </div>
+          <div style="margin-top:10px; font-size:13px;">
+            Copyright <span id="year"></span> Learnlio. All rights reserved.
+          </div>
+        </div>
+
+        <div class="footer-links" aria-label="Footer links">
+          <a href="/help/">Help Centre</a>
+          <a href="/contact.html">Contact us</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms &amp; Conditions</a>
+          <a href="/cookies.html">Cookies</a>
+          <a href="/ethics.html">Ethics</a>
+          <a href="/safeguarding.html">Safeguarding</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script src="/help/help-data.js"></script>
+  <script src="/help/search.js"></script>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

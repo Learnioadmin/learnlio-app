@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Help Centre - Troubleshooting | Learnlio</title>
+  <meta name="description" content="Troubleshooting help for Learnlio. Login, loading, audio, and mobile layout tips." />
+  <link rel="canonical" href="https://learnlio.co.uk/help/category-troubleshooting.html" />
+  <link rel="icon" type="image/x-icon" href="/assets/img/flavicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/img/flavicon.ico">
+  <link rel="stylesheet" href="/assets/css/app.css" />
+  <style>
+    :root{--bg:#f7f7fb;--card:#fff;--text:#0b0b0f;--muted:#6b7280;--line:#ececf4;--brand:#0b5cff;--shadow:0 10px 30px rgba(0,0,0,.08);--radius:18px;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);}a{color:inherit;text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:18px;}
+    .nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;}
+    .nav-inner{max-width:1100px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;letter-spacing:.2px;}
+    .brand img{height:34px;width:auto;display:block;}
+    .links{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+    .links a{text-decoration:none;padding:10px 12px;border-radius:12px;color:#111;}
+    .links a:hover{background:#f3f4f6;}
+    .btn{background:var(--brand);color:#fff;border:none;padding:12px 14px;border-radius:14px;cursor:pointer;font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:10px;}
+    .btn.light{background:#e5e7eb;color:#111;}
+    .breadcrumb{font-size:13px;color:var(--muted);margin-bottom:10px;}
+    .breadcrumb a{color:var(--muted);}
+    .layout{display:grid;grid-template-columns: 280px 1fr;gap:16px;}
+    @media(max-width:900px){.layout{grid-template-columns:1fr;}}
+    .toc{position:sticky;top:88px;align-self:start;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:var(--shadow);} 
+    .toc h3{margin:0 0 8px;font-size:14px;color:var(--muted);} 
+    .toc a{display:block;padding:8px 8px;border-radius:10px;color:#111;font-size:14px;} 
+    .toc a:hover{background:#f3f4f6;}
+    .toc-mobile{display:none;margin-bottom:12px;}
+    .toc-mobile summary{cursor:pointer;font-weight:800;}
+    @media(max-width:900px){.toc{display:none}.toc-mobile{display:block;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;}}
+    .card{background:var(--card);border:1px solid rgba(236,236,244,.8);border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:14px;}
+    .card h2{margin:0 0 6px;font-size:20px;}
+    .card p{margin:6px 0;color:var(--muted);line-height:1.7;}
+    .callout{margin-top:10px;padding:12px;border-radius:12px;border:1px solid rgba(11,92,255,.18);background:linear-gradient(135deg, rgba(11,92,255,.08), rgba(16,185,129,.08));}
+    .footer{margin-top:18px;padding:18px 0 40px;color:var(--muted);font-size:14px;}
+    .footer a{color:var(--muted);text-decoration:none;}
+    .footer a:hover{text-decoration:underline;}
+  </style>
+</head>
+<body>
+  <header class="nav" role="banner">
+    <div class="nav-inner">
+      <a class="brand" href="/" aria-label="Learnlio home">
+        <img src="/assets/img/logo.webp" alt="Learnlio" onerror="this.style.display='none'">
+        <span>Learnlio</span>
+      </a>
+      <nav class="links" aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/why-learnlio.html">Why Learnlio</a>
+        <a href="/pricing.html">Pricing</a>
+        <a class="btn light" href="/login.html" aria-label="Log in">Log in</a>
+        <a class="btn" href="/pricing.html" aria-label="Start free trial">Start free trial</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="breadcrumb">
+      <a href="/">Home</a> &gt; <a href="/help/">Help Centre</a> &gt; <span>Troubleshooting</span>
+    </div>
+
+    <h1 style="margin:0 0 12px;">Troubleshooting</h1>
+
+    <details class="toc-mobile">
+      <summary>Articles in this category</summary>
+      <div style="margin-top:8px;">
+        <a href="#cant-log-in">I cannot log in</a><br />
+        <a href="#blank-screen">Stuck loading or blank screen</a><br />
+        <a href="#audio-not-working">Audio or read aloud is not working</a><br />
+        <a href="#mobile-layout-issues">Mobile layout issues</a><br />
+        <a href="#contact-support">Contacting support</a>
+      </div>
+    </details>
+
+    <div class="layout">
+      <aside class="toc">
+        <h3>Articles</h3>
+        <a href="#cant-log-in">I cannot log in</a>
+        <a href="#blank-screen">Stuck loading or blank screen</a>
+        <a href="#audio-not-working">Audio or read aloud is not working</a>
+        <a href="#mobile-layout-issues">Mobile layout issues</a>
+        <a href="#contact-support">Contacting support</a>
+      </aside>
+
+      <section>
+        <article id="cant-log-in" class="card">
+          <h2>I cannot log in</h2>
+          <p>Use the password reset link and make sure your email is typed correctly.</p>
+          <p>If it still fails, contact support and include the email you use for the account.</p>
+          <div class="callout">Still stuck? Visit <a href="/help/contact.html">Contact</a> or email hello@learnlio.co.uk.</div>
+        </article>
+
+        <article id="blank-screen" class="card">
+          <h2>Stuck loading or blank screen</h2>
+          <p>Try a full refresh, clear cache, or switch to another browser.</p>
+          <p>If the issue continues, let us know the page you were on.</p>
+          <div class="callout">Still stuck? Visit <a href="/help/contact.html">Contact</a> or email hello@learnlio.co.uk.</div>
+        </article>
+
+        <article id="audio-not-working" class="card">
+          <h2>Audio or read aloud is not working</h2>
+          <p>Check device volume and browser permissions. Some devices require a tap before sound starts.</p>
+          <p>Try another browser if the issue continues.</p>
+          <div class="callout">Still stuck? Visit <a href="/help/contact.html">Contact</a> or email hello@learnlio.co.uk.</div>
+        </article>
+
+        <article id="mobile-layout-issues" class="card">
+          <h2>Mobile layout issues</h2>
+          <p>If the layout looks off, tell us your device model and OS version so we can fix it fast.</p>
+          <p>Include a screenshot if possible.</p>
+          <div class="callout">Still stuck? Visit <a href="/help/contact.html">Contact</a> or email hello@learnlio.co.uk.</div>
+        </article>
+
+        <article id="contact-support" class="card">
+          <h2>Contacting support</h2>
+          <p>Email hello@learnlio.co.uk and include your account email, child name, and device or browser.</p>
+          <p>We reply as quickly as we can and keep responses clear and calm.</p>
+          <div class="callout">Still stuck? Visit <a href="/help/contact.html">Contact</a> or email hello@learnlio.co.uk.</div>
+        </article>
+      </section>
+    </div>
+
+    <footer class="footer" role="contentinfo">
+      <div class="footer-inner">
+        <div>
+          <div style="font-weight:950; color:var(--ink); margin-bottom:6px;">Learnlio</div>
+          <div style="max-width:560px; line-height:1.7;">
+            Calm, dyslexia-friendly learning support for UK children who feel pressured, anxious, or stuck.
+          </div>
+          <div style="margin-top:10px; font-size:13px;">
+            Copyright <span id="year"></span> Learnlio. All rights reserved.
+          </div>
+        </div>
+        <div class="footer-links" aria-label="Footer links">
+          <a href="/help/">Help Centre</a>
+          <a href="/contact.html">Contact us</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms &amp; Conditions</a>
+          <a href="/cookies.html">Cookies</a>
+          <a href="/ethics.html">Ethics</a>
+          <a href="/safeguarding.html">Safeguarding</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
