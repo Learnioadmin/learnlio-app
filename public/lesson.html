@@ -1122,6 +1122,20 @@ Rules:
       return t === "mcq" || t === "number_line" || t === "match_pairs";
     }
 
+    function questionSteps(lesson){
+      const steps = Array.isArray(lesson?.steps) ? lesson.steps : [];
+      return steps.filter(isQuestionStep);
+    }
+
+    function questionIndexForStep(lesson, stepIndex){
+      const steps = Array.isArray(lesson?.steps) ? lesson.steps : [];
+      let q = 0;
+      for (let i = 0; i <= stepIndex; i++){
+        if (isQuestionStep(steps[i])) q++;
+      }
+      return Math.max(0, q - 1);
+    }
+
     function targetQuestionCount(level){
       const L = clampInt(level, 1, 10);
       const want = (L >= 8) ? 10 : (L + 2);
@@ -1255,12 +1269,18 @@ Rules:
     // Progress UI
     // -------------------------
     function setProgressUI(){
-      const total = steps.length || 0;
-      stepKpi.textContent = `${Math.min(idx+1,total)} / ${total}`;
+      const totalQ = questionSteps(lesson).length;
+      const isQ = isQuestionStep(steps[idx]);
+      let currentQ = 0;
+      for (let i = 0; i < steps.length && i <= idx; i++){
+        if (isQuestionStep(steps[i])) currentQ++;
+      }
+
+      stepKpi.textContent = isQ ? `Question ${currentQ} of ${totalQ}` : "Warm-up";
       topicKpi.textContent = `${SUBJECT} • ${AREA}`;
       practiceLine.textContent = `${SUBJECT} practice: ${AREA}`;
 
-      const pct = total ? Math.round(((idx) / total) * 100) : 0;
+      const pct = totalQ ? Math.round((currentQ / totalQ) * 100) : 0;
       barFill.style.width = Math.min(100, Math.max(0, pct)) + "%";
       renderXpUI();
     }
