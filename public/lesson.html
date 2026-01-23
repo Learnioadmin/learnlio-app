@@ -1116,6 +1116,87 @@ Rules:
       };
     }
 
+    // ===== Question scaling (level -> target question steps) =====
+    function isQuestionStep(step){
+      const t = String(step?.type || "");
+      return t === "mcq" || t === "number_line" || t === "match_pairs";
+    }
+
+    function targetQuestionCount(level){
+      const L = clampInt(level, 1, 10);
+      const want = (L >= 8) ? 10 : (L + 2);
+      return clampInt(want, 3, 10);
+    }
+
+    function countQuestionSteps(steps){
+      return (Array.isArray(steps) ? steps : []).filter(isQuestionStep).length;
+    }
+
+    function stepKey(step){
+      const t = String(step?.type || "").trim();
+      const p = String(step?.prompt || step?.text || "").trim().toLowerCase();
+      return `${t}::${p}`;
+    }
+
+    function mergeLessons(baseLesson, extraLesson, wantQuestions, seen){
+      if (!baseLesson || typeof baseLesson !== "object") return baseLesson;
+      if (!extraLesson || typeof extraLesson !== "object") return baseLesson;
+
+      const baseSteps = Array.isArray(baseLesson.steps) ? baseLesson.steps.slice() : [];
+      const extraSteps = Array.isArray(extraLesson.steps) ? extraLesson.steps.slice() : [];
+
+      const baseNonFinish = baseSteps.filter(s => s?.type !== "finish");
+      const baseFinish = baseSteps.find(s => s?.type === "finish") || null;
+
+      const pre = baseNonFinish.filter(s => !isQuestionStep(s));
+      const qs = baseNonFinish.filter(isQuestionStep);
+
+      qs.forEach(s => seen.add(stepKey(s)));
+
+      const maxQuestionsAllowed = Math.max(0, Math.min(wantQuestions, 10 - pre.length - 1));
+      if (qs.length > maxQuestionsAllowed) qs.length = maxQuestionsAllowed;
+
+      for (const s of extraSteps){
+        if (!isQuestionStep(s)) continue;
+        if (qs.length >= maxQuestionsAllowed) break;
+        const k = stepKey(s);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        qs.push(s);
+      }
+
+      const extraFinish = extraSteps.find(s => s?.type === "finish") || null;
+      const finish = extraFinish || baseFinish || { type:"finish", text:"Nice work. You can stop for today or try another lesson." };
+
+      baseLesson.steps = [...pre, ...qs, finish];
+      return baseLesson;
+    }
+
+    async function expandLessonToTargetQuestions(firstLesson, ctx){
+      const wantQuestions = targetQuestionCount(ctx.level);
+      const maxExtraFetches = 3;
+
+      let lesson = firstLesson;
+      let tries = 0;
+      const seen = new Set();
+      let qCount = countQuestionSteps(lesson?.steps);
+
+      while (qCount < wantQuestions && tries < maxExtraFetches){
+        tries += 1;
+        const variant_seed = lessonVariantSeed(child.id, SUBJECT, AREA, ctx.level, true);
+        const out = await fetchGeneratedLesson(ctx.skillRow, { variant_seed });
+        const extra = out.safeLesson;
+        if (out.fingerprint){
+          lastLessonFingerprint = out.fingerprint;
+          saveLastFp(out.fingerprint);
+        }
+        lesson = mergeLessons(lesson, extra, wantQuestions, seen);
+        qCount = Math.min(10, countQuestionSteps(lesson?.steps));
+      }
+
+      return lesson;
+    }
+
     async function fetchGeneratedLesson(skillRow, opts = {}){
       const level = clampInt(skillRow?.level ?? 1, 1, 10);
 
@@ -1152,7 +1233,7 @@ Rules:
         lastLessonFingerprint = loadLastFp();
       }
 
-      const firstSeed = opts.variant_seed || makeVariantSeed();
+      const firstSeed = opts.variant_seed || lessonVariantSeed(child.id, SUBJECT, AREA, level, false);
       let json = await attemptOnce(firstSeed);
 
       if (json?.fingerprint && lastLessonFingerprint && json.fingerprint === lastLessonFingerprint){
@@ -1868,6 +1949,15 @@ Rules:
           lastLessonFingerprint = out.fingerprint;
           saveLastFp(out.fingerprint);
         }
+        lesson = await expandLessonToTargetQuestions(lesson, {
+          subject: SUBJECT,
+          area: AREA,
+          age: childAge,
+          level,
+          owner_id: currentUser.id,
+          child_id: child.id,
+          skillRow
+        });
 
         steps = Array.isArray(lesson.steps) ? lesson.steps : [];
         idx = 0;
@@ -1937,6 +2027,15 @@ Rules:
           lastLessonFingerprint = out.fingerprint;
           saveLastFp(out.fingerprint);
         }
+        lesson = await expandLessonToTargetQuestions(lesson, {
+          subject: SUBJECT,
+          area: AREA,
+          age: childAge,
+          level: clampInt(skillRow?.level ?? 1, 1, 10),
+          owner_id: currentUser.id,
+          child_id: child.id,
+          skillRow
+        });
       }catch(e){
         console.error(e);
         showError("Could not load a lesson right now.");
