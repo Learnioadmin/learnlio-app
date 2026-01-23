@@ -360,6 +360,7 @@
           <div class="row">
             <button id="speakBtn" class="btn ghost" type="button">🔊 Read aloud</button>
             <button id="helpBtn" class="btn ghost" type="button">Help</button>
+            <button id="explainBtn" class="btn ghost" type="button">🔄 Explain another way</button>
           </div>
         </div>
 
@@ -471,6 +472,9 @@
     const LESSON_GEN_BASE = "https://learnlio-lessons.falling-grass-34ab.workers.dev";
     const LESSON_GEN_URL = `${LESSON_GEN_BASE.replace(/\/+$/,"")}/generate`;
 
+    // Tutor backend (explanations)
+    const BACKEND_URL = "https://softr-chat-backend.onrender.com";
+
     // Google TTS Worker
     const TTS_URL = "https://learnlio-tts.falling-grass-34ab.workers.dev/speak";
     // =========================
@@ -493,6 +497,7 @@
     const helpBtn = document.getElementById("helpBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const speakBtn = document.getElementById("speakBtn");
+    const explainBtn = document.getElementById("explainBtn");
 
     const stepKpi = document.getElementById("stepKpi");
     const topicKpi = document.getElementById("topicKpi");
@@ -513,6 +518,71 @@
       if (!text){ hintBox.style.display="none"; hintBox.textContent=""; return; }
       hintBox.style.display="block";
       hintBox.textContent = text;
+    }
+
+    async function callTutorBackend(promptText){
+      const payload = {
+        userId: currentUser?.id || "anon",
+        messages: [{ role:"user", content: promptText }],
+        subject: SUBJECT,
+        childName,
+        childAge: String(childAge)
+      };
+      const r = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+      const text = await r.text().catch(() => "");
+      let json;
+      try{ json = text ? JSON.parse(text) : null; }catch{ json = null; }
+      if (!r.ok) throw new Error(json?.error || text || `Backend error (${r.status})`);
+      return json?.reply || "";
+    }
+
+    async function explainAnotherWay(){
+      const step = steps[idx];
+      if (!step){
+        showHintBox("Tell me which bit feels tricky, and I’ll explain it another way.");
+        return;
+      }
+      if (step.type === "finish"){
+        showHintBox("You’re finished — great work.");
+        return;
+      }
+
+      const state = stepState[idx] || {};
+      state.explain_variant = (state.explain_variant || 0) + 1;
+      stepState[idx] = state;
+      const styles = ["simple", "visual", "example", "tiny-steps"];
+      const style = styles[(state.explain_variant - 1) % styles.length];
+      const stepText = step.text || step.prompt || "";
+
+      const prompt = `
+You are Learnlio AI, a child-safe UK tutor.
+Explain this step another way using style: ${style}
+Child: ${childName}, age ${childAge}
+Subject: ${SUBJECT}
+Area: ${AREA}
+Step type: ${step.type}
+Step text/prompt: "${stepText}"
+
+Rules:
+- British English
+- Calm, dyslexia-friendly
+- Short lines
+- DO NOT give the final answer
+- For MCQ: DO NOT indicate which option is correct
+- End with: "Want to try it now?"
+`;
+
+      try{
+        const reply = await callTutorBackend(prompt);
+        showHintBox("🔄 Another way:\n" + reply);
+      }catch(e){
+        console.warn("explainAnotherWay failed", e);
+        showHintBox("I couldn’t explain it another way right now. Try again in a moment.");
+      }
     }
 
     // Auth/child
@@ -1716,6 +1786,20 @@
     });
 
     speakBtn.addEventListener("click", speakCurrent);
+    explainBtn.addEventListener("click", async () => {
+      if (!steps[idx]) {
+        showHintBox("Tell me which bit feels tricky, and I’ll explain it another way.");
+        return;
+      }
+      explainBtn.disabled = true;
+      explainBtn.textContent = "🔄 Explaining";
+      try {
+        await explainAnotherWay();
+      } finally {
+        explainBtn.disabled = false;
+        explainBtn.textContent = "🔄 Explain another way";
+      }
+    });
 
     // -------------------------
     // Boot
