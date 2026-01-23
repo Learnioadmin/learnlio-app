@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Billing: render status/plan and dates from /me, handle checkout success refresh, and improve UX messaging. -->
 <html lang="en-GB">
 <head>
   <link rel="icon" type="image/x-icon" href="/assets/img/flavicon.ico">
@@ -106,6 +107,7 @@
             <button id="paidBtn" class="btn" type="button">Activate £0.99/month</button>
             <button id="manageBtnA" class="btn light" type="button">Manage billing</button>
           </div>
+          <div id="payLine" class="small" style="margin-top:8px;">Pay by card, Apple Pay or Google Pay.</div>
           <div id="paidMsg" class="status" aria-live="polite"></div>
           <div id="manageMsgA" class="status" aria-live="polite"></div>
           <div class="hr"></div>
@@ -238,6 +240,7 @@
     const manageBtnA = document.getElementById("manageBtnA");
     const paidMsg = document.getElementById("paidMsg");
     const manageMsgA = document.getElementById("manageMsgA");
+    const payLine = document.getElementById("payLine");
 
     const activeBlock = document.getElementById("activeBlock");
     const manageBtnB = document.getElementById("manageBtnB");
@@ -278,6 +281,12 @@
     async function requireAuth() {
       const { data, error } = await sb.auth.getUser();
       if (error || !data?.user) {
+        setStatus("Please log in", "Sign in again to manage billing.");
+        startTrialBtn.disabled = true;
+        paidBtn.disabled = true;
+        manageBtnA.disabled = true;
+        manageBtnB.disabled = true;
+        cancelBtn.disabled = true;
         window.location.href = "/login.html";
         return false;
       }
@@ -384,7 +393,7 @@
       deleteModal.setAttribute("aria-hidden", "true");
     }
 
-    function formatDateDDMMYYYY(isoLike) {
+    function formatUkDate(isoLike) {
       if (!isoLike) return "";
       const d = new Date(isoLike);
       if (isNaN(d.getTime())) {
@@ -393,21 +402,31 @@
         if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
         return s;
       }
-      const dd = String(d.getDate()).padStart(2, "0");
-      const mm = String(d.getMonth()+1).padStart(2, "0");
-      const yyyy = d.getFullYear();
-      return `${dd}/${mm}/${yyyy}`;
+      return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
     }
 
-    function pickNextPaymentIso(me) {
-      return (
-        me?.current_period_end ||
-        me?.next_payment_due ||
-        me?.next_payment_due_at ||
-        me?.next_payment_at ||
-        me?.period_end ||
-        null
-      );
+    function planDisplayName() {
+      return "Learnlio Standard";
+    }
+
+    function getNextDateInfo(me) {
+      const status = me?.status || "none";
+      const cancelIso = me?.cancel_at || me?.current_period_end || null;
+
+      if (status === "trialing" && me?.trial_ends_at) {
+        return { label: "Trial ends", value: formatUkDate(me.trial_ends_at) };
+      }
+
+      if (status === "active") {
+        if (me?.cancel_at_period_end && cancelIso) {
+          return { label: "Cancels on", value: formatUkDate(cancelIso) };
+        }
+        if (me?.current_period_end) {
+          return { label: "Next payment due", value: formatUkDate(me.current_period_end) };
+        }
+      }
+
+      return { label: "Next payment due", value: "" };
     }
 
     function resetUi() {
@@ -419,6 +438,7 @@
       trialBlock.style.display = "none";
       subscribeBlock.style.display = "none";
       activeBlock.style.display = "none";
+      if (payLine) payLine.style.display = "none";
 
       kpiWrap.style.display = "none";
       afterKpiHr.style.display = "none";
@@ -426,6 +446,7 @@
       startTrialBtn.disabled = false;
       paidBtn.disabled = false;
       manageBtnA.disabled = false;
+      manageBtnA.style.display = "inline-flex";
       manageBtnB.disabled = false;
       cancelBtn.disabled = false;
       if (deleteConfirmBtn) deleteConfirmBtn.disabled = true;
@@ -436,83 +457,94 @@
     }
 
     function renderKpis(me) {
-      const plan = me?.plan || (me?.status === "trialing" ? "Trial" : null);
-      const nextIso = pickNextPaymentIso(me);
-
-      // Plan is useful to show for trialing/active; hide KPI if nothing meaningful
-      const showPlan = !!plan;
-      const showNext = !!nextIso && me?.status === "active"; // only show “Next payment” for active subs
-
-      if (!showPlan && !showNext) {
-        kpiWrap.style.display = "none";
-        afterKpiHr.style.display = "none";
-        return;
-      }
+      const plan = planDisplayName();
+      const nextInfo = getNextDateInfo(me);
+      const showNext = !!nextInfo.value;
 
       kpiWrap.style.display = "grid";
       afterKpiHr.style.display = "block";
 
-      planValue.textContent = plan || "—";
-
-      if (showNext) {
-        nextPayLabel.textContent = "Next payment due";
-        nextPayValue.textContent = formatDateDDMMYYYY(nextIso);
-      } else {
-        nextPayLabel.textContent = "Next payment due";
-        nextPayValue.textContent = "—";
-      }
+      planValue.textContent = plan;
+      nextPayLabel.textContent = nextInfo.label || "Next payment due";
+      nextPayValue.textContent = showNext ? nextInfo.value : "—";
     }
 
     function applyUiForStatus(me) {
       resetUi();
 
       const status = me?.status || "none";
-      const trialEnds = me?.trial_ends_at ? formatDateDDMMYYYY(me.trial_ends_at) : null;
+      const trialEnds = me?.trial_ends_at ? formatUkDate(me.trial_ends_at) : null;
+      const cancelIso = me?.cancel_at || me?.current_period_end || null;
+      const cancelDate = cancelIso ? formatUkDate(cancelIso) : null;
 
       renderKpis(me);
 
+      if (DEBUG) {
+        setDebug(JSON.stringify({
+          status: me?.status,
+          plan: me?.plan,
+          stripe_status: me?.stripe_status,
+          trial_ends_at: me?.trial_ends_at,
+          current_period_end: me?.current_period_end,
+          cancel_at_period_end: me?.cancel_at_period_end,
+          cancel_at: me?.cancel_at
+        }, null, 2));
+      }
+
       if (status === "none") {
-        setStatus("No trial yet", "");
+        setStatus("No subscription", "");
         trialBlock.style.display = "block";
         trialCopy.textContent = "Start your 7-day trial. No card required.";
-        startTrialBtn.style.display = "inline-flex";
+        startTrialBtn.textContent = "Start free trial";
+        subscribeBlock.style.display = "block";
+        subscribeTitle.textContent = "Subscribe";
+        subscribeCopy.innerHTML = `Subscribe for <b>£0.99/month</b>. Cancel anytime.`;
+        paidBtn.textContent = "Subscribe for £0.99/month";
+        manageBtnA.style.display = "none";
+        if (payLine) payLine.style.display = "block";
       }
 
       else if (status === "trialing") {
-        setStatus("Trial active", trialEnds ? `Ends: ${trialEnds}` : "");
+        setStatus("Trial", trialEnds ? `Trial ends: ${trialEnds}` : "");
         trialBlock.style.display = "block";
         trialCopy.innerHTML = trialEnds
           ? `Your trial is active until <b>${trialEnds}</b>.`
           : `Your trial is active.`;
 
-        // ✅ allow upgrade during trial
         subscribeBlock.style.display = "block";
-        subscribeTitle.textContent = "Upgrade any time";
-        subscribeCopy.innerHTML = `Upgrade now for <b>£0.99/month</b>. You’ll keep access after the trial. Cancel anytime.`;
-        paidBtn.textContent = "Upgrade now (£0.99/month)";
-        manageBtnA.textContent = "Manage billing";
-
-        // show portal too (useful even during trial if Stripe customer exists later)
+        subscribeTitle.textContent = "Subscribe";
+        subscribeCopy.innerHTML = `Subscribe for <b>£0.99/month</b>. You’ll keep access after the trial. Cancel anytime.`;
+        paidBtn.textContent = "Subscribe for £0.99/month";
+        manageBtnA.style.display = "none";
+        if (payLine) payLine.style.display = "block";
       }
 
       else if (status === "expired") {
-        setStatus("Trial ended", trialEnds ? `Ended: ${trialEnds}` : "");
+        setStatus("Expired", trialEnds ? `Trial ended: ${trialEnds}` : "");
+        trialBlock.style.display = "block";
+        trialCopy.textContent = "Start your 7-day trial. No card required.";
+        startTrialBtn.textContent = "Start free trial";
         subscribeBlock.style.display = "block";
         subscribeTitle.textContent = "Subscribe";
-        subscribeCopy.innerHTML = `Continue for <b>£0.99/month</b>. Cancel anytime.`;
-        paidBtn.textContent = "Activate £0.99/month";
-        manageBtnA.textContent = "Manage billing";
+        subscribeCopy.innerHTML = `Subscribe for <b>£0.99/month</b>. Cancel anytime.`;
+        paidBtn.textContent = "Subscribe for £0.99/month";
+        manageBtnA.style.display = "none";
+        if (payLine) payLine.style.display = "block";
       }
 
       else if (status === "active") {
-        setStatus("Access active", me?.plan ? `Plan: ${me.plan}` : "");
+        setStatus("Active", "");
         activeBlock.style.display = "block";
+        manageBtnB.textContent = "Manage subscription";
 
         // If Stripe says cancel_at_period_end=true, tweak hint
         const cap = me?.cancel_at_period_end;
         if (typeof cap === "boolean" && cap) {
-          cancelHint.textContent = "Cancellation is already scheduled. You’ll keep access until the end of your paid period.";
+          cancelHint.textContent = cancelDate
+            ? `Cancellation is scheduled. You’ll keep access until ${cancelDate}.`
+            : "Cancellation is already scheduled. You’ll keep access until the end of your paid period.";
           cancelBtn.textContent = "View cancellation";
+          if (cancelDate) statusText.textContent = `Cancels on: ${cancelDate}`;
         } else {
           cancelHint.textContent = "Cancelling takes effect in Stripe. If you cancel, you’ll keep access until the end of your paid period.";
           cancelBtn.textContent = "Cancel subscription";
@@ -528,12 +560,23 @@
     async function refreshStatus() {
       setStatus("Checking…", "");
       setDebug("");
+      startTrialBtn.disabled = true;
+      paidBtn.disabled = true;
+      manageBtnA.disabled = true;
+      manageBtnB.disabled = true;
+      cancelBtn.disabled = true;
       try {
         const me = await callApi("/me", { method: "GET" });
         applyUiForStatus(me);
       } catch (e) {
         setStatus("Error", "");
-        setMsg(paidMsg, String(e.message || e), false);
+        setMsg(paidMsg, "We could not load billing details right now. Please try again.", false);
+        startTrialBtn.disabled = true;
+        paidBtn.disabled = true;
+        manageBtnA.disabled = true;
+        manageBtnB.disabled = true;
+        cancelBtn.disabled = true;
+        setDebug(String(e.message || e));
       }
     }
 
@@ -541,17 +584,20 @@
       const u = new URL(window.location.href);
       const success = u.searchParams.get("success");
       const sessionId = u.searchParams.get("session_id");
-      if (success !== "1" || !sessionId) return;
+      if (success !== "1" || !sessionId) return false;
 
       setMsg(paidMsg, "Payment successful ✅ Updating access…", true);
       try {
         await callApi(`/checkout/success?session_id=${encodeURIComponent(sessionId)}`, { method: "GET" });
+        await refreshStatus();
         u.searchParams.delete("session_id");
         u.searchParams.set("success", "1");
         window.history.replaceState({}, "", u.toString());
+        return true;
       } catch (e) {
         setMsg(paidMsg, "Payment was successful, but access didn’t update yet. Please refresh.", false);
         setDebug(String(e.message || e));
+        return false;
       }
     }
 
@@ -700,8 +746,8 @@
         setMsg(paidMsg, "No worries — checkout was cancelled.", false);
       }
 
-      await maybeFinalizeCheckout();
-      await refreshStatus();
+      const handled = await maybeFinalizeCheckout();
+      if (!handled) await refreshStatus();
     })();
   })();
   </script>
