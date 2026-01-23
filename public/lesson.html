@@ -520,6 +520,9 @@
     let child = null;
     let childName = "Child";
     let childAge = 10;
+    let screener = null;
+    let screenerBand = null;
+    let screenerStartLevel = null;
 
     // Context
     let SUBJECT = null;
@@ -597,6 +600,30 @@
       return true;
     }
 
+    async function loadLatestScreener(childId){
+      try{
+        const { data, error } = await sb
+          .from("screener_results")
+          .select("band, score, details, created_at")
+          .eq("child_id", childId)
+          .order("created_at", { ascending:false })
+          .limit(1);
+        if (error) throw error;
+        return data?.[0] || null;
+      } catch (e){
+        console.warn("loadLatestScreener failed", e);
+        return null;
+      }
+    }
+
+    function deriveStartLevelFromScreener(row){
+      if (!row) return null;
+      if (row.band === "high") return 1;
+      if (row.band === "medium") return 2;
+      if (row.band === "low") return 3;
+      return null;
+    }
+
     async function loadChildProfile(){
       const selected = getSelectedChildFromLocalStorage();
       if (!selected?.id){
@@ -622,6 +649,15 @@
       child = data;
       childName = child.child_name || "Child";
       childAge = computeAgeFromDob(child.child_dob);
+      try {
+        screener = await loadLatestScreener(child.id);
+        screenerBand = screener?.band || null;
+        screenerStartLevel = deriveStartLevelFromScreener(screener);
+      } catch (e){
+        screener = null;
+        screenerBand = null;
+        screenerStartLevel = null;
+      }
       return true;
     }
 
@@ -783,7 +819,7 @@
         child_id: child.id,
         subject: SUBJECT,
         area: AREA,
-        level: 1,
+        level: (screenerStartLevel ?? 1),
         confidence: 0.5,
         accuracy: 0.0,
         total_attempts: 0,
@@ -807,57 +843,61 @@
       return created;
     }
 
-    async function updateSkillRowAfterLesson(skillRow, score){
-      if (!skillRow?.id) return;
+    function computeNewLevel({ level, accuracy, streak_correct, streak_wrong, total_attempts }){
+      let newLevel = level || 1;
+      const att = total_attempts || 0;
+      if (att >= 6 && streak_correct >= 3 && accuracy >= 0.70) newLevel = Math.min(10, newLevel + 1);
+      if (att >= 6 && streak_wrong >= 3 && accuracy < 0.40) newLevel = Math.max(1, newLevel - 1);
+      return newLevel;
+    }
 
-      // score: 0..1
+    async function recordAttemptToSkill({ skillRow, isCorrect }){
+      if (!skillRow?.id) return skillRow;
+
       const total_attempts = (skillRow.total_attempts || 0) + 1;
-      const passed = (typeof score === "number") ? (score >= 0.7) : false;
-      const correct_attempts = (skillRow.correct_attempts || 0) + (passed ? 1 : 0);
+      const correct_attempts = (skillRow.correct_attempts || 0) + (isCorrect ? 1 : 0);
       const accuracy = total_attempts ? (correct_attempts / total_attempts) : 0.0;
 
+      const prevStreakCorrect = skillRow.streak_correct || 0;
+      const prevStreakWrong = skillRow.streak_wrong || 0;
+
+      const streak_correct = isCorrect ? (prevStreakCorrect + 1) : 0;
+      const streak_wrong = isCorrect ? 0 : (prevStreakWrong + 1);
+
       const oldConf = (typeof skillRow.confidence === "number") ? skillRow.confidence : 0.5;
+      const confidence = Math.max(0, Math.min(1, oldConf * 0.85 + accuracy * 0.15));
 
-      let confDelta = 0;
-      if (typeof score === "number"){
-        if (score >= 0.85) confDelta = +0.06;
-        else if (score >= 0.70) confDelta = +0.04;
-        else if (score >= 0.50) confDelta = +0.02;
-        else confDelta = -0.02;
-      }
+      const level = computeNewLevel({
+        level: skillRow.level || 1,
+        accuracy,
+        streak_correct,
+        streak_wrong,
+        total_attempts
+      });
 
-      const confidence = Math.max(0, Math.min(1, oldConf + confDelta));
-
-      // Level moves slowly (stored for your reporting/adaptation later)
-      let level = Number(skillRow.level || 1);
-      if (total_attempts >= 6 && confidence > 0.70) level = Math.min(10, level + 1);
-      if (total_attempts >= 6 && confidence < 0.35) level = Math.max(1, level - 1);
-
-      // Streaks
-      const streak_correct = passed ? (skillRow.streak_correct || 0) + 1 : 0;
-      const streak_wrong = passed ? 0 : (skillRow.streak_wrong || 0) + 1;
+      const patch = {
+        total_attempts,
+        correct_attempts,
+        accuracy,
+        confidence,
+        level,
+        streak_correct,
+        streak_wrong,
+        last_seen_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
       try{
-        const { data: updated } = await sb
+        const { data, error } = await sb
           .from("child_skill_progress")
-          .update({
-            total_attempts,
-            correct_attempts,
-            accuracy,
-            confidence,
-            level,
-            streak_correct,
-            streak_wrong,
-            last_seen_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+          .update(patch)
           .eq("id", skillRow.id)
           .select("*")
           .single();
-
-        return updated || skillRow;
+        if (error) throw error;
+        return data || skillRow;
       }catch(e){
-        console.warn("child_skill_progress update failed", e);
+        console.warn("recordAttemptToSkill update failed (safe)", e);
         return skillRow;
       }
     }
@@ -1421,10 +1461,17 @@
       backBtn.disabled = true;
 
       // quiet update to child_skill_progress
-      const score = calculateLessonScore(); // 0..1
       try{
-        const skillRow = await loadOrCreateSkillRow();
-        await updateSkillRowAfterLesson(skillRow, score);
+        let skillRow = await loadOrCreateSkillRow();
+        const activityIdxs = steps
+          .map((s,i) => (["mcq","number_line","match_pairs"].includes(s.type) ? i : null))
+          .filter(v => v !== null);
+        for (const i of activityIdxs){
+          const st = stepState[i];
+          if (st?.completed){
+            skillRow = await recordAttemptToSkill({ skillRow, isCorrect: !!st.correct });
+          }
+        }
       }catch(e){
         console.warn("skill progress update failed (safe)", e);
       }
