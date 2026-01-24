@@ -807,3 +807,21 @@
   })();
 
 })();
+
+// Learnlio Help Bubble (safe, additive)
+window.LEARNLIO_SUPPORT_CONFIG = window.LEARNLIO_SUPPORT_CONFIG || { helpIndexUrl: "/help/search-index.json" };
+// Optional: enable AI later by setting: window.LEARNLIO_SUPPORT_CONFIG.aiEndpoint = "/api/support-help";
+(function loadLearnlioHelpBubble(){
+  try {
+    if (document.getElementById("ll-help-bubble-script")) return;
+    var s = document.createElement("script");
+    s.id = "ll-help-bubble-script";
+    s.src = "/assets/js/help-bubble.js?v=20260124";
+    s.defer = true;
+    document.head.appendChild(s);
+  } catch {}
+})();
+// Pure UI: bubble + panel + quick actions + search UI + fallback links.
+// Uses existing Help Centre content only if /help/search-index.json exists; otherwise graceful fallback.
+// No DB changes.
+// Optional AI is OFF unless aiEndpoint is explicitly configured.
