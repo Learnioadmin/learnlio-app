@@ -2383,6 +2383,68 @@ End with: "Want to try it now?"
   })();
   </script>
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <!-- MOBILE NAV MENU (SAFE / MOBILE ONLY) -->
+  <style>
+  @media (max-width: 980px){
+    .nav-inner{
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+
+    .nav .links{
+      display: none;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .nav.nav-open .links{
+      display: flex;
+    }
+
+    .nav-menu-btn{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 900;
+      border-radius: 12px;
+      border: 1px solid rgba(15,23,42,.12);
+      background: #fff;
+      cursor: pointer;
+    }
+  }
+
+  /* Desktop untouched */
+  @media (min-width: 981px){
+    .nav-menu-btn{ display:none !important; }
+  }
+  </style>
+
+  <script>
+  /* MOBILE NAV MENU TOGGLE  SAFE */
+  (function(){
+    const nav = document.querySelector(".nav");
+    if (!nav) return;
+
+    const inner = nav.querySelector(".nav-inner");
+    const links = nav.querySelector(".links");
+    if (!inner || !links) return;
+
+    if (document.querySelector(".nav-menu-btn")) return;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "nav-menu-btn";
+    btn.textContent = " Menu";
+
+    btn.addEventListener("click", () => {
+      nav.classList.toggle("nav-open");
+    });
+
+    inner.appendChild(btn);
+  })();
+  </script>
 </body>
 </html>
 
