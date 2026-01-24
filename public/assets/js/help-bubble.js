@@ -29,21 +29,15 @@
     }[s]));
   }
 
-  function prefersReducedMotion() {
-    try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
-    catch { return false; }
-  }
-
   function injectStyles() {
     const css = `
 /* Learnlio Help Bubble (isolated) */
 #ll-help-bubble{
   position:fixed;
-  right:12px;
-  bottom:12px;
+  right:16px;
+  bottom:16px;
   z-index:9999;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  isolation:isolate;
 }
 #ll-help-bubble *{ box-sizing:border-box; }
 .llhb-btn{
@@ -71,7 +65,7 @@
   background:#fff;
   box-shadow:0 18px 44px rgba(12,18,32,.18);
   overflow:hidden;
-  max-height: min(560px, calc(100vh - 110px));
+  max-height: calc(100vh - 90px);
   display:flex;
   flex-direction:column;
 }
@@ -95,8 +89,7 @@
   display:grid;
   gap:10px;
   overflow:auto;
-  -webkit-overflow-scrolling: touch;
-  flex:1;
+  max-height: calc(100vh - 160px);
 }
 .llhb-muted{ color:#5b6475; font-size:12.5px; line-height:1.5; }
 .llhb-grid{ display:grid; grid-template-columns:1fr; gap:8px; }
@@ -141,11 +134,6 @@
   font-weight:900;
   font-size:12px;
 }
-.llhb-primary{
-  border:1px solid rgba(11,92,255,.35);
-  background: linear-gradient(180deg, #0b5cff, #0846d8);
-  color:#fff;
-}
 .llhb-answer{
   border:1px solid rgba(232,234,242,.9);
   background:#fbfcff;
@@ -161,6 +149,9 @@
 @keyframes llhbIn{ from{ transform: translateY(6px); opacity:.0; } to{ transform: translateY(0); opacity:1; } }
 @media (prefers-reduced-motion: reduce){
   .llhb-fadein{ animation:none; }
+}
+@media (max-width:420px){
+  #ll-help-bubble{ right:12px; bottom:12px; }
 }
     `.trim();
 
@@ -280,9 +271,8 @@
           <div>
             <div class="llhb-muted" style="font-weight:900; margin-bottom:6px;">Quick help</div>
             <div class="llhb-qa" id="llhb-quick" aria-label="Quick help"></div>
-            <div id="llhb-quick-answer" class="llhb-answer llhb-hide"></div>
+            <div id="llhb-answer" class="llhb-answer llhb-hide"></div>
             <div class="llhb-actions" id="llhb-quick-actions"></div>
-            <button id="llhb-troubleshoot" class="llhb-link" type="button" style="margin-top:8px;">Troubleshoot</button>
           </div>
 
           <div class="llhb-grid">
@@ -297,11 +287,6 @@
             <a class="llhb-link" href="/help/">Open Help Centre</a>
             <a class="llhb-link" href="/contact.html">Contact support</a>
           </div>
-
-          <details id="llhb-diag" class="llhb-item">
-            <summary style="cursor:pointer; font-weight:900;">Diagnostics</summary>
-            <div id="llhb-diag-body" class="llhb-muted" style="margin-top:6px;"></div>
-          </details>
         </div>
       </div>
 
@@ -314,14 +299,130 @@
     return mount;
   }
 
-  function renderFallback(resultsEl, opts = {}) {
-    const unavailable = opts.unavailable ? `
-      <div class="llhb-item">
-        <p class="llhb-muted">Help search unavailable - showing common answers.</p>
-      </div>
-    ` : "";
+  const KB = {
+    global: {
+      next: [
+        "Pick one small thing to do now: a 5-minute plan, Tutor, or Lessons.",
+        "Keep it short. End on an easy win to protect confidence.",
+        "If a page looks stuck, refresh once, then log out/in."
+      ],
+      broken: [
+        "Refresh the page once. If it still looks wrong, log out and back in.",
+        "Check you selected the right child in the dashboard/parent area.",
+        "If buttons dont respond, try Chrome/Edge and disable ad blockers for learnlio.co.uk."
+      ],
+      explain: [
+        "This page helps you understand progress without pressure.",
+        "Use small, calm steps and short sessions.",
+        "If anything is unclear, open the Help Centre or contact support."
+      ]
+    },
+    "/reports.html": {
+      explain: [
+        "This page turns Tutor + Lessons activity into clear parent insight.",
+        "Highlights shows the main focus and what needs support this week.",
+        "Use Start a 5-minute plan for a quick confidence-building session."
+      ],
+      next: [
+        "Press Start a 5-minute plan to practise the one key area calmly.",
+        "If you want a record, download the PDF after refreshing.",
+        "If weekly summaries are on, use Run weekly report now after a short session."
+      ],
+      broken: [
+        "If weekly toggle wont save: refresh, then try again (it can be a permissions/policy issue).",
+        "If the weekly list is empty: run Run weekly report now after at least 1 short session.",
+        "If it still fails, it may be database permissions - use Contact support."
+      ]
+    },
+    "/chat.html": {
+      explain: [
+        "Tutor gives calm practice questions and adapts to your child.",
+        "Choose a subject/area or use a 5-minute plan if one was started from Parent Insight.",
+        "Hints are there to keep confidence high - use them early."
+      ],
+      next: [
+        "Do a short 5-minute session. Stop while it still feels okay.",
+        "If your child hesitates, choose an easier area first for quick wins.",
+        "Return to Parent Insight to see what to do next."
+      ],
+      broken: [
+        "If Tutor asks for an area unexpectedly: go back and try the 5-minute plan again.",
+        "If audio wont play: check device volume and try Chrome/Edge.",
+        "If the page wont load: log out/in and retry."
+      ]
+    },
+    "/lessons.html": {
+      explain: [
+        "Lessons are guided practice in small steps with calm pacing.",
+        "Pick the recommended area, do a short block, then stop on a win.",
+        "You can switch back to Tutor any time."
+      ],
+      next: [
+        "Do one short lesson (5-10 minutes).",
+        "If it feels hard, drop to an easier area first.",
+        "Then check Parent Insight for the next focus."
+      ],
+      broken: [
+        "Refresh once, then retry the lesson.",
+        "If progress looks missing, re-select the child and refresh.",
+        "Try a different browser if taps dont register."
+      ]
+    },
+    "/billing.html": {
+      explain: [
+        "Billing shows your plan status and manages access.",
+        "If youre expired, start a trial/subscription to unlock Tutor and reports.",
+        "If you paid but still blocked, refresh then log out/in."
+      ],
+      next: [
+        "If you want access now, complete checkout then return to the dashboard.",
+        "If you think you already paid, log out/in and refresh.",
+        "If it still doesnt unlock, contact support with your email."
+      ],
+      broken: [
+        "If checkout loops, disable ad blockers for learnlio.co.uk and retry.",
+        "Refresh, then log out/in and try again.",
+        "If you still cant access, contact support."
+      ]
+    }
+  };
+
+  function getScopeKey(path) {
+    const key = (path || "").toLowerCase();
+    return KB[key] ? key : "global";
+  }
+
+  function buildAnswer(intentKey, pagePath) {
+    const scopeKey = getScopeKey(pagePath);
+    const base = (KB[scopeKey] && KB[scopeKey][intentKey]) || KB.global[intentKey] || KB.global.next;
+    const links = scopeKey === "/reports.html"
+      ? ["/chat.html", "/lessons.html"]
+      : ["/help/", "/contact.html"];
+
+    return {
+      bullets: base.slice(0, 3),
+      links,
+      footer: "If this still feels stuck, contact us - well help."
+    };
+  }
+
+  function renderAnswer(answerEl, answer) {
+    if (!answerEl) return;
+    const bullets = answer.bullets || [];
+    const links = answer.links || [];
+    answerEl.classList.remove("llhb-hide");
+    answerEl.innerHTML = `
+      <ul style="margin:0; padding-left:18px;">
+        ${bullets.map(s => `<li>${escHtml(String(s))}</li>`).join("")}
+      </ul>
+      <div style="margin-top:6px;">${links.map(l => `<a class="llhb-link" href="${escHtml(l)}">${l === "/chat.html" ? "Open Tutor" : l === "/lessons.html" ? "Open Lessons" : l === "/help/" ? "Open Help Centre" : "Contact support"}</a>`).join(" ")}</div>
+      <div class="llhb-muted" style="margin-top:6px;">${escHtml(answer.footer || "")}</div>
+    `;
+  }
+
+  function renderFallback(resultsEl) {
+    if (!resultsEl) return;
     resultsEl.innerHTML = `
-      ${unavailable}
       <div class="llhb-item">
         <a href="/help/">Browse the Help Centre</a>
         <p>Find quick guides and answers. If youre stuck, contact us and well help.</p>
@@ -338,6 +439,7 @@
   }
 
   function renderResults(resultsEl, items, q) {
+    if (!resultsEl) return;
     if (!items || !items.length) {
       resultsEl.innerHTML = `
         <div class="llhb-item">
@@ -357,6 +459,7 @@
   }
 
   function renderBestAnswer(bestEl, item, q) {
+    if (!bestEl) return;
     if (!item) { bestEl.classList.add("llhb-hide"); bestEl.textContent = ""; return; }
     const excerpt = item.excerpt || snippet(item.text, q);
     const steps = Array.isArray(item.steps) ? item.steps.slice(0, 4) : [];
@@ -370,234 +473,45 @@
   }
 
   function mapQuickHelp(path) {
-    const p = path.toLowerCase();
+    const p = (path || "").toLowerCase();
     if (p.includes("reports")) return [
-      "Weekly report wont save",
-      "Run weekly snapshot now",
-      "PDF wont download",
-      "Refresh this page"
+      { label: "What do I do next?", intent: "next" },
+      { label: "Something isnt working", intent: "broken" },
+      { label: "Explain this page", intent: "explain" }
     ];
     if (p.includes("chat")) return [
-      "Start a 5-minute plan",
-      "Tutor asking me to choose an area",
-      "Sound/voice isnt working",
-      "Refresh Tutor"
+      { label: "What do I do next?", intent: "next" },
+      { label: "Something isnt working", intent: "broken" },
+      { label: "Explain this page", intent: "explain" }
     ];
     if (p.includes("lessons")) return [
-      "Find the right lesson",
-      "Lesson wont load",
-      "Refresh Lessons"
+      { label: "What do I do next?", intent: "next" },
+      { label: "Something isnt working", intent: "broken" },
+      { label: "Explain this page", intent: "explain" }
     ];
     if (p.includes("billing")) return [
-      "Payment didnt unlock",
-      "Open billing portal",
-      "Refresh billing status"
+      { label: "What do I do next?", intent: "next" },
+      { label: "Something isnt working", intent: "broken" },
+      { label: "Explain this page", intent: "explain" }
     ];
     if (p.includes("login")) return [
-      "I cant log in",
-      "Reset password",
-      "Email not received"
+      { label: "What do I do next?", intent: "next" },
+      { label: "Something isnt working", intent: "broken" },
+      { label: "Explain this page", intent: "explain" }
     ];
     return [
-      "Account & login",
-      "Tutor & lessons",
-      "Reports",
-      "Billing"
+      { label: "What do I do next?", intent: "next" },
+      { label: "Something isnt working", intent: "broken" },
+      { label: "Explain this page", intent: "explain" }
     ];
   }
 
-  function quickHelpAnswer(label) {
-    const answers = {
-      "Weekly report wont save": {
-        steps: ["Check your connection.", "Try Run weekly report now.", "Refresh the page and try again.", "If it persists, contact support."],
-        links: ["/help/category-parents-reports.html", "/help/category-troubleshooting.html"],
-        actions: ["runWeekly", "refresh"]
-      },
-      "Run weekly snapshot now": {
-        steps: ["Click Run weekly report now.", "Wait for the success message.", "Use the list below to download.", "If it fails, refresh and try again."],
-        links: ["/help/category-parents-reports.html", "/help/"],
-        actions: ["runWeekly"]
-      },
-      "PDF wont download": {
-        steps: ["Try Chrome or Edge.", "Open the latest weekly snapshot.", "Use Download again.", "If it still fails, contact support."],
-        links: ["/help/category-parents-reports.html", "/help/category-troubleshooting.html"],
-        actions: ["refresh"]
-      },
-      "Refresh this page": {
-        steps: ["Refresh often fixes loading issues.", "Your data is safe.", "If it keeps happening, contact support.", "Try a different browser."],
-        links: ["/help/category-troubleshooting.html", "/help/"],
-        actions: ["refresh"]
-      },
-      "Start a 5-minute plan": {
-        steps: ["Open Tutor from this page.", "Pick one area only.", "Keep it short and calm.", "Finish on an easy win."],
-        links: ["/help/category-lessons-tutor.html", "/help/"],
-        actions: ["openTutor"]
-      },
-      "Tutor asking me to choose an area": {
-        steps: ["Pick one area to start.", "If it keeps looping, reset Tutor focus.", "Refresh Tutor and try again.", "Contact support if stuck."],
-        links: ["/help/category-lessons-tutor.html", "/help/category-troubleshooting.html"],
-        actions: ["resetTutor", "refresh"]
-      },
-      "Sound/voice isnt working": {
-        steps: ["Check device volume.", "Try the Listen button again.", "Allow audio in the browser.", "Refresh Tutor and retry."],
-        links: ["/help/category-troubleshooting.html", "/help/"],
-        actions: ["refresh"]
-      },
-      "Refresh Tutor": {
-        steps: ["Refreshing can fix stuck sessions.", "Your XP is saved.", "Try again after refresh.", "Contact support if needed."],
-        links: ["/help/category-troubleshooting.html", "/help/"],
-        actions: ["refresh"]
-      },
-      "Find the right lesson": {
-        steps: ["Start with a short lesson.", "Pick the closest area.", "Keep sessions calm.", "You can change later."],
-        links: ["/help/category-lessons-tutor.html", "/help/"],
-        actions: ["openLessons"]
-      },
-      "Lesson wont load": {
-        steps: ["Refresh the page.", "Try a different lesson.", "Check your connection.", "Contact support if it persists."],
-        links: ["/help/category-troubleshooting.html", "/help/category-lessons-tutor.html"],
-        actions: ["refresh"]
-      },
-      "Refresh Lessons": {
-        steps: ["Refresh the page.", "Try again after reload.", "If it repeats, contact support.", "You can also switch to Tutor."],
-        links: ["/help/category-lessons-tutor.html", "/help/"],
-        actions: ["refresh", "openTutor"]
-      },
-      "Payment didnt unlock": {
-        steps: ["Open billing to refresh status.", "Check your email receipt.", "Log out and back in.", "Contact support if still locked."],
-        links: ["/help/category-billing.html", "/help/category-troubleshooting.html"],
-        actions: ["billingPortal", "refresh"]
-      },
-      "Open billing portal": {
-        steps: ["Use Manage subscription on Billing.", "Update payment method if needed.", "Return here after changes.", "Contact support if stuck."],
-        links: ["/help/category-billing.html", "/help/"],
-        actions: ["billingPortal"]
-      },
-      "Refresh billing status": {
-        steps: ["Open Billing and refresh.", "If needed, log out and back in.", "Try again after a minute.", "Contact support if it persists."],
-        links: ["/help/category-billing.html", "/help/category-troubleshooting.html"],
-        actions: ["refresh"]
-      },
-      "I cant log in": {
-        steps: ["Check email/password.", "Try Reset password.", "Check spam for emails.", "Contact support if needed."],
-        links: ["/help/category-troubleshooting.html", "/help/"],
-        actions: ["openHelp"]
-      },
-      "Reset password": {
-        steps: ["Use the reset link on the login page.", "Check spam for the email.", "Try again after a few minutes.", "Contact support if it fails."],
-        links: ["/help/category-troubleshooting.html", "/help/"],
-        actions: ["openHelp"]
-      },
-      "Email not received": {
-        steps: ["Check spam or promotions.", "Wait a few minutes.", "Try resend on the login page.", "Contact support if needed."],
-        links: ["/help/category-troubleshooting.html", "/help/"],
-        actions: ["openHelp"]
-      }
-    };
-    return answers[label] || {
-      steps: ["Open the Help Centre.", "Search for your topic.", "Try the suggested steps.", "Contact support if needed."],
-      links: ["/help/", "/help/category-troubleshooting.html"],
-      actions: ["openHelp"]
-    };
-  }
-
-  function buildActionHandlers(statusEl) {
-    function setStatus(msg){ if (statusEl) statusEl.textContent = msg || ""; }
-
-    return {
-      refresh: () => { try { location.reload(); } catch { setStatus("Couldnt do that here - try Refresh."); } },
-      runWeekly: () => {
-        try {
-          if (typeof window.runWeeklySnapshot === "function") { window.runWeeklySnapshot(); setStatus("Done"); return; }
-          const btn = document.getElementById("runWeeklyBtn");
-          if (btn) { btn.click(); setStatus("Done"); return; }
-          setStatus("Couldnt do that here - try Refresh.");
-        } catch { setStatus("Couldnt do that here - try Refresh."); }
-      },
-      refreshBtn: () => {
-        try {
-          const btn = document.getElementById("refreshBtn");
-          if (btn) { btn.click(); setStatus("Done"); return; }
-          if (typeof window.loadEverything === "function") { window.loadEverything(); setStatus("Done"); return; }
-          location.reload();
-        } catch { setStatus("Couldnt do that here - try Refresh."); }
-      },
-      clearChild: () => {
-        try { localStorage.removeItem("selectedChild"); setStatus("Done"); location.reload(); } catch { setStatus("Couldnt do that here - try Refresh."); }
-      },
-      resetTutor: () => {
-        try {
-          const child = JSON.parse(localStorage.getItem("selectedChild") || "null");
-          if (child?.id){
-            localStorage.removeItem(`learnlio_last_ctx_${child.id}`);
-          } else {
-            Object.keys(localStorage).forEach(k => { if (k.startsWith("learnlio_last_ctx_")) localStorage.removeItem(k); });
-          }
-          setStatus("Done");
-        } catch { setStatus("Couldnt do that here - try Refresh."); }
-      },
-      openTutor: () => { try { window.location.href = "/chat.html"; } catch {} },
-      openLessons: () => { try { window.location.href = "/lessons.html"; } catch {} },
-      billingPortal: () => { try { window.location.href = "/billing.html"; } catch {} },
-      openHelp: () => { try { window.open("/help/", "_blank", "noopener"); } catch {} }
-    };
-  }
-
-  function buildTroubleshooter(root, setView) {
-    const wrap = document.createElement("div");
-    wrap.className = "llhb-item";
-    wrap.innerHTML = `
-      <div style="font-weight:900;">Troubleshooter</div>
-      <div id="llhb-ts" class="llhb-muted" style="margin-top:6px;"></div>
-    `;
-    const body = wrap.querySelector("#llhb-ts");
-
-    const steps = {
-      login: ["Check your email and password.", "Try reset password.", "Check spam for the email."],
-      tutor: ["Refresh Tutor.", "Reset Tutor focus if stuck.", "Try a short lesson instead."],
-      reports: ["Run weekly snapshot.", "Refresh the page.", "Try again in a few minutes."],
-      billing: ["Open billing and refresh.", "Check for confirmation email.", "Contact support if still locked."],
-      other: ["Refresh the page.", "Try a different browser.", "Contact support if needed."]
-    };
-
-    function renderStep1() {
-      body.innerHTML = `
-        <div>Whats happening?</div>
-        <div class="llhb-qa" style="margin-top:6px;">
-          <button class="llhb-chip" data-ts="login" type="button">Login</button>
-          <button class="llhb-chip" data-ts="tutor" type="button">Tutor</button>
-          <button class="llhb-chip" data-ts="reports" type="button">Reports</button>
-          <button class="llhb-chip" data-ts="billing" type="button">Billing</button>
-          <button class="llhb-chip" data-ts="other" type="button">Other</button>
-        </div>
-      `;
-      body.querySelectorAll(".llhb-chip").forEach(btn => {
-        btn.addEventListener("click", () => renderStep2(btn.getAttribute("data-ts")));
-      });
-    }
-
-    function renderStep2(key) {
-      const items = steps[key] || steps.other;
-      body.innerHTML = `
-        <div style="font-weight:900;">Try these</div>
-        <ul style="margin:6px 0 0; padding-left:18px;">${items.map(s => `<li>${escHtml(s)}</li>`).join("")}</ul>
-        <div style="margin-top:6px;"><button class="llhb-link" id="llhb-ts-next" type="button">Still stuck</button></div>
-      `;
-      body.querySelector("#llhb-ts-next").addEventListener("click", renderStep3);
-    }
-
-    function renderStep3() {
-      body.innerHTML = `
-        <div>Still stuck?</div>
-        <div class="llhb-actions" style="margin-top:6px;">
-          <a class="llhb-link" href="/help/">Open Help Centre</a>
-          <a class="llhb-link" href="/contact.html">Contact support</a>
-        </div>
-      `;
-    }
-
-    renderStep1();
-    return wrap;
+  function detectIntent(query) {
+    const q = (query || "").toLowerCase();
+    if (q.includes("next")) return "next";
+    if (q.includes("work") || q.includes("error") || q.includes("cant") || q.includes("won't") || q.includes("wont")) return "broken";
+    if (q.includes("what is") || q.includes("explain")) return "explain";
+    return "next";
   }
 
   async function init() {
@@ -606,6 +520,8 @@
 
       const cfg = window.LEARNLIO_SUPPORT_CONFIG || {};
       const helpIndexUrl = safeText(cfg.helpIndexUrl, "/help/search-index.json");
+      const aiEndpoint = safeText(cfg.aiEndpoint, "").trim();
+      const aiEnabled = !!aiEndpoint;
 
       const page = getPageContext();
       const root = buildUI();
@@ -617,10 +533,7 @@
       const resultsEl = root.querySelector("#llhb-results");
       const bestEl = root.querySelector("#llhb-best");
       const quickWrap = root.querySelector("#llhb-quick");
-      const quickAnswer = root.querySelector("#llhb-quick-answer");
-      const quickActions = root.querySelector("#llhb-quick-actions");
-      const troubleshootBtn = root.querySelector("#llhb-troubleshoot");
-      const diagBody = root.querySelector("#llhb-diag-body");
+      const answerEl = root.querySelector("#llhb-answer");
 
       let index = null;
       let indexUnavailable = false;
@@ -633,7 +546,7 @@
         if (open) {
           setTimeout(() => { try { input.focus(); } catch {} }, 0);
         } else {
-          quickAnswer.classList.add("llhb-hide");
+          answerEl.classList.add("llhb-hide");
         }
       }
 
@@ -680,15 +593,23 @@
         try { localStorage.setItem(LS_LASTQ, query); } catch {}
 
         if (!query) {
-          bestEl.classList.add("llhb-hide");
+          const intent = "next";
+          renderAnswer(answerEl, buildAnswer(intent, page.path));
           await ensureIndex();
-          renderFallback(resultsEl, { unavailable: indexUnavailable });
+          if (!indexUnavailable && index) {
+            renderFallback(resultsEl);
+          } else {
+            renderFallback(resultsEl);
+          }
           return;
         }
 
+        const intent = detectIntent(query);
+        renderAnswer(answerEl, buildAnswer(intent, page.path));
+
         await ensureIndex();
         if (indexUnavailable || !index) {
-          renderFallback(resultsEl, { unavailable: true });
+          renderFallback(resultsEl);
           bestEl.classList.add("llhb-hide");
           return;
         }
@@ -705,63 +626,23 @@
 
       // quick help buttons
       const quickItems = mapQuickHelp(page.path);
-      quickWrap.innerHTML = quickItems.map(x => `<button class="llhb-chip" data-q="${escHtml(x)}" type="button">${escHtml(x)}</button>`).join("");
+      quickWrap.innerHTML = quickItems.map(x => `<button class="llhb-chip" data-intent="${escHtml(x.intent)}" type="button">${escHtml(x.label)}</button>`).join("");
 
-      const actionHandlers = buildActionHandlers(quickAnswer);
+      function runIntent(intentKey){
+        open();
+        renderAnswer(answerEl, buildAnswer(intentKey, page.path));
+        runSearch(intentKey);
+      }
 
       root.addEventListener("click", (e) => {
         const chip = e.target && e.target.closest ? e.target.closest(".llhb-chip") : null;
         if (!chip) return;
-        const label = chip.getAttribute("data-q");
-        if (!label) return;
-
-        const pageHint = page.h1 || page.title;
-        const query = label === "Explain this page" && pageHint
-          ? `Explain ${pageHint}`
-          : label;
-        input.value = query;
-        runSearch(query);
-
-        const ans = quickHelpAnswer(label);
-        quickAnswer.classList.remove("llhb-hide");
-        quickAnswer.innerHTML = `
-          <div style="font-weight:900; margin-bottom:6px;">${escHtml(label)}</div>
-          <ul style="margin:0; padding-left:18px;">${ans.steps.map(s => `<li>${escHtml(String(s))}</li>`).join("")}</ul>
-          <div style="margin-top:6px;">${ans.links.map(l => `<a class="llhb-link" href="${escHtml(l)}">Open Help Centre</a>`).join(" ")}</div>
-        `;
-        quickActions.innerHTML = "";
-        (ans.actions || []).forEach(a => {
-          const b = document.createElement("button");
-          b.type = "button";
-          b.className = "llhb-link";
-          b.textContent = a === "refresh" ? "Refresh page" :
-            a === "runWeekly" ? "Run weekly snapshot" :
-            a === "refreshBtn" ? "Refresh" :
-            a === "clearChild" ? "Clear selected child" :
-            a === "resetTutor" ? "Reset Tutor focus" :
-            a === "openTutor" ? "Open Tutor" :
-            a === "openLessons" ? "Open Lessons" :
-            a === "billingPortal" ? "Open billing" :
-            a === "openHelp" ? "Open Help Centre" : "Try";
-          b.addEventListener("click", () => {
-            const fn = actionHandlers[a];
-            if (typeof fn === "function") fn();
-          });
-          quickActions.appendChild(b);
-        });
-      });
-
-      // Troubleshooter
-      troubleshootBtn.addEventListener("click", () => {
-        const node = buildTroubleshooter(root);
-        quickAnswer.classList.remove("llhb-hide");
-        quickAnswer.innerHTML = "";
-        quickAnswer.appendChild(node);
+        const intent = chip.getAttribute("data-intent") || "next";
+        runIntent(intent);
       });
 
       // input typing (debounced)
       let tId = null;
-
       input.addEventListener("input", () => {
         if (tId) clearTimeout(tId);
         tId = setTimeout(() => runSearch(input.value), 220);
@@ -775,33 +656,55 @@
 
       await runSearch(input.value);
 
-      // diagnostics
-      try {
-        const selected = localStorage.getItem("selectedChild");
-        let loggedIn = "unknown";
-        try {
-          if (window.sb?.auth?.getUser) {
-            const { data } = await window.sb.auth.getUser();
-            loggedIn = data?.user ? "yes" : "no";
+      if (aiEnabled) {
+        const askBtn = document.createElement("button");
+        askBtn.className = "llhb-link";
+        askBtn.type = "button";
+        askBtn.textContent = "Ask AI";
+        askBtn.addEventListener("click", async () => {
+          const question = safeText(input.value).trim() || "Help me with this page";
+          answerEl.classList.remove("llhb-hide");
+          answerEl.textContent = "Thinking";
+
+          let snippets = [];
+          await ensureIndex();
+          if (index && !indexUnavailable) {
+            snippets = index
+              .map(it => ({ it, s: scoreItem(it, question) }))
+              .filter(x => x.s > 0)
+              .sort((a, b) => b.s - a.s)
+              .slice(0, 3)
+              .map(x => ({ title: x.it.title, url: x.it.url, excerpt: snippet(x.it.text, question) }));
           }
-        } catch { loggedIn = "unknown"; }
 
-        let net = "checking";
-        try {
-          const r = await fetch("/favicon.ico", { cache: "no-store" });
-          net = r.ok ? "ok" : "fail";
-        } catch { net = "fail"; }
+          try {
+            const res = await fetch(aiEndpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "same-origin",
+              body: JSON.stringify({
+                question,
+                page: { path: page.path, title: page.title, h1: page.h1 },
+                snippets
+              })
+            });
+            if (!res.ok) throw new Error("ai call failed");
+            const data = await res.json();
+            const text = safeText(data.answer || data.text || "");
+            answerEl.textContent = text
+              ? text + "\n\nIf this doesnt look right, open the Help Centre or contact us."
+              : "Sorry - I couldnt generate a helpful answer. Please open the Help Centre or contact us.";
+          } catch (err) {
+            answerEl.textContent = "Sorry - I couldnt load AI help right now. Please open the Help Centre or contact us.";
+            console.warn("[HelpBubble]", err);
+          }
+        });
+        const actions = root.querySelector(".llhb-actions");
+        if (actions) actions.appendChild(askBtn);
+      }
 
-        diagBody.innerHTML = `
-          <div>Page: ${escHtml(page.path)}</div>
-          <div>Logged in: ${escHtml(loggedIn)}</div>
-          <div>Selected child: ${selected ? "yes" : "no"}</div>
-          <div>Network: ${escHtml(net)}</div>
-        `;
-      } catch {}
-
-    } catch (e) {
-      console.warn("[HelpBubble]", e);
+    } catch (err) {
+      console.warn("[HelpBubble]", err);
     }
   }
 
