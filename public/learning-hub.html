@@ -128,6 +128,19 @@
       <div id="continueLine" class="muted dys-text" style="margin-top:10px;">Start your first lesson to unlock Continue.</div>
     </section>
 
+    <section class="card box" style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h2 style="margin:0; font-size:16px;">Start a 5-minute plan</h2>
+          <div class="muted">A tiny, confidence-building session. No picking required.</div>
+        </div>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="start5MinBtn" class="btn" type="button">Start now</button>
+        <button id="surprise5MinBtn" class="btn light" type="button">Surprise me (easy)</button>
+      </div>
+    </section>
+
     <section class="card" style="margin-top:14px;">
       <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
         <h2 style="margin:0; font-size:16px;">XP progress</h2>
@@ -224,6 +237,8 @@
     const practiceLine = document.getElementById("practiceLine");
     const practicePills = document.getElementById("practicePills");
     const activityList = document.getElementById("activityList");
+    const start5MinBtn = document.getElementById("start5MinBtn");
+    const surprise5MinBtn = document.getElementById("surprise5MinBtn");
 
     function showErrorCard(message){
       if (hubError && message){
@@ -247,6 +262,64 @@
         if (!raw) return null;
         return JSON.parse(raw);
       } catch { return null; }
+    }
+
+    function safeHubGetJson(key){
+      try {
+        const v = localStorage.getItem(key);
+        return v ? JSON.parse(v) : null;
+      } catch { return null; }
+    }
+    function safeHubSetJson(key, obj){
+      try { localStorage.setItem(key, JSON.stringify(obj)); } catch {}
+    }
+    function safeHubChildId(){
+      const selected = getSelectedChildFromLocalStorage();
+      if (selected?.id) return selected.id;
+      const fallback = localStorage.getItem("learnlio_child_id");
+      return fallback || null;
+    }
+
+    function safeHubPickPlanTarget(childId){
+      const last = safeHubGetJson(`learnlio_last_ctx_${childId}`);
+      if (last?.subject || last?.area) {
+        return { subject: last?.subject || "", area: last?.area || "" };
+      }
+      const prevPlan = safeHubGetJson(`learnlio_5min_plan_${childId}`);
+      if (prevPlan?.subject || prevPlan?.area){
+        return { subject: prevPlan.subject || "", area: prevPlan.area || "" };
+      }
+      return { subject: "Maths", area: "Addition" };
+    }
+
+    function safeHubPickSurprise(){
+      const options = [
+        { subject:"Maths", area:"Addition" },
+        { subject:"Maths", area:"Subtraction" },
+        { subject:"Maths", area:"Multiplication" },
+        { subject:"English", area:"Spelling" },
+        { subject:"English", area:"Reading" }
+      ];
+      return options[Math.floor(Math.random() * options.length)];
+    }
+
+    function safeHubStartPlan({ subject, area }){
+      const childId = safeHubChildId();
+      if (!childId){
+        window.location.href = "/chat.html";
+        return;
+      }
+      try {
+        safeHubSetJson(`learnlio_last_ctx_${childId}`, { subject, area });
+        safeHubSetJson(`learnlio_5min_plan_${childId}`, {
+          subject, area,
+          steps: ["Warm-up (easy): 2 questions","Practice: 3 questions","Finish on a win: 1 easy question"],
+          source: "learning-hub",
+          created_at: new Date().toISOString()
+        });
+        try { localStorage.setItem(`learnlio_start_mode_${childId}`, "5min"); } catch {}
+      } catch {}
+      window.location.href = "/chat.html";
     }
 
     function formatHubTitle(name){
@@ -542,9 +615,33 @@
       renderActivity(activity);
     })();
 
+    start5MinBtn?.addEventListener("click", () => {
+      try {
+        const childId = safeHubChildId();
+        if (!childId){
+          window.location.href = "/chat.html";
+          return;
+        }
+        const target = safeHubPickPlanTarget(childId);
+        safeHubStartPlan({ subject: target.subject || "Maths", area: target.area || "Addition" });
+      } catch {
+        window.location.href = "/chat.html";
+      }
+    });
+
+    surprise5MinBtn?.addEventListener("click", () => {
+      try {
+        const target = safeHubPickSurprise();
+        safeHubStartPlan(target);
+      } catch {
+        window.location.href = "/chat.html";
+      }
+    });
+
     document.getElementById('year').textContent = new Date().getFullYear();
   })();
   </script>
+  <!-- Added 5-minute plan entry: writes learnlio_last_ctx_<childId>, learnlio_5min_plan_<childId>, learnlio_start_mode_<childId>. -->
 </body>
 </html>
 
