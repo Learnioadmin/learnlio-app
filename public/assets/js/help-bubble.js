@@ -257,7 +257,7 @@
             <div class="llhb-title">Need help?</div>
             <div class="llhb-muted" id="llhb-sub">Quick answers from the Help Centre.</div>
           </div>
-          <button class="llhb-close" id="llhb-close" type="button" aria-label="Close"></button>
+          <button class="llhb-close" id="llhb-close" type="button" aria-label="Close">&#215;</button>
         </div>
         <div class="llhb-bd">
           <div>
@@ -297,8 +297,14 @@
     return mount;
   }
 
-  function renderFallback(resultsEl) {
+  function renderFallback(resultsEl, opts = {}) {
+    const unavailable = opts.unavailable ? `
+      <div class="llhb-item">
+        <p class="llhb-muted">Help search unavailable - showing common answers.</p>
+      </div>
+    ` : "";
     resultsEl.innerHTML = `
+      ${unavailable}
       <div class="llhb-item">
         <a href="/help/">Browse the Help Centre</a>
         <p>Find quick guides and answers. If youre stuck, contact us and well help.</p>
@@ -650,23 +656,22 @@
       }
 
       async function runSearch(q) {
+        if (!resultsEl) return;
+        resultsEl.innerHTML = `<div class="llhb-item"><p class="llhb-muted">Searching</p></div>`;
+
         const query = safeText(q).trim();
         try { localStorage.setItem(LS_LASTQ, query); } catch {}
 
         if (!query) {
           bestEl.classList.add("llhb-hide");
-          if (indexUnavailable) renderFallback(resultsEl);
-          else {
-            await ensureIndex();
-            if (indexUnavailable) renderFallback(resultsEl);
-            else renderFallback(resultsEl);
-          }
+          await ensureIndex();
+          renderFallback(resultsEl, { unavailable: indexUnavailable });
           return;
         }
 
         await ensureIndex();
         if (indexUnavailable || !index) {
-          renderFallback(resultsEl);
+          renderFallback(resultsEl, { unavailable: true });
           bestEl.classList.add("llhb-hide");
           return;
         }
@@ -687,36 +692,45 @@
 
       const actionHandlers = buildActionHandlers(quickAnswer);
 
-      quickWrap.querySelectorAll(".llhb-chip").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const label = btn.getAttribute("data-q");
-          const ans = quickHelpAnswer(label);
-          quickAnswer.classList.remove("llhb-hide");
-          quickAnswer.innerHTML = `
-            <div style="font-weight:900; margin-bottom:6px;">${escHtml(label)}</div>
-            <ul style="margin:0; padding-left:18px;">${ans.steps.map(s => `<li>${escHtml(String(s))}</li>`).join("")}</ul>
-            <div style="margin-top:6px;">${ans.links.map(l => `<a class="llhb-link" href="${escHtml(l)}">Open Help Centre</a>`).join(" ")}</div>
-          `;
-          quickActions.innerHTML = "";
-          (ans.actions || []).forEach(a => {
-            const b = document.createElement("button");
-            b.type = "button";
-            b.className = "llhb-link";
-            b.textContent = a === "refresh" ? "Refresh page" :
-              a === "runWeekly" ? "Run weekly snapshot" :
-              a === "refreshBtn" ? "Refresh" :
-              a === "clearChild" ? "Clear selected child" :
-              a === "resetTutor" ? "Reset Tutor focus" :
-              a === "openTutor" ? "Open Tutor" :
-              a === "openLessons" ? "Open Lessons" :
-              a === "billingPortal" ? "Open billing" :
-              a === "openHelp" ? "Open Help Centre" : "Try";
-            b.addEventListener("click", () => {
-              const fn = actionHandlers[a];
-              if (typeof fn === "function") fn();
-            });
-            quickActions.appendChild(b);
+      root.addEventListener("click", (e) => {
+        const chip = e.target && e.target.closest ? e.target.closest(".llhb-chip") : null;
+        if (!chip) return;
+        const label = chip.getAttribute("data-q");
+        if (!label) return;
+
+        const pageHint = page.h1 || page.title;
+        const query = label === "Explain this page" && pageHint
+          ? `Explain ${pageHint}`
+          : label;
+        input.value = query;
+        runSearch(query);
+
+        const ans = quickHelpAnswer(label);
+        quickAnswer.classList.remove("llhb-hide");
+        quickAnswer.innerHTML = `
+          <div style="font-weight:900; margin-bottom:6px;">${escHtml(label)}</div>
+          <ul style="margin:0; padding-left:18px;">${ans.steps.map(s => `<li>${escHtml(String(s))}</li>`).join("")}</ul>
+          <div style="margin-top:6px;">${ans.links.map(l => `<a class="llhb-link" href="${escHtml(l)}">Open Help Centre</a>`).join(" ")}</div>
+        `;
+        quickActions.innerHTML = "";
+        (ans.actions || []).forEach(a => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "llhb-link";
+          b.textContent = a === "refresh" ? "Refresh page" :
+            a === "runWeekly" ? "Run weekly snapshot" :
+            a === "refreshBtn" ? "Refresh" :
+            a === "clearChild" ? "Clear selected child" :
+            a === "resetTutor" ? "Reset Tutor focus" :
+            a === "openTutor" ? "Open Tutor" :
+            a === "openLessons" ? "Open Lessons" :
+            a === "billingPortal" ? "Open billing" :
+            a === "openHelp" ? "Open Help Centre" : "Try";
+          b.addEventListener("click", () => {
+            const fn = actionHandlers[a];
+            if (typeof fn === "function") fn();
           });
+          quickActions.appendChild(b);
         });
       });
 
@@ -734,6 +748,12 @@
       input.addEventListener("input", () => {
         if (tId) clearTimeout(tId);
         tId = setTimeout(() => runSearch(input.value), 220);
+      });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          runSearch(input.value);
+        }
       });
 
       await runSearch(input.value);
@@ -764,13 +784,15 @@
       } catch {}
 
     } catch (e) {
-      debugLog("init failed", e);
+      console.warn("[HelpBubble]", e);
     }
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init, { once: true });
+    document.addEventListener("DOMContentLoaded", () => {
+      try { init(); } catch (err) { console.warn("[HelpBubble]", err); }
+    }, { once: true });
   } else {
-    init();
+    try { init(); } catch (err) { console.warn("[HelpBubble]", err); }
   }
 })();
