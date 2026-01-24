@@ -304,21 +304,16 @@
     }
 
     function safeHubStartPlan({ subject, area }){
-      const childId = safeHubChildId();
+      const selected = JSON.parse(localStorage.getItem("selectedChild") || "null");
+      const childId = selected?.id || window.child?.id || null;
       if (!childId){
         window.location.href = "/chat.html";
         return;
       }
-      try {
-        safeHubSetJson(`learnlio_last_ctx_${childId}`, { subject, area });
-        safeHubSetJson(`learnlio_5min_plan_${childId}`, {
-          subject, area,
-          steps: ["Warm-up (easy): 2 questions","Practice: 3 questions","Finish on a win: 1 easy question"],
-          source: "learning-hub",
-          created_at: new Date().toISOString()
-        });
-        try { localStorage.setItem(`learnlio_start_mode_${childId}`, "5min"); } catch {}
-      } catch {}
+      // 5-minute plan handoff (matches reports.html)
+      try { localStorage.setItem(`learnlio_last_ctx_${childId}`, JSON.stringify({ subject, area })); } catch {}
+      try { localStorage.setItem(`learnlio_5min_plan_${childId}`, JSON.stringify({ subject, area, minutes:5, mode:"5min", source:"hub" })); } catch {}
+      try { localStorage.setItem(`learnlio_start_mode_${childId}`, "5min"); } catch {}
       window.location.href = "/chat.html";
     }
 
@@ -617,7 +612,8 @@
 
     start5MinBtn?.addEventListener("click", () => {
       try {
-        const childId = safeHubChildId();
+        const selected = JSON.parse(localStorage.getItem("selectedChild") || "null");
+        const childId = selected?.id || window.child?.id || null;
         if (!childId){
           window.location.href = "/chat.html";
           return;
@@ -632,7 +628,7 @@
     surprise5MinBtn?.addEventListener("click", () => {
       try {
         const target = safeHubPickSurprise();
-        safeHubStartPlan(target);
+        safeHubStartPlan({ subject: target.subject || "Maths", area: target.area || "Addition" });
       } catch {
         window.location.href = "/chat.html";
       }
