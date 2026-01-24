@@ -821,6 +821,20 @@
   <script src="/assets/js/layout-app.js?v=20260122-pin2"></script>
   <script>
   (() => {
+    const qs = new URLSearchParams(location.search);
+    const start = qs.get("start");
+    const qsSubject = qs.get("subject");
+    const qsArea = qs.get("area");
+    if (start === "5min" && qsSubject && qsArea){
+      let childId = null;
+      try { childId = JSON.parse(localStorage.getItem("selectedChild")||"null")?.id || null; } catch {}
+      if (childId){
+        try { localStorage.setItem(`learnlio_last_ctx_${childId}`, JSON.stringify({ subject: qsSubject, area: qsArea })); } catch {}
+      }
+      try { window.__learnlio_force_ctx = { subject: qsSubject, area: qsArea, mode:"5min" }; } catch {}
+      try { window.__learnlio_skip_picker = true; } catch {}
+      try { history.replaceState({}, "", "/chat.html"); } catch {}
+    }
     // --- Mobile viewport fix (iOS address bar) ---
     function setVh(){
       const vh = window.innerHeight * 0.01;
@@ -2471,6 +2485,20 @@ End with: "Want to try it now?"
 
       // Start inside-chat picker
       if (window.__fiveMinPlanActive && subject && area){
+        await startArea(area);
+        updateJumpButton();
+        return true;
+      }
+      if ((!subject || !area) && !window.__learnlio_skip_picker){
+        showSubjectPickerInChat();
+        updateJumpButton();
+        return true;
+      }
+      if (window.__learnlio_force_ctx && (!subject || !area)){
+        subject = window.__learnlio_force_ctx.subject;
+        area = window.__learnlio_force_ctx.area;
+      }
+      if (subject && area){
         await startArea(area);
         updateJumpButton();
         return true;
