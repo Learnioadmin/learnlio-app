@@ -1441,6 +1441,9 @@
     function sessionComplete(){ return questionsAnswered >= maxQuestions; }
 
     function ctxKey(){ return child?.id ? `learnlio_last_ctx_${child.id}` : "learnlio_last_ctx"; }
+    function safeGetJson(key){ try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }catch{ return null; } }
+    function safeSetJson(key, obj){ try{ localStorage.setItem(key, JSON.stringify(obj)); }catch{} }
+    function safeDel(key){ try{ localStorage.removeItem(key); }catch{} }
     function saveLastContext(){
       if (!child?.id) return;
       localStorage.setItem(ctxKey(), JSON.stringify({ subject, area, at: new Date().toISOString() }));
@@ -2409,6 +2412,28 @@ End with: "Want to try it now?"
       updateProgressUI();
 
       const last = loadLastContext();
+      // Reads: learnlio_5min_plan_<childId>; Writes: learnlio_last_ctx_<childId>; Clears: learnlio_5min_plan_<childId>
+      try {
+        const childId = child?.id || getSelectedChildFromLocalStorage()?.id;
+        if (childId){
+          const planKey = "learnlio_5min_plan_" + childId;
+          const plan = safeGetJson(planKey);
+          if (plan && plan.enabled){
+            const ctxFallback = safeGetJson("learnlio_last_ctx_" + childId) || {};
+            const planSubject = String(plan.subject || "").trim() || String(ctxFallback.subject || "").trim() || "Maths";
+            const planArea = String(plan.area || "").trim() || String(ctxFallback.area || "").trim() || "";
+            subject = planSubject;
+            area = planArea;
+            safeSetJson("learnlio_last_ctx_" + childId, { subject: planSubject, area: planArea });
+            safeDel(planKey);
+            if (planSubject && planArea){
+              await startArea(planArea);
+              updateJumpButton();
+              return true;
+            }
+          }
+        }
+      } catch {}
       const plan = safeGetFiveMinPlan(child?.id);
       if (plan){
         window.__fiveMinPlanActive = true;
