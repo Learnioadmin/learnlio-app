@@ -37,7 +37,14 @@
   function injectStyles() {
     const css = `
 /* Learnlio Help Bubble (isolated) */
-#ll-help-bubble{ position:fixed; right:16px; bottom:16px; z-index:9999; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+#ll-help-bubble{
+  position:fixed;
+  right:12px;
+  bottom:12px;
+  z-index:9999;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  isolation:isolate;
+}
 #ll-help-bubble *{ box-sizing:border-box; }
 .llhb-btn{
   display:inline-flex; align-items:center; gap:8px;
@@ -64,6 +71,9 @@
   background:#fff;
   box-shadow:0 18px 44px rgba(12,18,32,.18);
   overflow:hidden;
+  max-height: min(560px, calc(100vh - 110px));
+  display:flex;
+  flex-direction:column;
 }
 .llhb-hd{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -80,7 +90,14 @@
   cursor:pointer;
   font-weight:900;
 }
-.llhb-bd{ padding:12px; display:grid; gap:10px; }
+.llhb-bd{
+  padding:12px;
+  display:grid;
+  gap:10px;
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+  flex:1;
+}
 .llhb-muted{ color:#5b6475; font-size:12.5px; line-height:1.5; }
 .llhb-grid{ display:grid; grid-template-columns:1fr; gap:8px; }
 .llhb-qa{ display:flex; flex-wrap:wrap; gap:8px; }
