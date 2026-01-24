@@ -302,7 +302,7 @@
       <div class="toggle">
         <div>
           <h2 style="margin:0 0 6px; font-size:16px;">Weekly Parent Insight</h2>
-          <div class="muted">Save a weekly snapshot here. (Email delivery can be added later.)</div>
+          <div class="muted">Get a simple weekly summary of progress (no grades, no pressure).</div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
           <span id="weeklyState" class="pill soft">Checking…</span>
@@ -603,6 +603,37 @@
       return String(v);
     }
     function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+
+    function safeArray(v){
+      if (Array.isArray(v)) return v;
+      if (typeof v === "string"){
+        try {
+          const parsed = JSON.parse(v);
+          if (Array.isArray(parsed)) return parsed;
+        } catch {}
+        return v ? [v] : [];
+      }
+      if (v === null || v === undefined) return [];
+      return [String(v)];
+    }
+    function safeJson(v){
+      if (!v) return {};
+      if (typeof v === "object") return v;
+      if (typeof v === "string"){
+        try { return JSON.parse(v); } catch { return {}; }
+      }
+      return {};
+    }
+    function weekEndFromStart(yyyy_mm_dd){
+      try {
+        const d = new Date(yyyy_mm_dd);
+        if (isNaN(d.getTime())) return "";
+        d.setDate(d.getDate() + 6);
+        return d.toISOString().slice(0,10);
+      } catch {
+        return "";
+      }
+    }
 
     function formatDateOnly(value){
       if (!value) return "—";
@@ -1180,17 +1211,17 @@
 
         const week = r.week_start ? formatDateOnly(r.week_start) : "—";
         const created = r.created_at ? formatDateOnly(r.created_at) : "—";
-        const summary = r.summary || {};
-        const stats = summary.stats || {};
+        const summary = safeJson(r.summary || {});
+        const stats = safeJson(summary.stats || {});
 
         const headline = summary.headline || summary.title || "Weekly Parent Insight";
-        const bullets = Array.isArray(summary.bullets) ? summary.bullets : [];
-        const next = summary.next_steps || summary.next || r.next_steps || "";
-        const fallbackStrengths = Array.isArray(r.strengths) ? r.strengths : (r.strengths ? [String(r.strengths)] : []);
-        const fallbackNeeds = Array.isArray(r.needs_support) ? r.needs_support : (r.needs_support ? [String(r.needs_support)] : []);
-        const focus = stats.focus_subject && stats.focus_area ? `${stats.focus_subject} — ${stats.focus_area}` : "—";
-        const sessions = Number(stats.sessions_this_week || 0);
-        const xpTotal = stats.xp_total !== undefined ? stats.xp_total : "—";
+        const bullets = safeArray(summary.bullets);
+        const strengths = safeArray(r.strengths || stats.strongest || stats.strengths || summary.strongest);
+        const needsSupport = safeArray(r.needs_support || stats.needs_support || summary.needs_support);
+        const nextSteps = safeArray(r.next_steps || summary.next_steps || summary.nextSteps || summary.next);
+        const sessions = Number(stats.sessions_this_week ?? stats.sessions ?? 0);
+        const focus = (stats.focus_subject && stats.focus_area) ? `${stats.focus_subject} — ${stats.focus_area}` : "";
+        const xpTotal = stats.xp_total ?? "";
 
         box.innerHTML = `
           <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
@@ -1198,11 +1229,11 @@
             <span class="pill soft">Week starting: ${week}</span>
           </div>
           <div class="muted small" style="margin-top:6px;">Stored: ${created}</div>
-          <div class="muted small" style="margin-top:8px;">Sessions: ${sessions} • Focus: ${escapeHtml(focus)} • XP total: ${escapeHtml(String(xpTotal))}</div>
+          <div class="muted small" style="margin-top:8px;">Sessions: ${sessions} • Focus: ${escapeHtml(focus || "—")} • XP total: ${escapeHtml(String(xpTotal || "—"))}</div>
           ${bullets.length ? `<ul style="margin:10px 0 0; padding-left:18px;">${bullets.slice(0,6).map(b => `<li>${escapeHtml(String(b))}</li>`).join("")}</ul>` : ``}
-          ${(!bullets.length && fallbackStrengths.length) ? `<div class="small" style="margin-top:8px;"><b>Strengths:</b> ${escapeHtml(fallbackStrengths.join(", "))}</div>` : ``}
-          ${(!bullets.length && fallbackNeeds.length) ? `<div class="small" style="margin-top:4px;"><b>Needs support:</b> ${escapeHtml(fallbackNeeds.join(", "))}</div>` : ``}
-          ${next ? `<div class="hr"></div><div class="small"><b>Next steps:</b> ${escapeHtml(String(next))}</div>` : ``}
+          ${strengths.length ? `<div class="small" style="margin-top:8px;"><b>Strengths:</b><ul style="margin:6px 0 0; padding-left:18px;">${strengths.slice(0,12).map(b => `<li>${escapeHtml(String(b))}</li>`).join("")}</ul></div>` : `<div class="small" style="margin-top:8px;"><b>Strengths:</b> —</div>`}
+          ${needsSupport.length ? `<div class="small" style="margin-top:4px;"><b>Needs support:</b><ul style="margin:6px 0 0; padding-left:18px;">${needsSupport.slice(0,12).map(b => `<li>${escapeHtml(String(b))}</li>`).join("")}</ul></div>` : `<div class="small" style="margin-top:4px;"><b>Needs support:</b> —</div>`}
+          ${nextSteps.length ? `<div class="hr"></div><div class="small"><b>Next steps:</b><ul style="margin:6px 0 0; padding-left:18px;">${nextSteps.slice(0,12).map(b => `<li>${escapeHtml(String(b))}</li>`).join("")}</ul></div>` : `<div class="hr"></div><div class="small"><b>Next steps:</b> —</div>`}
         `;
 
         wrap.appendChild(box);
@@ -1213,18 +1244,38 @@
     }
 
     async function saveWeeklyReport(summary){
-      const flat = buildWeeklyFlatColumns(derivedReport || computeDerivedReport(unifiedData || { skills:[], sessions:[] }));
+      const weekStart = getWeekStartMonday(new Date());
+      const weekEnd = weekEndFromStart(weekStart);
+      const stats = safeJson(summary?.stats || {});
+      const strengths = safeArray(stats.strongest || summary?.strongest);
+      const needsSupport = safeArray(stats.needs_support || summary?.needs_support);
+      const nextStepsArr = safeArray(summary?.next_steps || summary?.nextSteps || summary?.next);
+
+      const normalizedSummary = {
+        headline: summary?.headline || summary?.title || "Weekly Parent Insight",
+        bullets: safeArray(summary?.bullets),
+        next_steps: nextStepsArr[0] || "",
+        stats: {
+          sessions_this_week: stats.sessions_this_week ?? stats.sessions ?? 0,
+          focus_subject: stats.focus_subject || "",
+          focus_area: stats.focus_area || "",
+          xp_total: stats.xp_total ?? "",
+          strongest: strengths,
+          needs_support: needsSupport
+        },
+        snapshot_at: summary?.snapshot_at || new Date().toISOString()
+      };
+
       const payload = {
         parent_user_id: currentUser.id,
         child_id: child.id,
-        week_start: flat.weekStart,
-        week_end: flat.weekEnd,
-        strengths: flat.strongest,
-        needs_support: flat.needs,
-        next_steps: flat.next,
-        summary,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        week_start: weekStart,
+        week_end: weekEnd,
+        summary: normalizedSummary,
+        strengths: strengths,
+        needs_support: needsSupport,
+        next_steps: nextStepsArr,
+        created_at: new Date().toISOString()
       };
 
       try {
@@ -1237,8 +1288,8 @@
         const minimal = {
           parent_user_id: currentUser.id,
           child_id: child.id,
-          week_start: flat.weekStart,
-          summary,
+          week_start: weekStart,
+          summary: normalizedSummary,
           created_at: new Date().toISOString()
         };
         try {
@@ -1260,9 +1311,9 @@
       try {
         await saveWeeklyReport(summary);
         await loadWeeklyReports();
-        if (!silent) setWeeklyMsgSafe("Weekly report saved ✅", "good");
+        if (!silent) setWeeklyMsgSafe("Weekly summary saved — You can download it from the list below.", "good");
       } catch {
-        if (!silent) setWeeklyMsgSafe("Couldn’t save the weekly report yet.", "bad");
+        if (!silent) setWeeklyMsgSafe("Couldn’t save the weekly summary yet.", "bad");
       }
     }
 
@@ -1757,20 +1808,31 @@
     }
 
     function buildPdfFromWeekly(snapshot){
-      const summary = snapshot.summary || {};
-      const stats = summary.stats || {};
+      const summary = safeJson(snapshot.summary || {});
+      const stats = safeJson(summary.stats || {});
+      const strengths = safeArray(snapshot.strengths || stats.strongest);
+      const needsSupport = safeArray(snapshot.needs_support || stats.needs_support);
+      const nextSteps = safeArray(snapshot.next_steps || summary.next_steps);
+      const highlights = safeArray(summary.bullets);
+
+      if (!highlights.length) {
+        if (strengths.length) highlights.push(`Strengths: ${strengths.slice(0,3).join(", ")}`);
+        if (needsSupport.length) highlights.push(`Needs support: ${needsSupport.slice(0,3).join(", ")}`);
+        if (nextSteps.length) highlights.push(`Next steps: ${nextSteps[0]}`);
+      }
+
       return {
         headline: summary.headline || `Weekly Parent Insight for ${child?.child_name || "Child"}`,
         subtitle: "Calm, dyslexia-aware learning — with clear parent insight",
-        highlights: Array.isArray(summary.bullets) ? summary.bullets : [],
+        highlights: highlights,
         stats: {
           sessions: stats.sessions_this_week || 0,
           focus: stats.focus_subject && stats.focus_area ? `${stats.focus_subject} — ${stats.focus_area}` : "—",
           xpTotal: stats.xp_total !== undefined ? stats.xp_total : "—"
         },
-        strongest: Array.isArray(stats.strongest) ? stats.strongest : [],
-        needsSupport: Array.isArray(stats.needs_support) ? stats.needs_support : [],
-        nextSteps: summary.next_steps ? [summary.next_steps] : []
+        strongest: strengths,
+        needsSupport: needsSupport,
+        nextSteps: nextSteps
       };
     }
 
@@ -1974,6 +2036,7 @@
     - weekly_reports unique(parent_user_id,child_id,week_start)
     - summary should be jsonb (recommended)
     - RLS allows parent_user_id = auth.uid()
+    Weekly cleanup patch: (a) normalized save payload to match table columns; (b) safe array rendering; (c) stats displayed from summary.stats; (d) removed updated_at writes.
   -->
 </body>
 </html>
