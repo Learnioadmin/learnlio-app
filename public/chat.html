@@ -2412,6 +2412,23 @@ End with: "Want to try it now?"
       updateProgressUI();
 
       const last = loadLastContext();
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const start = params.get("start");
+        const pSubject = params.get("subject");
+        const pArea = params.get("area");
+        if (start === "5min" && pSubject && pArea){
+          const selected = JSON.parse(localStorage.getItem("selectedChild") || "null");
+          const childId = selected?.id || window.child?.id || null;
+          if (childId){
+            localStorage.setItem(`learnlio_last_ctx_${childId}`, JSON.stringify({ subject: pSubject, area: pArea }));
+            localStorage.setItem(`learnlio_5min_plan_${childId}`, JSON.stringify({ subject: pSubject, area: pArea, minutes:5, mode:"5min", source:"hub" }));
+          }
+          try { history.replaceState({}, "", "/chat.html"); } catch {}
+          subject = pSubject;
+          area = pArea;
+        }
+      } catch {}
       // Reads: learnlio_5min_plan_<childId>; Writes: learnlio_last_ctx_<childId>; Clears: learnlio_5min_plan_<childId>
       try {
         const childId = child?.id || getSelectedChildFromLocalStorage()?.id;

@@ -314,7 +314,7 @@
       try { localStorage.setItem(`learnlio_last_ctx_${childId}`, JSON.stringify({ subject, area })); } catch {}
       try { localStorage.setItem(`learnlio_5min_plan_${childId}`, JSON.stringify({ subject, area, minutes:5, mode:"5min", source:"hub" })); } catch {}
       try { localStorage.setItem(`learnlio_start_mode_${childId}`, "5min"); } catch {}
-      window.location.href = "/chat.html";
+      window.location.href = `/chat.html?start=5min&subject=${encodeURIComponent(subject)}&area=${encodeURIComponent(area)}`;
     }
 
     function formatHubTitle(name){
