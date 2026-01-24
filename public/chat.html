@@ -1430,6 +1430,7 @@
     function resetSessionCounters(){
       sessionDbId = null;
       maxQuestions = computeMaxQuestions();
+      if (window.__fiveMinPlanActive) maxQuestions = 6;
       questionsAnswered = 0;
       correctCount = 0;
       badges = [];
@@ -1447,6 +1448,30 @@
     function loadLastContext(){
       if (!child?.id) return null;
       try { const raw = localStorage.getItem(ctxKey()); return raw ? JSON.parse(raw) : null; } catch { return null; }
+    }
+
+    function safeGetFiveMinPlan(childId){
+      try {
+        const mode = localStorage.getItem("plan_mode");
+        if (mode !== "five_minute") return null;
+        const planSubject = localStorage.getItem("plan_subject") || "";
+        const planArea = localStorage.getItem("plan_area") || "";
+        return { childId, subject: planSubject, area: planArea };
+      } catch {
+        return null;
+      }
+    }
+    function safeClearFiveMinPlan(){
+      try {
+        localStorage.removeItem("plan_mode");
+        localStorage.removeItem("plan_subject");
+        localStorage.removeItem("plan_area");
+      } catch {}
+    }
+    function safePlanStep(i){
+      if (i <= 1) return { difficultyHint:"easy" };
+      if (i >= 5) return { difficultyHint:"easy" };
+      return { difficultyHint:"normal" };
     }
 
     // ---------- Backend ----------
@@ -1696,7 +1721,9 @@
 
     function boundsForAgeAndDifficulty(){
       const age = childAge;
-      const d = Math.max(1, Math.min(10, difficultyLevel || 1));
+      const planHint = window.__fiveMinPlanDifficultyHint || null;
+      const base = Math.max(1, Math.min(10, difficultyLevel || 1));
+      const d = (planHint === "easy") ? 1 : base;
       const band = (d <= 3) ? 1 : (d <= 6) ? 2 : 3;
 
       if (age <= 7){
@@ -1721,22 +1748,23 @@
 
     function generateMathQuestion(){
       const { min, max } = boundsForAgeAndDifficulty();
+      const hintNote = window.__fiveMinPlanDifficultyNote || "";
 
       if (area === "Addition"){
         const x = randInt(min, max), y = randInt(min, max);
-        return { kind:"math", displayText: `${x} + ${y} = ?`, correctAnswer: x + y };
+        return { kind:"math", displayText: `${x} + ${y} = ?`, correctAnswer: x + y, difficultyHint: hintNote };
       }
       if (area === "Subtraction"){
         let x = randInt(min, max), y = randInt(min, max);
         if (y > x) [x, y] = [y, x];
-        return { kind:"math", displayText: `${x} − ${y} = ?`, correctAnswer: x - y };
+        return { kind:"math", displayText: `${x} − ${y} = ?`, correctAnswer: x - y, difficultyHint: hintNote };
       }
       if (area === "Multiplication"){
         const base = (childAge <= 7) ? 5 : (childAge <= 9) ? 8 : 12;
         const band = (difficultyLevel <= 3) ? 0 : (difficultyLevel <= 6) ? 1 : 2;
         const tableMax = Math.min(12, base + band * 2);
         const x = randInt(2, tableMax), y = randInt(2, tableMax);
-        return { kind:"math", displayText: `${x} × ${y} = ?`, correctAnswer: x * y };
+        return { kind:"math", displayText: `${x} × ${y} = ?`, correctAnswer: x * y, difficultyHint: hintNote };
       }
       if (area === "Division"){
         const base = (childAge <= 7) ? 5 : (childAge <= 9) ? 8 : 12;
@@ -1745,7 +1773,7 @@
         const divisor = randInt(2, divMax);
         const quotient = randInt(2, divMax);
         const dividend = divisor * quotient;
-        return { kind:"math", displayText: `${dividend} ÷ ${divisor} = ?`, correctAnswer: quotient };
+        return { kind:"math", displayText: `${dividend} ÷ ${divisor} = ?`, correctAnswer: quotient, difficultyHint: hintNote };
       }
       return null;
     }
@@ -1883,18 +1911,51 @@ End with: "Want to try it now?"
         is_correct: null,
         meta: { subject, area, difficultyLevel }
       }).catch(console.error);
+
+      if (window.__fiveMinPlanActive){
+        window.__fiveMinPlanIndex = (window.__fiveMinPlanIndex || 0) + 1;
+      }
     }
 
     function handleNextQuestion(){
+      if (window.__fiveMinPlanActive && (window.__fiveMinPlanIndex || 0) >= 6){
+        safeClearFiveMinPlan();
+        window.__fiveMinPlanActive = false;
+        window.__fiveMinPlanIndex = 0;
+        window.__fiveMinPlanDifficultyHint = null;
+        if (typeof endSession === "function") { endSession(); return; }
+        if (typeof finishSession === "function") { finishSession(); return; }
+        if (typeof showSummary === "function") { showSummary(); return; }
+        endSessionUI();
+        return;
+      }
       if (sessionComplete()){
         endSessionUI();
         return;
       }
-      if (subject === "Maths"){
-        currentQuestion = generateMathQuestion();
-        showMathQuestion(currentQuestion);
-      } else {
-        presentEnglishMCQ();
+      try {
+        if (window.__fiveMinPlanActive){
+          const step = safePlanStep(window.__fiveMinPlanIndex || 0);
+          window.__fiveMinPlanDifficultyHint = step.difficultyHint;
+          window.__fiveMinPlanDifficultyNote = `Difficulty hint: ${step.difficultyHint}`;
+        } else {
+          window.__fiveMinPlanDifficultyHint = null;
+          window.__fiveMinPlanDifficultyNote = null;
+        }
+        if (subject === "Maths"){
+          currentQuestion = generateMathQuestion();
+          showMathQuestion(currentQuestion);
+        } else {
+          presentEnglishMCQ();
+        }
+      } catch (e){
+        if (window.__fiveMinPlanActive){
+          safeClearFiveMinPlan();
+          window.__fiveMinPlanActive = false;
+          window.__fiveMinPlanIndex = 0;
+          window.__fiveMinPlanDifficultyHint = null;
+          window.__fiveMinPlanDifficultyNote = null;
+        }
       }
     }
 
@@ -1986,6 +2047,9 @@ End with: "Want to try it now?"
         choices: q.choices.slice(),
         correctIndex: q.correctIndex
       };
+      if (window.__fiveMinPlanActive && window.__fiveMinPlanDifficultyNote){
+        currentQuestion.difficultyHint = window.__fiveMinPlanDifficultyNote;
+      }
 
       addBotMessage(`📚 ${q.prompt}`, { choices: q.choices, showExplain:true });
 
@@ -1996,6 +2060,10 @@ End with: "Want to try it now?"
         is_correct: null,
         meta: { subject, area, difficultyLevel, choices: q.choices }
       }).catch(console.error);
+
+      if (window.__fiveMinPlanActive){
+        window.__fiveMinPlanIndex = (window.__fiveMinPlanIndex || 0) + 1;
+      }
     }
 
     async function gradeEnglishChoice(choiceText){
@@ -2051,12 +2119,48 @@ End with: "Want to try it now?"
 
       if (subject === "Maths"){
         calculator.style.display = window.matchMedia("(max-width: 980px)").matches ? "none" : "block";
-        currentQuestion = generateMathQuestion();
-        showMathQuestion(currentQuestion);
+        try {
+          if (window.__fiveMinPlanActive){
+            const step = safePlanStep(window.__fiveMinPlanIndex || 0);
+            window.__fiveMinPlanDifficultyHint = step.difficultyHint;
+            window.__fiveMinPlanDifficultyNote = `Difficulty hint: ${step.difficultyHint}`;
+          } else {
+            window.__fiveMinPlanDifficultyHint = null;
+            window.__fiveMinPlanDifficultyNote = null;
+          }
+          currentQuestion = generateMathQuestion();
+          showMathQuestion(currentQuestion);
+        } catch (e){
+          if (window.__fiveMinPlanActive){
+            safeClearFiveMinPlan();
+            window.__fiveMinPlanActive = false;
+            window.__fiveMinPlanIndex = 0;
+            window.__fiveMinPlanDifficultyHint = null;
+            window.__fiveMinPlanDifficultyNote = null;
+          }
+        }
       } else {
         calculator.style.display = "none";
         englishQueue = [];
-        presentEnglishMCQ();
+        try {
+          if (window.__fiveMinPlanActive){
+            const step = safePlanStep(window.__fiveMinPlanIndex || 0);
+            window.__fiveMinPlanDifficultyHint = step.difficultyHint;
+            window.__fiveMinPlanDifficultyNote = `Difficulty hint: ${step.difficultyHint}`;
+          } else {
+            window.__fiveMinPlanDifficultyHint = null;
+            window.__fiveMinPlanDifficultyNote = null;
+          }
+          presentEnglishMCQ();
+        } catch (e){
+          if (window.__fiveMinPlanActive){
+            safeClearFiveMinPlan();
+            window.__fiveMinPlanActive = false;
+            window.__fiveMinPlanIndex = 0;
+            window.__fiveMinPlanDifficultyHint = null;
+            window.__fiveMinPlanDifficultyNote = null;
+          }
+        }
       }
     }
 
@@ -2096,6 +2200,13 @@ End with: "Want to try it now?"
     // ---------- End session ----------
     async function endSessionUI(){
       disableInput(true);
+      if (window.__fiveMinPlanActive){
+        safeClearFiveMinPlan();
+        window.__fiveMinPlanActive = false;
+        window.__fiveMinPlanIndex = 0;
+        window.__fiveMinPlanDifficultyHint = null;
+        window.__fiveMinPlanDifficultyNote = null;
+      }
       calculator.style.display = "none";
 
       await updateSessionRollups();
@@ -2298,6 +2409,15 @@ End with: "Want to try it now?"
       updateProgressUI();
 
       const last = loadLastContext();
+      const plan = safeGetFiveMinPlan(child?.id);
+      if (plan){
+        window.__fiveMinPlanActive = true;
+        window.__fiveMinPlanIndex = 0;
+        if (plan.subject) subject = plan.subject;
+        if (plan.area) area = plan.area;
+        if (typeof maxQuestions !== "undefined") maxQuestions = 6;
+      }
+
       if (last?.subject){
         addBotMessage(`👋 Hi ${childName}!\n\nLast time you worked on:\n${last.subject} • ${last.area || "—"}\n\nLet’s choose what you want to do today.`);
       } else {
@@ -2308,6 +2428,11 @@ End with: "Want to try it now?"
       }
 
       // Start inside-chat picker
+      if (window.__fiveMinPlanActive && subject && area){
+        await startArea(area);
+        updateJumpButton();
+        return true;
+      }
       showSubjectPickerInChat();
       updateJumpButton();
       return true;
@@ -2361,6 +2486,8 @@ End with: "Want to try it now?"
 
     sendBtn.addEventListener("click", safeHandleSend);
     input.addEventListener("keydown", e => { if (e.key === "Enter") safeHandleSend(); });
+
+    // Plan mode only runs when localStorage.plan_mode === 'five_minute'; otherwise no-op.
 
     newSessionBtn.addEventListener("click", () => startNewSession());
     finishBtn.addEventListener("click", () => endSessionUI());
