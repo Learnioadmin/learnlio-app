@@ -809,6 +809,23 @@
       return null;
     }
 
+    function safePick5MinFocus(){
+      try {
+        const label = derivedReport?.sessionSignals?.trickiestLabel;
+        if (label && label.includes("—")){
+          const parts = label.split("—").map(s => s.trim()).filter(Boolean);
+          if (parts.length >= 2) return { subject: parts[0], area: parts.slice(1).join(" — ") };
+        }
+        const ns = derivedReport?.needsSupport?.[0];
+        if (ns?.subject || ns?.area) return { subject: prettySubject(ns.subject), area: prettyArea(ns.area) };
+        const fs = derivedReport?.focusSkill;
+        if (fs?.subject || fs?.area) return { subject: prettySubject(fs.subject), area: prettyArea(fs.area) };
+        const ufs = unifiedData?.skills?.[0];
+        if (ufs?.subject || ufs?.area) return { subject: prettySubject(ufs.subject), area: prettyArea(ufs.area) };
+      } catch {}
+      return { subject:"Maths", area:"" };
+    }
+
     function renderPlan(report){
       const target = safePickPlanTarget(report);
       if (!planBox) return;
@@ -1747,6 +1764,7 @@
         renderBaseline(derivedReport);
         renderTimeline(unifiedData);
       }
+      wireFiveMinPlan();
 
       (async () => {
         try {
@@ -1757,6 +1775,7 @@
           renderSignals(derivedReport);
           renderPlan(derivedReport);
           renderEffortWins(derivedReport);
+          wireFiveMinPlan();
         } catch (e) {
           console.warn("session signals render failed (safe)", e);
         }
@@ -1959,15 +1978,33 @@
       await runWeeklySnapshot();
     });
 
-    startPlanBtn?.addEventListener("click", () => {
-      try {
-        const target = safePickPlanTarget(derivedReport);
-        if (target && child?.id){
-          localStorage.setItem(`learnlio_last_ctx_${child.id}`, JSON.stringify({ subject: target.subject, area: target.area }));
-        }
-        showOk("5-minute plan set");
-      } catch {}
-    });
+    // Uses: learnlio_last_ctx_<childId> and learnlio_5min_plan_<childId>
+    function wireFiveMinPlan(){
+      if (window.__learnlio5minWired) return;
+      const btn = document.getElementById("start5MinBtn") || startPlanBtn;
+      if (!btn) return;
+      window.__learnlio5minWired = true;
+      btn.addEventListener("click", () => {
+        try {
+          const focus = safePick5MinFocus();
+          const subject = prettySubject(focus.subject || "Maths");
+          const area = prettyArea(focus.area || "");
+          if (child?.id){
+            localStorage.setItem(`learnlio_last_ctx_${child.id}`, JSON.stringify({ subject, area }));
+            localStorage.setItem(`learnlio_5min_plan_${child.id}`, JSON.stringify({
+              enabled: true,
+              subject,
+              area,
+              created_at: new Date().toISOString(),
+              source: "reports"
+            }));
+          }
+          const statusEl = document.getElementById("fiveMinStatus");
+          if (statusEl) statusEl.textContent = "Starting 5-minute plan";
+          window.location.href = "/chat.html";
+        } catch {}
+      });
+    }
 
     saveParentNoteBtn?.addEventListener("click", async () => {
       const note = parentNoteInput?.value || "";
