@@ -537,6 +537,15 @@
       }[s]));
     }
 
+    function parseMeta(meta){
+      if (!meta) return {};
+      if (typeof meta === "object") return meta;
+      if (typeof meta === "string"){
+        try { return JSON.parse(meta); } catch { return {}; }
+      }
+      return {};
+    }
+
     function confidenceTag(confidence, attempts){
       if (!attempts || attempts < 3) return { label:"Getting started", cls:"warn" };
       if (confidence >= 0.75) return { label:"Confident", cls:"good" };
@@ -569,6 +578,74 @@
       } catch (error) {
         return { data: null, error };
       }
+    }
+
+    async function loadSessionSignalsLast7Days(){
+      try {
+        const since = new Date();
+        since.setDate(since.getDate() - 7);
+        const { data, error } = await sb
+          .from("session_items")
+          .select("item_type, prompt_text, child_text, is_correct, meta, created_at")
+          .eq("owner_id", currentUser.id)
+          .eq("child_id", child.id)
+          .gte("created_at", since.toISOString())
+          .order("created_at", { ascending:false })
+          .limit(400);
+        if (error) throw error;
+        return data || [];
+      } catch (e){
+        console.warn("session_items read failed (safe)", e);
+        return null;
+      }
+    }
+
+    function computeSessionSignals(items){
+      const rows = Array.isArray(items) ? items : [];
+      const buckets = {};
+      let explainCount = 0;
+      let hintCount = 0;
+      let attempts = 0;
+
+      rows.forEach(item => {
+        const type = String(item?.item_type || "");
+        if (type === "explain_another_way") explainCount += 1;
+        if (type === "hint") hintCount += 1;
+
+        const isCorrect = item?.is_correct;
+        const isMath = (type === "feedback");
+        const isEnglish = (type === "answer");
+        if ((isMath || isEnglish) && typeof isCorrect === "boolean"){
+          const meta = parseMeta(item?.meta);
+          const subj = String(meta?.subject || "");
+          const area = String(meta?.area || "");
+          const key = `${subj}||${area}`;
+          if (!buckets[key]) buckets[key] = { subject: subj, area, attempts:0, wrong:0, correct:0 };
+          buckets[key].attempts += 1;
+          attempts += 1;
+          if (isCorrect) buckets[key].correct += 1;
+          else buckets[key].wrong += 1;
+        }
+      });
+
+      let trickiest = null;
+      Object.values(buckets).forEach(b => {
+        if (b.wrong <= 0) return;
+        if (!trickiest) { trickiest = b; return; }
+        if (b.wrong > trickiest.wrong) { trickiest = b; return; }
+        if (b.wrong === trickiest.wrong && b.attempts > trickiest.attempts) { trickiest = b; }
+      });
+
+      const trickiestLabel = trickiest
+        ? `${prettySubject(trickiest.subject)} — ${prettyArea(trickiest.area)}`
+        : "";
+
+      return {
+        explainCount,
+        hintCount,
+        attempts,
+        trickiestLabel
+      };
     }
 
     function renderRows(target, rows){
@@ -1064,10 +1141,15 @@
     }
 
     function renderHighlights(report){
+      const signals = report?.sessionSignals;
       highlightFocus.textContent = `Focus this week: ${report.highlightFocus}`;
       highlightConfidence.textContent = `Confidence building in: ${report.highlightConfidence}`;
       highlightWin.textContent = `Best win: ${report.highlightWin}`;
-      highlightSupport.textContent = `Needs support: ${report.highlightSupport}`;
+      if (signals?.trickiestLabel){
+        highlightSupport.textContent = `Needs support: ${signals.trickiestLabel}`;
+      } else {
+        highlightSupport.textContent = `Needs support: ${report.highlightSupport}`;
+      }
     }
 
     function renderOverall(report){
@@ -1086,18 +1168,27 @@
     }
 
     function renderSignals(report){
-      if (!report.recentSignals.length){
-        signalsBox.innerHTML = `<div class="muted">No tutor signals saved yet.</div>`;
-        return;
-      }
-
-      const rows = report.recentSignals.map(s => {
+      const rows = (report.recentSignals || []).map(s => {
         const subj = prettySubject(s.subject);
         const ar = prettyArea(s.area);
         const when = formatDateOnly(s.last_seen_at || s.updated_at);
         const signal = (s.streak_wrong >= 3) ? "Needs support" : (s.streak_correct >= 3) ? "Doing well" : (s.confidence >= 0.7) ? "Building confidence" : "Steady progress";
         return { k: `${subj} — ${ar}`, v: `${signal} • ${when}` };
       });
+
+      const signals = report?.sessionSignals;
+      if (signals){
+        rows.push(
+          { k: "Explain another way used", v: `${signals.explainCount} times` },
+          { k: "Hint used", v: `${signals.hintCount} times` },
+          { k: "Answered attempts (7 days)", v: String(signals.attempts || 0) }
+        );
+      }
+
+      if (!rows.length){
+        signalsBox.innerHTML = `<div class="muted">No tutor signals saved yet.</div>`;
+        return;
+      }
 
       renderRows(signalsBox, rows);
     }
@@ -1240,6 +1331,18 @@
         renderSkills(derivedReport);
         renderNextSteps(derivedReport);
       }
+
+      (async () => {
+        try {
+          const items = await loadSessionSignalsLast7Days();
+          if (!items || !hasData) return;
+          derivedReport.sessionSignals = computeSessionSignals(items);
+          renderHighlights(derivedReport);
+          renderSignals(derivedReport);
+        } catch (e) {
+          console.warn("session signals render failed (safe)", e);
+        }
+      })();
 
       await autoGenerateWeekly();
       showOk("Parent Insight refreshed");
