@@ -570,6 +570,9 @@
     let weeklyEnabled = false;
     let weeklyEmailEnabled = false;
 
+    const DEBUG = new URLSearchParams(location.search).has("debug");
+    function debugLog(...args){ if (DEBUG) console.log("[Weekly]", ...args); }
+
     function showError(msg){
       pageError.style.display = "block";
       pageError.textContent = msg;
@@ -586,6 +589,14 @@
     function setWeeklyMsg(text, kind=""){
       weeklyMsg.textContent = text || "";
       weeklyMsg.className = "status" + (kind ? " " + kind : "");
+    }
+    function setWeeklyMsgSafe(text, kind="", err){
+      let msg = text || "";
+      if (DEBUG && err){
+        const e = (typeof err === "string") ? err : (err?.message || String(err));
+        msg = msg ? `${msg} (debug: ${e})` : `debug: ${e}`;
+      }
+      setWeeklyMsg(msg, kind);
     }
     function safe(v, fallback="—"){
       if (v === null || v === undefined || v === "") return fallback;
@@ -1019,9 +1030,10 @@
         data = res?.data || null;
         if (res?.error) throw res.error;
       } catch (error) {
-        console.error("weekly_report_settings read error", error);
+        debugLog("weekly_report_settings read error", error);
         setWeeklySwitchUI(false);
         if (weeklyEmailRow) weeklyEmailRow.style.display = "none";
+        setWeeklyMsgSafe("Weekly setting couldn’t load yet. Refresh to try again.", "warn", error);
         return;
       }
 
@@ -1034,7 +1046,7 @@
     }
 
     async function saveWeeklySetting(enabled){
-      setWeeklyMsg("");
+      setWeeklyMsgSafe("", "");
       weeklySwitch.style.pointerEvents = "none";
 
       const payload = {
@@ -1046,28 +1058,35 @@
         updated_at: new Date().toISOString()
       };
 
-      let error = null;
       try {
-        const res = await sb
-          .from("weekly_report_settings")
-          .upsert(payload, { onConflict: "parent_user_id,child_id" });
-        if (res?.error) throw res.error;
+        let r = await sb.from("weekly_report_settings")
+          .update({ enabled: payload.enabled, updated_at: payload.updated_at, email_enabled: payload.email_enabled, email_to: payload.email_to })
+          .eq("parent_user_id", payload.parent_user_id)
+          .eq("child_id", payload.child_id);
+
+        if (r?.error) debugLog("update failed", r.error);
+
+        const ins = await sb.from("weekly_report_settings").insert(payload);
+        if (ins?.error) {
+          const msg = String(ins.error.message || "");
+          const isDup = msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("unique");
+          if (!isDup) debugLog("insert failed", ins.error);
+        }
+
+        const ups = await sb.from("weekly_report_settings").upsert(payload, { onConflict: "parent_user_id,child_id" });
+        if (ups?.error) debugLog("upsert failed", ups.error);
+
+        setWeeklySwitchUI(enabled);
+        setWeeklyMsgSafe(enabled ? "Weekly Parent Insight is on ✅" : "Weekly Parent Insight is off.", "good");
+        return true;
       } catch (e) {
-        error = e;
-      }
-
-      weeklySwitch.style.pointerEvents = "auto";
-
-      if (error) {
-        console.error("weekly_report_settings upsert error", error);
+        debugLog("saveWeeklySetting exception", e);
         setWeeklySwitchUI(!enabled);
-        setWeeklyMsg("Couldn’t save that setting yet. Please try again.", "bad");
+        setWeeklyMsgSafe("Couldn’t save that setting yet. Please try again.", "bad", e);
         return false;
+      } finally {
+        weeklySwitch.style.pointerEvents = "auto";
       }
-
-      setWeeklySwitchUI(enabled);
-      setWeeklyMsg(enabled ? "Weekly Parent Insight is on ✅" : "Weekly Parent Insight is off.", "good");
-      return true;
     }
 
     async function toggleWeeklyEmail(){
@@ -1087,9 +1106,23 @@
           .upsert(payload, { onConflict: "parent_user_id,child_id" });
         if (res?.error) throw res.error;
       } catch (e) {
-        console.error("weekly email save error", e);
+        debugLog("weekly email save error", e);
         setWeeklyEmailSwitchUI(!next);
+        setWeeklyMsgSafe("Couldn’t save email preference yet.", "warn", e);
       }
+    }
+
+    function buildWeeklyFlatColumns(report){
+      const strongest = report.strongest?.map(s => `${prettySubject(s.subject)} — ${prettyArea(s.area)}`) || [];
+      const needs = report.needsSupport?.map(s => `${prettySubject(s.subject)} — ${prettyArea(s.area)}`) || [];
+      const next = report.nextSteps?.[0] || "";
+      const weekStart = getWeekStartMonday(new Date());
+      const weekEnd = (() => {
+        const d = new Date(weekStart);
+        d.setDate(d.getDate() + 6);
+        return d.toISOString().slice(0,10);
+      })();
+      return { weekStart, weekEnd, strongest, needs, next };
     }
 
     function getLatestWeekly(){
@@ -1111,7 +1144,7 @@
 
       const { data, error } = await sb
         .from("weekly_reports")
-        .select("id, week_start, created_at, summary")
+        .select("id, week_start, week_end, created_at, summary, strengths, needs_support, next_steps")
         .eq("parent_user_id", currentUser.id)
         .eq("child_id", child.id)
         .order("week_start", { ascending: false })
@@ -1152,7 +1185,9 @@
 
         const headline = summary.headline || summary.title || "Weekly Parent Insight";
         const bullets = Array.isArray(summary.bullets) ? summary.bullets : [];
-        const next = summary.next_steps || summary.next || "";
+        const next = summary.next_steps || summary.next || r.next_steps || "";
+        const fallbackStrengths = Array.isArray(r.strengths) ? r.strengths : (r.strengths ? [String(r.strengths)] : []);
+        const fallbackNeeds = Array.isArray(r.needs_support) ? r.needs_support : (r.needs_support ? [String(r.needs_support)] : []);
         const focus = stats.focus_subject && stats.focus_area ? `${stats.focus_subject} — ${stats.focus_area}` : "—";
         const sessions = Number(stats.sessions_this_week || 0);
         const xpTotal = stats.xp_total !== undefined ? stats.xp_total : "—";
@@ -1165,6 +1200,8 @@
           <div class="muted small" style="margin-top:6px;">Stored: ${created}</div>
           <div class="muted small" style="margin-top:8px;">Sessions: ${sessions} • Focus: ${escapeHtml(focus)} • XP total: ${escapeHtml(String(xpTotal))}</div>
           ${bullets.length ? `<ul style="margin:10px 0 0; padding-left:18px;">${bullets.slice(0,6).map(b => `<li>${escapeHtml(String(b))}</li>`).join("")}</ul>` : ``}
+          ${(!bullets.length && fallbackStrengths.length) ? `<div class="small" style="margin-top:8px;"><b>Strengths:</b> ${escapeHtml(fallbackStrengths.join(", "))}</div>` : ``}
+          ${(!bullets.length && fallbackNeeds.length) ? `<div class="small" style="margin-top:4px;"><b>Needs support:</b> ${escapeHtml(fallbackNeeds.join(", "))}</div>` : ``}
           ${next ? `<div class="hr"></div><div class="small"><b>Next steps:</b> ${escapeHtml(String(next))}</div>` : ``}
         `;
 
@@ -1176,23 +1213,43 @@
     }
 
     async function saveWeeklyReport(summary){
-      const weekStart = getWeekStartMonday(new Date());
+      const flat = buildWeeklyFlatColumns(derivedReport || computeDerivedReport(unifiedData || { skills:[], sessions:[] }));
       const payload = {
         parent_user_id: currentUser.id,
         child_id: child.id,
-        week_start: weekStart,
+        week_start: flat.weekStart,
+        week_end: flat.weekEnd,
+        strengths: flat.strongest,
+        needs_support: flat.needs,
+        next_steps: flat.next,
         summary,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await sb
-        .from("weekly_reports")
-        .upsert(payload, { onConflict: "parent_user_id,child_id,week_start" });
-
-      if (error){
-        console.error("weekly_reports upsert error", error);
-        throw error;
+      try {
+        const { error } = await sb
+          .from("weekly_reports")
+          .upsert(payload, { onConflict: "parent_user_id,child_id,week_start" });
+        if (error) throw error;
+      } catch (e) {
+        debugLog("weekly_reports upsert error", e);
+        const minimal = {
+          parent_user_id: currentUser.id,
+          child_id: child.id,
+          week_start: flat.weekStart,
+          summary,
+          created_at: new Date().toISOString()
+        };
+        try {
+          const { error: err2 } = await sb
+            .from("weekly_reports")
+            .upsert(minimal, { onConflict: "parent_user_id,child_id,week_start" });
+          if (err2) throw err2;
+        } catch (e2) {
+          debugLog("weekly_reports minimal upsert error", e2);
+          throw e2;
+        }
       }
     }
 
@@ -1203,9 +1260,9 @@
       try {
         await saveWeeklyReport(summary);
         await loadWeeklyReports();
-        if (!silent) setWeeklyMsg("Weekly report saved ✅", "good");
+        if (!silent) setWeeklyMsgSafe("Weekly report saved ✅", "good");
       } catch {
-        if (!silent) setWeeklyMsg("Couldn’t save the weekly report yet.", "bad");
+        if (!silent) setWeeklyMsgSafe("Couldn’t save the weekly report yet.", "bad");
       }
     }
 
@@ -1864,7 +1921,12 @@
       setWeeklySwitchUI(next);
       weeklyState.textContent = next ? "On" : "Off";
       const ok = await saveWeeklySetting(next);
-      if (ok) await loadWeeklyReports();
+      if (!ok) return;
+      try {
+        await loadWeeklyReports();
+      } catch (e) {
+        setWeeklyMsgSafe("Weekly list couldn’t refresh yet.", "warn", e);
+      }
     }
 
     weeklySwitch.addEventListener("click", toggleWeekly);
@@ -1907,6 +1969,11 @@
     Uses existing DB reads: session_items (effort wins), sessions (timeline), child_skill_progress (trend heuristic).
     Requires DB change: weekly_report_settings columns email_enabled/email_to (feature hides if missing).
     Uses existing table: parent_notes (already created).
+    DB checklist:
+    - weekly_report_settings unique(parent_user_id,child_id)
+    - weekly_reports unique(parent_user_id,child_id,week_start)
+    - summary should be jsonb (recommended)
+    - RLS allows parent_user_id = auth.uid()
   -->
 </body>
 </html>
