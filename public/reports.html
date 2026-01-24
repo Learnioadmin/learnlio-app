@@ -309,6 +309,17 @@
           <div id="weeklySwitch" class="switch" role="switch" aria-checked="false" tabindex="0" title="Toggle weekly summary"></div>
         </div>
       </div>
+      <div id="weeklyEmailRow" class="toggle" style="margin-top:10px;">
+        <div>
+          <div class="label" style="font-weight:950;">Email me weekly snapshot</div>
+          <div class="muted">Delivery comes later — this just saves your preference.</div>
+          <input id="weeklyEmailTo" class="select" type="email" placeholder="Email (optional)" style="margin-top:6px; display:none;">
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span id="weeklyEmailState" class="pill soft">Off</span>
+          <div id="weeklyEmailSwitch" class="switch" role="switch" aria-checked="false" tabindex="0" title="Toggle weekly email"></div>
+        </div>
+      </div>
 
       <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
         <button id="runWeeklyBtn" class="btn light" type="button">Run weekly report now</button>
@@ -335,6 +346,16 @@
         </div>
       </section>
 
+      <section id="baselineCard" class="card box" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0; font-size:16px;">Compare to baseline</h2>
+          <span class="pill">Baseline</span>
+        </div>
+        <div id="baselineBox" style="margin-top:10px;">
+          <div class="muted">Loading…</div>
+        </div>
+      </section>
+
       <!-- Tutor signals -->
       <section id="signalsCard" class="card box">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -349,6 +370,26 @@
         </div>
       </section>
     </div>
+
+    <section id="effortCard" class="card box" style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="margin:0; font-size:16px;">Effort wins</h2>
+        <span class="pill">This week</span>
+      </div>
+      <div id="effortBox" style="margin-top:10px;">
+        <div class="muted">Loading…</div>
+      </div>
+    </section>
+
+    <section id="timelineCard" class="card box" style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="margin:0; font-size:16px;">Last 7 days</h2>
+        <span class="pill">Timeline</span>
+      </div>
+      <div id="timelineBox" style="margin-top:10px;">
+        <div class="muted">Loading…</div>
+      </div>
+    </section>
 
     <!-- Skills -->
     <section id="skillsCard" class="card box" style="margin-top:14px;">
@@ -379,6 +420,23 @@
         <div class="muted">Loading…</div>
       </div>
     </section>
+    <section id="planCard" class="card box" style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h2 style="margin:0; font-size:16px;">5-minute plan</h2>
+          <div class="muted">A tiny plan to build confidence without pressure.</div>
+        </div>
+        <span class="pill soft">Quick</span>
+      </div>
+      <div id="planBox" style="margin-top:10px;">
+        <div class="muted">Loading…</div>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="startPlanBtn" class="btn" type="button">Start a 5-minute plan</button>
+        <a class="btn light" href="/chat.html">Open Tutor</a>
+        <a class="btn light" href="/lessons.html">Open Lessons</a>
+      </div>
+    </section>
 
     <section id="noDataBox" class="card box dashed" style="margin-top:14px; display:none;">
       <h2 style="margin:0 0 8px; font-size:16px;">No learning data yet</h2>
@@ -390,6 +448,20 @@
         <a class="btn" href="/chat.html" style="text-decoration:none; display:inline-block;">Go to Tutor</a>
         <a class="btn light" href="/lessons.html" style="text-decoration:none; display:inline-block;">Go to Lessons</a>
       </div>
+    </section>
+
+    <section id="parentNotesCard" class="card box" style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="margin:0; font-size:16px;">Parent notes</h2>
+        <span class="pill">This week</span>
+      </div>
+      <div class="muted" style="margin-top:6px;">Private notes for this child (saved per week).</div>
+      <textarea id="parentNoteInput" rows="4" class="select" placeholder="Write a note (e.g. what helped at home, what felt tricky)" style="margin-top:10px; width:100%;"></textarea>
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="saveParentNoteBtn" class="btn" type="button">Save note</button>
+        <button id="clearParentNoteBtn" class="btn light" type="button">Clear</button>
+      </div>
+      <div id="parentNoteMsg" class="status" aria-live="polite"></div>
     </section>
 
     <!-- Tiny footer note (professional) -->
@@ -448,14 +520,23 @@
     const highlightSupport = document.getElementById("highlightSupport");
 
     const overallCard = document.getElementById("overallCard");
+    const baselineCard = document.getElementById("baselineCard");
     const signalsCard = document.getElementById("signalsCard");
+    const effortCard = document.getElementById("effortCard");
     const skillsCard = document.getElementById("skillsCard");
     const nextCard = document.getElementById("nextCard");
+    const planCard = document.getElementById("planCard");
+    const timelineCard = document.getElementById("timelineCard");
+    const parentNotesCard = document.getElementById("parentNotesCard");
 
     const overallBox = document.getElementById("overallBox");
+    const baselineBox = document.getElementById("baselineBox");
     const signalsBox = document.getElementById("signalsBox");
+    const effortBox = document.getElementById("effortBox");
     const skillsBox = document.getElementById("skillsBox");
     const nextBox = document.getElementById("nextBox");
+    const planBox = document.getElementById("planBox");
+    const timelineBox = document.getElementById("timelineBox");
     const noDataBox = document.getElementById("noDataBox");
 
     // Child switcher
@@ -468,6 +549,16 @@
     const weeklyMsg = document.getElementById("weeklyMsg");
     const weeklyList = document.getElementById("weeklyList");
     const runWeeklyBtn = document.getElementById("runWeeklyBtn");
+    const weeklyEmailRow = document.getElementById("weeklyEmailRow");
+    const weeklyEmailSwitch = document.getElementById("weeklyEmailSwitch");
+    const weeklyEmailState = document.getElementById("weeklyEmailState");
+    const weeklyEmailTo = document.getElementById("weeklyEmailTo");
+
+    const startPlanBtn = document.getElementById("startPlanBtn");
+    const parentNoteInput = document.getElementById("parentNoteInput");
+    const saveParentNoteBtn = document.getElementById("saveParentNoteBtn");
+    const clearParentNoteBtn = document.getElementById("clearParentNoteBtn");
+    const parentNoteMsg = document.getElementById("parentNoteMsg");
 
     let currentUser = null;
     let child = null;
@@ -477,6 +568,7 @@
     let derivedReport = null;
     let lastWeekly = null;
     let weeklyEnabled = false;
+    let weeklyEmailEnabled = false;
 
     function showError(msg){
       pageError.style.display = "block";
@@ -660,6 +752,144 @@
       target.appendChild(wrap);
     }
 
+    function safePickPlanTarget(report){
+      try {
+        const label = report?.sessionSignals?.trickiestLabel;
+        if (label && label.includes("—")){
+          const parts = label.split("—").map(s => s.trim()).filter(Boolean);
+          if (parts.length >= 2) return { subject: parts[0], area: parts.slice(1).join(" — ") };
+        }
+        const ns = report?.needsSupport?.[0];
+        if (ns?.subject || ns?.area) return { subject: prettySubject(ns.subject), area: prettyArea(ns.area) };
+        const fs = report?.focusSkill;
+        if (fs?.subject || fs?.area) return { subject: prettySubject(fs.subject), area: prettyArea(fs.area) };
+      } catch {}
+      return null;
+    }
+
+    function renderPlan(report){
+      const target = safePickPlanTarget(report);
+      if (!planBox) return;
+      const focus = target ? `${target.subject} — ${target.area}` : "—";
+      planBox.innerHTML = `
+        <div class="muted" style="margin-bottom:6px;">Today’s focus: <b>${escapeHtml(focus)}</b></div>
+        <ul class="bullets" style="margin-top:6px;">
+          <li>Warm-up (easy): 2 questions</li>
+          <li>Practice: 3 questions</li>
+          <li>Finish on a win: 1 easy question</li>
+        </ul>
+      `;
+    }
+
+    function renderEffortWins(report){
+      if (!effortBox) return;
+      const s = report?.sessionSignals;
+      if (!s){
+        effortBox.innerHTML = `<div class="muted">Loading…</div>`;
+        return;
+      }
+      const total = (s.explainCount || 0) + (s.hintCount || 0);
+      if (!total){
+        effortBox.innerHTML = `<div class="muted">No effort signals yet — that’s fine. They’re just getting started.</div>`;
+        return;
+      }
+      renderRows(effortBox, [
+        { k: "Asked for another way", v: String(s.explainCount || 0) },
+        { k: "Used hints", v: String(s.hintCount || 0) }
+      ]);
+    }
+
+    function safeIsWithinLastDays(dateStr, days=7){
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return false;
+        const now = new Date();
+        const cutoff = new Date();
+        cutoff.setDate(now.getDate() - days);
+        return d >= cutoff;
+      } catch {
+        return false;
+      }
+    }
+
+    function renderTimeline(data){
+      if (!timelineBox) return;
+      const sessions = (data?.sessions || []).filter(s => safeIsWithinLastDays(s.created_at, 7)).slice(0, 10);
+      if (!sessions.length){
+        timelineBox.innerHTML = `<div class="muted">No activity logged in the last 7 days yet.</div>`;
+        return;
+      }
+      const rows = sessions.map(s => {
+        const dt = formatDateOnly(s.created_at);
+        const subj = prettySubject(s.subject);
+        const ar = prettyArea(s.area);
+        return { k: dt, v: `${subj} — ${ar} • Q: ${s.questions_done || 0}` };
+      });
+      renderRows(timelineBox, rows);
+    }
+
+    function renderBaseline(report){
+      if (!baselineCard || !baselineBox) return;
+      if (!report?.baseline){
+        baselineCard.style.display = "none";
+        return;
+      }
+      baselineCard.style.display = "block";
+      const base = report.baseline;
+      const label = base.subject ? `${base.subject}${base.area ? " — " + base.area : ""}` : "Setup check";
+      const level = base.level ? String(base.level) : "—";
+      const when = base.created_at ? formatDateOnly(base.created_at) : "—";
+      renderRows(baselineBox, [
+        { k: "Starting point", v: label },
+        { k: "Baseline", v: level },
+        { k: "Date", v: when },
+        { k: "Since then", v: `${report.sessionsThisWeek.length} sessions this week` },
+        { k: "Most practised", v: report.highlightFocus || "—" }
+      ]);
+    }
+
+    async function safeLoadParentNoteForWeek(){
+      if (!parentNoteInput || !parentNoteMsg) return;
+      const weekStart = getWeekStartMonday(new Date());
+      parentNoteMsg.textContent = "";
+      try {
+        const { data, error } = await sb
+          .from("parent_notes")
+          .select("note")
+          .eq("parent_user_id", currentUser.id)
+          .eq("child_id", child.id)
+          .eq("week_start", weekStart)
+          .maybeSingle();
+        if (error) throw error;
+        parentNoteInput.value = data?.note || "";
+      } catch (e) {
+        console.warn("parent_notes load failed (safe)", e);
+      }
+    }
+
+    async function safeSaveParentNote(noteText){
+      if (!parentNoteInput || !parentNoteMsg) return;
+      const weekStart = getWeekStartMonday(new Date());
+      parentNoteMsg.textContent = "";
+      try {
+        const payload = {
+          parent_user_id: currentUser.id,
+          child_id: child.id,
+          week_start: weekStart,
+          note: noteText,
+          updated_at: new Date().toISOString()
+        };
+        const { error } = await sb
+          .from("parent_notes")
+          .upsert(payload, { onConflict:"parent_user_id,child_id,week_start" });
+        if (error) throw error;
+        parentNoteMsg.textContent = "Saved.";
+      } catch (e) {
+        console.warn("parent_notes save failed (safe)", e);
+        parentNoteMsg.textContent = "Couldn’t save yet.";
+      }
+    }
+
     function setCardVisibility(show){
       const display = show ? "block" : "none";
       highlightsCard.style.display = display;
@@ -752,6 +982,7 @@
         if (chosen) localStorage.setItem("selectedChild", JSON.stringify(chosen));
         await loadChildProfile();
         await loadEverything();
+        await safeLoadParentNoteForWeek();
       };
     }
 
@@ -765,24 +996,41 @@
       weeklyState.textContent = on ? "On" : "Off";
     }
 
+    function setWeeklyEmailSwitchUI(on){
+      weeklyEmailEnabled = !!on;
+      weeklyEmailSwitch?.classList.toggle("on", !!on);
+      weeklyEmailSwitch?.setAttribute("aria-checked", on ? "true" : "false");
+      if (weeklyEmailState) weeklyEmailState.textContent = on ? "On" : "Off";
+      if (weeklyEmailTo) weeklyEmailTo.style.display = on ? "block" : "none";
+    }
+
     async function loadWeeklySetting(){
       weeklyState.textContent = "Checking…";
       setWeeklySwitchUI(false);
 
-      const { data, error } = await sb
-        .from("weekly_report_settings")
-        .select("enabled")
-        .eq("parent_user_id", currentUser.id)
-        .eq("child_id", child.id)
-        .maybeSingle();
-
-      if (error) {
+      let data = null;
+      try {
+        const res = await sb
+          .from("weekly_report_settings")
+          .select("enabled, email_enabled, email_to")
+          .eq("parent_user_id", currentUser.id)
+          .eq("child_id", child.id)
+          .maybeSingle();
+        data = res?.data || null;
+        if (res?.error) throw res.error;
+      } catch (error) {
         console.error("weekly_report_settings read error", error);
         setWeeklySwitchUI(false);
+        if (weeklyEmailRow) weeklyEmailRow.style.display = "none";
         return;
       }
 
       setWeeklySwitchUI(!!data?.enabled);
+      if (weeklyEmailRow){
+        setWeeklyEmailSwitchUI(!!data?.email_enabled);
+        if (weeklyEmailTo) weeklyEmailTo.value = data?.email_to || "";
+        weeklyEmailRow.style.display = "";
+      }
     }
 
     async function saveWeeklySetting(enabled){
@@ -793,12 +1041,20 @@
         parent_user_id: currentUser.id,
         child_id: child.id,
         enabled: !!enabled,
+        email_enabled: weeklyEmailEnabled,
+        email_to: weeklyEmailTo?.value || "",
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await sb
-        .from("weekly_report_settings")
-        .upsert(payload, { onConflict: "parent_user_id,child_id" });
+      let error = null;
+      try {
+        const res = await sb
+          .from("weekly_report_settings")
+          .upsert(payload, { onConflict: "parent_user_id,child_id" });
+        if (res?.error) throw res.error;
+      } catch (e) {
+        error = e;
+      }
 
       weeklySwitch.style.pointerEvents = "auto";
 
@@ -812,6 +1068,28 @@
       setWeeklySwitchUI(enabled);
       setWeeklyMsg(enabled ? "Weekly Parent Insight is on ✅" : "Weekly Parent Insight is off.", "good");
       return true;
+    }
+
+    async function toggleWeeklyEmail(){
+      if (!weeklyEmailSwitch) return;
+      const next = !weeklyEmailEnabled;
+      setWeeklyEmailSwitchUI(next);
+      try {
+        const payload = {
+          parent_user_id: currentUser.id,
+          child_id: child.id,
+          email_enabled: next,
+          email_to: weeklyEmailTo?.value || "",
+          updated_at: new Date().toISOString()
+        };
+        const res = await sb
+          .from("weekly_report_settings")
+          .upsert(payload, { onConflict: "parent_user_id,child_id" });
+        if (res?.error) throw res.error;
+      } catch (e) {
+        console.error("weekly email save error", e);
+        setWeeklyEmailSwitchUI(!next);
+      }
     }
 
     function getLatestWeekly(){
@@ -1209,6 +1487,7 @@
             <th class="num">Attempts</th>
             <th class="num">Confidence</th>
             <th class="num">Confidence feel</th>
+            <th class="num">Trend</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1222,6 +1501,7 @@
         .forEach(it => {
           const accPct = (it.accuracy === null || it.accuracy === undefined) ? "—" : (Math.round(it.accuracy * 100) + "%");
           const conf = confidenceTag(it.confidence || 0, it.attempts || 0);
+          const trend = (it.streak_correct >= 3) ? "getting easier" : (it.streak_wrong >= 3) ? "getting harder" : "steady";
 
           const tr = document.createElement("tr");
           tr.innerHTML = `
@@ -1229,6 +1509,7 @@
             <td class="num">${it.attempts}</td>
             <td class="num">${accPct}</td>
             <td class="num"><span class="tag ${conf.cls}">${conf.label}</span></td>
+            <td class="num"><span class="tag">${trend}</span></td>
           `;
           tbody.appendChild(tr);
         });
@@ -1258,9 +1539,20 @@
       if (needsSupport.length){
         const box = document.createElement("div");
         box.className = "callout";
+        let whyText = "";
+        const top = report.needsSupport?.[0];
+        if (top && top.streak_wrong >= 3){
+          whyText = "This can happen when questions change slightly or speed is rushed.";
+        } else if (top && top.confidence < 0.5){
+          whyText = "This is often confidence, not ability — short wins help.";
+        } else if (top && top.accuracy < 0.6){
+          whyText = "This usually means the basics need one calm revisit.";
+        }
         box.innerHTML = `
           <h3>Needs support 💛</h3>
           <ul class="bullets">${needsSupport.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+          ${whyText ? `<div class="muted" style="margin-top:6px;">${escapeHtml(whyText)}</div>` : ``}
+          ${whyText ? `<div class="small" style="margin-top:4px;"><b>Try saying:</b> Let’s do just two easy ones first.</div>` : ``}
         `;
         wrap.appendChild(box);
       }
@@ -1309,9 +1601,13 @@
       clearError();
 
       overallBox.innerHTML = `<div class="muted">Loading…</div>`;
+      if (baselineBox) baselineBox.innerHTML = `<div class="muted">Loading…</div>`;
       signalsBox.innerHTML = `<div class="muted">Loading…</div>`;
+      if (effortBox) effortBox.innerHTML = `<div class="muted">Loading…</div>`;
       skillsBox.innerHTML = `<div class="muted">Loading…</div>`;
       nextBox.innerHTML = `<div class="muted">Loading…</div>`;
+      if (planBox) planBox.innerHTML = `<div class="muted">Loading…</div>`;
+      if (timelineBox) timelineBox.innerHTML = `<div class="muted">Loading…</div>`;
       noDataBox.style.display = "none";
 
       await loadWeeklySetting();
@@ -1323,13 +1619,25 @@
       const hasData = (unifiedData.skills && unifiedData.skills.length) || (unifiedData.sessions && unifiedData.sessions.length);
       noDataBox.style.display = hasData ? "none" : "block";
       setCardVisibility(hasData);
+      if (!hasData){
+        if (planCard) planCard.style.display = "none";
+        if (effortCard) effortCard.style.display = "none";
+        if (timelineCard) timelineCard.style.display = "none";
+        if (baselineCard) baselineCard.style.display = "none";
+      }
 
       if (hasData){
+        if (planCard) planCard.style.display = "block";
+        if (effortCard) effortCard.style.display = "block";
+        if (timelineCard) timelineCard.style.display = "block";
         renderHighlights(derivedReport);
         renderOverall(derivedReport);
         renderSignals(derivedReport);
         renderSkills(derivedReport);
         renderNextSteps(derivedReport);
+        renderPlan(derivedReport);
+        renderBaseline(derivedReport);
+        renderTimeline(unifiedData);
       }
 
       (async () => {
@@ -1339,6 +1647,8 @@
           derivedReport.sessionSignals = computeSessionSignals(items);
           renderHighlights(derivedReport);
           renderSignals(derivedReport);
+          renderPlan(derivedReport);
+          renderEffortWins(derivedReport);
         } catch (e) {
           console.warn("session signals render failed (safe)", e);
         }
@@ -1530,6 +1840,25 @@
       await runWeeklySnapshot();
     });
 
+    startPlanBtn?.addEventListener("click", () => {
+      try {
+        const target = safePickPlanTarget(derivedReport);
+        if (target && child?.id){
+          localStorage.setItem(`learnlio_last_ctx_${child.id}`, JSON.stringify({ subject: target.subject, area: target.area }));
+        }
+        showOk("5-minute plan set");
+      } catch {}
+    });
+
+    saveParentNoteBtn?.addEventListener("click", async () => {
+      const note = parentNoteInput?.value || "";
+      await safeSaveParentNote(note);
+    });
+    clearParentNoteBtn?.addEventListener("click", async () => {
+      if (parentNoteInput) parentNoteInput.value = "";
+      await safeSaveParentNote("");
+    });
+
     async function toggleWeekly(){
       const next = !weeklyEnabled;
       setWeeklySwitchUI(next);
@@ -1543,6 +1872,13 @@
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         toggleWeekly();
+      }
+    });
+    weeklyEmailSwitch?.addEventListener("click", toggleWeeklyEmail);
+    weeklyEmailSwitch?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleWeeklyEmail();
       }
     });
 
@@ -1561,10 +1897,17 @@
       if (!childOk) return;
 
       await loadEverything();
+      await safeLoadParentNoteForWeek();
     })();
   })();
   </script>
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <!--
+    Pure UI: 5-minute plan, micro-explanations, trend column, timeline, baseline panel.
+    Uses existing DB reads: session_items (effort wins), sessions (timeline), child_skill_progress (trend heuristic).
+    Requires DB change: weekly_report_settings columns email_enabled/email_to (feature hides if missing).
+    Uses existing table: parent_notes (already created).
+  -->
 </body>
 </html>
 
