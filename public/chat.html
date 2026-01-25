@@ -1857,12 +1857,24 @@ Short lines.
       if (hintUsedForCurrent){
         addBotMessage("You’ve already had a hint for this one. Have another go.");
         return;
-      }
-      hintUsedForCurrent = true;
+        }
+        hintUsedForCurrent = true;
 
-      const hintPrompt = `
-You are Learnlio AI, a child-safe UK tutor.
-Child: ${childName}, age ${childAge}
+        try{
+          await insertSessionItem({
+            item_type: "hint",
+            prompt_text: (currentQuestion && currentQuestion.displayText) ? currentQuestion.displayText : (currentQuestion && currentQuestion.prompt) ? currentQuestion.prompt : null,
+            child_text: null,
+            is_correct: null,
+            meta: { subject, area, difficultyLevel, via: "hint_button" }
+          });
+        } catch(e){
+          console.warn("hint log failed (safe)", e);
+        }
+  
+        const hintPrompt = `
+  You are Learnlio AI, a child-safe UK tutor.
+  Child: ${childName}, age ${childAge}
 Maths area: ${area}
 Question: "${currentQuestion.displayText}"
 
