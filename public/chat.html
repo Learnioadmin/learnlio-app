@@ -1559,13 +1559,40 @@
       }
     }
 
-    function deriveStartLevelFromScreener(row){
-      if (!row) return null;
-      if (row.band === "high") return 1;
-      if (row.band === "medium") return 2;
-      if (row.band === "low") return 3;
-      return null;
-    }
+      function deriveStartLevelFromScreener(row){
+        if (!row) return null;
+        if (row.band === "high") return 1;
+        if (row.band === "medium") return 2;
+        if (row.band === "low") return 3;
+        return null;
+      }
+
+      // Engine ingest: runs after auth + child selected; never blocks; safe timeout; silent failure.
+      async function safeEngineIngestAuthed(childId){
+        if (!childId) return;
+        try{
+          const { data } = await sb.auth.getSession();
+          const token = data?.session?.access_token;
+          if (!token) return;
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 6800);
+          try{
+            await fetch("https://learnlio-engine.falling-grass-34ab.workers.dev/engine/ingest-authed", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+              },
+              body: JSON.stringify({ child_id: childId }),
+              signal: controller.signal
+            });
+          } finally {
+            clearTimeout(timeout);
+          }
+        } catch {
+          console.warn("engine ingest skipped");
+        }
+      }
 
     async function loadChildXp(){
       const { data: existing, error } = await sb
@@ -2112,7 +2139,8 @@ End with: "Want to try it now?"
       });
 
       await recordAttemptToSkill({ isCorrect });
-      await updateSessionRollups();
+        await updateSessionRollups();
+        safeEngineIngestAuthed(child?.id);
 
       if (isCorrect){
         addBotMessage(`✅ Nice one, ${childName}!\n\nThat’s right.\n\nReady for the next one?`, { showNext:true });
@@ -2415,12 +2443,13 @@ End with: "Want to try it now?"
         if (!hasOverlay && (screenerBand === "medium" || screenerBand === "high")) {
           applyOverlay("paper");
         }
-      } catch {}
+        } catch {}
 
-      await loadChildXp();
-      loadXpAndRewards();
-      clearError();
-      disableInput(false);
+        await loadChildXp();
+        safeEngineIngestAuthed(child.id);
+        loadXpAndRewards();
+        clearError();
+        disableInput(false);
 
       maxQuestions = computeMaxQuestions();
       updateProgressUI();

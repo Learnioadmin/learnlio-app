@@ -727,6 +727,33 @@ Rules:
       return null;
     }
 
+    // Engine ingest: runs after auth + child selected; never blocks; safe timeout; silent failure.
+    async function safeEngineIngestAuthed(childId){
+      if (!childId) return;
+      try{
+        const { data } = await sb.auth.getSession();
+        const token = data?.session?.access_token;
+        if (!token) return;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 6800);
+        try{
+          await fetch("https://learnlio-engine.falling-grass-34ab.workers.dev/engine/ingest-authed", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({ child_id: childId }),
+            signal: controller.signal
+          });
+        } finally {
+          clearTimeout(timeout);
+        }
+      } catch {
+        console.warn("engine ingest skipped");
+      }
+    }
+
     async function loadChildProfile(){
       const selected = getSelectedChildFromLocalStorage();
       if (!selected?.id){
@@ -1796,12 +1823,14 @@ Rules:
               .eq("id", skillRow.id);
           }
         }
-      }catch(e){
-        console.warn("skill progress update failed (safe)", e);
-      }
+        }catch(e){
+          console.warn("skill progress update failed (safe)", e);
+        }
 
-      // show end screen
-      contextLine.textContent = `${SUBJECT} • ${AREA} — Finished ✅`;
+        safeEngineIngestAuthed(child?.id);
+
+        // show end screen
+        contextLine.textContent = `${SUBJECT} • ${AREA} — Finished ✅`;
       lessonTextEl.textContent = `Nice work, ${childName}.`;
       showHintBox("You can stop for today or try another lesson.");
       mcqEl.style.display = "none";
@@ -2003,11 +2032,12 @@ Rules:
 
       parseUrlContext();
 
-      const ok = await requireAuth();
-      if (!ok) return;
+        const ok = await requireAuth();
+        if (!ok) return;
 
-      const childOk = await loadChildProfile();
-      if (!childOk) return;
+        const childOk = await loadChildProfile();
+        if (!childOk) return;
+        safeEngineIngestAuthed(child.id);
 
       ensureSubjectAreaFromStorageIfMissing();
 
