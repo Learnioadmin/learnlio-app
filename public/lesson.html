@@ -1434,17 +1434,18 @@ Rules:
           Array.from(mcqEl.querySelectorAll("button")).forEach(b => b.disabled = true);
 
           const isCorrect = (i === correctIndex);
-          stepState[idx] = { completed:true, correct:isCorrect };
-          await insertSessionItem({
-            item_type: "answer",
-            prompt_text: step.prompt || "",
-            child_text: null,
-            is_correct: isCorrect,
-            meta: { source:"lesson", subject: SUBJECT, area: AREA, step_type: step.type, step_index: idx }
-          });
+            stepState[idx] = { completed:true, correct:isCorrect };
+            await insertSessionItem({
+              item_type: "answer",
+              prompt_text: step.prompt || "",
+              child_text: null,
+              is_correct: isCorrect,
+              meta: { source:"lesson", subject: SUBJECT, area: AREA, step_type: step.type, step_index: idx }
+            });
+            try { safeEngineIngestAuthed(child?.id); } catch {}
 
-          // Gentle XP: reward effort + a bit more for correct
-          await awardXp(isCorrect ? 10 : 6);
+            // Gentle XP: reward effort + a bit more for correct
+            await awardXp(isCorrect ? 10 : 6);
 
           hintLine.textContent = isCorrect ? "Nice work ✅" : "Good try — keep going 💛";
 
@@ -1566,19 +1567,20 @@ Rules:
         thumb.style.pointerEvents = "none";
         track.style.pointerEvents = "none";
 
-        const isCorrect = (chosen === target);
-        stepState[idx] = { completed:true, correct:isCorrect };
-        await insertSessionItem({
-          item_type: "answer",
-          prompt_text: step.prompt || "",
-          child_text: null,
-          is_correct: isCorrect,
-          meta: { source:"lesson", subject: SUBJECT, area: AREA, step_type: step.type, step_index: idx }
-        });
+          const isCorrect = (chosen === target);
+          stepState[idx] = { completed:true, correct:isCorrect };
+          await insertSessionItem({
+            item_type: "answer",
+            prompt_text: step.prompt || "",
+            child_text: null,
+            is_correct: isCorrect,
+            meta: { source:"lesson", subject: SUBJECT, area: AREA, step_type: step.type, step_index: idx }
+          });
+          try { safeEngineIngestAuthed(child?.id); } catch {}
 
-        await awardXp(isCorrect ? 12 : 7);
-        hintLine.textContent = isCorrect ? "Yes — you landed on it ✅" : `Nearly. It was ${target}. Keep going 💛`;
-        scheduleAutoAdvance(850);
+          await awardXp(isCorrect ? 12 : 7);
+          hintLine.textContent = isCorrect ? "Yes — you landed on it ✅" : `Nearly. It was ${target}. Keep going 💛`;
+          scheduleAutoAdvance(850);
       });
     }
 
@@ -1696,18 +1698,19 @@ Rules:
 
           setStatus();
 
-          if (matched >= cleanPairs.length){
-            stepState[idx] = { completed:true, correct:(mistakes === 0) };
-            await insertSessionItem({
-              item_type: "answer",
-              prompt_text: step.prompt || "",
-              child_text: null,
-              is_correct: (mistakes === 0),
-              meta: { source:"lesson", subject: SUBJECT, area: AREA, step_type: step.type, step_index: idx }
-            });
-            hintLine.textContent = "All matched ✅";
-            scheduleAutoAdvance(900);
-          }
+            if (matched >= cleanPairs.length){
+              stepState[idx] = { completed:true, correct:(mistakes === 0) };
+              await insertSessionItem({
+                item_type: "answer",
+                prompt_text: step.prompt || "",
+                child_text: null,
+                is_correct: (mistakes === 0),
+                meta: { source:"lesson", subject: SUBJECT, area: AREA, step_type: step.type, step_index: idx }
+              });
+              try { safeEngineIngestAuthed(child?.id); } catch {}
+              hintLine.textContent = "All matched ✅";
+              scheduleAutoAdvance(900);
+            }
         } else {
           mistakes += 1;
           hintLine.textContent = "Not that one — try a different match 💛";
@@ -2119,6 +2122,15 @@ Rules:
       backBtn.disabled = true;
       renderStep();
     }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden"){
+        try { safeEngineIngestAuthed(child?.id); } catch {}
+      }
+    });
+    window.addEventListener("beforeunload", () => {
+      try { safeEngineIngestAuthed(child?.id); } catch {}
+    });
 
     boot().catch(err => {
       console.error(err);
