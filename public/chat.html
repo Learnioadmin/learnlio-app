@@ -2351,9 +2351,10 @@ End with: "Want to try it now?"
       });
 
       await recordAttemptToSkill({ isCorrect: correct });
-      await updateSessionRollups();
+        await updateSessionRollups();
+        try { safeEngineIngestAuthed(child?.id); } catch {}
 
-      const reply = await giveMathFeedback_AI(currentQuestion, text);
+        const reply = await giveMathFeedback_AI(currentQuestion, text);
 
       if (sessionComplete()){
         addBotMessage(reply);
