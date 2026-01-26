@@ -52,6 +52,7 @@
       color: #fff;
       border-radius: 16px;
       padding: 14px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom));
       box-shadow: 0 10px 30px rgba(0,0,0,.25);
       display: none;
     }
@@ -66,6 +67,8 @@
     }
     .cookie-text { font-size: 14px; color:#e5e7eb; line-height:1.5; }
     .cookie-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .cookie-actions a { color:#c7d2fe; text-decoration:none; padding:8px 10px; border-radius:10px; }
+    .cookie-actions a:hover { background: rgba(255,255,255,.08); }
     .cookie-actions button { border:none; border-radius:12px; padding:10px 12px; cursor:pointer; font-size:14px; }
     .cookie-ok { background:#0b5cff; color:#fff; }
     .cookie-close { background: rgba(255,255,255,.12); color:#fff; }

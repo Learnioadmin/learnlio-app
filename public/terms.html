@@ -47,6 +47,7 @@
       color: #fff;
       border-radius: 16px;
       padding: 14px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom));
       box-shadow: 0 10px 30px rgba(0,0,0,.25);
       display: none;
     }
@@ -61,6 +62,8 @@
     }
     .cookie-text { font-size: 14px; color:#e5e7eb; line-height:1.5; }
     .cookie-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .cookie-actions a { color:#c7d2fe; text-decoration:none; padding:8px 10px; border-radius:10px; }
+    .cookie-actions a:hover { background: rgba(255,255,255,.08); }
     .cookie-actions button { border:none; border-radius:12px; padding:10px 12px; cursor:pointer; font-size:14px; }
     .cookie-ok { background:#0b5cff; color:#fff; }
     .cookie-close { background: rgba(255,255,255,.12); color:#fff; }
@@ -133,7 +136,13 @@
         By using Learnlio, you agree to these Terms.
       </p>
 
-      <h2>Who can use Learnlio</h2>
+      
+      <h2>Company details</h2>
+      <p>
+        Service provider: [ADD COMPANY LEGAL NAME], [ADD REGISTERED ADDRESS].
+        Contact: <strong>hello@learnlio.co.uk</strong>.
+      </p>
+<h2>Who can use Learnlio</h2>
       <ul>
         <li>Learnlio accounts are created and managed by a parent or legal guardian.</li>
         <li>Children may use Learnlio under adult supervision or guidance.</li>
@@ -163,11 +172,19 @@
 
       <h2>Payments, trials, and cancellations</h2>
       <ul>
+        <li>Subscriptions renew automatically unless you cancel before the renewal date.</li>
         <li>Trials (if offered) are time-limited and intended for testing Learnlio.</li>
+        <li>If a trial converts to paid, it will become a paid subscription at the end of the trial unless you cancel beforehand.</li>
         <li>Paid access is handled through Stripe. We do not store card details.</li>
         <li>You can cancel at any time via the Billing page or Stripe portal (where enabled).</li>
-        <li>If you cancel, access continues until the end of the paid period.</li>
+        <li>If you cancel, access continues until the end of the current paid period or trial.</li>
+        <li>Refunds: [ADD REFUND POLICY].</li>
       </ul>
+
+      <h2>Digital services and your rights</h2>
+      <p>
+        Under UK consumer law, digital services must be provided with reasonable care and skill. If something goes wrong, you may be entitled to a repair (repeat performance) or a price reduction. These rights are not affected by these Terms.
+      </p>
 
       <h2>Acceptable use</h2>
       <p>Please do not:</p>
@@ -175,6 +192,7 @@
         <li>Use Learnlio to upload harmful, abusive, or illegal content.</li>
         <li>Attempt to break, reverse engineer, or disrupt the Service.</li>
         <li>Use Learnlio in a way that risks harm to a child.</li>
+        <li>Encourage a child to share personal contact details or use Learnlio without appropriate adult oversight.</li>
       </ul>
 
       <h2>Availability and changes</h2>

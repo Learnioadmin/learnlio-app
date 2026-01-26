@@ -129,6 +129,40 @@
     ]
   }
   </script>
+
+  <style>
+    /* Cookie banner */
+    .cookie-banner {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 9999;
+      background: #111827;
+      color: #fff;
+      border-radius: 16px;
+      padding: 14px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom));
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      display: none;
+    }
+    .cookie-row {
+      max-width: 980px;
+      margin: 0 auto;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .cookie-text { font-size: 14px; color:#e5e7eb; line-height:1.5; }
+    .cookie-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .cookie-actions a { color:#c7d2fe; text-decoration:none; padding:8px 10px; border-radius:10px; }
+    .cookie-actions a:hover { background: rgba(255,255,255,.08); }
+    .cookie-actions button { border:none; border-radius:12px; padding:10px 12px; cursor:pointer; font-size:14px; }
+    .cookie-ok { background:#0b5cff; color:#fff; }
+    .cookie-close { background: rgba(255,255,255,.12); color:#fff; }
+  </style>
 </head>
 
 <body>
@@ -255,5 +289,48 @@
   <script src="/help/help-data.js"></script>
   <script src="/help/search.js"></script>
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+
+  <!-- Cookie banner -->
+  <div id="cookieBanner" class="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie notice">
+    <div class="cookie-row">
+      <div class="cookie-text">
+        We only use <strong>essential cookies</strong> to keep you signed in and keep Learnlio secure.
+        <a href="/cookies.html" style="color:#c7d2fe; text-decoration:underline;">Learn more</a>.
+      </div>
+      <div class="cookie-actions">
+        <button id="cookieOk" class="cookie-ok" type="button">OK</button>
+        <button id="cookieClose" class="cookie-close" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const KEY = "learnlio_cookie_notice_v1";
+      const banner = document.getElementById("cookieBanner");
+      if (!banner) return;
+      const ok = document.getElementById("cookieOk");
+      const close = document.getElementById("cookieClose");
+
+      function hide() {
+        banner.style.display = "none";
+      }
+      function accept() {
+        try { localStorage.setItem(KEY, "1"); } catch {}
+        hide();
+      }
+      function showIfNeeded() {
+        let seen = "0";
+        try { seen = localStorage.getItem(KEY) || "0"; } catch {}
+        if (seen !== "1") banner.style.display = "block";
+      }
+
+      if (ok) ok.addEventListener("click", accept);
+      if (close) close.addEventListener("click", accept);
+
+      showIfNeeded();
+    })();
+  </script>
+
 </body>
 </html>

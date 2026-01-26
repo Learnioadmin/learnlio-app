@@ -48,6 +48,7 @@
       color: #fff;
       border-radius: 16px;
       padding: 14px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom));
       box-shadow: 0 10px 30px rgba(0,0,0,.25);
       display: none;
     }
@@ -140,6 +141,11 @@
       <p>
         Learnlio is an online learning platform designed to support children with dyslexia-friendly, child-led learning in Maths and English.
       </p>
+      <h2>Data controller identity</h2>
+      <p>
+        Data controller: [ADD COMPANY LEGAL NAME], [ADD REGISTERED ADDRESS].
+        If you have any questions about this policy, contact us at <strong>hello@learnlio.co.uk</strong>.
+      </p>
       <p class="muted">
         Questions? Email us: <strong>hello@learnlio.co.uk</strong>
       </p>
@@ -179,12 +185,46 @@
         <li>Manage subscriptions and access</li>
       </ul>
 
+      <h2>Lawful bases (UK GDPR)</h2>
+      <p>We rely on the following lawful bases, depending on the activity:</p>
+      <ul>
+        <li><strong>Account creation and login:</strong> contract (providing the service you request).</li>
+        <li><strong>Child profiles and tutoring/lessons:</strong> contract and legitimate interests (delivering the learning service safely).</li>
+        <li><strong>Screener/setup check:</strong> contract and legitimate interests; consent where optional information is provided.</li>
+        <li><strong>Billing and payments:</strong> contract and legal obligation (tax/accounting records).</li>
+        <li><strong>Support messages and contact requests:</strong> legitimate interests or contract (to respond to you).</li>
+      </ul>
+
       <h2>How we store and protect data</h2>
       <ul>
         <li>Data is stored securely using <strong>Supabase</strong></li>
         <li>Payments are handled by <strong>Stripe</strong> (we never see card details)</li>
         <li>Connections are encrypted (HTTPS)</li>
         <li>Access is restricted using role-based permissions</li>
+      </ul>
+
+      <h2>Data retention</h2>
+      <ul>
+        <li><strong>Account data:</strong> kept while your account is active and for a limited period after closure for support and security.</li>
+        <li><strong>Child profiles and learning progress:</strong> kept until you delete them or close the account.</li>
+        <li><strong>Support messages:</strong> kept for [ADD SUPPORT RETENTION PERIOD] to help resolve issues.</li>
+        <li><strong>Billing records:</strong> kept for [ADD BILLING RETENTION PERIOD] to meet legal and accounting obligations.</li>
+      </ul>
+
+      <h2>International transfers</h2>
+      <p>
+        Some processors (such as Supabase, Stripe, and our hosting/CDN providers) may process data outside the UK.
+        Where this happens, we rely on appropriate safeguards such as UK GDPR transfer mechanisms (for example, standard contractual clauses or the UK IDTA) and provider security measures.
+      </p>
+
+      <h2>Processors we use</h2>
+      <ul>
+        <li><strong>Supabase:</strong> authentication, database, and secure storage.</li>
+        <li><strong>Stripe:</strong> payments and billing portal.</li>
+        <li><strong>Cloudflare or similar CDN/hosting providers:</strong> performance and security.</li>
+        <li><strong>Google (Text-to-Speech):</strong> audio support where enabled.</li>
+        <li><strong>OpenAI:</strong> optional AI support features where enabled.</li>
+        <li><strong>Formspree:</strong> contact form delivery (if you use the contact form).</li>
       </ul>
 
       <h2>Children’s data</h2>
@@ -212,7 +252,16 @@
         <li>Request deletion of your data</li>
         <li>Withdraw consent where applicable</li>
       </ul>
-      <p>To exercise these rights, email: <strong>hello@learnlio.co.uk</strong></p>
+      <p>
+        To exercise these rights, email: <strong>hello@learnlio.co.uk</strong>. We aim to respond within one month.
+        If we need longer, we will explain why and keep you updated.
+      </p>
+
+      <h2>Complaints</h2>
+      <p>
+        You have the right to complain to the UK Information Commissioner's Office (ICO) if you are unhappy with how your data is handled.
+        See the Information Commissioner's Office (ICO) website for guidance.
+      </p>
 
       <h2>Changes to this policy</h2>
       <p>
