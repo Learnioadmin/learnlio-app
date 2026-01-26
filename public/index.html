@@ -475,6 +475,7 @@
 </head>
 
 <body>
+  <a href="#main" style="position:absolute;left:-999px;top:auto;width:1px;height:1px;overflow:hidden;" onfocus="this.style.left='12px';this.style.top='12px';this.style.width='auto';this.style.height='auto';this.style.overflow='visible';this.style.padding='8px 12px';this.style.background='#fff';this.style.border='1px solid rgba(15,23,42,.12)';this.style.borderRadius='12px';this.style.boxShadow='0 12px 24px rgba(2,6,23,.12)';this.style.zIndex='9999';" onblur="this.style.left='-999px';this.style.top='auto';this.style.width='1px';this.style.height='1px';this.style.overflow='hidden';this.style.padding='0';this.style.background='transparent';this.style.border='none';this.style.boxShadow='none';">Skip to content</a>
   <!-- PUBLIC NAV (single primary path: pricing -> trial -> first session) -->
   <header class="nav" role="banner">
     <div class="nav-inner">
@@ -493,7 +494,7 @@
     </div>
   </header>
 
-  <main class="container">
+  <main id="main" class="container">
     <!-- HERO -->
     <section class="hero" aria-label="Learnlio homepage">
       <div class="card hero-left">
@@ -512,7 +513,7 @@
           <a class="btn" href="/pricing.html">Start free trial</a>
           <a class="btn light" href="#how-it-works">See how it works</a>
         </div>
-        <div style="margin-top:8px;color:var(--muted);font-size:13.5px;font-weight:850;">Ages 614  Works on phone, tablet &amp; laptop  No tests  just calm guidance</div>
+        <div style="margin-top:8px;color:var(--muted);font-size:13.5px;font-weight:850;" role="list" aria-label="Trust points"><span role="listitem">Ages 614</span>  <span role="listitem">Works on phone, tablet &amp; laptop</span>  <span role="listitem">No tests  just calm guidance.</span></div>
 
         <div class="reassure" aria-label="Trust points">
           <div class="item">
