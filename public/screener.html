@@ -37,24 +37,6 @@
       line-height:1.7;
     }
 
-    /* --- Top bar (MATCH this across all pages) --- */
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-    }
-    .topbar-inner{
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: 10px 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
-    }
     .brand{
       display:flex;
       align-items:center;
@@ -73,32 +55,6 @@
       color: var(--muted);
     }
 
-    .nav{
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content:flex-end;
-      align-items:center;
-    }
-    .nav a{
-      text-decoration:none;
-      color: var(--text);
-      background: var(--pill);
-      border: 1px solid #dbeafe;
-      padding: 9px 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      display:inline-flex;
-      align-items:center;
-      gap: 8px;
-      transition: 0.15s ease;
-    }
-    .nav a:hover{ transform: translateY(-1px); }
-    .nav a.active{
-      background: var(--blue);
-      border-color: var(--blue);
-      color: #fff;
-    }
 
     /* --- Page layout --- */
     .wrap{
@@ -224,7 +180,6 @@
       .brand .title{ display:none; }
       .nav a{ padding: 9px 10px; }
     }
-  </style>
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
