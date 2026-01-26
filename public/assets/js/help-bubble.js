@@ -1,3 +1,4 @@
+/* Mobile visual viewport fix for keyboard-safe help bubble (no desktop impact). */
 /* Support Bubble v2 - guided help + safe actions + search fallback */
 /* Learnlio Help Bubble (retrieval-first). Additive, safe, no layout impact. */
 
@@ -153,12 +154,48 @@
 @media (max-width:420px){
   #ll-help-bubble{ right:12px; bottom:12px; }
 }
+@media (max-width:980px){
+  .llhb-panel{
+    max-height: calc(var(--vvh) * 100 - 24px - env(safe-area-inset-bottom));
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .llhb-hd{
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .llhb-bd{
+    max-height: calc(var(--vvh) * 100 - 120px - env(safe-area-inset-bottom));
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
     `.trim();
 
     const style = document.createElement("style");
     style.id = "ll-help-bubble-style";
     style.textContent = css;
     document.head.appendChild(style);
+  }
+
+  function initVisualViewportFix() {
+    try {
+      const root = document.documentElement;
+      const update = () => {
+        const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const v = h / 100;
+        if (Number.isFinite(v)) root.style.setProperty("--vvh", String(v));
+      };
+      update();
+      window.addEventListener("resize", update, { passive: true });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", update, { passive: true });
+        window.visualViewport.addEventListener("scroll", update, { passive: true });
+      }
+    } catch {}
   }
 
   function getPageContext() {
@@ -516,6 +553,7 @@
 
   async function init() {
     try {
+      initVisualViewportFix();
       injectStyles();
 
       const cfg = window.LEARNLIO_SUPPORT_CONFIG || {};
